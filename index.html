@@ -10,52 +10,47 @@
     <input type="text" id="campoNome" placeholder="Digite o nome...">
     <button id="btnSalvar">Salvar no Firebase</button>
 
-    <!-- 2. O Script com o código mínimo -->
+    <!-- 2. O Script corrigido e limpo -->
     <script type="module">
-      
-// Importa as funções que você precisa do SDK do Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Importa as funções do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Sua configuração do Firebase (a que você acabou de colar)
-const firebaseConfig = {
-  apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsOrV5h3KFH9M",
-  authDomain: "portal-47793.firebaseapp.com",
-  projectId: "portal-47793",
-  storageBucket: "portal-47793.firebasestorage.app",
-  messagingSenderId: "746031374293",
-  appId: "1:746031374293:web:ddb18d9faec8530a72675c"
-};
-
-// Inicializa o Firebase
-const app = initializeApp(firebaseConfig);
-
-// AQUI ESTÁ O PASSO EXTRA QUE FALTAVA: Ativa o banco de dados Firestore!
-const db = getFirestore(app);
-
-
-
-        
+        // Sua configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsOrV5h3KFH9M",
+            authDomain: "portal-47793.firebaseapp.com",
+            projectId: "portal-47793",
+            storageBucket: "portal-47793.firebasestorage.app",
+            messagingSenderId: "746031374293",
+            appId: "1:746031374293:web:ddb18d9faec8530a72675c"
         };
 
-        // Inicializa o Firebase
+        // Inicializa o Firebase e o Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         // Quando o botão for clicado...
         document.getElementById('btnSalvar').addEventListener('click', async () => {
-            // Pega o que foi digitado na caixinha do HTML
             const nomeDigitado = document.getElementById('campoNome').value;
 
+            if (!nomeDigitado.trim()) {
+                alert("Digite um nome antes de salvar!");
+                return;
+            }
+
             try {
-                // SALVA NA COLEÇÃO "servidores" (O Firebase cria o documento sozinho!)
+                // SALVA NA COLEÇÃO "servidores"
                 await addDoc(collection(db, "servidores"), {
-                    nome: nomeDigitado
+                    nome: nomeDigitado,
+                    dataCriacao: new Date().toISOString()
                 });
 
                 alert("Salvo com sucesso!");
+                document.getElementById('campoNome').value = ""; // Limpa o campo
             } catch (erro) {
                 console.error("Erro ao salvar: ", erro);
+                alert("Erro ao salvar. Verifique o console (F12).");
             }
         });
     </script>
