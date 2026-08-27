@@ -2,53 +2,52 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Salvar no Firebase</title>
+    <title>Cadastro de Servidores - Vales</title>
 </head>
 <body>
 
-    <!-- 1. O campo de texto e o botão -->
-    <input type="text" id="campoNome" placeholder="Digite o nome...">
+    <h2>Cadastro de Servidores</h2>
 
+    <!-- Caixas de texto e botão -->
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="campoNome" placeholder="Digite o nome...">
+    </div>
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="campoCpf" placeholder="Digite o CPF...">
+    </div>
+    
     <button id="btnSalvar">Salvar no Firebase</button>
 
-    <!-- 2. O Script corrigido e limpo -->
+    <!-- O Script que importa a conexão pronta do firebase.js -->
     <script type="module">
-        // Importa as funções do Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // Sua configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsOrV5h3KFH9M",
-            authDomain: "portal-47793.firebaseapp.com",
-            projectId: "portal-47793",
-            storageBucket: "portal-47793.firebasestorage.app",
-            messagingSenderId: "746031374293",
-            appId: "1:746031374293:web:ddb18d9faec8530a72675c"
-        };
-
-        // Inicializa o Firebase e o Firestore
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Puxa o 'db' pronto do nosso arquivo centralizador
+        import { db } from "./firebase.js"; 
+        import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Quando o botão for clicado...
         document.getElementById('btnSalvar').addEventListener('click', async () => {
             const nomeDigitado = document.getElementById('campoNome').value;
+            const cpfDigitado = document.getElementById('campoCpf').value;
 
-            if (!nomeDigitado.trim()) {
-                alert("Digite um nome antes de salvar!");
+            if (!nomeDigitado.trim() || !cpfDigitado.trim()) {
+                alert("Preencha todos os campos!");
                 return;
             }
 
             try {
-                // SALVA NA COLEÇÃO "servidores"
+                // Salva na gaveta "servidores" usando a conexão importada
                 await addDoc(collection(db, "servidores"), {
                     nome: nomeDigitado,
+                    cpf: cpfDigitado,
                     dataCriacao: new Date().toISOString()
                 });
 
                 alert("Salvo com sucesso!");
-                document.getElementById('campoNome').value = ""; // Limpa o campo
+                
+                // Limpa os campos
+                document.getElementById('campoNome').value = "";
+                document.getElementById('campoCpf').value = "";
+                
             } catch (erro) {
                 console.error("Erro ao salvar: ", erro);
                 alert("Erro ao salvar. Verifique o console (F12).");
