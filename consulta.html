@@ -221,6 +221,31 @@ tr:hover td {
     font-size: 14px;
 }
 
+/* BOTÃO DE AÇÃO (LÁPIS) */
+.btn-acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-secondary);
+}
+
+.btn-acao:hover {
+    background: #f1ebf6;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-acao .material-symbols-outlined {
+    font-size: 18px;
+}
+
 .table-footer {
     padding: 16px 24px;
     background: #fafbfc;
@@ -374,11 +399,12 @@ tr:hover td {
                         <th>E-mail</th>
                         <th>Cargo</th>
                         <th>Telefone</th>
+                        <th style="width: 80px; text-align: center;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabelaServidores">
                     <tr>
-                        <td colspan="5" class="empty-state">Carregando servidores do banco de dados...</td>
+                        <td colspan="6" class="empty-state">Carregando servidores do banco de dados...</td>
                     </tr>
                 </tbody>
             </table>
@@ -428,7 +454,7 @@ tr:hover td {
         }, (error) => {
             console.error("Erro ao carregar dados: ", error);
             document.getElementById("tabelaServidores").innerHTML = `
-                <tr><td colspan="5" class="empty-state" style="color: var(--red);">Erro ao carregar os dados do banco. Verifique sua conexão.</td></tr>
+                <tr><td colspan="6" class="empty-state" style="color: var(--red);">Erro ao carregar os dados do banco. Verifique sua conexão.</td></tr>
             `;
         });
     }
@@ -468,7 +494,7 @@ tr:hover td {
         tbody.innerHTML = "";
 
         if (totalRegistros === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhum servidor encontrado.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhum servidor encontrado.</td></tr>`;
             document.getElementById("infoPaginacao").textContent = "Nenhum registro encontrado";
             document.getElementById("paginaAtualSpan").textContent = "Página 1 de 1";
             document.getElementById("btnAnterior").disabled = true;
@@ -478,12 +504,20 @@ tr:hover td {
 
         itensDaPagina.forEach(serv => {
             const tr = document.createElement("tr");
+            
+            const botaoEditar = `
+                <a href="servidores.html?id=${serv.id}" class="btn-acao" title="Editar Servidor">
+                    <span class="material-symbols-outlined">edit</span>
+                </a>
+            `;
+
             tr.innerHTML = `
                 <td><strong>${serv.nome || ""}</strong></td>
                 <td>${serv.cpf || ""}</td>
                 <td>${serv.email || ""}</td>
                 <td>${serv.cargo || ""}</td>
                 <td>${serv.telefone || ""}</td>
+                <td style="text-align: center;">${botaoEditar}</td>
             `;
             tbody.appendChild(tr);
         });
