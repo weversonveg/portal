@@ -11,9 +11,10 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-    <!-- Estilo moderno do calendário (Flatpickr) -->
+<!-- Estilo moderno do calendário (Flatpickr) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
+
 <title>Novo Servidor - Vale Transporte</title>
 
 <style>
@@ -419,16 +420,6 @@ body {
 
 
 /* =====================================================
-    DATAS - BLOQUEADAS PARA DIGITAÇÃO MANUAL
-===================================================== */
-
-input[type="date"] {
-    cursor: pointer;
-    background-color: #ffffff;
-}
-
-
-/* =====================================================
     MENSAGEM
 ===================================================== */
 
@@ -542,6 +533,13 @@ button {
 
 button:active {
     transform: translateY(1px);
+}
+
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
 
@@ -684,27 +682,6 @@ button .material-symbols-outlined {
         width: 100%;
     }
 
-}
-    /* =====================================================
-    CALENDÁRIO - ESTILO MODERNO (MATERIAL DESIGN)
-===================================================== */
-input[type="date"] {
-    position: relative;
-    cursor: pointer;
-    background-color: #ffffff;
-}
-
-/* Personaliza o ícone do calendário nativo para ficar mais elegante */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    padding: 6px;
-    filter: invert(0.3) sepia(1) saturate(500%) hue-rotate(230deg); /* Deixa com a cor roxinha padrão do seu sistema */
-    border-radius: 4px;
-    transition: background 0.2s;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-    background: rgba(91, 42, 134, 0.08);
 }
 
 </style>
@@ -891,7 +868,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                     </div>
 
 
-                    <!-- DATA NASCIMENTO (Bloqueada para digitação manual) -->
+                    <!-- DATA NASCIMENTO -->
 
                     <div class="form-group">
 
@@ -904,15 +881,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                             id="dataNascimento"
                             name="dataNascimento"
                             required
-                            onkeydown="return false;"
-                            onpaste="return false;"
-                            ondrop="return false;"
                         >
 
                     </div>
 
 
-                    <!-- DATA ADMISSÃO (Bloqueada para digitação manual) -->
+                    <!-- DATA ADMISSÃO -->
 
                     <div class="form-group">
 
@@ -925,9 +899,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                             id="dataAdmissao"
                             name="dataAdmissao"
                             required
-                            onkeydown="return false;"
-                            onpaste="return false;"
-                            ondrop="return false;"
                         >
 
                     </div>
@@ -1027,14 +998,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
                     <button
                         type="submit"
+                        id="btnSalvar"
                         class="btn-salvar"
                     >
 
-                        <span class="material-symbols-outlined">
+                        <span class="material-symbols-outlined" id="iconeSalvar">
                             save
                         </span>
 
-                        Salvar
+                        <span id="textoBotao">Salvar</span>
 
                     </button>
 
@@ -1060,11 +1032,42 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 </main>
 
 
+<!-- Script do Flatpickr (Calendário Moderno) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
 <!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
     // Importa a conexão central do nosso firebase.js
     import { db } from "./firebase.js";
     import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    /* =====================================================
+       INICIALIZAÇÃO DO CALENDAR FLATPICKR
+    ===================================================== */
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr("input[type='date']", {
+            locale: "pt",
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            onChange: function(selectedDates, dateStr, instance) {
+                // Atualiza a cor verde do input quando a data for selecionada
+                window.atualizarCorCampo(instance.element);
+                ocultarMensagem();
+            }
+        });
+
+        const campos = document.querySelectorAll("#formServidor input");
+
+        campos.forEach(function(campo) {
+            campo.addEventListener("input", function() {
+                atualizarCorCampo(campo);
+                ocultarMensagem();
+            });
+
+            atualizarCorCampo(campo);
+        });
+    });
 
     /* =====================================================
        CAMPOS PREENCHIDOS
@@ -1074,38 +1077,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             campo.classList.add("preenchido");
         } else {
             campo.classList.remove("preenchido");
-        }
-    }
-
-    /* =====================================================
-       MONITORAMENTO DOS CAMPOS
-    ===================================================== */
-  /* =====================================================
-       MONITORAMENTO DOS CAMPOS
-    ===================================================== */
-    document.addEventListener("DOMContentLoaded", function() {
-        const campos = document.querySelectorAll("#formServidor input");
-
-        campos.forEach(function(campo) {
-            campo.addEventListener("input", function() {
-                atualizarCorCampo(campo);
-                ocultarMensagem(); // <-- Some com a mensagem antiga assim que o usuário digita algo novo!
-            });
-
-            campo.addEventListener("change", function() {
-                atualizarCorCampo(campo);
-                ocultarMensagem(); // <-- Também limpa se usar o calendário nas datas
-            });
-            // ... (resto do código continua igual)
-        });
-    });
-
-    // Função auxiliar para esconder a mensagem
-    function ocultarMensagem() {
-        const mensagem = document.getElementById("mensagem");
-        if (mensagem.classList.contains("sucesso")) {
-            mensagem.className = "mensagem";
-            mensagem.textContent = "";
         }
     }
 
@@ -1150,7 +1121,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     /* =====================================================
-       SALVAR NO FIREBASE
+       SALVAR NO FIREBASE COM FEEDBACK DE REDE
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
@@ -1183,8 +1154,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             return;
         }
 
+        // PEGA O BOTÃO E MUDA PARA O ESTADO "SALVANDO..."
+        const btnSalvar = document.getElementById("btnSalvar");
+        const textoBotao = document.getElementById("textoBotao");
+        const iconeSalvar = document.getElementById("iconeSalvar");
+
+        btnSalvar.disabled = true;
+        textoBotao.textContent = "Salvando...";
+        iconeSalvar.textContent = "sync"; // Ícone de sincronização/carregamento
+
         try {
-            // SALVA NA GAVETA "servidores" DO FIRESTORE
+            // TENTA SALVAR NA GAVETA "servidores" DO FIRESTORE
             await addDoc(collection(db, "servidores"), {
                 nome: nome,
                 cpf: cpf,
@@ -1196,19 +1176,33 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 dataCriacao: new Date().toISOString()
             });
 
-            // LIMPA OS CAMPOS DO FORMULÁRIO E TIRA A COR VERDE DOS INPUTS, MAS DEIXA A MENSAGEM VISÍVEL
+            // LIMPA OS CAMPOS DO FORMULÁRIO E TIRA A COR VERDE DOS INPUTS
             document.getElementById("formServidor").reset();
+            
+            // Reseta também o calendário Flatpickr visualmente se houver instâncias
+            const dateInputs = document.querySelectorAll("input[type='date']");
+            dateInputs.forEach(input => {
+                if (input._flatpickr) {
+                    input._flatpickr.clear();
+                }
+            });
+
             const campos = document.querySelectorAll("#formServidor input");
             campos.forEach(function(campo) {
                 campo.classList.remove("preenchido");
             });
 
-            // MOSTRA A MENSAGEM DE SUCESSO DE FORMA FIXA NA TELA
+            // MOSTRA A MENSAGEM DE SUCESSO
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
 
         } catch (erro) {
             console.error("Erro ao salvar no Firebase: ", erro);
-            mostrarMensagem("Erro ao salvar no banco de dados. Verifique o console.", "erro");
+            mostrarMensagem("Erro de conexão! Não foi possível salvar. Verifique sua internet.", "erro");
+        } finally {
+            // RESTAURA O BOTÃO AO NORMAL (SEJA SUCESSO OU ERRO)
+            btnSalvar.disabled = false;
+            textoBotao.textContent = "Salvar";
+            iconeSalvar.textContent = "save";
         }
     }
 
@@ -1225,14 +1219,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     window.cancelar = function() {
         document.getElementById("formServidor").reset();
 
+        const dateInputs = document.querySelectorAll("input[type='date']");
+        dateInputs.forEach(input => {
+            if (input._flatpickr) {
+                input._flatpickr.clear();
+            }
+        });
+
         const campos = document.querySelectorAll("#formServidor input");
         campos.forEach(function(campo) {
             campo.classList.remove("preenchido");
         });
 
-        const mensagem = document.getElementById("mensagem");
-        mensagem.className = "mensagem";
-        mensagem.textContent = "";
+        ocultarMensagem();
     }
 
     /* =====================================================
@@ -1243,20 +1242,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         mensagem.textContent = texto;
         mensagem.className = "mensagem " + tipo;
     }
+
+    window.ocultarMensagem = function() {
+        const mensagem = document.getElementById("mensagem");
+        if (mensagem.classList.contains("sucesso") || mensagem.classList.contains("erro")) {
+            mensagem.className = "mensagem";
+            mensagem.textContent = "";
+        }
+    }
 </script>
 
-
-
-    <!-- Script do calendário moderno -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-<script>
-    // Ativa o calendário moderno em português em todos os inputs de data
-    flatpickr("input[type='date']", {
-        locale: "pt",
-        dateFormat: "Y-m-d",
-        allowInput: false // Garante que continua bloqueado para digitação manual
-    });
-</script>
 </body>
 </html>
