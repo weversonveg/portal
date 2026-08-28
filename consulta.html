@@ -173,7 +173,43 @@ body {
     outline: none;
     font-size: 13px;
     color: var(--text);
-    transition: border-color .15s ease, box-shadow .15s ease;
+    transition: border-color .15s ease, box-shadow .15s ease;<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Consultar Servidores - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --red: #c62828;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
 }
 
 .search-box input:focus {
@@ -191,7 +227,7 @@ body {
 }
 
 /* =====================================================
-    TABELA
+    TABELA COM HOVER CINZA
 ===================================================== */
 .table-container {
     width: 100%;
@@ -219,8 +255,13 @@ td {
     color: #263238;
 }
 
+/* EFEITO CINZA AO PASSAR O MOUSE */
+tr {
+    transition: background-color 0.12s ease;
+}
+
 tr:hover td {
-    background: #fafafa;
+    background-color: #f1f3f5 !important;
 }
 
 .empty-state {
@@ -230,7 +271,73 @@ tr:hover td {
     font-size: 14px;
 }
 
-/* BOTÕES DE AÇÃO */
+/* =====================================================
+    RODAPÉ DA TABELA (PAGINAÇÃO)
+===================================================== */
+.table-footer {
+    padding: 16px 24px;
+    background: #fafbfc;
+    border-top: 1px solid #e5e8eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pagination-controls select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-page {
+    height: 36px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-page:hover:not(:disabled) {
+    background: #f1f3f5;
+    border-color: #b7c0c7;
+}
+
+.btn-page:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* BOTÃO VOLTAR */
 .btn-voltar {
     background: var(--primary);
     color: #fff;
@@ -265,7 +372,7 @@ tr:hover td {
         width: calc(100% - 24px);
         padding: 20px 0;
     }
-    .card-header {
+    .card-header, .table-footer {
         flex-direction: column;
         align-items: stretch;
     }
@@ -279,6 +386,7 @@ tr:hover td {
 
 <body>
 
+<!-- BARRA SUPERIOR -->
 <header class="topbar">
     <div class="topbar-content">
         <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
@@ -288,6 +396,7 @@ tr:hover td {
     </div>
 </header>
 
+<!-- CONTEÚDO -->
 <main class="main">
     <div class="page-header">
         <div class="breadcrumb">
@@ -300,11 +409,13 @@ tr:hover td {
         <p>Lista em tempo real de todos os servidores salvos na nuvem.</p>
     </div>
 
+    <!-- CARD DA TABELA -->
     <section class="card">
         <div class="card-header">
+            <!-- CAMPO DE BUSCA RÁPIDA -->
             <div class="search-box">
                 <span class="material-symbols-outlined">search</span>
-                <input type="text" id="filtroBusca" placeholder="Pesquisar por nome ou CPF..." oninput="filtrarServidores()">
+                <input type="text" id="filtroBusca" placeholder="Pesquisar por nome ou CPF..." oninput="aoDigitarBusca()">
             </div>
 
             <a href="servidores.html" class="btn-voltar">
@@ -331,14 +442,36 @@ tr:hover td {
                 </tbody>
             </table>
         </div>
+
+        <!-- RODAPÉ COM PAGINAÇÃO -->
+        <div class="table-footer">
+            <div id="infoPaginacao">Exibindo registros...</div>
+            
+            <div class="pagination-controls">
+                <label for="itensPorPagina">Itens por página:</label>
+                <select id="itensPorPagina" onchange="mudarItensPorPagina()">
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+
+                <div class="pagination-buttons">
+                    <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)" disabled>Anterior</button>
+                    <span id="paginaAtualSpan" style="padding: 0 6px; font-weight: 500;">Página 1</span>
+                    <button class="btn-page" id="btnProxima" onclick="mudarPagina(1)" disabled>Próxima</button>
+                </div>
+            </div>
+        </div>
     </section>
 </main>
 
+<!-- SCRIPT DE CONSULTA COM PAGINAÇÃO E TEMPO REAL -->
 <script type="module">
     import { db } from "./firebase.js";
     import { collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let listaGlobalServidores = [];
+    let listaFiltrada = [];
+    let paginaAtual = 1;
 
     document.addEventListener("DOMContentLoaded", function() {
         carregarServidoresTempoReal();
@@ -347,14 +480,13 @@ tr:hover td {
     function carregarServidoresTempoReal() {
         const q = query(collection(db, "servidores"), orderBy("dataCriacao", "desc"));
 
-        // onSnapshot escuta o banco em tempo real
         onSnapshot(q, (snapshot) => {
             listaGlobalServidores = [];
             snapshot.forEach((doc) => {
                 listaGlobalServidores.push({ id: doc.id, ...doc.data() });
             });
 
-            renderizarTabela(listaGlobalServidores);
+            aplicarFiltroEAtualizar();
         }, (error) => {
             console.error("Erro ao carregar dados: ", error);
             document.getElementById("tabelaServidores").innerHTML = `
@@ -363,16 +495,49 @@ tr:hover td {
         });
     }
 
-    function renderizarTabela(servidores) {
+    window.aoDigitarBusca = function() {
+        paginaAtual = 1; // Volta para a primeira página ao pesquisar
+        aplicarFiltroEAtualizar();
+    }
+
+    function aplicarFiltroEAtualizar() {
+        const termo = document.getElementById("filtroBusca").value.toLowerCase().trim();
+        
+        listaFiltrada = listaGlobalServidores.filter(serv => {
+            const nome = (serv.nome || "").toLowerCase();
+            const cpf = (serv.cpf || "").toLowerCase();
+            return nome.includes(termo) || cpf.includes(termo);
+        });
+
+        renderizarTabelaPaginada();
+    }
+
+    function renderizarTabelaPaginada() {
         const tbody = document.getElementById("tabelaServidores");
+        const itensPorPagina = parseInt(document.getElementById("itensPorPagina").value);
+        const totalRegistros = listaFiltrada.length;
+        const totalPaginas = Math.ceil(totalRegistros / itensPorPagina) || 1;
+
+        if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+        if (paginaAtual < 1) paginaAtual = 1;
+
+        // Fatiar a lista para a página atual
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const itensDaPagina = listaFiltrada.slice(inicio, fim);
+
         tbody.innerHTML = "";
 
-        if (servidores.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhum servidor cadastrado até o momento.</td></tr>`;
+        if (totalRegistros === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhum servidor encontrado.</td></tr>`;
+            document.getElementById("infoPaginacao").textContent = "Nenhum registro encontrado";
+            document.getElementById("paginaAtualSpan").textContent = "Página 1 de 1";
+            document.getElementById("btnAnterior").disabled = true;
+            document.getElementById("btnProxima").disabled = true;
             return;
         }
 
-        servidores.forEach(serv => {
+        itensDaPagina.forEach(serv => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td><strong>${serv.nome || ""}</strong></td>
@@ -383,19 +548,61 @@ tr:hover td {
             `;
             tbody.appendChild(tr);
         });
+
+        // Atualizar textos e botões de paginação
+        const inicioExibicao = inicio + 1;
+        const fimExibicao = Math.min(fim, totalRegistros);
+        document.getElementById("infoPaginacao").textContent = `Mostrando de ${inicioExibicao} até ${fimExibicao} de ${totalRegistros} registros`;
+        document.getElementById("paginaAtualSpan").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Consultar Servidores - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --red: #c62828;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+        document.getElementById("btnAnterior").disabled = paginaAtual === 1;
+        document.getElementById("btnProxima").disabled = paginaAtual === totalPaginas;
     }
 
-    // Função de filtro por busca (Nome ou CPF)
-    window.filtrarServidores = function() {
-        const termo = document.getElementById("filtroBusca").value.toLowerCase().trim();
-        
-        const filtrados = listaGlobalServidores.filter(serv => {
-            const nome = (serv.nome || "").toLowerCase();
-            const cpf = (serv.cpf || "").toLowerCase();
-            return nome.includes(termo) || cpf.includes(termo);
-        });
+    window.mudarPagina = function(direcao) {
+        paginaAtual += direcao;
+        renderizarTabelaPaginada();
+    }
 
-        renderizarTabela(filtrados);
+    window.mudarItensPorPagina = function() {
+        paginaAtual = 1;
+        renderizarTabelaPaginada();
     }
 </script>
 
