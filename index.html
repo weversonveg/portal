@@ -76,7 +76,6 @@ body {
 
 /* =====================================================
     BARRA SUPERIOR
-    MESMA LARGURA DO CONTEÚDO
 ===================================================== */
 
 .topbar {
@@ -417,30 +416,12 @@ body {
 
 
 /* =====================================================
-    AUTOFILL
-===================================================== */
-
-.form-group input:-webkit-autofill,
-.form-group input:-webkit-autofill:hover,
-.form-group input:-webkit-autofill:focus {
-
-    -webkit-text-fill-color: #263238 !important;
-
-    -webkit-box-shadow:
-        0 0 0 1000px var(--green-light) inset !important;
-
-    box-shadow:
-        0 0 0 1000px var(--green-light) inset !important;
-}
-
-
-/* =====================================================
-    DATAS
-    SOMENTE SELEÇÃO
+    DATAS - BLOQUEADAS PARA DIGITAÇÃO MANUAL
 ===================================================== */
 
 input[type="date"] {
     cursor: pointer;
+    background-color: #ffffff;
 }
 
 
@@ -886,7 +867,7 @@ button .material-symbols-outlined {
                     </div>
 
 
-                    <!-- DATA NASCIMENTO -->
+                    <!-- DATA NASCIMENTO (Bloqueada para digitação manual) -->
 
                     <div class="form-group">
 
@@ -899,12 +880,15 @@ button .material-symbols-outlined {
                             id="dataNascimento"
                             name="dataNascimento"
                             required
+                            onkeydown="return false;"
+                            onpaste="return false;"
+                            ondrop="return false;"
                         >
 
                     </div>
 
 
-                    <!-- DATA ADMISSÃO -->
+                    <!-- DATA ADMISSÃO (Bloqueada para digitação manual) -->
 
                     <div class="form-group">
 
@@ -917,6 +901,9 @@ button .material-symbols-outlined {
                             id="dataAdmissao"
                             name="dataAdmissao"
                             required
+                            onkeydown="return false;"
+                            onpaste="return false;"
+                            ondrop="return false;"
                         >
 
                     </div>
@@ -1138,11 +1125,8 @@ button .material-symbols-outlined {
     /* =====================================================
        SALVAR NO FIREBASE
     ===================================================== */
-   /* =====================================================
-       SALVAR NO FIREBASE
-    ===================================================== */
     window.salvarServidor = async function(event) {
-        event.preventDefault(); // <-- Impede o navegador de recarregar a página
+        event.preventDefault();
 
         const nome = document.getElementById("nome").value.trim();
         const cpf = document.getElementById("cpf").value.trim();
@@ -1185,13 +1169,15 @@ button .material-symbols-outlined {
                 dataCriacao: new Date().toISOString()
             });
 
-            // MOSTRA A MENSAGEM DE SUCESSO ANTES DE LIMPAR
+            // LIMPA OS CAMPOS DO FORMULÁRIO E TIRA A COR VERDE DOS INPUTS, MAS DEIXA A MENSAGEM VISÍVEL
+            document.getElementById("formServidor").reset();
+            const campos = document.querySelectorAll("#formServidor input");
+            campos.forEach(function(campo) {
+                campo.classList.remove("preenchido");
+            });
+
+            // MOSTRA A MENSAGEM DE SUCESSO DE FORMA FIXA NA TELA
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
-            
-            // Limpa o formulário após 500 milissegundos para dar tempo de ver a mensagem
-            setTimeout(() => {
-                cancelar();
-            }, 500);
 
         } catch (erro) {
             console.error("Erro ao salvar no Firebase: ", erro);
