@@ -1138,8 +1138,11 @@ button .material-symbols-outlined {
     /* =====================================================
        SALVAR NO FIREBASE
     ===================================================== */
+   /* =====================================================
+       SALVAR NO FIREBASE
+    ===================================================== */
     window.salvarServidor = async function(event) {
-        event.preventDefault();
+        event.preventDefault(); // <-- Impede o navegador de recarregar a página
 
         const nome = document.getElementById("nome").value.trim();
         const cpf = document.getElementById("cpf").value.trim();
@@ -1182,8 +1185,13 @@ button .material-symbols-outlined {
                 dataCriacao: new Date().toISOString()
             });
 
+            // MOSTRA A MENSAGEM DE SUCESSO ANTES DE LIMPAR
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
-            cancelar(); // Limpa o formulário após salvar
+            
+            // Limpa o formulário após 500 milissegundos para dar tempo de ver a mensagem
+            setTimeout(() => {
+                cancelar();
+            }, 500);
 
         } catch (erro) {
             console.error("Erro ao salvar no Firebase: ", erro);
