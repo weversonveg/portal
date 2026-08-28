@@ -1056,31 +1056,34 @@ button .material-symbols-outlined {
     /* =====================================================
        MONITORAMENTO DOS CAMPOS
     ===================================================== */
+  /* =====================================================
+       MONITORAMENTO DOS CAMPOS
+    ===================================================== */
     document.addEventListener("DOMContentLoaded", function() {
         const campos = document.querySelectorAll("#formServidor input");
 
         campos.forEach(function(campo) {
             campo.addEventListener("input", function() {
                 atualizarCorCampo(campo);
+                ocultarMensagem(); // <-- Some com a mensagem antiga assim que o usuário digita algo novo!
             });
 
             campo.addEventListener("change", function() {
                 atualizarCorCampo(campo);
+                ocultarMensagem(); // <-- Também limpa se usar o calendário nas datas
             });
-
-            campo.addEventListener("paste", function(event) {
-                if (campo.type === "date") {
-                    event.preventDefault();
-                    return;
-                }
-                setTimeout(function() {
-                    atualizarCorCampo(campo);
-                }, 10);
-            });
-
-            atualizarCorCampo(campo);
+            // ... (resto do código continua igual)
         });
     });
+
+    // Função auxiliar para esconder a mensagem
+    function ocultarMensagem() {
+        const mensagem = document.getElementById("mensagem");
+        if (mensagem.classList.contains("sucesso")) {
+            mensagem.className = "mensagem";
+            mensagem.textContent = "";
+        }
+    }
 
     /* =====================================================
        CPF
