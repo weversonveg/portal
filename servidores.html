@@ -11,7 +11,6 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<!-- Estilo moderno do calendário (Flatpickr) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
 
@@ -685,7 +684,7 @@ button .material-symbols-outlined {
 }
 
 
-    /* =====================================================
+/* =====================================================
     CAMPO COM ERRO (EX: CPF DUPLICADO)
 ===================================================== */
 .form-group input.erro-input {
@@ -705,10 +704,6 @@ button .material-symbols-outlined {
 
 <body>
 
-
-<!-- =====================================================
-     BARRA SUPERIOR
-===================================================== -->
 
 <header class="topbar">
 
@@ -734,10 +729,6 @@ button .material-symbols-outlined {
 
 </header>
 
-
-<!-- =====================================================
-     CONTEÚDO
-===================================================== -->
 
 <main class="main">
 
@@ -771,10 +762,6 @@ button .material-symbols-outlined {
     </div>
 
 
-    <!-- =================================================
-         CARD
-    ================================================ -->
-
     <section class="form-card">
 
 
@@ -804,10 +791,6 @@ button .material-symbols-outlined {
         </div>
 
 
-        <!-- =================================================
-             FORMULÁRIO
-        ================================================ -->
-
         <form
             class="form"
             id="formServidor"
@@ -819,8 +802,6 @@ button .material-symbols-outlined {
 
 
                 <div class="form-grid">
-
-                    <!-- NOME -->
 
                     <div class="form-group full">
 
@@ -839,8 +820,6 @@ button .material-symbols-outlined {
 
                     </div>
 
-
-                    <!-- CPF -->
 
                     <div class="form-group">
 
@@ -863,8 +842,6 @@ button .material-symbols-outlined {
                     </div>
 
 
-                    <!-- EMAIL -->
-
                     <div class="form-group">
 
                         <label for="email">
@@ -883,8 +860,6 @@ button .material-symbols-outlined {
                     </div>
 
 
-                    <!-- DATA NASCIMENTO -->
-
                     <div class="form-group">
 
                         <label for="dataNascimento">
@@ -900,8 +875,6 @@ button .material-symbols-outlined {
 
                     </div>
 
-
-                    <!-- DATA ADMISSÃO -->
 
                     <div class="form-group">
 
@@ -919,8 +892,6 @@ button .material-symbols-outlined {
                     </div>
 
 
-                    <!-- CARGO -->
-
                     <div class="form-group">
 
                         <label for="cargo">
@@ -937,8 +908,6 @@ button .material-symbols-outlined {
 
                     </div>
 
-
-                    <!-- TELEFONE -->
 
                     <div class="form-group">
 
@@ -966,19 +935,11 @@ button .material-symbols-outlined {
             </div>
 
 
-            <!-- =================================================
-                 MENSAGEM
-            ================================================ -->
-
             <div
                 id="mensagem"
                 class="mensagem"
             ></div>
 
-
-            <!-- =================================================
-                 RODAPÉ
-            ================================================ -->
 
             <div class="form-footer">
 
@@ -1045,11 +1006,9 @@ button .material-symbols-outlined {
 </main>
 
 
-<!-- Script do Flatpickr (Calendário Moderno) -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
-<!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
     // Importa a conexão central do nosso firebase.js e os módulos de consulta
     import { db } from "./firebase.js";
@@ -1086,9 +1045,13 @@ button .material-symbols-outlined {
     ===================================================== */
     window.atualizarCorCampo = function(campo) {
         if (campo.value && campo.value.trim() !== "") {
-            campo.classList.add("preenchido");
+            // Se estiver com erro de duplicidade, não sobrescreve com verde
+            if (!campo.classList.contains("erro-input")) {
+                campo.classList.add("preenchido");
+            }
         } else {
             campo.classList.remove("preenchido");
+            campo.classList.remove("erro-input");
         }
     }
 
@@ -1108,6 +1071,7 @@ button .material-symbols-outlined {
         }
 
         input.value = valor;
+        input.classList.remove("erro-input"); // Remove o vermelho ao digitar de novo
         atualizarCorCampo(input);
     }
 
@@ -1125,13 +1089,19 @@ button .material-symbols-outlined {
 
                 if (!querySnapshot.empty) {
                     mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+                    input.classList.remove("preenchido");
+                    input.classList.add("erro-input");
                     input.focus();
                 } else {
+                    input.classList.remove("erro-input");
+                    atualizarCorCampo(input);
                     ocultarMensagem();
                 }
             } catch (erro) {
                 console.error("Erro ao verificar CPF: ", erro);
             }
+        } else {
+            input.classList.remove("erro-input");
         }
     }
 
@@ -1204,7 +1174,11 @@ button .material-symbols-outlined {
 
             if (!querySnapshot.empty) {
                 mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
-                document.getElementById("cpf").focus();
+                const campoCpf = document.getElementById("cpf");
+                campoCpf.classList.remove("preenchido");
+                campoCpf.classList.add("erro-input");
+                campoCpf.focus();
+                
                 btnSalvar.disabled = false;
                 textoBotao.textContent = "Salvar";
                 iconeSalvar.textContent = "save";
@@ -1236,6 +1210,7 @@ button .material-symbols-outlined {
             const campos = document.querySelectorAll("#formServidor input");
             campos.forEach(function(campo) {
                 campo.classList.remove("preenchido");
+                campo.classList.remove("erro-input");
             });
 
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
@@ -1273,6 +1248,7 @@ button .material-symbols-outlined {
         const campos = document.querySelectorAll("#formServidor input");
         campos.forEach(function(campo) {
             campo.classList.remove("preenchido");
+            campo.classList.remove("erro-input");
         });
 
         ocultarMensagem();
