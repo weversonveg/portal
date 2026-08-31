@@ -411,6 +411,21 @@ body {
 
 
 /* =====================================================
+    CAMPO COM ERRO (EX: CPF DUPLICADO)
+===================================================== */
+.form-group input.erro-input {
+    background: #fff0f0 !important;
+    border-color: #c62828 !important;
+    color: #c62828 !important;
+}
+
+.form-group input.erro-input:focus {
+    border-color: #c62828 !important;
+    box-shadow: 0 0 0 3px rgba(198,40,40,.12) !important;
+}
+
+
+/* =====================================================
     PLACEHOLDER
 ===================================================== */
 
@@ -842,6 +857,7 @@ button .material-symbols-outlined {
                             inputmode="numeric"
                             required
                             oninput="formatarCPF(this)"
+                            onblur="verificarCpfDuplicado(this)"
                         >
 
                     </div>
@@ -1035,7 +1051,7 @@ button .material-symbols-outlined {
 
 <!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
-    // Importa a conexão central do nosso firebase.js e os módulos de consulta (query, where, getDocs)
+    // Importa a conexão central do nosso firebase.js e os módulos de consulta
     import { db } from "./firebase.js";
     import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -1070,9 +1086,12 @@ button .material-symbols-outlined {
     ===================================================== */
     window.atualizarCorCampo = function(campo) {
         if (campo.value && campo.value.trim() !== "") {
-            campo.classList.add("preenchido");
+            if (!campo.classList.contains("erro-input")) {
+                campo.classList.add("preenchido");
+            }
         } else {
             campo.classList.remove("preenchido");
+            campo.classList.remove("erro-input");
         }
     }
 
@@ -1092,7 +1111,38 @@ button .material-symbols-outlined {
         }
 
         input.value = valor;
+        input.classList.remove("erro-input");
         atualizarCorCampo(input);
+    }
+
+    /* =====================================================
+        VERIFICAÇÃO DE CPF JÁ CADASTRADO EM TEMPO REAL (AO SAIR DO CAMPO)
+    ===================================================== */
+    window.verificarCpfDuplicado = async function(input) {
+        const cpf = input.value.trim();
+        const cpfNumeros = cpf.replace(/\D/g, "");
+
+        if (cpfNumeros.length === 11) {
+            try {
+                const q = query(collection(db, "servidores"), where("cpf", "==", cpf));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+                    input.classList.remove("preenchido");
+                    input.classList.add("erro-input");
+                    input.focus();
+                } else {
+                    input.classList.remove("erro-input");
+                    atualizarCorCampo(input);
+                    ocultarMensagem();
+                }
+            } catch (erro) {
+                console.error("Erro ao verificar CPF: ", erro);
+            }
+        } else {
+            input.classList.remove("erro-input");
+        }
     }
 
     /* =====================================================
@@ -1165,7 +1215,11 @@ button .material-symbols-outlined {
 
             if (!querySnapshot.empty) {
                 mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
-                document.getElementById("cpf").focus();
+                const campoCpf = document.getElementById("cpf");
+                campoCpf.classList.remove("preenchido");
+                campoCpf.classList.add("erro-input");
+                campoCpf.focus();
+
                 btnSalvar.disabled = false;
                 textoBotao.textContent = "Salvar";
                 iconeSalvar.textContent = "save";
@@ -1198,6 +1252,7 @@ button .material-symbols-outlined {
             const campos = document.querySelectorAll("#formServidor input");
             campos.forEach(function(campo) {
                 campo.classList.remove("preenchido");
+                campo.classList.remove("erro-input");
             });
 
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
@@ -1235,6 +1290,7 @@ button .material-symbols-outlined {
         const campos = document.querySelectorAll("#formServidor input");
         campos.forEach(function(campo) {
             campo.classList.remove("preenchido");
+            campo.classList.remove("erro-input");
         });
 
         ocultarMensagem();
