@@ -1,7 +1,6 @@
-
 // Importa as funções do Firebase direto da nuvem do Google
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Sua configuração oficial do Firebase
 const firebaseConfig = {
@@ -15,7 +14,14 @@ const firebaseConfig = {
 
 // Inicializa o Firebase e o Firestore
 const app = initializeApp(firebaseConfig);
-
-// Exporta o 'db' pronto para as outras páginas usarem
 export const db = getFirestore(app);
-        
+
+// Ativa a persistência offline via cache local (IndexedDB)
+enableIndexedDbPersistence(db)
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn("Persistência offline falhou: Múltiplas abas abertas ao mesmo tempo.");
+    } else if (err.code === 'unimplemented') {
+      console.warn("O navegador atual não suporta recursos de persistência offline.");
+    }
+  });
