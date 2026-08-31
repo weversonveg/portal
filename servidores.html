@@ -827,23 +827,25 @@ button .material-symbols-outlined {
 
                     <!-- CPF -->
 
-                 <!-- CPF -->
-<div class="form-group">
-    <label for="cpf">
-        CPF <span>*</span>
-    </label>
-    <input
-        type="text"
-        id="cpf"
-        name="cpf"
-        placeholder="000.000.000-00"
-        maxlength="14"
-        inputmode="numeric"
-        required
-        oninput="formatarCPF(this)"
-        onblur="verificarCpfDuplicado(this)"
-    >
-</div>
+                    <div class="form-group">
+
+                        <label for="cpf">
+                            CPF <span>*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cpf"
+                            name="cpf"
+                            placeholder="000.000.000-00"
+                            maxlength="14"
+                            inputmode="numeric"
+                            required
+                            oninput="formatarCPF(this)"
+                            onblur="verificarCpfDuplicado(this)"
+                        >
+
+                    </div>
 
 
                     <!-- EMAIL -->
@@ -1034,7 +1036,7 @@ button .material-symbols-outlined {
 
 <!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
-    // Importa a conexão central do nosso firebase.js e os módulos de consulta (query, where, getDocs)
+    // Importa a conexão central do nosso firebase.js e os módulos de consulta
     import { db } from "./firebase.js";
     import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -1095,6 +1097,30 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
+        VERIFICAÇÃO DE CPF JÁ CADASTRADO EM TEMPO REAL (AO SAIR DO CAMPO)
+    ===================================================== */
+    window.verificarCpfDuplicado = async function(input) {
+        const cpf = input.value.trim();
+        const cpfNumeros = cpf.replace(/\D/g, "");
+
+        if (cpfNumeros.length === 11) {
+            try {
+                const q = query(collection(db, "servidores"), where("cpf", "==", cpf));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+                    input.focus();
+                } else {
+                    ocultarMensagem();
+                }
+            } catch (erro) {
+                console.error("Erro ao verificar CPF: ", erro);
+            }
+        }
+    }
+
+    /* =====================================================
         TELEFONE
     ===================================================== */
     window.formatarTelefone = function(input) {
@@ -1116,7 +1142,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        SALVAR NO FIREBASE COM VERIFICAÇÃO DE CPF DUPLICADO
+        SALVAR NO FIREBASE
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
@@ -1158,7 +1184,6 @@ button .material-symbols-outlined {
         iconeSalvar.textContent = "sync";
 
         try {
-            // 1. Verifica se já existe um servidor cadastrado com este CPF
             const q = query(collection(db, "servidores"), where("cpf", "==", cpf));
             const querySnapshot = await getDocs(q);
 
@@ -1168,12 +1193,11 @@ button .material-symbols-outlined {
                 btnSalvar.disabled = false;
                 textoBotao.textContent = "Salvar";
                 iconeSalvar.textContent = "save";
-                return; // Interrompe o salvamento
+                return;
             }
 
             textoBotao.textContent = "Salvando...";
 
-            // 2. Se não existir, prossegue com o cadastro
             await addDoc(collection(db, "servidores"), {
                 nome: nome,
                 cpf: cpf,
