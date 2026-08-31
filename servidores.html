@@ -758,7 +758,7 @@ button .material-symbols-outlined {
 
     <!-- =================================================
          CARD
-    ================================================= -->
+    ================================================ -->
 
     <section class="form-card">
 
@@ -791,7 +791,7 @@ button .material-symbols-outlined {
 
         <!-- =================================================
              FORMULÁRIO
-        ================================================= -->
+        ================================================ -->
 
         <form
             class="form"
@@ -804,7 +804,6 @@ button .material-symbols-outlined {
 
 
                 <div class="form-grid">
-
 
                     <!-- NOME -->
 
@@ -953,7 +952,7 @@ button .material-symbols-outlined {
 
             <!-- =================================================
                  MENSAGEM
-            ================================================= -->
+            ================================================ -->
 
             <div
                 id="mensagem"
@@ -963,7 +962,7 @@ button .material-symbols-outlined {
 
             <!-- =================================================
                  RODAPÉ
-            ================================================= -->
+            ================================================ -->
 
             <div class="form-footer">
 
@@ -992,9 +991,7 @@ button .material-symbols-outlined {
                         Importar CSV
 
                     </button>
-
                     
-
 
                     <button
                         type="submit"
@@ -1038,12 +1035,12 @@ button .material-symbols-outlined {
 
 <!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
-    // Importa a conexão central do nosso firebase.js
+    // Importa a conexão central do nosso firebase.js e os módulos de consulta (query, where, getDocs)
     import { db } from "./firebase.js";
-    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     /* =====================================================
-       INICIALIZAÇÃO DO CALENDAR FLATPICKR
+        INICIALIZAÇÃO DO CALENDAR FLATPICKR
     ===================================================== */
     document.addEventListener("DOMContentLoaded", function() {
         flatpickr("input[type='date']", {
@@ -1069,7 +1066,7 @@ button .material-symbols-outlined {
     });
 
     /* =====================================================
-       CAMPOS PREENCHIDOS
+        CAMPOS PREENCHIDOS
     ===================================================== */
     window.atualizarCorCampo = function(campo) {
         if (campo.value && campo.value.trim() !== "") {
@@ -1080,7 +1077,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       CPF
+        CPF
     ===================================================== */
     window.formatarCPF = function(input) {
         let valor = input.value.replace(/\D/g, "");
@@ -1099,7 +1096,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       TELEFONE
+        TELEFONE
     ===================================================== */
     window.formatarTelefone = function(input) {
         let valor = input.value.replace(/\D/g, "");
@@ -1120,7 +1117,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       SALVAR NO FIREBASE COM FEEDBACK DE REDE
+        SALVAR NO FIREBASE COM VERIFICAÇÃO DE CPF DUPLICADO
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
@@ -1158,10 +1155,26 @@ button .material-symbols-outlined {
         const iconeSalvar = document.getElementById("iconeSalvar");
 
         btnSalvar.disabled = true;
-        textoBotao.textContent = "Salvando...";
+        textoBotao.textContent = "Verificando...";
         iconeSalvar.textContent = "sync";
 
         try {
+            // 1. Verifica se já existe um servidor cadastrado com este CPF
+            const q = query(collection(db, "servidores"), where("cpf", "==", cpf));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
+                document.getElementById("cpf").focus();
+                btnSalvar.disabled = false;
+                textoBotao.textContent = "Salvar";
+                iconeSalvar.textContent = "save";
+                return; // Interrompe o salvamento
+            }
+
+            textoBotao.textContent = "Salvando...";
+
+            // 2. Se não existir, prossegue com o cadastro
             await addDoc(collection(db, "servidores"), {
                 nome: nome,
                 cpf: cpf,
@@ -1200,14 +1213,14 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       IMPORTAR CSV
+        IMPORTAR CSV
     ===================================================== */
     window.importarCSV = function() {
         alert("Função de importação CSV será implementada.");
     }
 
     /* =====================================================
-       CANCELAR / LIMPAR
+        CANCELAR / LIMPAR
     ===================================================== */
     window.cancelar = function() {
         document.getElementById("formServidor").reset();
@@ -1228,7 +1241,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       MENSAGEM
+        MENSAGEM
     ===================================================== */
     window.mostrarMensagem = function(texto, tipo) {
         const mensagem = document.getElementById("mensagem");
