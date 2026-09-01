@@ -156,48 +156,78 @@ body {
 
 
 /* =====================================================
-    INDICADOR DE STATUS ONLINE/OFFLINE
+    INDICADOR DE SINAL DE REDE (ESTILO WI-FI/CELULAR)
 ===================================================== */
 .status-conexao {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
     font-weight: 600;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     background: #f1f3f5;
     border: 1px solid #e2e8f0;
     transition: all 0.3s ease;
 }
 
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    transition: background 0.3s ease;
+/* Container das barrinhas */
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
 }
 
-/* Estado Online */
+/* Estilo de cada barra individual */
+.signal-bars .bar {
+    width: 3px;
+    background-color: #cbd5e1;
+    border-radius: 1px;
+    transition: background-color 0.3s ease;
+}
+
+/* Alturas progressivas para formar o ícone de sinal */
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+/* Estado Online / Conectado (Todas as barras acesas em Verde) */
 .status-conexao.online {
     color: #2e7d32;
     background: #edf7ee;
     border-color: #c8e6c9;
 }
-.status-conexao.online .status-dot {
-    background: #2e7d32;
-    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+.status-conexao.online .signal-bars .bar {
+    background-color: #2e7d32;
 }
 
-/* Estado Offline */
+/* Estado de Rede Lenta / Instável (Ex: 3G - Apenas 2 barras acesas) */
+.status-conexao.instavel {
+    color: #b45309;
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+.status-conexao.instavel .signal-bars .bar-1,
+.status-conexao.instavel .signal-bars .bar-2 {
+    background-color: #d97706;
+}
+
+/* Estado Offline / Sem Conexão (Barrinhas vermelhas animadas) */
 .status-conexao.offline {
     color: #c62828;
     background: #fff0f0;
     border-color: #efc5c5;
 }
-.status-conexao.offline .status-dot {
-    background: #c62828;
-    box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+.status-conexao.offline .signal-bars .bar {
+    background-color: #ef4444;
+    animation: pulsar-sinal 1.2s infinite ease-in-out;
+}
+
+@keyframes pulsar-sinal {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
 }
 
 
@@ -777,9 +807,14 @@ button .material-symbols-outlined {
            Semed-Recursos Humanos-Gestão de Benefícios
         </span>
 
-        <!-- INDICADOR DE STATUS ONLINE/OFFLINE -->
-        <div id="statusConexao" class="status-conexao online">
-            <span class="status-dot"></span>
+        <!-- INDICADOR DE SINAL DE REDE (ESTÉTICO E DINÂMICO) -->
+        <div id="statusConexao" class="status-conexao online" title="Conexão estável">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
             <span id="statusTexto">Online</span>
         </div>
 
@@ -1109,23 +1144,44 @@ button .material-symbols-outlined {
     import { collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     /* =====================================================
-       MONITOR DE CONEXÃO (ONLINE / OFFLINE)
+       MONITOR DE CONEXÃO INTELIGENTE COM BARRINHAS
     ===================================================== */
     function atualizarStatusConexao() {
         const statusDiv = document.getElementById("statusConexao");
         const statusTexto = document.getElementById("statusTexto");
 
-        if (navigator.onLine) {
-            statusDiv.className = "status-conexao online";
-            statusTexto.textContent = "Online";
-        } else {
+        if (!navigator.onLine) {
             statusDiv.className = "status-conexao offline";
             statusTexto.textContent = "Sem Conexão";
+            statusDiv.title = "Computador desconectado da internet";
+            return;
+        }
+
+        const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        
+        if (conexao) {
+            if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
+                statusDiv.className = "status-conexao instavel";
+                statusTexto.textContent = "Instável";
+                statusDiv.title = "Rede móvel ou conexão lenta detectada";
+            } else {
+                statusDiv.className = "status-conexao online";
+                statusTexto.textContent = "Online";
+                statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
+            }
+        } else {
+            statusDiv.className = "status-conexao online";
+            statusTexto.textContent = "Online";
+            statusDiv.title = "Sistema Conectado";
         }
     }
 
     window.addEventListener('online', atualizarStatusConexao);
     window.addEventListener('offline', atualizarStatusConexao);
+
+    if (navigator.connection) {
+        navigator.connection.addEventListener('change', atualizarStatusConexao);
+    }
 
     /* =====================================================
        CACHE LOCAL DE CPFs (ZERO LEITURAS NA VALIDAÇÃO)
