@@ -27,3 +27,36 @@ CRONOGRAMA OFICIAL - SISTEMA VALE TRANSPORTE
    [ ] 4.3 Desenvolvimento do módulo de Linha do Tempo (Histórico do Servidor).
 =====================================================
 Estamos retomando o projeto. Nosso último ponto concluído foi o item X.X."
+
+
+
+
+=====================================================================
+ESTRUTURA DEFINITIVA DO SISTEMA E FORMULÁRIO DE SERVIDORES (SEMED)
+=====================================================================
+
+1. DOCUMENTO PRINCIPAL (Dados Pessoais e Fixos)
+   - Nome completo
+   - CPF (com validação em tempo real e máscara)
+   - E-mail
+   - Data de Nascimento
+   - Telefone
+   - Endereço residencial completo
+
+2. SUBCOLEÇÃO / DADOS DINÂMICOS, VÍNCULOS E BENEFÍCIOS (Por Servidor)
+   - Matrícula Principal e botão dinâmico para "Adicionar segunda matrícula" (suporte a acúmulo de cargos)
+   - Tipo de Vínculo: [Efetivo | Contratado | Comissionado | Estagiário | Terceirizado]
+   - Lotação: Select fixo no HTML contendo a SEMED, Cemed e as 50 escolas da rede
+   - Vale-Transporte: Necessidade (Sim/Não), seleção de empresas/linhas baseadas nas tarifas cadastradas, com cálculo automático de passagens e valores unitários
+   - Vale-Refeição: [Sim / Não]
+
+3. MÓDULO DE GESTÃO DE EMPRESAS DE ÔNIBUS (Painel Administrativo)
+   - Nova Página / Tela "Empresas": Interface exclusiva para a Secretaria Central cadastrar, editar e excluir as empresas de transporte, suas respectivas linhas e os valores unitários das passagens.
+   - Subcoleção / Coleção no Firestore ("empresas_tarifas"): Banco de dados dedicado onde ficam armazenados de forma centralizada os registros de cada empresa e seus respectivos custos por passagem, permitindo atualização global imediata sempre que houver reajuste tarifário.
+
+4. DIRETRIZES DE OTIMIZAÇÃO E ARQUITETURA DE CUSTOS
+   - Escolas da Rede: Hardcoded diretamente no código HTML para garantir custo zero de leitura no Firestore, carregamento instantâneo e manutenção simples via código caso ocorra alguma alteração na rede municipal.
+   - Empresas de Ônibus e Tarifas: Gerenciadas a partir da nova coleção/página dedicada, carregadas de forma otimizada (via cache local ou array controlado) para permitir que a Secretaria Central atualize valores facilmente sem comprometer o orçamento de leituras do banco de dados.
+====================================================================
+
+
