@@ -1141,7 +1141,7 @@ button .material-symbols-outlined {
 <script type="module">
     // Importa a conexão central do nosso firebase.js e os módulos de consulta
     import { db } from "./firebase.js";
-    import { collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, addDoc, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     /* =====================================================
        MONITOR DE CONEXÃO INTELIGENTE COM BARRINHAS
@@ -1184,47 +1184,10 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       CACHE LOCAL INTELIGENTE COM SESSIONSTORAGE (ZERO LEITURAS REPETIDAS)
-    ===================================================== */
-    let cpfsCadastradosCache = new Set();
-
-    async function carregarCacheCPFs() {
-        try {
-            // Tenta recuperar o cache da sessão atual do navegador primeiro
-            const cacheSalvo = sessionStorage.getItem("cpfs_cache_semed");
-            
-            if (cacheSalvo) {
-                const listaCPFs = JSON.parse(cacheSalvo);
-                cpfsCadastradosCache = new Set(listaCPFs);
-                return;
-            }
-
-            // Se não existe na sessão, busca no Firebase (Acontece apenas 1 vez por sessão)
-            const querySnapshot = await getDocs(collection(db, "servidores"));
-            cpfsCadastradosCache.clear();
-            
-            querySnapshot.forEach((doc) => {
-                const dados = doc.data();
-                if (dados.cpf) {
-                    const cpfLimpo = dados.cpf.replace(/\D/g, "");
-                    cpfsCadastradosCache.add(cpfLimpo);
-                }
-            });
-
-            // Salva na sessionStorage para zerar os custos ao recarregar a página
-            sessionStorage.setItem("cpfs_cache_semed", JSON.stringify([...cpfsCadastradosCache]));
-
-        } catch (erro) {
-            console.error("Erro ao carregar cache de CPFs:", erro);
-        }
-    }
-
-    /* =====================================================
         INICIALIZAÇÃO DO CALENDAR FLATPICKR
     ===================================================== */
     document.addEventListener("DOMContentLoaded", function() {
         atualizarStatusConexao();
-        carregarCacheCPFs();
 
         flatpickr("input[type='date']", {
             locale: "pt",
@@ -1283,22 +1246,30 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        VERIFICAÇÃO DE CPF JÁ CADASTRADO (USANDO CACHE LOCAL)
+        VERIFICAÇÃO DE CPF PONTUAL (GASTA APENAS 1 LEITURA NO BANCO)
     ===================================================== */
-    window.verificarCpfDuplicado = function(input) {
+    window.verificarCpfDuplicado = async function(input) {
         const cpf = input.value.trim();
         const cpfNumeros = cpf.replace(/\D/g, "");
 
         if (cpfNumeros.length === 11) {
-            if (cpfsCadastradosCache.has(cpfNumeros)) {
-                mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
-                input.classList.remove("preenchido");
-                input.classList.add("erro-input");
-                input.focus();
-            } else {
-                input.classList.remove("erro-input");
-                atualizarCorCampo(input);
-                ocultarMensagem();
+            try {
+                // Consulta pontual e cirúrgica: traz no máximo 1 documento correspondente ao CPF
+                const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+                    input.classList.remove("preenchido");
+                    input.classList.add("erro-input");
+                    input.focus();
+                } else {
+                    input.classList.remove("erro-input");
+                    atualizarCorCampo(input);
+                    ocultarMensagem();
+                }
+            } catch (erro) {
+                console.error("Erro ao verificar CPF no Firebase:", erro);
             }
         } else {
             input.classList.remove("erro-input");
@@ -1327,7 +1298,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        SALVAR NO FIREBASE COM CACHE DE CPF
+        SALVAR NO FIREBASE COM VALIDAÇÃO PONTUAL
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
@@ -1360,13 +1331,22 @@ button .material-symbols-outlined {
             return;
         }
 
-        // Validação imediata usando o cache local (Zero leituras extras)
-        if (cpfsCadastradosCache.has(cpfNumeros)) {
-            mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
-            const campoCpf = document.getElementById("cpf");
-            campoCpf.classList.remove("preenchido");
-            campoCpf.classList.add("erro-input");
-            campoCpf.focus();
+        // Validação dupla de segurança no momento de salvar (pesquisa pontual de 1 leitura)
+        try {
+            const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
+                const campoCpf = document.getElementById("cpf");
+                campoCpf.classList.remove("preenchido");
+                campoCpf.classList.add("erro-input");
+                campoCpf.focus();
+                return;
+            }
+        } catch (erro) {
+            console.error("Erro ao validar CPF duplicado antes de salvar:", erro);
+            mostrarMensagem("Erro ao verificar duplicidade. Verifique sua conexão.", "erro");
             return;
         }
 
@@ -1389,10 +1369,6 @@ button .material-symbols-outlined {
                 telefone: telefone,
                 dataCriacao: new Date().toISOString()
             });
-
-            // Atualiza o cache local e sincroniza a sessão do navegador
-            cpfsCadastradosCache.add(cpfNumeros);
-            sessionStorage.setItem("cpfs_cache_semed", JSON.stringify([...cpfsCadastradosCache]));
 
             document.getElementById("formServidor").reset();
             
