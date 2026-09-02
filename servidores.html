@@ -394,6 +394,18 @@ body {
     gap: 22px 24px;
 }
 
+/* Divisor de Sessão dentro do Form */
+.form-section-title {
+    grid-column: 1 / -1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #37474f;
+    margin-top: 12px;
+    margin-bottom: -6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e8eb;
+}
+
 
 .form-group {
     display: flex;
@@ -453,16 +465,23 @@ body {
 }
 
 
-.form-group input:hover {
+.form-group input:hover:not([readonly]) {
     border-color: #b7c0c7;
 }
 
 
-.form-group input:focus {
+.form-group input:focus:not([readonly]) {
     border-color: var(--primary);
 
     box-shadow:
         0 0 0 3px rgba(91,42,134,.10);
+}
+
+/* Campos bloqueados visualmente (Read-only) */
+.form-group input[readonly] {
+    background-color: #f8f9fa;
+    color: #68737d;
+    cursor: not-allowed;
 }
 
 
@@ -479,7 +498,7 @@ body {
 }
 
 
-.form-group input.preenchido:focus {
+.form-group input.preenchido:focus:not([readonly]) {
     border-color: var(--green) !important;
 
     box-shadow:
@@ -908,6 +927,8 @@ button .material-symbols-outlined {
 
                 <div class="form-grid">
 
+                    <div class="form-section-title">Dados Pessoais e Funcionais</div>
+
                     <!-- NOME -->
 
                     <div class="form-group full">
@@ -1046,6 +1067,118 @@ button .material-symbols-outlined {
                             oninput="formatarTelefone(this)"
                         >
 
+                    </div>
+
+
+                    <!-- =================================================
+                         BLOCO DE ENDEREÇO
+                    ================================================ -->
+
+                    <div class="form-section-title">Endereço Residencial</div>
+
+                    <!-- CEP -->
+                    <div class="form-group">
+                        <label for="cep">
+                            CEP <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="cep"
+                            name="cep"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            inputmode="numeric"
+                            required
+                            oninput="formatarCEP(this)"
+                            onblur="buscarCEP(this)"
+                        >
+                    </div>
+
+                    <!-- BAIRRO -->
+                    <div class="form-group">
+                        <label for="bairro">
+                            Bairro <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="bairro"
+                            name="bairro"
+                            placeholder="Digite o bairro"
+                            required
+                        >
+                    </div>
+
+                    <!-- RUA / LOGRADOURO -->
+                    <div class="form-group full">
+                        <label for="logradouro">
+                            Logradouro (Rua, Av.) <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="logradouro"
+                            name="logradouro"
+                            placeholder="Digite o logradouro"
+                            required
+                        >
+                    </div>
+
+                    <!-- NÚMERO -->
+                    <div class="form-group">
+                        <label for="numero">
+                            Número <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="numero"
+                            name="numero"
+                            placeholder="Ex: 123, S/N"
+                            required
+                        >
+                    </div>
+
+                    <!-- COMPLEMENTO -->
+                    <div class="form-group">
+                        <label for="complemento">
+                            Complemento
+                        </label>
+                        <input
+                            type="text"
+                            id="complemento"
+                            name="complemento"
+                            placeholder="Apto, Bloco, etc."
+                        >
+                    </div>
+
+                    <!-- CIDADE -->
+                    <div class="form-group">
+                        <label for="cidade">
+                            Cidade <span>*</span>
+                        </label>
+                        <!-- readonly impede que o operador altere a cidade gerada pelo CEP -->
+                        <input
+                            type="text"
+                            id="cidade"
+                            name="cidade"
+                            placeholder="Digite a cidade"
+                            required
+                            readonly
+                        >
+                    </div>
+
+                    <!-- UF -->
+                    <div class="form-group">
+                        <label for="uf">
+                            UF <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="uf"
+                            name="uf"
+                            placeholder="Ex: MG"
+                            maxlength="2"
+                            required
+                            readonly
+                        >
                     </div>
 
 
@@ -1254,7 +1387,6 @@ button .material-symbols-outlined {
 
         if (cpfNumeros.length === 11) {
             try {
-                // Consulta pontual e cirúrgica: traz no máximo 1 documento correspondente ao CPF
                 const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
                 const querySnapshot = await getDocs(q);
 
@@ -1298,11 +1430,69 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
+        CEP - VIA CEP INTEGRAÇÃO
+    ===================================================== */
+    window.formatarCEP = function(input) {
+        let valor = input.value.replace(/\D/g, "");
+        valor = valor.substring(0, 8);
+        if (valor.length > 5) {
+            valor = valor.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
+        }
+        input.value = valor;
+        input.classList.remove("erro-input");
+        atualizarCorCampo(input);
+    }
+
+    window.buscarCEP = async function(input) {
+        let cep = input.value.replace(/\D/g, "");
+        
+        if (cep.length === 8) {
+            try {
+                input.disabled = true; // Impede digitação enquanto busca
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (!data.erro) {
+                    // Preenche os campos
+                    document.getElementById("logradouro").value = data.logradouro;
+                    document.getElementById("bairro").value = data.bairro;
+                    document.getElementById("cidade").value = data.localidade;
+                    document.getElementById("uf").value = data.uf;
+                    
+                    // Coloca eles verdes (preenchidos)
+                    atualizarCorCampo(document.getElementById("logradouro"));
+                    atualizarCorCampo(document.getElementById("bairro"));
+                    atualizarCorCampo(document.getElementById("cidade"));
+                    atualizarCorCampo(document.getElementById("uf"));
+
+                    input.classList.remove("erro-input");
+                    
+                    // Pula o foco do mouse direto para o "Número"
+                    document.getElementById("numero").focus(); 
+                    ocultarMensagem();
+                } else {
+                    mostrarMensagem("CEP não encontrado.", "erro");
+                    input.classList.add("erro-input");
+                }
+            } catch (error) {
+                console.error("Erro ao buscar CEP:", error);
+                mostrarMensagem("Erro ao consultar o CEP. Verifique sua internet.", "erro");
+            } finally {
+                input.disabled = false;
+            }
+        } else if(cep.length > 0) {
+            input.classList.add("erro-input");
+        }
+    }
+
+
+    /* =====================================================
         SALVAR NO FIREBASE COM VALIDAÇÃO PONTUAL
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
 
+        // Dados Pessoais
         const nome = document.getElementById("nome").value.trim();
         const cpf = document.getElementById("cpf").value.trim();
         const email = document.getElementById("email").value.trim();
@@ -1311,10 +1501,19 @@ button .material-symbols-outlined {
         const cargo = document.getElementById("cargo").value.trim();
         const telefone = document.getElementById("telefone").value.trim();
 
+        // Dados de Endereço
+        const cep = document.getElementById("cep").value.trim();
+        const bairro = document.getElementById("bairro").value.trim();
+        const logradouro = document.getElementById("logradouro").value.trim();
+        const numero = document.getElementById("numero").value.trim();
+        const complemento = document.getElementById("complemento").value.trim();
+        const cidade = document.getElementById("cidade").value.trim();
+        const uf = document.getElementById("uf").value.trim();
+
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
 
-        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !cargo || !telefone) {
+        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !cargo || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf) {
             mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
             return;
         }
@@ -1331,7 +1530,6 @@ button .material-symbols-outlined {
             return;
         }
 
-        // Validação dupla de segurança no momento de salvar (pesquisa pontual de 1 leitura)
         try {
             const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
             const querySnapshot = await getDocs(q);
@@ -1360,6 +1558,7 @@ button .material-symbols-outlined {
 
         try {
             await addDoc(collection(db, "servidores"), {
+                // Pessoais
                 nome: nome,
                 cpf: cpf,
                 email: email,
@@ -1367,6 +1566,15 @@ button .material-symbols-outlined {
                 dataAdmissao: dataAdmissao,
                 cargo: cargo,
                 telefone: telefone,
+                // Endereço
+                cep: cep,
+                bairro: bairro,
+                logradouro: logradouro,
+                numero: numero,
+                complemento: complemento,
+                cidade: cidade,
+                uf: uf,
+                // Sistema
                 dataCriacao: new Date().toISOString()
             });
 
