@@ -1184,14 +1184,25 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-       CACHE LOCAL DE CPFs (ZERO LEITURAS NA VALIDAÇÃO)
+       CACHE LOCAL INTELIGENTE COM SESSIONSTORAGE (ZERO LEITURAS REPETIDAS)
     ===================================================== */
     let cpfsCadastradosCache = new Set();
 
     async function carregarCacheCPFs() {
         try {
+            // Tenta recuperar o cache da sessão atual do navegador primeiro
+            const cacheSalvo = sessionStorage.getItem("cpfs_cache_semed");
+            
+            if (cacheSalvo) {
+                const listaCPFs = JSON.parse(cacheSalvo);
+                cpfsCadastradosCache = new Set(listaCPFs);
+                return;
+            }
+
+            // Se não existe na sessão, busca no Firebase (Acontece apenas 1 vez por sessão)
             const querySnapshot = await getDocs(collection(db, "servidores"));
             cpfsCadastradosCache.clear();
+            
             querySnapshot.forEach((doc) => {
                 const dados = doc.data();
                 if (dados.cpf) {
@@ -1199,6 +1210,10 @@ button .material-symbols-outlined {
                     cpfsCadastradosCache.add(cpfLimpo);
                 }
             });
+
+            // Salva na sessionStorage para zerar os custos ao recarregar a página
+            sessionStorage.setItem("cpfs_cache_semed", JSON.stringify([...cpfsCadastradosCache]));
+
         } catch (erro) {
             console.error("Erro ao carregar cache de CPFs:", erro);
         }
@@ -1375,8 +1390,9 @@ button .material-symbols-outlined {
                 dataCriacao: new Date().toISOString()
             });
 
-            // Atualiza o cache local adicionando o novo CPF salvo
+            // Atualiza o cache local e sincroniza a sessão do navegador
             cpfsCadastradosCache.add(cpfNumeros);
+            sessionStorage.setItem("cpfs_cache_semed", JSON.stringify([...cpfsCadastradosCache]));
 
             document.getElementById("formServidor").reset();
             
