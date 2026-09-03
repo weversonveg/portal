@@ -436,6 +436,45 @@ body {
 
 
 /* =====================================================
+    CAIXA DE RESUMO DE TOTAIS (ESTILO DASHBOARD)
+===================================================== */
+.resumo-beneficios {
+    grid-column: 1 / -1;
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.resumo-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.resumo-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.resumo-valor {
+    font-size: 16px;
+    font-weight: 700;
+    color: #37474f;
+}
+
+.resumo-valor.total-geral {
+    color: var(--primary);
+    font-size: 18px;
+}
+
+
+/* =====================================================
     CAMPOS (INPUTS E SELECTS)
 ===================================================== */
 
@@ -789,6 +828,10 @@ button .material-symbols-outlined {
 
     .footer-buttons button {
         width: 100%;
+    }
+
+    .resumo-beneficios {
+        grid-template-columns: 1fr;
     }
 
 }
@@ -1178,7 +1221,7 @@ button .material-symbols-outlined {
 
 
                     <!-- =================================================
-                         BLOCO DE BENEFÍCIOS (EMPRESAS E TARIFAS)
+                         BLOCO DE BENEFÍCIOS (EMPRESAS, VALE-EXTRA E TOTAIS)
                     ================================================ -->
 
                     <div class="form-section-title">Controle de Vale Transporte e Benefícios</div>
@@ -1188,7 +1231,7 @@ button .material-symbols-outlined {
                         <label for="empresa1">
                             Empresa / Concessionária 1 <span>*</span>
                         </label>
-                        <select id="empresa1" name="empresa1" required onchange="atualizarTarifa(1)">
+                        <select id="empresa1" name="empresa1" required onchange="calcularTotais()">
                             <option value="">Selecione a empresa</option>
                             <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
                             <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
@@ -1210,7 +1253,7 @@ button .material-symbols-outlined {
                             min="0"
                             inputmode="numeric"
                             required
-                            oninput="atualizarCorCampo(this)"
+                            oninput="atualizarCorCampo(this); calcularTotais();"
                         >
                     </div>
 
@@ -1219,7 +1262,7 @@ button .material-symbols-outlined {
                         <label for="empresa2">
                             Empresa / Concessionária 2 (Opcional)
                         </label>
-                        <select id="empresa2" name="empresa2" onchange="atualizarTarifa(2)">
+                        <select id="empresa2" name="empresa2" onchange="calcularTotais()">
                             <option value="">Nenhuma / Apenas 1 empresa</option>
                             <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
                             <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
@@ -1240,8 +1283,40 @@ button .material-symbols-outlined {
                             placeholder="Ex: 22"
                             min="0"
                             inputmode="numeric"
-                            oninput="atualizarCorCampo(this)"
+                            oninput="atualizarCorCampo(this); calcularTotais();"
                         >
+                    </div>
+
+                    <!-- VALE-EXTRA -->
+                    <div class="form-group full">
+                        <label for="valeExtra">
+                            Valor Vale-Extra (R$) (Opcional)
+                        </label>
+                        <input
+                            type="number"
+                            id="valeExtra"
+                            name="valeExtra"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                            oninput="atualizarCorCampo(this); calcularTotais();"
+                        >
+                    </div>
+
+                    <!-- CAIXA DE RESUMO / TOTAIS -->
+                    <div class="resumo-beneficios">
+                        <div class="resumo-item">
+                            <span class="resumo-label">Subtotal Transporte 1</span>
+                            <span id="lblSubtotal1" class="resumo-valor">R$ 0,00</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Subtotal Transporte 2</span>
+                            <span id="lblSubtotal2" class="resumo-valor">R$ 0,00</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Valor Total Geral</span>
+                            <span id="lblTotalGeral" class="resumo-valor total-geral">R$ 0,00</span>
+                        </div>
                     </div>
 
 
@@ -1410,6 +1485,8 @@ button .material-symbols-outlined {
 
             atualizarCorCampo(campo);
         });
+
+        calcularTotais();
     });
 
     /* =====================================================
@@ -1550,11 +1627,37 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        ATUALIZAR TARIFA (SELECIONAR EMPRESA)
+        CÁLCULO AUTOMÁTICO DOS TOTAIS DE BENEFÍCIOS
     ===================================================== */
-    window.atualizarTarifa = function(num) {
-        const select = document.getElementById("empresa" + num);
-        atualizarCorCampo(select);
+    window.calcularTotais = function() {
+        const select1 = document.getElementById("empresa1");
+        const qtd1 = parseFloat(document.getElementById("qtdPassagens1").value) || 0;
+        
+        const select2 = document.getElementById("empresa2");
+        const qtd2 = parseFloat(document.getElementById("qtdPassagens2").value) || 0;
+
+        const valeExtra = parseFloat(document.getElementById("valeExtra").value) || 0;
+
+        // Pega a tarifa da empresa 1 através do atributo data-tarifa da opção selecionada
+        let tarifa1 = 0;
+        if (select1.selectedIndex > 0) {
+            tarifa1 = parseFloat(select1.options[select1.selectedIndex].getAttribute("data-tarifa")) || 0;
+        }
+
+        // Pega a tarifa da empresa 2
+        let tarifa2 = 0;
+        if (select2.selectedIndex > 0) {
+            tarifa2 = parseFloat(select2.options[select2.selectedIndex].getAttribute("data-tarifa")) || 0;
+        }
+
+        const subtotal1 = qtd1 * tarifa1;
+        const subtotal2 = qtd2 * tarifa2;
+        const totalGeral = subtotal1 + subtotal2 + valeExtra;
+
+        // Atualiza os textos na tela formatados em Real (R$)
+        document.getElementById("lblSubtotal1").textContent = subtotal1.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById("lblSubtotal2").textContent = subtotal2.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById("lblTotalGeral").textContent = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
 
@@ -1582,11 +1685,12 @@ button .material-symbols-outlined {
         const cidade = document.getElementById("cidade").value.trim();
         const uf = document.getElementById("uf").value.trim();
 
-        // Benefícios / Empresas
+        // Benefícios / Empresas / Extra
         const empresa1 = document.getElementById("empresa1").value;
         const qtdPassagens1 = document.getElementById("qtdPassagens1").value.trim();
         const empresa2 = document.getElementById("empresa2").value;
         const qtdPassagens2 = document.getElementById("qtdPassagens2").value.trim();
+        const valeExtra = document.getElementById("valeExtra").value.trim();
 
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
@@ -1657,7 +1761,8 @@ button .material-symbols-outlined {
                     empresa1: empresa1,
                     qtdPassagens1: Number(qtdPassagens1),
                     empresa2: empresa2 || null,
-                    qtdPassagens2: qtdPassagens2 ? Number(qtdPassagens2) : 0
+                    qtdPassagens2: qtdPassagens2 ? Number(qtdPassagens2) : 0,
+                    valeExtra: valeExtra ? Number(valeExtra) : 0
                 },
                 // Sistema
                 dataCriacao: new Date().toISOString()
@@ -1678,6 +1783,7 @@ button .material-symbols-outlined {
                 campo.classList.remove("erro-input");
             });
 
+            calcularTotais();
             mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
 
         } catch (erro) {
@@ -1716,6 +1822,7 @@ button .material-symbols-outlined {
             campo.classList.remove("erro-input");
         });
 
+        calcularTotais();
         ocultarMensagem();
     }
 
