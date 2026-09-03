@@ -436,10 +436,11 @@ body {
 
 
 /* =====================================================
-    CAMPOS
+    CAMPOS (INPUTS E SELECTS)
 ===================================================== */
 
-.form-group input {
+.form-group input,
+.form-group select {
     width: 100%;
 
     height: 44px;
@@ -465,23 +466,18 @@ body {
 }
 
 
-.form-group input:hover:not([readonly]) {
+.form-group input:hover,
+.form-group select:hover {
     border-color: #b7c0c7;
 }
 
 
-.form-group input:focus:not([readonly]) {
+.form-group input:focus,
+.form-group select:focus {
     border-color: var(--primary);
 
     box-shadow:
         0 0 0 3px rgba(91,42,134,.10);
-}
-
-/* Campos bloqueados visualmente (Read-only) */
-.form-group input[readonly] {
-    background-color: #f8f9fa;
-    color: #68737d;
-    cursor: not-allowed;
 }
 
 
@@ -489,7 +485,8 @@ body {
     CAMPOS PREENCHIDOS
 ===================================================== */
 
-.form-group input.preenchido {
+.form-group input.preenchido,
+.form-group select.preenchido {
     background: var(--green-light) !important;
 
     border-color: var(--green-border) !important;
@@ -498,7 +495,8 @@ body {
 }
 
 
-.form-group input.preenchido:focus:not([readonly]) {
+.form-group input.preenchido:focus,
+.form-group select.preenchido:focus {
     border-color: var(--green) !important;
 
     box-shadow:
@@ -1154,14 +1152,12 @@ button .material-symbols-outlined {
                         <label for="cidade">
                             Cidade <span>*</span>
                         </label>
-                        <!-- readonly impede que o operador altere a cidade gerada pelo CEP -->
                         <input
                             type="text"
                             id="cidade"
                             name="cidade"
                             placeholder="Digite a cidade"
                             required
-                            readonly
                         >
                     </div>
 
@@ -1177,7 +1173,74 @@ button .material-symbols-outlined {
                             placeholder="Ex: MG"
                             maxlength="2"
                             required
-                            readonly
+                        >
+                    </div>
+
+
+                    <!-- =================================================
+                         BLOCO DE BENEFÍCIOS (EMPRESAS E TARIFAS)
+                    ================================================ -->
+
+                    <div class="form-section-title">Controle de Vale Transporte e Benefícios</div>
+
+                    <!-- EMPRESA 1 -->
+                    <div class="form-group">
+                        <label for="empresa1">
+                            Empresa / Concessionária 1 <span>*</span>
+                        </label>
+                        <select id="empresa1" name="empresa1" required onchange="atualizarTarifa(1)">
+                            <option value="">Selecione a empresa</option>
+                            <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
+                            <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
+                            <option value="Exdil" data-tarifa="8.00">Exdil (R$ 8,00)</option>
+                            <option value="Teixeira" data-tarifa="5.00">Teixeira (R$ 5,00)</option>
+                        </select>
+                    </div>
+
+                    <!-- QTD PASSAGENS 1 -->
+                    <div class="form-group">
+                        <label for="qtdPassagens1">
+                            Qtd. Passagens (Empresa 1) <span>*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="qtdPassagens1"
+                            name="qtdPassagens1"
+                            placeholder="Ex: 44"
+                            min="0"
+                            inputmode="numeric"
+                            required
+                            oninput="atualizarCorCampo(this)"
+                        >
+                    </div>
+
+                    <!-- EMPRESA 2 (OPCIONAL / INTEGRAÇÃO) -->
+                    <div class="form-group">
+                        <label for="empresa2">
+                            Empresa / Concessionária 2 (Opcional)
+                        </label>
+                        <select id="empresa2" name="empresa2" onchange="atualizarTarifa(2)">
+                            <option value="">Nenhuma / Apenas 1 empresa</option>
+                            <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
+                            <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
+                            <option value="Exdil" data-tarifa="8.00">Exdil (R$ 8,00)</option>
+                            <option value="Teixeira" data-tarifa="5.00">Teixeira (R$ 5,00)</option>
+                        </select>
+                    </div>
+
+                    <!-- QTD PASSAGENS 2 -->
+                    <div class="form-group">
+                        <label for="qtdPassagens2">
+                            Qtd. Passagens (Empresa 2)
+                        </label>
+                        <input
+                            type="number"
+                            id="qtdPassagens2"
+                            name="qtdPassagens2"
+                            placeholder="Ex: 22"
+                            min="0"
+                            inputmode="numeric"
+                            oninput="atualizarCorCampo(this)"
                         >
                     </div>
 
@@ -1317,7 +1380,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        INICIALIZAÇÃO DO CALENDAR FLATPICKR
+        INICIALIZAÇÃO DO CALENDAR FLATPICKR E CAMPOS
     ===================================================== */
     document.addEventListener("DOMContentLoaded", function() {
         atualizarStatusConexao();
@@ -1332,10 +1395,15 @@ button .material-symbols-outlined {
             }
         });
 
-        const campos = document.querySelectorAll("#formServidor input");
+        const campos = document.querySelectorAll("#formServidor input, #formServidor select");
 
         campos.forEach(function(campo) {
             campo.addEventListener("input", function() {
+                atualizarCorCampo(campo);
+                ocultarMensagem();
+            });
+
+            campo.addEventListener("change", function() {
                 atualizarCorCampo(campo);
                 ocultarMensagem();
             });
@@ -1379,7 +1447,7 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
-        VERIFICAÇÃO DE CPF PONTUAL (GASTA APENAS 1 LEITURA NO BANCO)
+        VERIFICAÇÃO DE CPF PONTUAL (GASTA APENAS 1 LEITURA)
     ===================================================== */
     window.verificarCpfDuplicado = async function(input) {
         const cpf = input.value.trim();
@@ -1448,26 +1516,22 @@ button .material-symbols-outlined {
         
         if (cep.length === 8) {
             try {
-                input.disabled = true; // Impede digitação enquanto busca
+                input.disabled = true;
                 const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                 const data = await response.json();
 
                 if (!data.erro) {
-                    // Preenche os campos
                     document.getElementById("logradouro").value = data.logradouro;
                     document.getElementById("bairro").value = data.bairro;
                     document.getElementById("cidade").value = data.localidade;
                     document.getElementById("uf").value = data.uf;
                     
-                    // Coloca eles verdes (preenchidos)
                     atualizarCorCampo(document.getElementById("logradouro"));
                     atualizarCorCampo(document.getElementById("bairro"));
                     atualizarCorCampo(document.getElementById("cidade"));
                     atualizarCorCampo(document.getElementById("uf"));
 
                     input.classList.remove("erro-input");
-                    
-                    // Pula o foco do mouse direto para o "Número"
                     document.getElementById("numero").focus(); 
                     ocultarMensagem();
                 } else {
@@ -1485,14 +1549,22 @@ button .material-symbols-outlined {
         }
     }
 
+    /* =====================================================
+        ATUALIZAR TARIFA (SELECIONAR EMPRESA)
+    ===================================================== */
+    window.atualizarTarifa = function(num) {
+        const select = document.getElementById("empresa" + num);
+        atualizarCorCampo(select);
+    }
+
 
     /* =====================================================
-        SALVAR NO FIREBASE COM VALIDAÇÃO PONTUAL
+        SALVAR NO FIREBASE
     ===================================================== */
     window.salvarServidor = async function(event) {
         event.preventDefault();
 
-        // Dados Pessoais
+        // Pessoais
         const nome = document.getElementById("nome").value.trim();
         const cpf = document.getElementById("cpf").value.trim();
         const email = document.getElementById("email").value.trim();
@@ -1501,7 +1573,7 @@ button .material-symbols-outlined {
         const cargo = document.getElementById("cargo").value.trim();
         const telefone = document.getElementById("telefone").value.trim();
 
-        // Dados de Endereço
+        // Endereço
         const cep = document.getElementById("cep").value.trim();
         const bairro = document.getElementById("bairro").value.trim();
         const logradouro = document.getElementById("logradouro").value.trim();
@@ -1510,10 +1582,16 @@ button .material-symbols-outlined {
         const cidade = document.getElementById("cidade").value.trim();
         const uf = document.getElementById("uf").value.trim();
 
+        // Benefícios / Empresas
+        const empresa1 = document.getElementById("empresa1").value;
+        const qtdPassagens1 = document.getElementById("qtdPassagens1").value.trim();
+        const empresa2 = document.getElementById("empresa2").value;
+        const qtdPassagens2 = document.getElementById("qtdPassagens2").value.trim();
+
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
 
-        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !cargo || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf) {
+        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !cargo || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !empresa1 || !qtdPassagens1) {
             mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
             return;
         }
@@ -1574,6 +1652,13 @@ button .material-symbols-outlined {
                 complemento: complemento,
                 cidade: cidade,
                 uf: uf,
+                // Benefícios
+                transporte: {
+                    empresa1: empresa1,
+                    qtdPassagens1: Number(qtdPassagens1),
+                    empresa2: empresa2 || null,
+                    qtdPassagens2: qtdPassagens2 ? Number(qtdPassagens2) : 0
+                },
                 // Sistema
                 dataCriacao: new Date().toISOString()
             });
@@ -1587,7 +1672,7 @@ button .material-symbols-outlined {
                 }
             });
 
-            const campos = document.querySelectorAll("#formServidor input");
+            const campos = document.querySelectorAll("#formServidor input, #formServidor select");
             campos.forEach(function(campo) {
                 campo.classList.remove("preenchido");
                 campo.classList.remove("erro-input");
@@ -1625,7 +1710,7 @@ button .material-symbols-outlined {
             }
         });
 
-        const campos = document.querySelectorAll("#formServidor input");
+        const campos = document.querySelectorAll("#formServidor input, #formServidor select");
         campos.forEach(function(campo) {
             campo.classList.remove("preenchido");
             campo.classList.remove("erro-input");
