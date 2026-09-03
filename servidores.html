@@ -968,7 +968,7 @@ button .material-symbols-outlined {
 
                 <div class="form-grid">
 
-                    <div class="form-section-title">Dados Pessoais e Funcionais</div>
+                    <div class="form-section-title">Dados Pessoais e Contato</div>
 
                     <!-- NOME -->
 
@@ -1069,28 +1069,9 @@ button .material-symbols-outlined {
                     </div>
 
 
-                    <!-- CARGO -->
-
-                    <div class="form-group">
-
-                        <label for="cargo">
-                            Cargo <span>*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            id="cargo"
-                            name="cargo"
-                            placeholder="Digite o cargo"
-                            required
-                        >
-
-                    </div>
-
-
                     <!-- TELEFONE -->
 
-                    <div class="form-group">
+                    <div class="form-group full">
 
                         <label for="telefone">
                             Telefone para contato <span>*</span>
@@ -1221,17 +1202,31 @@ button .material-symbols-outlined {
 
 
                     <!-- =================================================
-                         BLOCO DE BENEFÍCIOS (EMPRESAS, VALE-EXTRA E TOTAIS)
+                         MATRÍCULA 1 (VÍNCULO PRINCIPAL)
                     ================================================ -->
 
-                    <div class="form-section-title">Controle de Vale Transporte e Benefícios</div>
+                    <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
 
-                    <!-- EMPRESA 1 -->
-                    <div class="form-group">
-                        <label for="empresa1">
-                            Empresa / Concessionária 1 <span>*</span>
+                    <!-- CARGO 1 -->
+                    <div class="form-group full">
+                        <label for="cargo1">
+                            Cargo / Função (Matrícula 1) <span>*</span>
                         </label>
-                        <select id="empresa1" name="empresa1" required onchange="calcularTotais()">
+                        <input
+                            type="text"
+                            id="cargo1"
+                            name="cargo1"
+                            placeholder="Digite o cargo da 1ª matrícula"
+                            required
+                        >
+                    </div>
+
+                    <!-- EMPRESA 1 (M1) -->
+                    <div class="form-group">
+                        <label for="empresa1_m1">
+                            Empresa / Concessionária 1 (Matrícula 1) <span>*</span>
+                        </label>
+                        <select id="empresa1_m1" name="empresa1_m1" required onchange="calcularTotais()">
                             <option value="">Selecione a empresa</option>
                             <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
                             <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
@@ -1240,15 +1235,15 @@ button .material-symbols-outlined {
                         </select>
                     </div>
 
-                    <!-- QTD PASSAGENS 1 -->
+                    <!-- QTD PASSAGENS 1 (M1) -->
                     <div class="form-group">
-                        <label for="qtdPassagens1">
-                            Qtd. Passagens (Empresa 1) <span>*</span>
+                        <label for="qtdPassagens1_m1">
+                            Qtd. Passagens (Empresa 1 - Matrícula 1) <span>*</span>
                         </label>
                         <input
                             type="number"
-                            id="qtdPassagens1"
-                            name="qtdPassagens1"
+                            id="qtdPassagens1_m1"
+                            name="qtdPassagens1_m1"
                             placeholder="Ex: 44"
                             min="0"
                             inputmode="numeric"
@@ -1257,12 +1252,12 @@ button .material-symbols-outlined {
                         >
                     </div>
 
-                    <!-- EMPRESA 2 (OPCIONAL / INTEGRAÇÃO) -->
+                    <!-- EMPRESA 2 (M1 - OPCIONAL) -->
                     <div class="form-group">
-                        <label for="empresa2">
-                            Empresa / Concessionária 2 (Opcional)
+                        <label for="empresa2_m1">
+                            Empresa 2 - Matrícula 1 (Opcional)
                         </label>
-                        <select id="empresa2" name="empresa2" onchange="calcularTotais()">
+                        <select id="empresa2_m1" name="empresa2_m1" onchange="calcularTotais()">
                             <option value="">Nenhuma / Apenas 1 empresa</option>
                             <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
                             <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
@@ -1271,21 +1266,122 @@ button .material-symbols-outlined {
                         </select>
                     </div>
 
-                    <!-- QTD PASSAGENS 2 -->
+                    <!-- QTD PASSAGENS 2 (M1) -->
                     <div class="form-group">
-                        <label for="qtdPassagens2">
-                            Qtd. Passagens (Empresa 2)
+                        <label for="qtdPassagens2_m1">
+                            Qtd. Passagens (Empresa 2 - Matrícula 1)
                         </label>
                         <input
                             type="number"
-                            id="qtdPassagens2"
-                            name="qtdPassagens2"
+                            id="qtdPassagens2_m1"
+                            name="qtdPassagens2_m1"
                             placeholder="Ex: 22"
                             min="0"
                             inputmode="numeric"
                             oninput="atualizarCorCampo(this); calcularTotais();"
                         >
                     </div>
+
+
+                    <!-- =================================================
+                         SEGUNDO VÍNCULO (CHECKBOX TOGGLE)
+                    ================================================ -->
+                    <div class="form-group full" style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--primary);">
+                            <input type="checkbox" id="possuiSegundoVinculo" onchange="toggleSegundoVinculo()" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+                            <span>Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?</span>
+                        </label>
+                    </div>
+
+
+                    <!-- =================================================
+                         MATRÍCULA 2 (OCULTO POR PADRÃO)
+                    ================================================ -->
+                    <div id="blocoSegundoVinculo" style="display: none; grid-column: 1 / -1; display: none; grid-template-columns: 1fr 1fr; gap: 22px 24px; background: #fafbfc; border: 1px dashed var(--border); padding: 20px; border-radius: 8px; margin-top: 5px;">
+
+                        <div class="form-section-title" style="margin-top: 0;">Matrícula 2 (Segundo Vínculo)</div>
+
+                        <!-- CARGO 2 -->
+                        <div class="form-group full">
+                            <label for="cargo2">
+                                Cargo / Função (Matrícula 2) <span>*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="cargo2"
+                                name="cargo2"
+                                placeholder="Digite o cargo da 2ª matrícula"
+                            >
+                        </div>
+
+                        <!-- EMPRESA 1 (M2) -->
+                        <div class="form-group">
+                            <label for="empresa1_m2">
+                                Empresa / Concessionária 1 (Matrícula 2) <span>*</span>
+                            </label>
+                            <select id="empresa1_m2" name="empresa1_m2" onchange="calcularTotais()">
+                                <option value="">Selecione a empresa</option>
+                                <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
+                                <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
+                                <option value="Exdil" data-tarifa="8.00">Exdil (R$ 8,00)</option>
+                                <option value="Teixeira" data-tarifa="5.00">Teixeira (R$ 5,00)</option>
+                            </select>
+                        </div>
+
+                        <!-- QTD PASSAGENS 1 (M2) -->
+                        <div class="form-group">
+                            <label for="qtdPassagens1_m2">
+                                Qtd. Passagens (Empresa 1 - Matrícula 2) <span>*</span>
+                            </label>
+                            <input
+                                type="number"
+                                id="qtdPassagens1_m2"
+                                name="qtdPassagens1_m2"
+                                placeholder="Ex: 44"
+                                min="0"
+                                inputmode="numeric"
+                                oninput="atualizarCorCampo(this); calcularTotais();"
+                            >
+                        </div>
+
+                        <!-- EMPRESA 2 (M2 - OPCIONAL) -->
+                        <div class="form-group">
+                            <label for="empresa2_m2">
+                                Empresa 2 - Matrícula 2 (Opcional)
+                            </label>
+                            <select id="empresa2_m2" name="empresa2_m2" onchange="calcularTotais()">
+                                <option value="">Nenhuma / Apenas 1 empresa</option>
+                                <option value="Trancid" data-tarifa="5.50">Trancid (R$ 5,50)</option>
+                                <option value="Transpratur" data-tarifa="6.00">Transpratur (R$ 6,00)</option>
+                                <option value="Exdil" data-tarifa="8.00">Exdil (R$ 8,00)</option>
+                                <option value="Teixeira" data-tarifa="5.00">Teixeira (R$ 5,00)</option>
+                            </select>
+                        </div>
+
+                        <!-- QTD PASSAGENS 2 (M2) -->
+                        <div class="form-group">
+                            <label for="qtdPassagens2_m2">
+                                Qtd. Passagens (Empresa 2 - Matrícula 2)
+                            </label>
+                            <input
+                                type="number"
+                                id="qtdPassagens2_m2"
+                                name="qtdPassagens2_m2"
+                                placeholder="Ex: 22"
+                                min="0"
+                                inputmode="numeric"
+                                oninput="atualizarCorCampo(this); calcularTotais();"
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         VALE-EXTRA E TOTAIS
+                    ================================================ -->
+
+                    <div class="form-section-title">Outros Benefícios e Resumo Financeiro</div>
 
                     <!-- VALE-EXTRA -->
                     <div class="form-group full">
@@ -1306,11 +1402,11 @@ button .material-symbols-outlined {
                     <!-- CAIXA DE RESUMO / TOTAIS -->
                     <div class="resumo-beneficios">
                         <div class="resumo-item">
-                            <span class="resumo-label">Subtotal Transporte 1</span>
+                            <span class="resumo-label">Subtotal Matrícula 1</span>
                             <span id="lblSubtotal1" class="resumo-valor">R$ 0,00</span>
                         </div>
                         <div class="resumo-item">
-                            <span class="resumo-label">Subtotal Transporte 2</span>
+                            <span class="resumo-label">Subtotal Matrícula 2</span>
                             <span id="lblSubtotal2" class="resumo-valor">R$ 0,00</span>
                         </div>
                         <div class="resumo-item">
@@ -1627,31 +1723,64 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
+        CONTROLE DO SEGUNDO VÍNCULO (MATRÍCULA 2)
+    ===================================================== */
+    window.toggleSegundoVinculo = function() {
+        const checkbox = document.getElementById("possuiSegundoVinculo");
+        const bloco = document.getElementById("blocoSegundoVinculo");
+        
+        if (checkbox.checked) {
+            bloco.style.display = "grid";
+        } else {
+            bloco.style.display = "none";
+            // Limpa os campos da matrícula 2 se desmarcar
+            document.getElementById("cargo2").value = "";
+            document.getElementById("empresa1_m2").value = "";
+            document.getElementById("qtdPassagens1_m2").value = "";
+            document.getElementById("empresa2_m2").value = "";
+            document.getElementById("qtdPassagens2_m2").value = "";
+            
+            // Remove classes preenchido/erro
+            const camposM2 = bloco.querySelectorAll("input, select");
+            camposM2.forEach(c => {
+                c.classList.remove("preenchido");
+                c.classList.remove("erro-input");
+            });
+        }
+        calcularTotais();
+    }
+
+    /* =====================================================
         CÁLCULO AUTOMÁTICO DOS TOTAIS DE BENEFÍCIOS
     ===================================================== */
     window.calcularTotais = function() {
-        const select1 = document.getElementById("empresa1");
-        const qtd1 = parseFloat(document.getElementById("qtdPassagens1").value) || 0;
-        
-        const select2 = document.getElementById("empresa2");
-        const qtd2 = parseFloat(document.getElementById("qtdPassagens2").value) || 0;
+        // Matrícula 1
+        const sel1_m1 = document.getElementById("empresa1_m1");
+        const qtd1_m1 = parseFloat(document.getElementById("qtdPassagens1_m1").value) || 0;
+        const sel2_m1 = document.getElementById("empresa2_m1");
+        const qtd2_m1 = parseFloat(document.getElementById("qtdPassagens2_m1").value) || 0;
+
+        let tarifa1_m1 = sel1_m1.selectedIndex > 0 ? parseFloat(sel1_m1.options[sel1_m1.selectedIndex].getAttribute("data-tarifa")) || 0 : 0;
+        let tarifa2_m1 = sel2_m1.selectedIndex > 0 ? parseFloat(sel2_m1.options[sel2_m1.selectedIndex].getAttribute("data-tarifa")) || 0 : 0;
+
+        const subtotal1 = (qtd1_m1 * tarifa1_m1) + (qtd2_m1 * tarifa2_m1);
+
+        // Matrícula 2 (se ativa)
+        let subtotal2 = 0;
+        const checkbox = document.getElementById("possuiSegundoVinculo");
+        if (checkbox && checkbox.checked) {
+            const sel1_m2 = document.getElementById("empresa1_m2");
+            const qtd1_m2 = parseFloat(document.getElementById("qtdPassagens1_m2").value) || 0;
+            const sel2_m2 = document.getElementById("empresa2_m2");
+            const qtd2_m2 = parseFloat(document.getElementById("qtdPassagens2_m2").value) || 0;
+
+            let tarifa1_m2 = sel1_m2.selectedIndex > 0 ? parseFloat(sel1_m2.options[sel1_m2.selectedIndex].getAttribute("data-tarifa")) || 0 : 0;
+            let tarifa2_m2 = sel2_m2.selectedIndex > 0 ? parseFloat(sel2_m2.options[sel2_m2.selectedIndex].getAttribute("data-tarifa")) || 0 : 0;
+
+            subtotal2 = (qtd1_m2 * tarifa1_m2) + (qtd2_m2 * tarifa2_m2);
+        }
 
         const valeExtra = parseFloat(document.getElementById("valeExtra").value) || 0;
-
-        // Pega a tarifa da empresa 1 através do atributo data-tarifa da opção selecionada
-        let tarifa1 = 0;
-        if (select1.selectedIndex > 0) {
-            tarifa1 = parseFloat(select1.options[select1.selectedIndex].getAttribute("data-tarifa")) || 0;
-        }
-
-        // Pega a tarifa da empresa 2
-        let tarifa2 = 0;
-        if (select2.selectedIndex > 0) {
-            tarifa2 = parseFloat(select2.options[select2.selectedIndex].getAttribute("data-tarifa")) || 0;
-        }
-
-        const subtotal1 = qtd1 * tarifa1;
-        const subtotal2 = qtd2 * tarifa2;
         const totalGeral = subtotal1 + subtotal2 + valeExtra;
 
         // Atualiza os textos na tela formatados em Real (R$)
@@ -1673,7 +1802,6 @@ button .material-symbols-outlined {
         const email = document.getElementById("email").value.trim();
         const dataNascimento = document.getElementById("dataNascimento").value;
         const dataAdmissao = document.getElementById("dataAdmissao").value;
-        const cargo = document.getElementById("cargo").value.trim();
         const telefone = document.getElementById("telefone").value.trim();
 
         // Endereço
@@ -1685,18 +1813,36 @@ button .material-symbols-outlined {
         const cidade = document.getElementById("cidade").value.trim();
         const uf = document.getElementById("uf").value.trim();
 
-        // Benefícios / Empresas / Extra
-        const empresa1 = document.getElementById("empresa1").value;
-        const qtdPassagens1 = document.getElementById("qtdPassagens1").value.trim();
-        const empresa2 = document.getElementById("empresa2").value;
-        const qtdPassagens2 = document.getElementById("qtdPassagens2").value.trim();
+        // Matrícula 1
+        const cargo1 = document.getElementById("cargo1").value.trim();
+        const empresa1_m1 = document.getElementById("empresa1_m1").value;
+        const qtdPassagens1_m1 = document.getElementById("qtdPassagens1_m1").value.trim();
+        const empresa2_m1 = document.getElementById("empresa2_m1").value;
+        const qtdPassagens2_m1 = document.getElementById("qtdPassagens2_m1").value.trim();
+
+        // Segundo Vínculo e Matrícula 2
+        const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
+        const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
+        const empresa1_m2 = temSegundoVinculo ? document.getElementById("empresa1_m2").value : null;
+        const qtdPassagens1_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens1_m2").value.trim() : null;
+        const empresa2_m2 = temSegundoVinculo ? document.getElementById("empresa2_m2").value : null;
+        const qtdPassagens2_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens2_m2").value.trim() : null;
+
+        // Vale Extra
         const valeExtra = document.getElementById("valeExtra").value.trim();
 
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
 
-        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !cargo || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !empresa1 || !qtdPassagens1) {
-            mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+        // Validações básicas obrigatórias gerais
+        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !cargo1 || !empresa1_m1 || !qtdPassagens1_m1) {
+            mostrarMensagem("Preencha todos os campos obrigatórios da Matrícula 1, Pessoais e Endereço.", "erro");
+            return;
+        }
+
+        // Validação se o segundo vínculo estiver marcado
+        if (temSegundoVinculo && (!cargo2 || !empresa1_m2 || !qtdPassagens1_m2)) {
+            mostrarMensagem("Preencha os campos obrigatórios da Matrícula 2 (Segundo Vínculo).", "erro");
             return;
         }
 
@@ -1739,6 +1885,7 @@ button .material-symbols-outlined {
         iconeSalvar.textContent = "sync";
 
         try {
+            // Montagem do objeto de salvamento estruturado
             await addDoc(collection(db, "servidores"), {
                 // Pessoais
                 nome: nome,
@@ -1746,7 +1893,6 @@ button .material-symbols-outlined {
                 email: email,
                 dataNascimento: dataNascimento,
                 dataAdmissao: dataAdmissao,
-                cargo: cargo,
                 telefone: telefone,
                 // Endereço
                 cep: cep,
@@ -1756,19 +1902,32 @@ button .material-symbols-outlined {
                 complemento: complemento,
                 cidade: cidade,
                 uf: uf,
-                // Benefícios
-                transporte: {
-                    empresa1: empresa1,
-                    qtdPassagens1: Number(qtdPassagens1),
-                    empresa2: empresa2 || null,
-                    qtdPassagens2: qtdPassagens2 ? Number(qtdPassagens2) : 0,
-                    valeExtra: valeExtra ? Number(valeExtra) : 0
+                // Matrícula 1
+                matricula1: {
+                    cargo: cargo1,
+                    empresa1: empresa1_m1,
+                    qtdPassagens1: Number(qtdPassagens1_m1),
+                    empresa2: empresa2_m1 || null,
+                    qtdPassagens2: qtdPassagens2_m1 ? Number(qtdPassagens2_m1) : 0
                 },
+                // Matrícula 2 (Condicional)
+                matricula2: temSegundoVinculo ? {
+                    cargo: cargo2,
+                    empresa1: empresa1_m2,
+                    qtdPassagens1: Number(qtdPassagens1_m2),
+                    empresa2: empresa2_m2 || null,
+                    qtdPassagens2: qtdPassagens2_m2 ? Number(qtdPassagens2_m2) : 0
+                } : null,
+                // Benefícios Extras
+                valeExtra: valeExtra ? Number(valeExtra) : 0,
                 // Sistema
                 dataCriacao: new Date().toISOString()
             });
 
             document.getElementById("formServidor").reset();
+            
+            // Oculta o bloco 2 novamente após salvar
+            document.getElementById("blocoSegundoVinculo").style.display = "none";
             
             const dateInputs = document.querySelectorAll("input[type='date']");
             dateInputs.forEach(input => {
@@ -1808,6 +1967,7 @@ button .material-symbols-outlined {
     ===================================================== */
     window.cancelar = function() {
         document.getElementById("formServidor").reset();
+        document.getElementById("blocoSegundoVinculo").style.display = "none";
 
         const dateInputs = document.querySelectorAll("input[type='date']");
         dateInputs.forEach(input => {
