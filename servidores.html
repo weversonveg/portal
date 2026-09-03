@@ -436,7 +436,7 @@ body {
 
 
 /* =====================================================
-    BLOCO DA MATRÍCULA 2 (RESPONSIVO)
+    BLOCOS DINÂMICOS (REVELAÇÃO PROGRESSIVA)
 ===================================================== */
 .bloco-segundo-vinculo {
     display: none;
@@ -452,6 +452,43 @@ body {
 
 .bloco-segundo-vinculo.ativo {
     display: grid;
+}
+
+/* Linha extra de condução (oculta por padrão) */
+.conducao-extra {
+    display: none;
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 24px;
+    background: #f1f5f9;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.conducao-extra.ativo {
+    display: grid;
+}
+
+/* Botão discreto para adicionar condução */
+.btn-link-adicionar {
+    grid-column: 1 / -1;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+    padding: 4px 0;
+    transition: opacity 0.2s;
+}
+
+.btn-link-adicionar:hover {
+    opacity: 0.8;
 }
 
 
@@ -771,7 +808,8 @@ button .material-symbols-outlined {
         gap: 18px;
     }
 
-    .bloco-segundo-vinculo {
+    .bloco-segundo-vinculo,
+    .conducao-extra {
         grid-template-columns: 1fr;
     }
 
@@ -1219,7 +1257,7 @@ button .material-symbols-outlined {
                     <!-- EMPRESA 1 (M1) -->
                     <div class="form-group">
                         <label for="empresa1_m1">
-                            Empresa / Concessionária 1 (Matrícula 1) <span>*</span>
+                            Concessionária (Linha Principal) <span>*</span>
                         </label>
                         <select id="empresa1_m1" name="empresa1_m1" required>
                             <option value="">Selecione a empresa</option>
@@ -1233,7 +1271,7 @@ button .material-symbols-outlined {
                     <!-- PASSES DIÁRIOS 1 (M1) -->
                     <div class="form-group">
                         <label for="qtdPassagens1_m1">
-                            Passes Diários (Empresa 1 - Matrícula 1) <span>*</span>
+                            Passes Diários <span>*</span>
                         </label>
                         <input
                             type="number"
@@ -1247,34 +1285,36 @@ button .material-symbols-outlined {
                         >
                     </div>
 
-                    <!-- EMPRESA 2 (M1 - OPCIONAL) -->
-                    <div class="form-group">
-                        <label for="empresa2_m1">
-                            Empresa 2 - Matrícula 1 (Opcional)
-                        </label>
-                        <select id="empresa2_m1" name="empresa2_m1">
-                            <option value="">Nenhuma / Apenas 1 empresa</option>
-                            <option value="Trancid">Trancid</option>
-                            <option value="Transpratur">Transpratur</option>
-                            <option value="Exdil">Exdil</option>
-                            <option value="Teixeira">Teixeira</option>
-                        </select>
-                    </div>
+                    <!-- BOTÃO DISCRETO PARA ADICIONAR 2ª CONDUÇÃO NA M1 -->
+                    <button type="button" id="btnToggleConducao1" class="btn-link-adicionar" onclick="toggleConducaoExtra(1)">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+                        Adicionar segunda condução (integração)
+                    </button>
 
-                    <!-- PASSES DIÁRIOS 2 (M1) -->
-                    <div class="form-group">
-                        <label for="qtdPassagens2_m1">
-                            Passes Diários (Empresa 2 - Matrícula 1)
-                        </label>
-                        <input
-                            type="number"
-                            id="qtdPassagens2_m1"
-                            name="qtdPassagens2_m1"
-                            placeholder="Ex: 2 ou 4"
-                            min="0"
-                            inputmode="numeric"
-                            oninput="atualizarCorCampo(this)"
-                        >
+                    <!-- CONDUÇÃO EXTRA 1 (OCULTA POR PADRÃO) -->
+                    <div id="conducaoExtra1" class="conducao-extra">
+                        <div class="form-group">
+                            <label for="empresa2_m1">Concessionária (Integração)</label>
+                            <select id="empresa2_m1" name="empresa2_m1">
+                                <option value="">Selecione a empresa</option>
+                                <option value="Trancid">Trancid</option>
+                                <option value="Transpratur">Transpratur</option>
+                                <option value="Exdil">Exdil</option>
+                                <option value="Teixeira">Teixeira</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="qtdPassagens2_m1">Passes Diários (Integração)</label>
+                            <input
+                                type="number"
+                                id="qtdPassagens2_m1"
+                                name="qtdPassagens2_m1"
+                                placeholder="Ex: 2"
+                                min="0"
+                                inputmode="numeric"
+                                oninput="atualizarCorCampo(this)"
+                            >
+                        </div>
                     </div>
 
 
@@ -1325,7 +1365,7 @@ button .material-symbols-outlined {
                         <!-- EMPRESA 1 (M2) -->
                         <div class="form-group">
                             <label for="empresa1_m2">
-                                Empresa / Concessionária 1 (Matrícula 2) <span>*</span>
+                                Concessionária (Linha Principal) <span>*</span>
                             </label>
                             <select id="empresa1_m2" name="empresa1_m2">
                                 <option value="">Selecione a empresa</option>
@@ -1339,7 +1379,7 @@ button .material-symbols-outlined {
                         <!-- PASSES DIÁRIOS 1 (M2) -->
                         <div class="form-group">
                             <label for="qtdPassagens1_m2">
-                                Passes Diários (Empresa 1 - Matrícula 2) <span>*</span>
+                                Passes Diários <span>*</span>
                             </label>
                             <input
                                 type="number"
@@ -1352,34 +1392,36 @@ button .material-symbols-outlined {
                             />
                         </div>
 
-                        <!-- EMPRESA 2 (M2 - OPCIONAL) -->
-                        <div class="form-group">
-                            <label for="empresa2_m2">
-                                Empresa 2 - Matrícula 2 (Opcional)
-                            </label>
-                            <select id="empresa2_m2" name="empresa2_m2">
-                                <option value="">Nenhuma / Apenas 1 empresa</option>
-                                <option value="Trancid">Trancid</option>
-                                <option value="Transpratur">Transpratur</option>
-                                <option value="Exdil">Exdil</option>
-                                <option value="Teixeira">Teixeira</option>
-                            </select>
-                        </div>
+                        <!-- BOTÃO DISCRETO PARA ADICIONAR 2ª CONDUÇÃO NA M2 -->
+                        <button type="button" id="btnToggleConducao2" class="btn-link-adicionar" onclick="toggleConducaoExtra(2)">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+                            Adicionar segunda condução (integração)
+                        </button>
 
-                        <!-- PASSES DIÁRIOS 2 (M2) -->
-                        <div class="form-group">
-                            <label for="qtdPassagens2_m2">
-                                Passes Diários (Empresa 2 - Matrícula 2)
-                            </label>
-                            <input
-                                type="number"
-                                id="qtdPassagens2_m2"
-                                name="qtdPassagens2_m2"
-                                placeholder="Ex: 2 ou 4"
-                                min="0"
-                                inputmode="numeric"
-                                oninput="atualizarCorCampo(this)"
-                            />
+                        <!-- CONDUÇÃO EXTRA 2 (OCULTA POR PADRÃO) -->
+                        <div id="conducaoExtra2" class="conducao-extra">
+                            <div class="form-group">
+                                <label for="empresa2_m2">Concessionária (Integração)</label>
+                                <select id="empresa2_m2" name="empresa2_m2">
+                                    <option value="">Selecione a empresa</option>
+                                    <option value="Trancid">Trancid</option>
+                                    <option value="Transpratur">Transpratur</option>
+                                    <option value="Exdil">Exdil</option>
+                                    <option value="Teixeira">Teixeira</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="qtdPassagens2_m2">Passes Diários (Integração)</label>
+                                <input
+                                    type="number"
+                                    id="qtdPassagens2_m2"
+                                    name="qtdPassagens2_m2"
+                                    placeholder="Ex: 2"
+                                    min="0"
+                                    inputmode="numeric"
+                                    oninput="atualizarCorCampo(this)"
+                                >
+                            </div>
                         </div>
 
                     </div>
@@ -1690,6 +1732,24 @@ button .material-symbols-outlined {
     }
 
     /* =====================================================
+        CONTROLE DE CONDUÇÃO EXTRA (INTEGRAÇÃO)
+    ===================================================== */
+    window.toggleConducaoExtra = function(numMatricula) {
+        const blocoExtra = document.getElementById("conducaoExtra" + numMatricula);
+        const botao = document.getElementById("btnToggleConducao" + numMatricula);
+
+        if (blocoExtra.classList.contains("ativo")) {
+            blocoExtra.classList.remove("ativo");
+            document.getElementById("empresa2_m" + numMatricula).value = "";
+            document.getElementById("qtdPassagens2_m" + numMatricula).value = "";
+            botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
+        } else {
+            blocoExtra.classList.add("ativo");
+            botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">remove_circle</span> Remover segunda condução';
+        }
+    }
+
+    /* =====================================================
         CONTROLE DO SEGUNDO VÍNCULO (MATRÍCULA 2)
     ===================================================== */
     window.toggleSegundoVinculo = function() {
@@ -1707,6 +1767,10 @@ button .material-symbols-outlined {
             document.getElementById("empresa2_m2").value = "";
             document.getElementById("qtdPassagens2_m2").value = "";
             
+            // Fecha a condução extra 2 também se estiver aberta
+            document.getElementById("conducaoExtra2").classList.remove("ativo");
+            document.getElementById("btnToggleConducao2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
+
             const camposM2 = bloco.querySelectorAll("input, select");
             camposM2.forEach(c => {
                 c.classList.remove("preenchido");
@@ -1790,7 +1854,7 @@ button .material-symbols-outlined {
             }
         } catch (erro) {
             console.error("Erro ao validar CPF duplicado antes de salvar:", erro);
-            mostrarMensagem("Erro ao verificar duplicidade. Verifique sua internet.", "erro");
+            mostrarMensagem("Erro ao verificar duplicidade. Verifique sua conexão.", "erro");
             return;
         }
 
@@ -1838,6 +1902,10 @@ button .material-symbols-outlined {
 
             document.getElementById("formServidor").reset();
             document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+            document.getElementById("conducaoExtra1").classList.remove("ativo");
+            document.getElementById("conducaoExtra2").classList.remove("ativo");
+            document.getElementById("btnToggleConducao1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
+            document.getElementById("btnToggleConducao2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
             
             const dateInputs = document.querySelectorAll("input[type='date']");
             dateInputs.forEach(input => {
@@ -1877,6 +1945,10 @@ button .material-symbols-outlined {
     window.cancelar = function() {
         document.getElementById("formServidor").reset();
         document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+        document.getElementById("conducaoExtra1").classList.remove("ativo");
+        document.getElementById("conducaoExtra2").classList.remove("ativo");
+        document.getElementById("btnToggleConducao1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
+        document.getElementById("btnToggleConducao2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda condução (integração)';
 
         const dateInputs = document.querySelectorAll("input[type='date']");
         dateInputs.forEach(input => {
