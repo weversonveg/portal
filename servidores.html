@@ -1231,8 +1231,22 @@ button .material-symbols-outlined {
 
                     <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
 
+                    <!-- NÚMERO DA MATRÍCULA 1 -->
+                    <div class="form-group">
+                        <label for="numeroMatricula1">
+                            Nº da Matrícula 1 <span>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="numeroMatricula1"
+                            name="numeroMatricula1"
+                            placeholder="Ex: 12345"
+                            required
+                        >
+                    </div>
+
                     <!-- CARGO 1 -->
-                    <div class="form-group full">
+                    <div class="form-group">
                         <label for="cargo1">
                             Cargo / Função (Matrícula 1) <span>*</span>
                         </label>
@@ -1240,7 +1254,7 @@ button .material-symbols-outlined {
                             type="text"
                             id="cargo1"
                             name="cargo1"
-                            placeholder="Digite o cargo da 1ª matrícula"
+                            placeholder="Digite o cargo"
                             required
                         >
                     </div>
@@ -1325,8 +1339,21 @@ button .material-symbols-outlined {
 
                         <div class="form-section-title" style="margin-top: 0;">Matrícula 2 (Segundo Vínculo)</div>
 
+                        <!-- NÚMERO DA MATRÍCULA 2 -->
+                        <div class="form-group">
+                            <label for="numeroMatricula2">
+                                Nº da Matrícula 2 <span>*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="numeroMatricula2"
+                                name="numeroMatricula2"
+                                placeholder="Ex: 67890"
+                            >
+                        </div>
+
                         <!-- CARGO 2 -->
-                        <div class="form-group full">
+                        <div class="form-group">
                             <label for="cargo2">
                                 Cargo / Função (Matrícula 2) <span>*</span>
                             </label>
@@ -1334,7 +1361,7 @@ button .material-symbols-outlined {
                                 type="text"
                                 id="cargo2"
                                 name="cargo2"
-                                placeholder="Digite o cargo da 2ª matrícula"
+                                placeholder="Digite o cargo"
                             >
                         </div>
 
@@ -1757,6 +1784,7 @@ button .material-symbols-outlined {
             bloco.classList.add("ativo");
         } else {
             bloco.classList.remove("ativo");
+            document.getElementById("numeroMatricula2").value = "";
             document.getElementById("cargo2").value = "";
             document.getElementById("empresa1_m2").value = "";
             document.getElementById("qtdPassagens1_m2").value = "";
@@ -1830,6 +1858,7 @@ button .material-symbols-outlined {
         const cidade = document.getElementById("cidade").value.trim();
         const uf = document.getElementById("uf").value.trim();
 
+        const numeroMatricula1 = document.getElementById("numeroMatricula1").value.trim();
         const cargo1 = document.getElementById("cargo1").value.trim();
         const empresa1_m1 = document.getElementById("empresa1_m1").value;
         const qtdPassagens1_m1 = document.getElementById("qtdPassagens1_m1").value.trim();
@@ -1837,6 +1866,7 @@ button .material-symbols-outlined {
         const qtdPassagens2_m1 = document.getElementById("qtdPassagens2_m1").value.trim();
 
         const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
+        const numeroMatricula2 = temSegundoVinculo ? document.getElementById("numeroMatricula2").value.trim() : null;
         const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
         const empresa1_m2 = temSegundoVinculo ? document.getElementById("empresa1_m2").value : null;
         const qtdPassagens1_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens1_m2").value.trim() : null;
@@ -1848,12 +1878,12 @@ button .material-symbols-outlined {
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
 
-        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !cargo1 || !empresa1_m1 || !qtdPassagens1_m1) {
+        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !numeroMatricula1 || !cargo1 || !empresa1_m1 || !qtdPassagens1_m1) {
             mostrarMensagem("Preencha todos os campos obrigatórios da Matrícula 1, Pessoais e Endereço.", "erro");
             return;
         }
 
-        if (temSegundoVinculo && (!cargo2 || !empresa1_m2 || !qtdPassagens1_m2)) {
+        if (temSegundoVinculo && (!numeroMatricula2 || !cargo2 || !empresa1_m2 || !qtdPassagens1_m2)) {
             mostrarMensagem("Preencha os campos obrigatórios da Matrícula 2 (Segundo Vínculo).", "erro");
             return;
         }
@@ -1912,6 +1942,7 @@ button .material-symbols-outlined {
                 cidade: cidade,
                 uf: uf,
                 matricula1: {
+                    numeroMatricula: numeroMatricula1,
                     cargo: cargo1,
                     empresa1: empresa1_m1,
                     qtdPassagens1: Number(qtdPassagens1_m1),
@@ -1919,6 +1950,7 @@ button .material-symbols-outlined {
                     qtdPassagens2: qtdPassagens2_m1 ? Number(qtdPassagens2_m1) : 0
                 },
                 matricula2: temSegundoVinculo ? {
+                    numeroMatricula: numeroMatricula2,
                     cargo: cargo2,
                     empresa1: empresa1_m2,
                     qtdPassagens1: Number(qtdPassagens1_m2),
