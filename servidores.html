@@ -1841,6 +1841,7 @@ button .material-symbols-outlined {
         const cidade = document.getElementById("cidade").value.trim();
         const uf = document.getElementById("uf").value.trim();
 
+        // Matrícula 1
         const numeroMatricula1 = document.getElementById("numeroMatricula1").value.trim();
         const cargo1 = document.getElementById("cargo1").value.trim();
         const escola1_m1 = document.getElementById("escola1_m1").value;
@@ -1852,6 +1853,7 @@ button .material-symbols-outlined {
         const empresaEscola2_m1 = temEscola2_m1 ? document.getElementById("empresa_escola2_m1").value : null;
         const qtdPassagensEscola2_m1 = temEscola2_m1 ? document.getElementById("qtdPassagens_escola2_m1").value.trim() : null;
 
+        // Matrícula 2
         const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
         const numeroMatricula2 = temSegundoVinculo ? document.getElementById("numeroMatricula2").value.trim() : null;
         const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
@@ -1863,6 +1865,16 @@ button .material-symbols-outlined {
         const escola2_m2 = temEscola2_m2 ? document.getElementById("escola2_m2").value : null;
         const empresaEscola2_m2 = temEscola2_m2 ? document.getElementById("empresa_escola2_m2").value : null;
         const qtdPassagensEscola2_m2 = temEscola2_m2 ? document.getElementById("qtdPassagens_escola2_m2").value.trim() : null;
+
+        // Monta o array de escolas para consulta rápida otimizada
+        let escolasArray = [];
+        if (escola1_m1) escolasArray.push(escola1_m1);
+        if (temEscola2_m1 && escola2_m1) escolasArray.push(escola2_m1);
+        if (temSegundoVinculo) {
+            if (escola1_m2) escolasArray.push(escola1_m2);
+            if (temEscola2_m2 && escola2_m2) escolasArray.push(escola2_m2);
+        }
+        escolasArray = [...new Set(escolasArray)]; // Remove duplicadas
 
         const cpfNumeros = cpf.replace(/\D/g, "");
         const telefoneNumeros = telefone.replace(/\D/g, "");
@@ -1930,6 +1942,7 @@ button .material-symbols-outlined {
                 complemento: complemento,
                 cidade: cidade,
                 uf: uf,
+                escolas: escolasArray, // Campo auxiliar otimizado para a busca por escola
                 matricula1: {
                     numeroMatricula: numeroMatricula1,
                     cargo: cargo1,
