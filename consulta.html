@@ -191,9 +191,16 @@ body {
 }
 
 .search-group {
-    flex-grow: 1;
     display: flex;
     flex-direction: column;
+}
+
+.search-group.tipo {
+    width: 200px;
+}
+
+.search-group.input-container {
+    flex-grow: 1;
 }
 
 .search-group label {
@@ -203,7 +210,8 @@ body {
     margin-bottom: 7px;
 }
 
-.search-group input {
+.search-group input,
+.search-group select {
     height: 44px;
     padding: 0 13px;
     background: #ffffff;
@@ -214,7 +222,8 @@ body {
     color: #263238;
 }
 
-.search-group input:focus {
+.search-group input:focus,
+.search-group select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
@@ -232,62 +241,67 @@ body {
     align-items: center;
     gap: 8px;
     transition: background 0.15s;
+    flex-shrink: 0;
 }
 
 .btn-pesquisar:hover {
     background: var(--primary-hover);
 }
 
-/* RESULTADO DA PESQUISA */
-.result-card {
+/* LISTA DE RESULTADOS */
+.results-container {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.results-container.ativo {
+    display: flex;
+}
+
+.servidor-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    padding: 24px;
-    display: none;
+    padding: 20px 24px;
 }
 
-.result-card.ativo {
-    display: block;
-}
-
-.servidor-info-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
+.servidor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid #e5e8eb;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
 }
 
-.info-item label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-}
-
-.info-item p {
-    font-size: 14px;
-    font-weight: 600;
+.servidor-nome {
+    font-size: 16px;
+    font-weight: 700;
     color: #263238;
-    margin-top: 4px;
+}
+
+.servidor-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 16px;
 }
 
 .matricula-box {
     background: #fafbfc;
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 16px;
-    margin-top: 14px;
+    padding: 14px;
+    margin-top: 10px;
 }
 
 .matricula-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--primary);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -309,13 +323,25 @@ body {
     color: #c62828;
 }
 
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
 @media (max-width: 700px) {
     .search-card {
         flex-direction: column;
         align-items: stretch;
     }
-    .servidor-info-grid {
-        grid-template-columns: 1fr;
+    .search-group.tipo {
+        width: 100%;
+    }
+    .servidor-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 }
 
@@ -351,15 +377,25 @@ body {
             <span>Consulta</span>
         </div>
         <h1>Consulta de Beneficiário</h1>
-        <p>Pesquise pelo CPF do servidor para visualizar vínculos, escolas e linhas de transporte.</p>
+        <p>Pesquise por CPF, Nome do Servidor ou Escola de Lotação.</p>
     </div>
 
-    <!-- CARD DE PESQUISA (CUSTA APENAS 1 LEITURA POR BUSCA) -->
+    <!-- CARD DE PESQUISA FLEXÍVEL -->
     <section class="search-card">
-        <div class="search-group">
-            <label for="filtroCpf">Digite o CPF do Servidor</label>
-            <input type="text" id="filtroCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCPF(this)">
+        <div class="search-group tipo">
+            <label for="tipoBusca">Pesquisar por</label>
+            <select id="tipoBusca" onchange="mudarTipoBusca()">
+                <option value="cpf">CPF</option>
+                <option value="nome">Nome</option>
+                <option value="escola">Escola</option>
+            </select>
         </div>
+
+        <div class="search-group input-container" id="grupoInput">
+            <label for="termoBusca" id="labelTermo">Digite o CPF</label>
+            <input type="text" id="termoBusca" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCampoBusca(this)">
+        </div>
+
         <button type="button" class="btn-pesquisar" onclick="pesquisarServidor()">
             <span class="material-symbols-outlined">search</span>
             Pesquisar
@@ -368,26 +404,9 @@ body {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- CARD DE RESULTADO -->
-    <section id="resultCard" class="result-card">
-        <div class="servidor-info-grid">
-            <div class="info-item">
-                <label>Nome Completo</label>
-                <p id="resNome">-</p>
-            </div>
-            <div class="info-item">
-                <label>CPF</label>
-                <p id="resCpf">-</p>
-            </div>
-            <div class="info-item">
-                <label>Telefone</label>
-                <p id="resTelefone">-</p>
-            </div>
-        </div>
-
-        <div id="detalhesMatriculas">
-            <!-- Os blocos de matrículas serão injetados aqui via JS -->
-        </div>
+    <!-- CONTAINER DE RESULTADOS (LISTA DINÂMICA) -->
+    <section id="resultsContainer" class="results-container">
+        <!-- Os cards dos servidores encontrados entram aqui -->
     </section>
 </main>
 
@@ -395,71 +414,119 @@ body {
     import { db } from "./firebase.js";
     import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Formatação de CPF enquanto digita
-    window.formatarCPF = function(input) {
-        let valor = input.value.replace(/\D/g, "");
-        valor = valor.substring(0, 11);
-        if (valor.length > 9) {
-            valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
-        } else if (valor.length > 6) {
-            valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
-        } else if (valor.length > 3) {
-            valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+    // Altera dinamicamente o campo de entrada conforme o tipo de busca selecionado
+    window.mudarTipoBusca = function() {
+        const tipo = document.getElementById("tipoBusca").value;
+        const grupoInput = document.getElementById("grupoInput");
+        const label = document.getElementById("labelTermo");
+
+        if (tipo === "cpf") {
+            label.textContent = "Digite o CPF";
+            grupoInput.innerHTML = `
+                <label for="termoBusca" id="labelTermo">Digite o CPF</label>
+                <input type="text" id="termoBusca" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCampoBusca(this)">
+            `;
+        } else if (tipo === "nome") {
+            label.textContent = "Digite o Nome";
+            grupoInput.innerHTML = `
+                <label for="termoBusca" id="labelTermo">Digite o Nome</label>
+                <input type="text" id="termoBusca" placeholder="Digite parte ou o nome completo" oninput="ocultarMensagem()">
+            `;
+        } else if (tipo === "escola") {
+            grupoInput.innerHTML = `
+                <label for="termoBusca" id="labelTermo">Selecione a Escola</label>
+                <select id="termoBusca">
+                    <option value="">Selecione a escola</option>
+                    <option value="CEAE">CEAE</option>
+                    <option value="CETEPE">CETEPE</option>
+                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                </select>
+            `;
         }
-        input.value = valor;
     }
 
-    // PESQUISA DIRECIONADA NO FIREBASE (CUSTO: EXATAMENTE 1 LEITURA)
+    // Formatação de CPF se o tipo ativo for CPF
+    window.formatarCampoBusca = function(input) {
+        const tipo = document.getElementById("tipoBusca").value;
+        if (tipo === "cpf") {
+            let valor = input.value.replace(/\D/g, "");
+            valor = valor.substring(0, 11);
+            if (valor.length > 9) {
+                valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+            } else if (valor.length > 6) {
+                valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+            } else if (valor.length > 3) {
+                valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+            }
+            input.value = valor;
+        }
+        ocultarMensagem();
+    }
+
+    // PESQUISA INTELIGENTE NO FIREBASE
     window.pesquisarServidor = async function() {
-        const cpfInput = document.getElementById("filtroCpf").value.trim();
+        const tipo = document.getElementById("tipoBusca").value;
+        const termo = document.getElementById("termoBusca").value.trim();
         const msgDiv = document.getElementById("mensagem");
-        const resultCard = document.getElementById("resultCard");
+        const resultsContainer = document.getElementById("resultsContainer");
 
         msgDiv.className = "mensagem";
         msgDiv.textContent = "";
-        resultCard.classList.remove("ativo");
+        resultsContainer.classList.remove("ativo");
+        resultsContainer.innerHTML = "";
 
-        if (!cpfInput) {
-            mostrarMensagem("Informe um CPF para realizar a pesquisa.", "erro");
+        if (!termo) {
+            mostrarMensagem("Preencha o campo de pesquisa para continuar.", "erro");
             return;
         }
 
         try {
-            // Executa consulta exata filtrada por CPF no Firestore com limit(1)
-            const q = query(collection(db, "servidores"), where("cpf", "==", cpfInput), limit(1));
+            let q;
+            if (tipo === "cpf") {
+                q = query(collection(db, "servidores"), where("cpf", "==", termo), limit(1));
+            } else if (tipo === "nome") {
+                // Busca por nome (prefixo exato no Firestore)
+                q = query(collection(db, "servidores"), where("nome", ">=", termo), where("nome", "<=", termo + "\uf8ff"), limit(20));
+            } else if (tipo === "escola") {
+                // Busca por escola usando o campo array que armazena as escolas do servidor
+                q = query(collection(db, "servidores"), where("escolas", "array-contains", termo), limit(50));
+            }
+
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor encontrado com o CPF informado.", "erro");
+                mostrarMensagem("Nenhum registro encontrado com o termo informado.", "info");
                 return;
             }
 
-            // Pega o primeiro documento retornado
-            const docData = querySnapshot.docs[0].data();
-            exibirResultados(docData);
+            let htmlCards = "";
+            querySnapshot.forEach((doc) => {
+                htmlCards += montarCardServidor(doc.data());
+            });
+
+            resultsContainer.innerHTML = htmlCards;
+            resultsContainer.classList.add("ativo");
 
         } catch (erro) {
-            console.error("Erro ao consultar servidor:", erro);
-            mostrarMensagem("Erro ao consultar o banco de dados. Verifique sua conexão.", "erro");
+            console.error("Erro na consulta:", erro);
+            mostrarMensagem("Erro ao realizar a busca no banco de dados. Verifique sua conexão.", "erro");
         }
     }
 
-    function exibirResultados(servidor) {
-        document.getElementById("resNome").textContent = servidor.nome || "-";
-        document.getElementById("resCpf").textContent = servidor.cpf || "-";
-        document.getElementById("resTelefone").textContent = servidor.telefone || "-";
-
+    function montarCardServidor(servidor) {
         let htmlMatriculas = "";
 
-        // Renderiza Matrícula 1
+        // Matrícula 1
         if (servidor.matricula1) {
             htmlMatriculas += `
                 <div class="matricula-box">
                     <div class="matricula-title">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">badge</span>
+                        <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
                         Matrícula 1: ${servidor.matricula1.numeroMatricula} (${servidor.matricula1.cargo})
                     </div>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;"><b>Lotação 1:</b> ${servidor.matricula1.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola1.empresa} (${servidor.matricula1.escola1.qtdPassagensDiarias} passes/dia)</p>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação 1:</b> ${servidor.matricula1.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola1.empresa} (${servidor.matricula1.escola1.qtdPassagensDiarias} passes/dia)</p>
             `;
             if (servidor.matricula1.escola2) {
                 htmlMatriculas += `
@@ -469,15 +536,15 @@ body {
             htmlMatriculas += `</div>`;
         }
 
-        // Renderiza Matrícula 2 (se houver)
+        // Matrícula 2
         if (servidor.matricula2) {
             htmlMatriculas += `
                 <div class="matricula-box">
                     <div class="matricula-title">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">badge</span>
+                        <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
                         Matrícula 2: ${servidor.matricula2.numeroMatricula} (${servidor.matricula2.cargo})
                     </div>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;"><b>Lotação 1:</b> ${servidor.matricula2.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola1.empresa} (${servidor.matricula2.escola1.qtdPassagensDiarias} passes/dia)</p>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação 1:</b> ${servidor.matricula2.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola1.empresa} (${servidor.matricula2.escola1.qtdPassagensDiarias} passes/dia)</p>
             `;
             if (servidor.matricula2.escola2) {
                 htmlMatriculas += `
@@ -487,14 +554,32 @@ body {
             htmlMatriculas += `</div>`;
         }
 
-        document.getElementById("detalhesMatriculas").innerHTML = htmlMatriculas;
-        document.getElementById("resultCard").classList.add("ativo");
+        return `
+            <div class="servidor-card">
+                <div class="servidor-header">
+                    <span class="servidor-nome">${servidor.nome}</span>
+                    <div class="servidor-meta">
+                        <span><b>CPF:</b> ${servidor.cpf}</span>
+                        <span><b>Tel:</b> ${servidor.telefone}</span>
+                    </div>
+                </div>
+                ${htmlMatriculas}
+            </div>
+        `;
     }
 
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
+    }
+
+    window.ocultarMensagem = function() {
+        const msg = document.getElementById("mensagem");
+        if (msg.classList.contains("erro") || msg.classList.contains("info")) {
+            msg.className = "mensagem";
+            msg.textContent = "";
+        }
     }
 </script>
 
