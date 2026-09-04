@@ -377,16 +377,15 @@ body {
             <span>Consulta</span>
         </div>
         <h1>Consulta de Beneficiário</h1>
-        <p>Pesquise por CPF, Nome do Servidor ou Escola de Lotação.</p>
+        <p>Pesquise por CPF ou Escola de Lotação.</p>
     </div>
 
-    <!-- CARD DE PESQUISA FLEXÍVEL -->
+    <!-- CARD DE PESQUISA (CPF OU ESCOLA) -->
     <section class="search-card">
         <div class="search-group tipo">
             <label for="tipoBusca">Pesquisar por</label>
             <select id="tipoBusca" onchange="mudarTipoBusca()">
                 <option value="cpf">CPF</option>
-                <option value="nome">Nome</option>
                 <option value="escola">Escola</option>
             </select>
         </div>
@@ -414,7 +413,7 @@ body {
     import { db } from "./firebase.js";
     import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Altera dinamicamente o campo de entrada conforme o tipo de busca selecionado
+    // Altera dinamicamente o campo de entrada conforme o tipo de busca selecionado (CPF ou Escola)
     window.mudarTipoBusca = function() {
         const tipo = document.getElementById("tipoBusca").value;
         const grupoInput = document.getElementById("grupoInput");
@@ -425,12 +424,6 @@ body {
             grupoInput.innerHTML = `
                 <label for="termoBusca" id="labelTermo">Digite o CPF</label>
                 <input type="text" id="termoBusca" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCampoBusca(this)">
-            `;
-        } else if (tipo === "nome") {
-            label.textContent = "Digite o Nome";
-            grupoInput.innerHTML = `
-                <label for="termoBusca" id="labelTermo">Digite o Nome</label>
-                <input type="text" id="termoBusca" placeholder="Digite parte ou o nome completo" oninput="ocultarMensagem()">
             `;
         } else if (tipo === "escola") {
             grupoInput.innerHTML = `
@@ -465,7 +458,7 @@ body {
         ocultarMensagem();
     }
 
-    // PESQUISA INTELIGENTE NO FIREBASE
+    // PESQUISA DIRECIONADA NO FIREBASE
     window.pesquisarServidor = async function() {
         const tipo = document.getElementById("tipoBusca").value;
         const termo = document.getElementById("termoBusca").value.trim();
@@ -486,12 +479,8 @@ body {
             let q;
             if (tipo === "cpf") {
                 q = query(collection(db, "servidores"), where("cpf", "==", termo), limit(1));
-            } else if (tipo === "nome") {
-                // Busca por nome (prefixo exato no Firestore)
-                q = query(collection(db, "servidores"), where("nome", ">=", termo), where("nome", "<=", termo + "\uf8ff"), limit(20));
             } else if (tipo === "escola") {
-                // Busca por escola usando o campo array que armazena as escolas do servidor
-                q = query(collection(db, "servidores"), where("escolas", "array-contains", termo), limit(50));
+                q = query(collection(db, "servidores"), where("escolas", "array-contains", termo), limit(100));
             }
 
             const querySnapshot = await getDocs(q);
@@ -503,7 +492,8 @@ body {
 
             let htmlCards = "";
             querySnapshot.forEach((doc) => {
-                htmlCards += montarCardServidor(doc.data());
+                const escolaFiltro = (tipo === "escola") ? termo : null;
+                htmlCards += montarCardServidor(doc.data(), escolaFiltro);
             });
 
             resultsContainer.innerHTML = htmlCards;
@@ -515,44 +505,71 @@ body {
         }
     }
 
-    function montarCardServidor(servidor) {
+    // MONTAGEM DO CARD COM FILTRAGEM INTELIGENTE DE ESCOLA
+    function montarCardServidor(servidor, escolaFiltro = null) {
         let htmlMatriculas = "";
 
-        // Matrícula 1
-        if (servidor.matricula1) {
-            htmlMatriculas += `
-                <div class="matricula-box">
-                    <div class="matricula-title">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
-                        Matrícula 1: ${servidor.matricula1.numeroMatricula} (${servidor.matricula1.cargo})
-                    </div>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação 1:</b> ${servidor.matricula1.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola1.empresa} (${servidor.matricula1.escola1.qtdPassagensDiarias} passes/dia)</p>
-            `;
-            if (servidor.matricula1.escola2) {
-                htmlMatriculas += `
-                    <p style="font-size: 13px; color: var(--text-secondary);"><b>Lotação 2:</b> ${servidor.matricula1.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola2.empresa} (${servidor.matricula1.escola2.qtdPassagensDiarias} passes/dia)</p>
-                `;
-            }
-            htmlMatriculas += `</div>`;
+        function escolaCombina(escolaObj) {
+            if (!escolaObj) return false;
+            if (!escolaFiltro) return true;
+            return escolaObj.nomeEscola === escolaFiltro;
         }
 
-        // Matrícula 2
-        if (servidor.matricula2) {
-            htmlMatriculas += `
-                <div class="matricula-box">
-                    <div class="matricula-title">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
-                        Matrícula 2: ${servidor.matricula2.numeroMatricula} (${servidor.matricula2.cargo})
-                    </div>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação 1:</b> ${servidor.matricula2.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola1.empresa} (${servidor.matricula2.escola1.qtdPassagensDiarias} passes/dia)</p>
-            `;
-            if (servidor.matricula2.escola2) {
+        // --- MATRÍCULA 1 ---
+        if (servidor.matricula1) {
+            const m1Escola1Match = escolaCombina(servidor.matricula1.escola1);
+            const m1Escola2Match = escolaCombina(servidor.matricula1.escola2);
+
+            const mostrarM1 = !escolaFiltro || m1Escola1Match || m1Escola2Match;
+
+            if (mostrarM1) {
                 htmlMatriculas += `
-                    <p style="font-size: 13px; color: var(--text-secondary);"><b>Lotação 2:</b> ${servidor.matricula2.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola2.empresa} (${servidor.matricula2.escola2.qtdPassagensDiarias} passes/dia)</p>
+                    <div class="matricula-box">
+                        <div class="matricula-title">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
+                            Matrícula 1: ${servidor.matricula1.numeroMatricula} (${servidor.matricula1.cargo})
+                        </div>
                 `;
+
+                if (m1Escola1Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula1.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola1.empresa} (${servidor.matricula1.escola1.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+                if (m1Escola2Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula1.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola2.empresa} (${servidor.matricula1.escola2.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+
+                htmlMatriculas += `</div>`;
             }
-            htmlMatriculas += `</div>`;
         }
+
+        // --- MATRÍCULA 2 ---
+        if (servidor.matricula2) {
+            const m2Escola1Match = escolaCombina(servidor.matricula2.escola1);
+            const m2Escola2Match = escolaCombina(servidor.matricula2.escola2);
+
+            const mostrarM2 = !escolaFiltro || m2Escola1Match || m2Escola2Match;
+
+            if (mostrarM2) {
+                htmlMatriculas += `
+                    <div class="matricula-box">
+                        <div class="matricula-title">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
+                            Matrícula 2: ${servidor.matricula2.numeroMatricula} (${servidor.matricula2.cargo})
+                        </div>
+                `;
+
+                if (m2Escola1Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula2.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola1.empresa} (${servidor.matricula2.escola1.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+                if (m2Escola2Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula2.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola2.empresa} (${servidor.matricula2.escola2.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+
+                htmlMatriculas += `</div>`;
+            }
+        }
+
+        if (!htmlMatriculas) return "";
 
         return `
             <div class="servidor-card">
