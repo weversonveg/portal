@@ -271,7 +271,7 @@ body {
 .summary-box p {
     font-size: 22px;
     font-weight: 700;
-    color: var(--primary);
+    color: #263238;
     margin-top: 6px;
 }
 
@@ -339,6 +339,13 @@ tr:hover td {
     color: #334155;
 }
 
+.mensagem.sucesso {
+    display: block;
+    background: #edf7ee;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
 @media (max-width: 800px) {
     .filter-card {
         flex-direction: column;
@@ -385,7 +392,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Selecione o mês de referência para calcular automaticamente a quantidade de vales com base nos dias úteis letivos.</p>
+        <p>Calcula a quantidade de vales descontando automaticamente os dias de afastamento lançados.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -418,16 +425,16 @@ tr:hover td {
     <!-- RESUMO DO CÁLCULO -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
-            <label>Dias Úteis no Mês</label>
+            <label>Dias Úteis Base</label>
             <p id="sumDiasUteis">0</p>
         </div>
         <div class="summary-box">
             <label>Total de Vínculos / Lotações</label>
             <p id="sumVinculos">0</p>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="border-left: 4px solid var(--green);">
             <label>Total Geral de Passes</label>
-            <p id="sumTotalPasses">0</p>
+            <p id="sumTotalPasses" style="color: var(--green);">0</p>
         </div>
     </section>
 
@@ -440,13 +447,14 @@ tr:hover td {
                     <th>CPF / Matrícula</th>
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
-                    <th>Passes / Dia</th>
+                    <th>Passes/Dia</th>
                     <th>Dias Úteis</th>
+                    <th>Afastamentos</th>
                     <th>Total no Mês</th>
                 </tr>
             </thead>
             <tbody id="tabelaCorpo">
-                <!-- Linhas inseridas dinamicamente via JS -->
+                <!-- Inserido via JS -->
             </tbody>
         </table>
     </section>
@@ -464,7 +472,6 @@ tr:hover td {
         verificarDiasUteis();
     });
 
-    // Verifica se o mês possui dias úteis configurados
     window.verificarDiasUteis = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         if (!mesAno) return;
@@ -474,7 +481,7 @@ tr:hover td {
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
-                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
+                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}.`, "erro");
             } else {
                 ocultarMensagem();
             }
@@ -483,7 +490,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO DE VALES
+    // MOTOR DE CÁLCULO COM AVISO VISUAL NA TELA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -498,18 +505,35 @@ tr:hover td {
         }
 
         try {
-            // 1. Pega os dias úteis configurados para o mês
+            // 1. Pega os dias úteis do mês
             const configRef = doc(db, "configuracoes", mesAno);
             const configSnap = await getDoc(configRef);
 
             if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Vá na tela de Configuração e defina os dias úteis primeiro.`, "erro");
+                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados!`, "erro");
                 return;
             }
 
-            const diasUteis = configSnap.data().diasUteis;
+            const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca os servidores no Firebase (filtrando por escola se necessário)
+            // 2. Busca lançamentos de afastamento e armazena em mapa
+            const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+            const lancSnap = await getDocs(lancQuery);
+            const afastamentosMap = {};
+            let totalLancamentosEncontrados = 0;
+
+            lancSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                const dias = Number(data.diasAfastamento) || 0;
+                totalLancamentosEncontrados++;
+
+                if (data.cpf) {
+                    const cpfL = data.cpf.replace(/\D/g, "");
+                    afastamentosMap[cpfL] = dias;
+                }
+            });
+
+            // 3. Busca os servidores
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -529,18 +553,26 @@ tr:hover td {
             let linhasTabela = "";
             let totalVinculos = 0;
             let totalGeralPasses = 0;
+            let totalComAfastamentoAplicado = 0;
 
-            // 3. Processa cada servidor e suas lotações
-            querySnapshot.forEach((doc) => {
-                const s = doc.data();
+            // 4. Processa o cálculo cruzando os dados
+            querySnapshot.forEach((docServidor) => {
+                const s = docServidor.data();
+                const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
-                // Função auxiliar para extrair e calcular cada lotação
+                const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
+                if (diasAfastamento > 0) {
+                    totalComAfastamentoAplicado++;
+                }
+
+                const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
+
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
                     if (escolaSelecionada !== "TODAS" && escolaObj.nomeEscola !== escolaSelecionada) return;
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
-                    const totalMes = passesDiarios * diasUteis;
+                    const totalMes = passesDiarios * diasEfetivos;
 
                     totalVinculos++;
                     totalGeralPasses += totalMes;
@@ -552,19 +584,18 @@ tr:hover td {
                             <td>${escolaObj.nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td>${diasUteis}</td>
+                            <td>${diasUteisBase}</td>
+                            <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
                     `;
                 }
 
-                // Processa Matrícula 1
                 if (s.matricula1) {
                     processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
                     processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
                 }
 
-                // Processa Matrícula 2
                 if (s.matricula2) {
                     processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
                     processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
@@ -572,14 +603,16 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            // 4. Exibe os totais e a tabela
-            document.getElementById("sumDiasUteis").textContent = diasUteis;
+            // Exibe um resumo visual direto na tela para você conferir no celular
+            mostrarMensagem(`Cálculo concluído! Lançamentos lidos no banco: ${totalLancamentosEncontrados} | Servidores com desconto aplicado: ${totalComAfastamentoAplicado}`, "sucesso");
+
+            document.getElementById("sumDiasUteis").textContent = diasUteisBase;
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
