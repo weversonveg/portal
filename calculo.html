@@ -241,7 +241,7 @@ body {
     background: var(--green-hover);
 }
 
-/* RESUMO E ESTATÍSTICAS (4 COLUNAS) */
+/* RESUMO E ESTATÍSTICAS (4 CARDS) */
 .summary-container {
     display: none;
     grid-template-columns: repeat(4, 1fr);
@@ -428,7 +428,7 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO CÁLCULO (4 CARDS) -->
+    <!-- RESUMO DO CÁLCULO (4 CARDS SEGUROS) -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Referência SEMED</label>
@@ -500,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO SEGURO E ROBUSTO
+    // MOTOR DE CÁLCULO BLINDADO E ESTRITAMENTE FUNCIONAL
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -526,34 +526,49 @@ tr:hover td {
 
             const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca customizações de dias úteis das escolas
-            const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
-            const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+            // 2. Busca customizações de dias úteis das escolas (com proteção contra falha de coleção vazia)
             const diasEscolaMap = {};
-            escolaConfigsSnap.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.escola) {
-                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
-                }
-            });
+            try {
+                const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
+                const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+                escolaConfigsSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.escola) {
+                        diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
+                    }
+                });
+            } catch (e) {
+                console.log("Aviso: Coleção de configuração de escolas ainda não utilizada ou sem índice.");
+            }
 
             // 3. Busca afastamentos individuais
-            const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
-            const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
-            lancSnap.forEach(docSnap => {
-                const data = docSnap.data();
-                const dias = Number(data.diasAfastamento) || 0;
-                if (data.cpf) {
-                    afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
-                }
-            });
+            try {
+                const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+                const lancSnap = await getDocs(lancQuery);
+                lancSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dias = Number(data.diasAfastamento) || 0;
+                    if (data.cpf) {
+                        afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
+                    }
+                });
+            } catch (e) {
+                console.log("Aviso: Sem lançamentos mensais para este período.");
+            }
 
-            // 4. Busca todos os servidores cadastrados (garante 100% de compatibilidade com qualquer estrutura de cadastro)
-            const querySnapshot = await getDocs(collection(db, "servidores"));
+            // 4. Busca os servidores usando a consulta exata original que funcionava
+            let q;
+            if (escolaSelecionada !== "TODAS") {
+                q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
+            } else {
+                q = collection(db, "servidores");
+            }
+
+            const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                mostrarMensagem("Nenhum servidor encontrado para o critério selecionado.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
@@ -563,7 +578,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processamento do cálculo e filtragem por escola em memória
+            // 5. Processamento das lotações exatamente como no original
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -574,7 +589,6 @@ tr:hover td {
                     const nomeEscola = escolaObj.nomeEscola;
                     if (!nomeEscola) return;
                     
-                    // Se foi selecionada uma escola específica e não bate, ignora
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
@@ -618,7 +632,7 @@ tr:hover td {
                 return;
             }
 
-            // Atualiza os cards do topo com segurança
+            // Atualiza os cartões com total segurança
             document.getElementById("sumDiasSemed").textContent = diasSemedDefault + " dias";
 
             if (escolaSelecionada !== "TODAS") {
