@@ -244,7 +244,7 @@ body {
 /* RESUMO E ESTATÍSTICAS */
 .summary-container {
     display: none;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -269,7 +269,7 @@ body {
 }
 
 .summary-box p {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #263238;
     margin-top: 6px;
@@ -339,17 +339,23 @@ tr:hover td {
     color: #334155;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 950px) {
     .filter-card {
         flex-direction: column;
         align-items: stretch;
     }
     .summary-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
     table {
         display: block;
         overflow-x: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .summary-container {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -421,6 +427,10 @@ tr:hover td {
             <label>Dias Úteis Base</label>
             <p id="sumDiasUteis">0</p>
         </div>
+        <div class="summary-box" style="border-left: 4px solid var(--primary);">
+            <label>Dias da Unidade (Escola)</label>
+            <p id="sumDiasEscola" style="color: var(--primary);">Padrão</p>
+        </div>
         <div class="summary-box">
             <label>Total de Vínculos / Lotações</label>
             <p id="sumVinculos">0</p>
@@ -483,7 +493,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM AFASTAMENTOS
+    // MOTOR DE CÁLCULO INTEGRADO COM AFASTAMENTOS E DIAS AJUSTADOS DA ESCOLA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -507,9 +517,20 @@ tr:hover td {
                 return;
             }
 
-            const diasUteisBase = configSnap.data().diasUteis;
+            const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca todos os afastamentos lançados para este mês de uma só vez (otimização de leitura)
+            // 2. Busca customizações de dias úteis feitas pelas escolas para este mês
+            const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
+            const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+            const diasEscolaMap = {};
+            escolaConfigsSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.escola) {
+                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasUteisBase;
+                }
+            });
+
+            // 3. Busca todos os afastamentos lançados para este mês de uma só vez (otimização de leitura)
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
@@ -521,7 +542,7 @@ tr:hover td {
                 }
             });
 
-            // 3. Busca os servidores no Firebase
+            // 4. Busca os servidores no Firebase
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -542,18 +563,23 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 4. Processa o cálculo aplicando os descontos
+            // 5. Processa o cálculo aplicando os dias da escola e descontos de afastamento
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
                 const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
-                
-                // Dias efetivos de trabalho = dias úteis menos os afastamentos (garantindo que não fique negativo)
-                const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
-                    if (escolaSelecionada !== "TODAS" && escolaObj.nomeEscola !== escolaSelecionada) return;
+                    const nomeEscola = escolaObj.nomeEscola;
+                    if (!nomeEscola) return;
+                    if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
+
+                    // Pega os dias da unidade específica ou o padrão base
+                    const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
+
+                    // Dias efetivos = dias úteis da escola menos os afastamentos (garantindo que não fique negativo)
+                    const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
                     const totalMes = passesDiarios * diasEfetivos;
@@ -565,10 +591,10 @@ tr:hover td {
                         <tr>
                             <td><b>${s.nome}</b></td>
                             <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
-                            <td>${escolaObj.nomeEscola}</td>
+                            <td>${nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td>${diasUteisBase}</td>
+                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasUteisBase ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
@@ -593,7 +619,17 @@ tr:hover td {
                 return;
             }
 
-            document.getElementById("sumDiasUteis").textContent = diasUteisBase;
+            document.getElementById("sumDiasUteis").textContent = diasUteisBase + " dias";
+
+            if (escolaSelecionada !== "TODAS") {
+                const diasEscolaAtual = diasEscolaMap[escolaSelecionada] !== undefined ? diasEscolaMap[escolaSelecionada] : diasUteisBase;
+                const statusStr = diasEscolaAtual !== diasUteisBase ? " (Ajustado)" : " (Padrão)";
+                document.getElementById("sumDiasEscola").textContent = diasEscolaAtual + " dias" + statusStr;
+            } else {
+                const qtdCustomizadas = Object.keys(diasEscolaMap).length;
+                document.getElementById("sumDiasEscola").textContent = qtdCustomizadas > 0 ? `${qtdCustomizadas} unidade(s) c/ ajuste` : "Todas no Padrão";
+            }
+
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
