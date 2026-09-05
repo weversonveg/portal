@@ -385,7 +385,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Calcula a quantidade de vales descontando automaticamente os dias de afastamento lançados pelas escolas.</p>
+        <p>Calcula a quantidade de vales descontando automaticamente os dias de afastamento lançados.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -474,7 +474,7 @@ tr:hover td {
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
-                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
+                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}.`, "erro");
             } else {
                 ocultarMensagem();
             }
@@ -483,7 +483,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM AFASTAMENTOS
+    // MOTOR DE CÁLCULO COM CRUZAMENTO ROBUSTO POR ID E CPF
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -498,30 +498,32 @@ tr:hover td {
         }
 
         try {
-            // 1. Pega os dias úteis configurados para o mês
+            // 1. Pega os dias úteis do mês
             const configRef = doc(db, "configuracoes", mesAno);
             const configSnap = await getDoc(configRef);
 
             if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Defina os dias úteis na tela de configuração primeiro.`, "erro");
+                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados!`, "erro");
                 return;
             }
 
-            const diasUteisBase = configSnap.data().diasUteis;
+            const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca todos os afastamentos lançados para este mês de uma só vez (otimização de leitura)
+            // 2. Busca todos os lançamentos de afastamento do mês
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
+
             lancSnap.forEach(docSnap => {
                 const data = docSnap.data();
-                if (data.cpf) {
-                    const cpfLimpo = data.cpf.replace(/\D/g, "");
-                    afastamentosMap[cpfLimpo] = Number(data.diasAfastamento) || 0;
-                }
+                const dias = Number(data.diasAfastamento) || 0;
+                
+                // Mapeia tanto pelo ID do servidor quanto pelo CPF limpo para garantir compatibilidade
+                if (data.servidorId) afastamentosMap[data.servidorId] = dias;
+                if (data.cpf) afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
             });
 
-            // 3. Busca os servidores no Firebase
+            // 3. Busca os servidores
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -542,13 +544,14 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 4. Processa o cálculo aplicando os descontos
-            querySnapshot.forEach((doc) => {
-                const s = doc.data();
+            // 4. Processa o cálculo aplicando o desconto de forma garantida
+            querySnapshot.forEach((docServidor) => {
+                const s = docServidor.data();
+                const servidorId = docServidor.id;
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-                const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
-                
-                // Dias efetivos de trabalho = dias úteis menos os afastamentos (garantindo que não fique negativo)
+
+                // Verifica o afastamento usando o ID do documento ou o CPF limpo
+                const diasAfastamento = afastamentosMap[servidorId] || afastamentosMap[cpfLimpo] || 0;
                 const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
@@ -587,7 +590,7 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
