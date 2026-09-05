@@ -11,7 +11,7 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<title>Relatórios e Exportação - Vale Transporte</title>
+<title>Relatórios Avançados e PDF - Vale Transporte</title>
 
 <style>
 
@@ -141,7 +141,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* CARD DE FILTROS */
+/* CARD DE FILTROS AVANÇADOS */
 .filter-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -150,14 +150,19 @@ body {
     padding: 24px;
     margin-bottom: 24px;
     display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    align-items: flex-end;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
 }
 
 .filter-group label {
@@ -185,6 +190,33 @@ body {
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
 
+.filter-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.filter-checkbox-group input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e5e8eb;
+    padding-top: 16px;
+}
+
 .btn-gerar {
     height: 44px;
     background: var(--primary);
@@ -198,7 +230,6 @@ body {
     align-items: center;
     gap: 8px;
     transition: background 0.15s;
-    flex-shrink: 0;
 }
 
 .btn-gerar:hover {
@@ -218,7 +249,6 @@ body {
     align-items: center;
     gap: 8px;
     transition: background 0.15s;
-    flex-shrink: 0;
 }
 
 .btn-pdf:hover {
@@ -278,7 +308,6 @@ body {
     display: block;
 }
 
-/* CABEÇALHO DO RELATÓRIO PARA IMPRESSÃO */
 .print-report-header {
     display: none;
     text-align: center;
@@ -356,7 +385,7 @@ tr:hover td {
     color: #2e7d32;
 }
 
-/* ESTILOS ESPECÍFICOS PARA GERAÇÃO DE PDF / IMPRESSÃO */
+/* IMPRESSÃO / PDF */
 @media print {
     body {
         background: white;
@@ -385,10 +414,9 @@ tr:hover td {
     }
 }
 
-@media (max-width: 800px) {
-    .filter-card {
-        flex-direction: column;
-        align-items: stretch;
+@media (max-width: 900px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
     }
     .summary-container {
         grid-template-columns: 1fr;
@@ -420,10 +448,10 @@ tr:hover td {
                 <span class="material-symbols-outlined">home</span>
                 <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
                 <span>/</span>
-                <span>Relatórios e PDF</span>
+                <span>Relatórios Avançados e PDF</span>
             </div>
-            <h1>Relatório Oficial de Vales</h1>
-            <p>Gere e exporte o fechamento consolidado para apresentação ou arquivo em PDF.</p>
+            <h1>Central de Relatórios de Vales</h1>
+            <p>Filtre por escola, cargo ou empresa e exporte relatórios consolidados em PDF.</p>
         </div>
         <div>
             <button type="button" id="btnExportarPdf" class="btn-pdf" onclick="exportarPDF()" disabled>
@@ -433,29 +461,50 @@ tr:hover td {
         </div>
     </div>
 
-    <!-- CARD DE FILTROS -->
+    <!-- CARD DE FILTROS AVANÇADOS -->
     <section class="filter-card">
-        <div class="filter-group">
-            <label for="mesReferencia">Mês de Referência</label>
-            <input type="month" id="mesReferencia">
+        <div class="filter-grid">
+            
+            <div class="filter-group">
+                <label for="mesReferencia">Mês de Referência <span>*</span></label>
+                <input type="month" id="mesReferencia">
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroEscola">Escola / Unidade</label>
+                <select id="filtroEscola">
+                    <option value="TODAS">Todas as Escolas</option>
+                    <option value="CEAE">CEAE</option>
+                    <option value="CETEPE">CETEPE</option>
+                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroCargo">Cargo / Função</label>
+                <input type="text" id="filtroCargo" placeholder="Ex: Professor, Apoio...">
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroEmpresa">Empresa / Concessionária</label>
+                <input type="text" id="filtroEmpresa" placeholder="Ex: Viação X, Empresa Y...">
+            </div>
+
+            <div class="filter-checkbox-group">
+                <input type="checkbox" id="filtroApenasFalta">
+                <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com dias de afastamento lançados</label>
+            </div>
+
         </div>
 
-        <div class="filter-group">
-            <label for="filtroEscola">Selecione a Escola</label>
-            <select id="filtroEscola">
-                <option value="TODAS">Todas as Escolas</option>
-                <option value="CEAE">CEAE</option>
-                <option value="CETEPE">CETEPE</option>
-                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-            </select>
+        <div class="filter-actions">
+            <button type="button" class="btn-gerar" onclick="gerarRelatorio()">
+                <span class="material-symbols-outlined">description</span>
+                Gerar Relatório Avançado
+            </button>
         </div>
-
-        <button type="button" class="btn-gerar" onclick="gerarRelatorio()">
-            <span class="material-symbols-outlined">description</span>
-            Gerar Relatório
-        </button>
     </section>
 
     <div id="mensagem" class="mensagem"></div>
@@ -467,7 +516,7 @@ tr:hover td {
             <p id="sumDiasUteis">0 dias</p>
         </div>
         <div class="summary-box">
-            <label>Total de Vínculos</label>
+            <label>Total de Vínculos Filtrados</label>
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--green);">
@@ -480,13 +529,14 @@ tr:hover td {
     <section id="tableCard" class="table-card">
         <div class="print-report-header">
             <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
-            <p id="printSubtitulo">Relatório de Fechamento de Vale Transporte</p>
+            <p id="printSubtitulo">Relatório Consolidado de Vale Transporte</p>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Servidor</th>
                     <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
@@ -516,6 +566,10 @@ tr:hover td {
     window.gerarRelatorio = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
+        const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
+        const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
+        const apenasFalta = document.getElementById("filtroApenasFalta").checked;
+
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnExportarPdf");
 
@@ -578,17 +632,10 @@ tr:hover td {
             }
 
             // 4. Busca servidores
-            let q;
-            if (escolaSelecionada !== "TODAS") {
-                q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
-            } else {
-                q = collection(db, "servidores");
-            }
-
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await getDocs(collection(db, "servidores"));
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor encontrado para os critérios selecionados.", "info");
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
@@ -606,10 +653,22 @@ tr:hover td {
                     if (!escolaObj) return;
                     const nomeEscola = escolaObj.nomeEscola;
                     if (!nomeEscola) return;
+
+                    // Filtro por Escola
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
+
+                    // Filtro por Cargo (busca parcial sem diferenciar maiúsculas/minúsculas)
+                    if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
+
+                    // Filtro por Empresa (busca parcial)
+                    const empresa = escolaObj.empresa || "";
+                    if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
 
                     const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
                     const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
+
+                    // Filtro opcional: Apenas servidores com falta
+                    if (apenasFalta && diasAfastamento <= 0) return;
 
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
@@ -624,8 +683,9 @@ tr:hover td {
                         <tr>
                             <td><b>${s.nome}</b></td>
                             <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
+                            <td>${cargo || '-'}</td>
                             <td>${nomeEscola}</td>
-                            <td>${escolaObj.empresa}</td>
+                            <td>${empresa || '-'}</td>
                             <td>${passesDiarios}</td>
                             <td><b>${diasEfetivos} dias</b></td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento}</span></td>
@@ -646,14 +706,14 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para os filtros selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
             // Atualiza cabeçalho para impressão
-            document.getElementById("printSubtitulo").textContent = `Relatório de Fechamento - Mês: ${mesAno} | Unidade: ${escolaSelecionada}`;
+            document.getElementById("printSubtitulo").textContent = `Relatório de Fechamento - Mês: ${mesAno} | Escola: ${escolaSelecionada} | Cargo: ${cargoFiltro || 'Todos'} | Empresa: ${empresaFiltro || 'Todas'}`;
 
             // Atualiza cards de resumo
             document.getElementById("sumDiasUteis").textContent = diasSemedDefault + " dias (Base)";
@@ -665,7 +725,7 @@ tr:hover td {
             document.getElementById("tableCard").classList.add("ativo");
             
             btnPdf.disabled = false;
-            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
+            mostrarMensagem("Relatório avançado gerado com sucesso!", "sucesso");
 
         } catch (erro) {
             console.error("Erro ao gerar relatório:", erro);
@@ -673,7 +733,6 @@ tr:hover td {
         }
     }
 
-    // FUNÇÃO NATIVA DE EXPORTAÇÃO PARA PDF VIA IMPRESSÃO DO NAVEGADOR
     window.exportarPDF = function() {
         window.print();
     }
