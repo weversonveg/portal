@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Cálculo de Vales - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+
+    --red: #c62828;
+    --red-hover: #a51f1f;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR */
+.topbar {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 24px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+/* INDICADOR DE SINAL DE REDE */
+.status-conexao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f5;
+    border: 1px solid #e2e8f0;
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: #2e7d32;
+    border-radius: 1px;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online {
+    color: #2e7d32;
+    background: #edf7ee;
+    border-color: #c8e6c9;
+}
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 32px 0;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 10px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 6px;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* CARD DE FILTROS */
+.filter-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 7px;
+}
+
+.filter-group input,
+.filter-group select {
+    height: 44px;
+    padding: 0 13px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.btn-calcular {
+    height: 44px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-calcular:hover {
+    background: var(--green-hover);
+}
+
+/* RESUMO E ESTATÍSTICAS */
+.summary-container {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-container.ativo {
+    display: grid;
+}
+
+.summary-box {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+}
+
+.summary-box label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.summary-box p {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 6px;
+}
+
+/* TABELA DE RESULTADOS */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+}
+
+.table-card.ativo {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background: #fafbfc;
+    padding: 14px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #263238;
+    border-bottom: 1px solid #edf2f7;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
+}
+
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+@media (max-width: 800px) {
+    .filter-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .summary-container {
+        grid-template-columns: 1fr;
+    }
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Cálculo de Vales</span>
+        <div class="status-conexao online">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
+            <span>Online</span>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <span>Relatórios</span>
+            <span>/</span>
+            <span>Cálculo de Vales</span>
+        </div>
+        <h1>Fechamento e Cálculo de Passes</h1>
+        <p>Selecione o mês de referência para calcular automaticamente a quantidade de vales com base nos dias úteis letivos.</p>
+    </div>
+
+    <!-- CARD DE FILTROS -->
+    <section class="filter-card">
+        <div class="filter-group">
+            <label for="mesReferencia">Mês de Referência</label>
+            <input type="month" id="mesReferencia" onchange="verificarDiasUteis()">
+        </div>
+
+        <div class="filter-group">
+            <label for="filtroEscola">Filtrar por Escola (Opcional)</label>
+            <select id="filtroEscola">
+                <option value="TODAS">Todas as Escolas</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+            </select>
+        </div>
+
+        <button type="button" class="btn-calcular" onclick="executarCalculo()">
+            <span class="material-symbols-outlined">calculate</span>
+            Calcular Vales
+        </button>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <!-- RESUMO DO CÁLCULO -->
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label>Dias Úteis no Mês</label>
+            <p id="sumDiasUteis">0</p>
+        </div>
+        <div class="summary-box">
+            <label>Total de Vínculos / Lotações</label>
+            <p id="sumVinculos">0</p>
+        </div>
+        <div class="summary-box">
+            <label>Total Geral de Passes</label>
+            <p id="sumTotalPasses">0</p>
+        </div>
+    </section>
+
+    <!-- TABELA DE RESULTADOS -->
+    <section id="tableCard" class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Escola / Lotação</th>
+                    <th>Concessionária</th>
+                    <th>Passes / Dia</th>
+                    <th>Dias Úteis</th>
+                    <th>Total no Mês</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo">
+                <!-- Linhas inseridas dinamicamente via JS -->
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        verificarDiasUteis();
+    });
+
+    // Verifica se o mês possui dias úteis configurados
+    window.verificarDiasUteis = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        if (!mesAno) return;
+
+        try {
+            const docRef = doc(db, "configuracoes", mesAno);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
+            } else {
+                ocultarMensagem();
+            }
+        } catch (erro) {
+            console.error("Erro ao verificar dias úteis:", erro);
+        }
+    }
+
+    // MOTOR DE CÁLCULO DE VALES
+    window.executarCalculo = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        const escolaSelecionada = document.getElementById("filtroEscola").value;
+        const msgDiv = document.getElementById("mensagem");
+
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
+
+        if (!mesAno) {
+            mostrarMensagem("Selecione o mês de referência.", "erro");
+            return;
+        }
+
+        try {
+            // 1. Pega os dias úteis configurados para o mês
+            const configRef = doc(db, "configuracoes", mesAno);
+            const configSnap = await getDoc(configRef);
+
+            if (!configSnap.exists()) {
+                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Vá na tela de Configuração e defina os dias úteis primeiro.`, "erro");
+                return;
+            }
+
+            const diasUteis = configSnap.data().diasUteis;
+
+            // 2. Busca os servidores no Firebase (filtrando por escola se necessário)
+            let q;
+            if (escolaSelecionada !== "TODAS") {
+                q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
+            } else {
+                q = collection(db, "servidores");
+            }
+
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                mostrarMensagem("Nenhum servidor encontrado para o critério selecionado.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                return;
+            }
+
+            let linhasTabela = "";
+            let totalVinculos = 0;
+            let totalGeralPasses = 0;
+
+            // 3. Processa cada servidor e suas lotações
+            querySnapshot.forEach((doc) => {
+                const s = doc.data();
+
+                // Função auxiliar para extrair e calcular cada lotação
+                function processarEscola(matriculaNum, cargo, escolaObj) {
+                    if (!escolaObj) return;
+                    if (escolaSelecionada !== "TODAS" && escolaObj.nomeEscola !== escolaSelecionada) return;
+
+                    const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
+                    const totalMes = passesDiarios * diasUteis;
+
+                    totalVinculos++;
+                    totalGeralPasses += totalMes;
+
+                    linhasTabela += `
+                        <tr>
+                            <td><b>${s.nome}</b></td>
+                            <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
+                            <td>${escolaObj.nomeEscola}</td>
+                            <td>${escolaObj.empresa}</td>
+                            <td>${passesDiarios}</td>
+                            <td>${diasUteis}</td>
+                            <td><b>${totalMes} passes</b></td>
+                        </tr>
+                    `;
+                }
+
+                // Processa Matrícula 1
+                if (s.matricula1) {
+                    processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
+                    processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
+                }
+
+                // Processa Matrícula 2
+                if (s.matricula2) {
+                    processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
+                    processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
+                }
+            });
+
+            if (totalVinculos === 0) {
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                return;
+            }
+
+            // 4. Exibe os totais e a tabela
+            document.getElementById("sumDiasUteis").textContent = diasUteis;
+            document.getElementById("sumVinculos").textContent = totalVinculos;
+            document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            document.getElementById("summaryContainer").classList.add("ativo");
+            document.getElementById("tableCard").classList.add("ativo");
+
+        } catch (erro) {
+            console.error("Erro no cálculo:", erro);
+            mostrarMensagem("Erro ao processar o cálculo. Verifique sua conexão.", "erro");
+        }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+
+    function ocultarMensagem() {
+        const msg = document.getElementById("mensagem");
+        msg.className = "mensagem";
+        msg.textContent = "";
+    }
+</script>
+
+</body>
+</html>
