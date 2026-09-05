@@ -605,14 +605,12 @@ tr:hover td {
         }
 
         try {
-            // 1. Busca o padrão de dias úteis da SEMED para este mês
             const semedConfigRef = doc(db, "configuracoes", mesAno);
             const semedSnap = await getDoc(semedConfigRef);
 
             const diasSemedDefault = semedSnap.exists() ? (Number(semedSnap.data().diasUteis) || 22) : 22;
             document.getElementById("infoSemedDefault").textContent = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
 
-            // 2. Busca se já existe um ajuste específico salvo para esta escola neste mês
             const configEscolaId = `${mesAno}_${escola}`;
             const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
             const configEscolaSnap = await getDoc(configEscolaRef);
@@ -622,7 +620,6 @@ tr:hover td {
 
             schoolConfigCard.classList.add("ativo");
 
-            // 3. Busca os servidores da escola
             const q = query(collection(db, "servidores"), where("escolas", "array-contains", escola));
             const querySnapshot = await getDocs(q);
 
@@ -647,7 +644,8 @@ tr:hover td {
                 }
 
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-                const lancamentoId = `${mesAno}_${cpfLimpo}`;
+                // ID único do lançamento agora inclui a ESCOLA para separar as faltas por unidade
+                const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
                 const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
                 const lancSnap = await getDoc(lancRef);
                 
@@ -672,7 +670,7 @@ tr:hover td {
                             ${badgeHtml}
                         </td>
                         <td>
-                            <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${s.cpf}', '${servidorId}')">
+                            <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}')">
                                 <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
                             </button>
                         </td>
@@ -693,7 +691,6 @@ tr:hover td {
         }
     }
 
-    // SALVA OS DIAS ÚTEIS ESPECÍFICOS DA ESCOLA
     window.salvarDiasUteisEscola = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escola = document.getElementById("filtroEscola").value;
@@ -718,16 +715,17 @@ tr:hover td {
         }
     }
 
-    // SALVA O AFASTAMENTO DO SERVIDOR
-    window.salvarAfastamento = async function(mesAno, cpfServidor, servidorId) {
+    // SALVA O AFASTAMENTO VINCULADO À ESCOLA ESPECÍFICA
+    window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId) {
         const inputDias = document.getElementById(`afastamento_${servidorId}`);
         const diasAfastamento = Number(inputDias.value) || 0;
         const cpfLimpo = cpfServidor.replace(/\D/g, "");
-        const lancamentoId = `${mesAno}_${cpfLimpo}`;
+        const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
 
         try {
             await setDoc(doc(db, "lancamentos_mensais", lancamentoId), {
                 mesReferencia: mesAno,
+                escola: escola,
                 servidorId: servidorId,
                 cpf: cpfServidor,
                 diasAfastamento: diasAfastamento,
