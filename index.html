@@ -11,7 +11,7 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<title>Painel Principal - Gestão de Vale Transporte</title>
+<title>Início - Gestão de Vale Transporte</title>
 
 <style>
 
@@ -31,8 +31,7 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
     --background: #f4f6f8;
     --white: #ffffff;
 
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 76px;
+    --sidebar-width: 280px;
     --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -51,7 +50,7 @@ html, body {
     color: var(--text);
 }
 
-.app-container {
+.layout-wrapper {
     display: flex;
     width: 100%;
     height: 100vh;
@@ -66,50 +65,48 @@ html, body {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
-    z-index: 100;
+    transition: transform 0.3s ease, width 0.3s ease;
+    z-index: 1000;
+    flex-shrink: 0;
 }
 
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
+/* Estado fechado no mobile / desktop */
+.sidebar.fechado {
+    transform: translateX(-100%);
+    width: 0;
+    overflow: hidden;
+    border-right: none;
 }
 
 .sidebar-header {
-    height: 68px;
-    padding: 0 20px;
+    height: 70px;
+    padding: 0 24px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.sidebar-title {
-    font-size: 15px;
+.sidebar-brand {
+    font-size: 16px;
     font-weight: 700;
     color: var(--primary);
     white-space: nowrap;
-    transition: opacity 0.2s ease;
-}
-
-.sidebar.collapsed .sidebar-title {
-    opacity: 0;
-    pointer-events: none;
-    display: none;
 }
 
 .sidebar-menu {
     list-style: none;
-    padding: 16px 12px;
+    padding: 20px 14px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     flex-grow: 1;
     overflow-y: auto;
 }
@@ -118,14 +115,13 @@ html, body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 12px 14px;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border-radius: 8px;
     text-decoration: none;
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
     transition: all 0.15s ease;
-    white-space: nowrap;
 }
 
 .menu-item a:hover {
@@ -141,31 +137,27 @@ html, body {
 
 .menu-item .material-symbols-outlined {
     font-size: 22px;
-    flex-shrink: 0;
-}
-
-.sidebar.collapsed .menu-item span:not(.material-symbols-outlined) {
-    display: none;
 }
 
 /* CONTEÚDO PRINCIPAL */
-.main-wrapper {
+.main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    background: var(--background);
 }
 
 /* TOOBAR SUPERIOR */
 .topbar {
-    height: 68px;
+    height: 70px;
     background: var(--white);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 28px;
+    padding: 0 32px;
     flex-shrink: 0;
 }
 
@@ -175,23 +167,25 @@ html, body {
     gap: 16px;
 }
 
-.btn-toggle {
+.btn-menu-toggle {
     background: none;
-    border: none;
+    border: 1px solid var(--border);
     cursor: pointer;
-    color: var(--text-secondary);
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    transition: background 0.15s;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--white);
+    transition: all 0.15s;
 }
 
-.btn-toggle:hover {
-    background: var(--background);
+.btn-menu-toggle:hover {
+    background: var(--primary-light);
     color: var(--primary);
+    border-color: var(--primary);
 }
 
 .topbar-title {
@@ -200,93 +194,86 @@ html, body {
     color: #3d2450;
 }
 
-.user-profile {
+.user-badge {
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
 }
 
-.user-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: var(--primary-light);
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-}
-
-/* ÁREA DE TRABALHO (DASHBOARD) */
-.content-area {
+/* ÁREA DE TRABALHO / DASHBOARD */
+.dashboard-body {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 32px;
+    padding: 36px;
 }
 
-.welcome-banner {
+.hero-banner {
     background: linear-gradient(135deg, var(--primary) 0%, #47206b 100%);
     color: var(--white);
-    padding: 32px;
+    padding: 36px 40px;
     border-radius: 12px;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     box-shadow: var(--shadow);
 }
 
-.welcome-banner h1 {
+.hero-banner h1 {
     font-size: 26px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
-.welcome-banner p {
+.hero-banner p {
     font-size: 14px;
     opacity: 0.9;
-    max-width: 650px;
+    max-width: 700px;
     line-height: 1.5;
 }
 
-.section-title {
-    font-size: 16px;
+.section-heading {
+    font-size: 18px;
     font-weight: 700;
     color: var(--text);
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
-/* CARDS DE ATALHO RÁPIDO */
-.modules-grid {
+/* GRID DE MÓDULOS */
+.cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
 }
 
-.module-card {
+.nav-card {
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 24px;
+    padding: 28px;
     text-decoration: none;
     color: var(--text);
     box-shadow: var(--shadow);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
-.module-card:hover {
+.nav-card:hover {
     transform: translateY(-3px);
     border-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(91,42,134,0.08);
 }
 
-.module-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
+.card-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
     background: var(--primary-light);
     color: var(--primary);
     display: flex;
@@ -294,32 +281,33 @@ html, body {
     justify-content: center;
 }
 
-.module-icon .material-symbols-outlined {
-    font-size: 26px;
+.card-icon-box .material-symbols-outlined {
+    font-size: 28px;
 }
 
-.module-card h3 {
-    font-size: 16px;
+.nav-card h3 {
+    font-size: 17px;
     font-weight: 700;
     color: var(--text);
 }
 
-.module-card p {
+.nav-card p {
     font-size: 13px;
     color: var(--text-secondary);
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
+/* Responsividade para telas menores */
 @media (max-width: 768px) {
     .sidebar {
         position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        transform: translateX(-100%);
+        height: 100%;
     }
-    .sidebar.mobile-show {
-        transform: translateX(0);
+    .topbar {
+        padding: 0 16px;
+    }
+    .dashboard-body {
+        padding: 20px;
     }
 }
 
@@ -328,13 +316,13 @@ html, body {
 
 <body>
 
-<div class="app-container">
+<div class="layout-wrapper">
     
     <!-- MENU LATERAL -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebarMenu">
         <div class="sidebar-header">
             <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
-            <span class="sidebar-title">Vale Transporte</span>
+            <span class="sidebar-brand">Vale Transporte</span>
         </div>
 
         <ul class="sidebar-menu">
@@ -347,19 +335,19 @@ html, body {
             <li class="menu-item">
                 <a href="servidores.html">
                     <span class="material-symbols-outlined">badge</span>
-                    <span>Cadastro de Servidores</span>
+                    <span>Servidores & Vínculos</span>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="configuracao.html">
                     <span class="material-symbols-outlined">calendar_month</span>
-                    <span>Calendário SEMED</span>
+                    <span>Dias Úteis (SEMED)</span>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="lancamentos.html">
                     <span class="material-symbols-outlined">edit_note</span>
-                    <span>Lançamentos da Escola</span>
+                    <span>Lançamentos da Unidade</span>
                 </a>
             </li>
             <li class="menu-item">
@@ -371,64 +359,64 @@ html, body {
         </ul>
     </aside>
 
-    <!-- WRAPPER PRINCIPAL -->
-    <div class="main-wrapper">
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content">
         
         <!-- BARRA SUPERIOR -->
         <header class="topbar">
             <div class="topbar-left">
-                <button type="button" class="btn-toggle" onclick="toggleSidebar()" title="Recolher Menu">
+                <button type="button" class="btn-menu-toggle" onclick="alternarMenu()" title="Abrir/Fechar Menu">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
                 <span class="topbar-title">Secretaria Municipal de Educação - SEMED</span>
             </div>
-            <div class="user-profile">
-                <div class="user-avatar">SM</div>
+            <div class="user-badge">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--primary);">account_circle</span>
                 <span>Operador SEMED</span>
             </div>
         </header>
 
-        <!-- CONTEÚDO / DASHBOARD -->
-        <main class="content-area">
-            <div class="welcome-banner">
-                <h1>Sistema de Gestão de Vale Transporte</h1>
-                <p>Gerencie cadastros, calendários letivos descentralizados, controle de afastamentos mensais e o motor de cálculo automático com total agilidade.</p>
+        <!-- DASHBOARD -->
+        <main class="dashboard-body">
+            <div class="hero-banner">
+                <h1>Painel de Controle - Vale Transporte</h1>
+                <p>Gerencie o cadastro de professores, calendários oficiais da SEMED, os ajustes descentralizados por escola e o motor de cálculo com controle rigoroso de afastamentos mensais.</p>
             </div>
 
-            <h2 class="section-title">Módulos do Sistema</h2>
+            <h2 class="section-heading">Acesso Rápido aos Módulos</h2>
 
-            <div class="modules-grid">
+            <div class="cards-grid">
                 
-                <a href="servidores.html" class="module-card">
-                    <div class="module-icon">
+                <a href="servidores.html" class="nav-card">
+                    <div class="card-icon-box">
                         <span class="material-symbols-outlined">badge</span>
                     </div>
-                    <h3>Servidores & Vínculos</h3>
-                    <p>Cadastre e gerencie servidores, lotações em múltiplas escolas e dados das linhas de transporte.</p>
+                    <h3>Cadastro de Servidores</h3>
+                    <p>Gerencie os dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
                 </a>
 
-                <a href="configuracao.html" class="module-card">
-                    <div class="module-icon">
+                <a href="configuracao.html" class="nav-card">
+                    <div class="card-icon-box">
                         <span class="material-symbols-outlined">calendar_month</span>
                     </div>
-                    <h3>Dias Úteis (SEMED)</h3>
-                    <p>Defina o calendário letivo de referência mensal para toda a rede pública de ensino.</p>
+                    <h3>Configuração SEMED</h3>
+                    <p>Defina a quantidade de dias úteis letivos de referência oficial para cada mês da rede de ensino.</p>
                 </a>
 
-                <a href="lancamentos.html" class="module-card">
-                    <div class="module-icon">
+                <a href="lancamentos.html" class="nav-card">
+                    <div class="card-icon-box">
                         <span class="material-symbols-outlined">edit_note</span>
                     </div>
-                    <h3>Lançamentos da Unidade</h3>
-                    <p>Ajuste de dias letivos da escola (recessos ou reposições) e lançamento de afastamentos individuais.</p>
+                    <h3>Lançamentos da Escola</h3>
+                    <p>Ajuste o calendário específico da unidade (como semanas comemorativas) e registre faltas e afastamentos.</p>
                 </a>
 
-                <a href="calculo.html" class="module-card">
-                    <div class="module-icon" style="background: var(--green-light); color: var(--green);">
+                <a href="calculo.html" class="nav-card">
+                    <div class="card-icon-box" style="background: var(--green-light); color: var(--green);">
                         <span class="material-symbols-outlined">calculate</span>
                     </div>
-                    <h3>Cálculo e Fechamento</h3>
-                    <p>Gere o relatório definitivo descontando automaticamente os afastamentos e o calendário da unidade.</p>
+                    <h3>Cálculo de Vales</h3>
+                    <p>Gere o fechamento financeiro completo cruzando os dias ajustados da escola e os afastamentos por CPF.</p>
                 </a>
 
             </div>
@@ -439,9 +427,9 @@ html, body {
 </div>
 
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.toggle("collapsed");
+    function alternarMenu() {
+        const sidebar = document.getElementById("sidebarMenu");
+        sidebar.classList.toggle("fechado");
     }
 </script>
 
