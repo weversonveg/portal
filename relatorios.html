@@ -164,13 +164,17 @@ body {
 
 .filter-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
+}
+
+.filter-group.full-width {
+    grid-column: 1 / -1;
 }
 
 .filter-group label {
@@ -196,6 +200,35 @@ body {
 .filter-group select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+/* GRADE DE ESCOLAS COM CHECKBOXES */
+.checkboxes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    background: #fafbfc;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+}
+
+.checkboxes-grid label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    margin-bottom: 0 !important;
+}
+
+.checkboxes-grid input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
 }
 
 .filter-checkbox-group {
@@ -439,7 +472,7 @@ tr:hover td {
                 <span>Relatórios e Exportação</span>
             </div>
             <h1>Central de Relatórios Avançados</h1>
-            <p>Filtre por período mensal/anual, escola, cargo ou empresa e exporte em PDF, CSV ou Excel.</p>
+            <p>Selecione as escolas, defina o período e exporte em PDF, CSV ou Excel.</p>
         </div>
         <div class="export-buttons">
             <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF ou Imprimir">
@@ -483,18 +516,6 @@ tr:hover td {
             </div>
 
             <div class="filter-group">
-                <label for="filtroEscola">Escola / Unidade</label>
-                <select id="filtroEscola">
-                    <option value="TODAS">Todas as Escolas</option>
-                    <option value="CEAE">CEAE</option>
-                    <option value="CETEPE">CETEPE</option>
-                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
                 <label for="filtroCargo">Cargo / Função</label>
                 <input type="text" id="filtroCargo" placeholder="Ex: Professor, Apoio...">
             </div>
@@ -502,6 +523,19 @@ tr:hover td {
             <div class="filter-group">
                 <label for="filtroEmpresa">Empresa / Concessionária</label>
                 <input type="text" id="filtroEmpresa" placeholder="Ex: Viação X...">
+            </div>
+
+            <!-- SELEÇÃO MÚLTIPLA DE ESCOLAS POR CHECKBOX -->
+            <div class="filter-group full-width">
+                <label>Escolas / Unidades (Marque as desejadas)</label>
+                <div class="checkboxes-grid">
+                    <label><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
+                    <label><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="verificarCheckEscola(this)"> CEAE</label>
+                    <label><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="verificarCheckEscola(this)"> CETEPE</label>
+                    <label><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="verificarCheckEscola(this)"> E M SÃO JOSÉ</label>
+                    <label><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="verificarCheckEscola(this)"> E M SÃO GERALDO</label>
+                    <label><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="verificarCheckEscola(this)"> CMEI ANÁLIA NOGUEIRA</label>
+                </div>
             </div>
 
             <div class="filter-checkbox-group">
@@ -552,7 +586,7 @@ tr:hover td {
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
-                    <th id="thColunaDias">Dias Efetivos</th>
+                    <th>Dias Efetivos</th>
                     <th>Afast. Totais</th>
                     <th>Total Passes</th>
                 </tr>
@@ -587,12 +621,33 @@ tr:hover td {
         }
     }
 
+    // Controle do Master Checkbox "Todas as Escolas"
+    window.toggleTodasEscolas = function(master) {
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
+        checkboxes.forEach(cb => {
+            if (cb !== master) {
+                cb.checked = master.checked;
+            }
+        });
+    }
+
+    window.verificarCheckEscola = function(cb) {
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        if (!cb.checked && master) {
+            master.checked = false;
+        }
+    }
+
     window.gerarRelatorio = async function() {
         const tipoPeriodo = document.getElementById("tipoPeriodo").value;
-        const escolaSelecionada = document.getElementById("filtroEscola").value;
         const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
         const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
         const apenasFalta = document.getElementById("filtroApenasFalta").checked;
+
+        // Pega as escolas marcadas
+        const checkboxesEscola = document.querySelectorAll('input[name="escolaCheck"]:checked');
+        const escolasSelecionadas = Array.from(checkboxesEscola).map(cb => cb.value);
+        const todasEscolasMarcadas = escolasSelecionadas.includes("TODAS");
 
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnPdf");
@@ -604,6 +659,11 @@ tr:hover td {
         btnPdf.disabled = true;
         btnCsv.disabled = true;
         btnXls.disabled = true;
+
+        if (escolasSelecionadas.length === 0) {
+            mostrarMensagem("Selecione ao menos uma escola no filtro.", "erro");
+            return;
+        }
 
         try {
             let mesesParaProcessar = [];
@@ -623,27 +683,21 @@ tr:hover td {
                 }
             }
 
-            // Mapeia servidores e consolida dados
             const servidoresSnap = await getDocs(collection(db, "servidores"));
             if (servidoresSnap.empty) {
                 mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
                 return;
             }
 
-            // Acumulador geral por vínculo (Chave: ServidorCPF_Escola_Cargo)
             let resultadosConsolidados = {};
-            let totalDiasUteisPeriodo = 0;
 
             for (const mesAno of mesesParaProcessar) {
-                // 1. Dias SEMED
                 const configRef = doc(db, "configuracoes", mesAno);
                 const configSnap = await getDoc(configRef);
-                if (!configSnap.exists()) continue; // Pula meses não configurados no modo anual
+                if (!configSnap.exists()) continue;
 
                 const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
-                totalDiasUteisPeriodo += diasSemedDefault;
 
-                // 2. Dias Escola
                 const diasEscolaMap = {};
                 try {
                     const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
@@ -654,7 +708,6 @@ tr:hover td {
                     });
                 } catch (e) {}
 
-                // 3. Afastamentos
                 const afastamentosMap = {};
                 try {
                     const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
@@ -670,7 +723,6 @@ tr:hover td {
                     });
                 } catch (e) {}
 
-                // 4. Processa servidores para este mês
                 servidoresSnap.forEach((docServidor) => {
                     const s = docServidor.data();
                     const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -680,7 +732,9 @@ tr:hover td {
                         const nomeEscola = escolaObj.nomeEscola;
                         if (!nomeEscola) return;
 
-                        if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
+                        // Valida se a escola está nas marcadas pelos checkboxes
+                        if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
+
                         if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
                         const empresa = escolaObj.empresa || "";
                         if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
@@ -758,7 +812,8 @@ tr:hover td {
             }
 
             const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${document.getElementById("mesReferencia").value}` : `Ano: ${document.getElementById("anoReferencia").value}`;
-            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escola: ${escolaSelecionada}`;
+            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
             document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal" ? document.getElementById("mesReferencia").value : `Ano ${document.getElementById("anoReferencia").value}`;
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
@@ -778,12 +833,10 @@ tr:hover td {
         }
     }
 
-    // EXPORTAR PARA PDF / IMPRIMIR
     window.exportarPDF = function() {
         window.print();
     }
 
-    // EXPORTAR PARA CSV
     window.exportarCSV = function() {
         let csv = [];
         let rows = document.querySelectorAll("#tabelaCorpo tr");
@@ -819,7 +872,6 @@ tr:hover td {
         link.click();
     }
 
-    // EXPORTAR PARA EXCEL (XLS)
     window.exportarXLS = function() {
         let htmlTable = document.getElementById("tableCard").querySelector("table").outerHTML;
         let blob = new Blob(['\ufeff' + htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
