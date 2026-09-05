@@ -339,6 +339,13 @@ tr:hover td {
     color: #334155;
 }
 
+.mensagem.sucesso {
+    display: block;
+    background: #edf7ee;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
 @media (max-width: 800px) {
     .filter-card {
         flex-direction: column;
@@ -483,7 +490,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO COM AUDITORIA DE CONSOLE (F12)
+    // MOTOR DE CÁLCULO COM AVISO VISUAL NA TELA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -509,21 +516,22 @@ tr:hover td {
 
             const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca lançamentos de afastamento e gera mapa de auditoria
+            // 2. Busca lançamentos de afastamento e armazena em mapa
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
+            let totalLancamentosEncontrados = 0;
 
             lancSnap.forEach(docSnap => {
                 const data = docSnap.data();
                 const dias = Number(data.diasAfastamento) || 0;
+                totalLancamentosEncontrados++;
+
                 if (data.cpf) {
                     const cpfL = data.cpf.replace(/\D/g, "");
                     afastamentosMap[cpfL] = dias;
                 }
             });
-
-            console.log("=== AUDITORIA DE AFASTAMENTOS CARREGADOS ===", afastamentosMap);
 
             // 3. Busca os servidores
             let q;
@@ -545,14 +553,17 @@ tr:hover td {
             let linhasTabela = "";
             let totalVinculos = 0;
             let totalGeralPasses = 0;
+            let totalComAfastamentoAplicado = 0;
 
-            // 4. Processa o cálculo cruzando o CPF
+            // 4. Processa o cálculo cruzando os dados
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
                 const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
-                console.log(`Servidor: ${s.nome} | CPF Limpo: ${cpfLimpo} | Afastamentos encontrados: ${diasAfastamento}`);
+                if (diasAfastamento > 0) {
+                    totalComAfastamentoAplicado++;
+                }
 
                 const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
 
@@ -597,6 +608,9 @@ tr:hover td {
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
+
+            // Exibe um resumo visual direto na tela para você conferir no celular
+            mostrarMensagem(`Cálculo concluído! Lançamentos lidos no banco: ${totalLancamentosEncontrados} | Servidores com desconto aplicado: ${totalComAfastamentoAplicado}`, "sucesso");
 
             document.getElementById("sumDiasUteis").textContent = diasUteisBase;
             document.getElementById("sumVinculos").textContent = totalVinculos;
