@@ -346,13 +346,18 @@ tr:hover td {
     background: #f8fafc;
 }
 
+.acoes-grupo {
+    display: flex;
+    gap: 6px;
+}
+
 .btn-acao {
     height: 34px;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -363,6 +368,14 @@ tr:hover td {
 
 .btn-acao:hover {
     background: var(--primary-hover);
+}
+
+.btn-acao.btn-excluir {
+    background: var(--red);
+}
+
+.btn-acao.btn-excluir:hover {
+    background: var(--red-hover);
 }
 
 /* RODAPÉ DO FORM */
@@ -488,7 +501,7 @@ button:disabled {
             <span>Dias Úteis</span>
         </div>
         <h1>Dias Úteis Letivos</h1>
-        <p>Defina ou visualize a quantidade de dias úteis cadastrados para cada mês.</p>
+        <p>Defina, visualize ou remova a quantidade de dias úteis cadastrados para cada mês.</p>
     </div>
 
     <!-- CARD DO FORMULÁRIO -->
@@ -591,11 +604,10 @@ button:disabled {
                     <th>Mês / Ano</th>
                     <th>Dias Úteis</th>
                     <th>Observações</th>
-                    <th>Ação</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="tabelaConfiguracoes">
-                <!-- Preenchido via JS -->
                 <tr>
                     <td colspan="4" style="text-align: center; color: var(--text-secondary);">Carregando configurações...</td>
                 </tr>
@@ -606,7 +618,7 @@ button:disabled {
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     document.addEventListener("DOMContentLoaded", function() {
         const hoje = new Date();
@@ -630,7 +642,6 @@ button:disabled {
         }
     }
 
-    // Formata "2026-09" para "Setembro / 2026"
     function formatarMesAno(str) {
         if (!str) return "";
         const [ano, mes] = str.split("-");
@@ -639,7 +650,6 @@ button:disabled {
         return `${nomeMes} / ${ano}`;
     }
 
-    // CARREGA TODOS OS MESES CONFIGURADOS PARA EXIBIR NA TABELA
     async function carregarTodasConfiguracoes() {
         const tbody = document.getElementById("tabelaConfiguracoes");
         try {
@@ -650,21 +660,26 @@ button:disabled {
             }
 
             let linhas = "";
-            // Ordena por mês em ordem decrescente (mais recente primeiro)
             const docsList = [];
             querySnapshot.forEach(d => docsList.push(d.data()));
             docsList.sort((a, b) => b.mesReferencia.localeCompare(a.mesReferencia));
 
             docsList.forEach(item => {
+                const obsTexto = item.observacoes ? item.observacoes.replace(/'/g, "\\'") : '';
                 linhas += `
                     <tr>
                         <td><b>${formatarMesAno(item.mesReferencia)}</b> <small style="color:var(--text-secondary)">(${item.mesReferencia})</small></td>
                         <td><span style="font-weight: 700; color: var(--primary);">${item.diasUteis} dias</span></td>
                         <td>${item.observacoes || '<span style="color:#9aa3aa;">Nenhuma observação</span>'}</td>
                         <td>
-                            <button type="button" class="btn-acao" onclick="selecionarMes('${item.mesReferencia}', ${item.diasUteis}, '${item.observacoes || ''}')">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Editar
-                            </button>
+                            <div class="acoes-grupo">
+                                <button type="button" class="btn-acao" onclick="selecionarMes('${item.mesReferencia}', ${item.diasUteis}, '${obsTexto}')">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Editar
+                                </button>
+                                <button type="button" class="btn-acao btn-excluir" onclick="excluirConfiguracao('${item.mesReferencia}')">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Excluir
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -677,7 +692,6 @@ button:disabled {
         }
     }
 
-    // CLICA EM "EDITAR" PARA TRAZER OS DADOS DE UM MÊS PARA O FORMULÁRIO
     window.selecionarMes = function(mesAno, dias, obs) {
         document.getElementById("mesReferencia").value = mesAno;
         document.getElementById("diasUteis").value = dias;
@@ -686,6 +700,21 @@ button:disabled {
         atualizarCorCampo(document.getElementById("diasUteis"));
         window.scrollTo({ top: 0, behavior: 'smooth' });
         mostrarMensagem(`Carregado mês ${formatarMesAno(mesAno)} para edição.`, "sucesso");
+    }
+
+    // EXCLUI A CONFIGURAÇÃO DO MÊS COM CONFIRMAÇÃO
+    window.excluirConfiguracao = async function(mesAno) {
+        if (confirm(`Deseja realmente excluir a configuração do mês ${formatarMesAno(mesAno)}?`)) {
+            try {
+                await deleteDoc(doc(db, "configuracoes", mesAno));
+                mostrarMensagem(`Configuração de ${formatarMesAno(mesAno)} excluída com sucesso.`, "sucesso");
+                carregarTodasConfiguracoes();
+                limparFormulario();
+            } catch (erro) {
+                console.error("Erro ao excluir configuração:", erro);
+                mostrarMensagem("Erro ao excluir o registro. Verifique sua conexão.", "erro");
+            }
+        }
     }
 
     window.carregarConfiguracao = async function(mesAno) {
@@ -744,7 +773,7 @@ button:disabled {
             });
 
             mostrarMensagem("Configuração de dias úteis salva com sucesso!", "sucesso");
-            carregarTodasConfiguracoes(); // Atualiza a tabela instantaneamente
+            carregarTodasConfiguracoes();
         } catch (erro) {
             console.error("Erro ao salvar configuração:", erro);
             mostrarMensagem("Erro ao salvar. Verifique sua conexão com a internet.", "erro");
