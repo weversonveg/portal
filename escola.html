@@ -241,6 +241,106 @@ body {
     background: var(--primary-hover);
 }
 
+/* CARD DE DIAS ÚTEIS ESPECÍFICOS DA ESCOLA */
+.school-config-card {
+    display: none;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.school-config-card.ativo {
+    display: flex;
+}
+
+.school-config-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.school-config-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.school-config-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.input-dias-escola {
+    width: 90px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary);
+}
+
+.btn-salvar-dias {
+    height: 40px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-salvar-dias:hover {
+    background: var(--green-hover);
+}
+
+/* RESUMO ESTATÍSTICO */
+.summary-container {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-container.ativo {
+    display: grid;
+}
+
+.summary-box {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+}
+
+.summary-box label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.summary-box p {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 6px;
+}
+
 /* TABELA DE LANÇAMENTOS */
 .table-card {
     background: var(--white);
@@ -293,6 +393,20 @@ tr:hover td {
     font-weight: 600;
 }
 
+.badge-salvo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #eaf6ec;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    margin-left: 8px;
+}
+
 .btn-salvar-linha {
     height: 36px;
     background: var(--green);
@@ -340,6 +454,13 @@ tr:hover td {
         flex-direction: column;
         align-items: stretch;
     }
+    .school-config-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .summary-container {
+        grid-template-columns: 1fr;
+    }
     table {
         display: block;
         overflow-x: auto;
@@ -377,8 +498,8 @@ tr:hover td {
             <span>/</span>
             <span>Lançamentos e Afastamentos</span>
         </div>
-        <h1>Controle de Afastamentos Mensais</h1>
-        <p>Informe os dias de afastamento (licenças, faltas, etc.) dos servidores da sua unidade para o mês selecionado.</p>
+        <h1>Controle de Afastamentos e Dias Úteis da Escola</h1>
+        <p>Ajuste o calendário específico da unidade e registre os afastamentos individuais dos servidores.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -400,13 +521,39 @@ tr:hover td {
             </select>
         </div>
 
-        <button type="button" class="btn-carregar" onclick="carregarServidoresDaEscola()">
+        <button type="button" class="btn-carregar" onclick="carregarDadosDaEscola()">
             <span class="material-symbols-outlined">search</span>
-            Carregar Servidores
+            Carregar Unidade
         </button>
     </section>
 
     <div id="mensagem" class="mensagem"></div>
+
+    <!-- PAINEL DE DIAS ÚTEIS ESPECÍFICOS DA ESCOLA -->
+    <section id="schoolConfigCard" class="school-config-card">
+        <div class="school-config-info">
+            <h3>Dias Úteis Efetivos para esta Escola</h3>
+            <p id="infoSemedDefault">Padrão SEMED para o mês: carregando...</p>
+        </div>
+        <div class="school-config-action">
+            <input type="number" id="inputDiasEscola" class="input-dias-escola" min="1" max="31" inputmode="numeric">
+            <button type="button" class="btn-salvar-dias" onclick="salvarDiasUteisEscola()">
+                <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Salvar Dias da Escola
+            </button>
+        </div>
+    </section>
+
+    <!-- RESUMO ESTATÍSTICO -->
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label>Servidores com Afastamento no Mês</label>
+            <p id="sumComAfastamento">0 servidores</p>
+        </div>
+        <div class="summary-box">
+            <label>Total de Dias Afastados Registrados</label>
+            <p id="sumTotalDias">0 dias</p>
+        </div>
+    </section>
 
     <!-- TABELA DE LANÇAMENTOS -->
     <section id="tableCard" class="table-card">
@@ -438,16 +585,19 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
-    // CARREGA OS SERVIDORES DA ESCOLA ESCOLHIDA PARA O MÊS
-    window.carregarServidoresDaEscola = async function() {
+    window.carregarDadosDaEscola = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escola = document.getElementById("filtroEscola").value;
         const msgDiv = document.getElementById("mensagem");
         const tableCard = document.getElementById("tableCard");
+        const summaryContainer = document.getElementById("summaryContainer");
+        const schoolConfigCard = document.getElementById("schoolConfigCard");
 
         msgDiv.className = "mensagem";
         msgDiv.textContent = "";
         tableCard.classList.remove("ativo");
+        summaryContainer.classList.remove("ativo");
+        schoolConfigCard.classList.remove("ativo");
 
         if (!mesAno || !escola) {
             mostrarMensagem("Selecione o mês de referência e a escola.", "erro");
@@ -455,7 +605,24 @@ tr:hover td {
         }
 
         try {
-            // Busca servidores lotados nesta escola
+            // 1. Busca o padrão de dias úteis da SEMED para este mês
+            const semedConfigRef = doc(db, "configuracoes", mesAno);
+            const semedSnap = await getDoc(semedConfigRef);
+
+            const diasSemedDefault = semedSnap.exists() ? (Number(semedSnap.data().diasUteis) || 22) : 22;
+            document.getElementById("infoSemedDefault").textContent = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
+
+            // 2. Busca se já existe um ajuste específico salvo para esta escola neste mês
+            const configEscolaId = `${mesAno}_${escola}`;
+            const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
+            const configEscolaSnap = await getDoc(configEscolaRef);
+
+            const diasEfetivosEscola = configEscolaSnap.exists() ? Number(configEscolaSnap.data().diasUteisEscola) : diasSemedDefault;
+            document.getElementById("inputDiasEscola").value = diasEfetivosEscola;
+
+            schoolConfigCard.classList.add("ativo");
+
+            // 3. Busca os servidores da escola
             const q = query(collection(db, "servidores"), where("escolas", "array-contains", escola));
             const querySnapshot = await getDocs(q);
 
@@ -465,12 +632,13 @@ tr:hover td {
             }
 
             let linhasTabela = "";
+            let servidoresComFalta = 0;
+            let somaTotalDias = 0;
 
             for (const servidorDoc of querySnapshot.docs) {
                 const s = servidorDoc.data();
                 const servidorId = servidorDoc.id;
 
-                // Identifica qual matrícula pertence a esta escola
                 let matriculaInfo = "";
                 if (s.matricula1 && (s.matricula1.escola1?.nomeEscola === escola || s.matricula1.escola2?.nomeEscola === escola)) {
                     matriculaInfo = `Matrícula 1: ${s.matricula1.numeroMatricula} (${s.matricula1.cargo})`;
@@ -478,11 +646,21 @@ tr:hover td {
                     matriculaInfo = `Matrícula 2: ${s.matricula2.numeroMatricula} (${s.matricula2.cargo})`;
                 }
 
-                // Busca se já existe afastamento salvo para este servidor neste mês
-                const lancamentoId = `${mesAno}_${s.cpf.replace(/\D/g, "")}`;
+                const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+                const lancamentoId = `${mesAno}_${cpfLimpo}`;
                 const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
                 const lancSnap = await getDoc(lancRef);
-                const diasSalvos = lancSnap.exists() ? (lancSnap.data().diasAfastamento || 0) : 0;
+                
+                const diasSalvos = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
+
+                if (diasSalvos > 0) {
+                    servidoresComFalta++;
+                    somaTotalDias += diasSalvos;
+                }
+
+                const badgeHtml = diasSalvos > 0 
+                    ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo no Banco</span>` 
+                    : ``;
 
                 linhasTabela += `
                     <tr>
@@ -491,6 +669,7 @@ tr:hover td {
                         <td>${matriculaInfo}</td>
                         <td>
                             <input type="number" id="afastamento_${servidorId}" class="input-afastamento" value="${diasSalvos}" min="0" max="31" inputmode="numeric">
+                            ${badgeHtml}
                         </td>
                         <td>
                             <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${s.cpf}', '${servidorId}')">
@@ -501,16 +680,45 @@ tr:hover td {
                 `;
             }
 
+            document.getElementById("sumComAfastamento").textContent = servidoresComFalta + " servidores";
+            document.getElementById("sumTotalDias").textContent = somaTotalDias + " dias";
+
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             tableCard.classList.add("ativo");
+            summaryContainer.classList.add("ativo");
 
         } catch (erro) {
-            console.error("Erro ao carregar servidores:", erro);
+            console.error("Erro ao carregar dados:", erro);
             mostrarMensagem("Erro ao carregar dados do banco.", "erro");
         }
     }
 
-    // SALVA O AFASTAMENTO DO SERVIDOR PARA O MÊS ESPECÍFICO
+    // SALVA OS DIAS ÚTEIS ESPECÍFICOS DA ESCOLA
+    window.salvarDiasUteisEscola = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        const escola = document.getElementById("filtroEscola").value;
+        const diasEfetivos = Number(document.getElementById("inputDiasEscola").value) || 0;
+
+        if (!mesAno || !escola) return;
+
+        const configEscolaId = `${mesAno}_${escola}`;
+
+        try {
+            await setDoc(doc(db, "escola_configuracoes_mensais", configEscolaId), {
+                mesReferencia: mesAno,
+                escola: escola,
+                diasUteisEscola: diasEfetivos,
+                dataAtualizacao: new Date().toISOString()
+            });
+
+            alert(`Dias úteis da escola ${escola} atualizados para ${diasEfetivos} dias neste mês!`);
+        } catch (erro) {
+            console.error("Erro ao salvar dias úteis da escola:", erro);
+            alert("Erro ao salvar os dias úteis da escola. Verifique sua conexão.");
+        }
+    }
+
+    // SALVA O AFASTAMENTO DO SERVIDOR
     window.salvarAfastamento = async function(mesAno, cpfServidor, servidorId) {
         const inputDias = document.getElementById(`afastamento_${servidorId}`);
         const diasAfastamento = Number(inputDias.value) || 0;
@@ -520,12 +728,12 @@ tr:hover td {
         try {
             await setDoc(doc(db, "lancamentos_mensais", lancamentoId), {
                 mesReferencia: mesAno,
+                servidorId: servidorId,
                 cpf: cpfServidor,
                 diasAfastamento: diasAfastamento,
                 dataAtualizacao: new Date().toISOString()
             }, { merge: true });
 
-            // Feedback visual rápido de sucesso na linha
             const btnOriginal = inputDias.parentElement.nextElementSibling.querySelector("button");
             const textoOriginal = btnOriginal.innerHTML;
             btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check</span> Salvo!';
@@ -534,7 +742,8 @@ tr:hover td {
             setTimeout(() => {
                 btnOriginal.innerHTML = textoOriginal;
                 btnOriginal.style.background = "";
-            }, 2000);
+                carregarDadosDaEscola();
+            }, 1200);
 
         } catch (erro) {
             console.error("Erro ao salvar afastamento:", erro);
