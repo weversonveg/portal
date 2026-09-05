@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Lançamentos e Afastamentos - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+
+    --red: #c62828;
+    --red-hover: #a51f1f;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR */
+.topbar {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 24px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+/* INDICADOR DE SINAL DE REDE */
+.status-conexao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f5;
+    border: 1px solid #e2e8f0;
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: #2e7d32;
+    border-radius: 1px;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online {
+    color: #2e7d32;
+    background: #edf7ee;
+    border-color: #c8e6c9;
+}
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 32px 0;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 10px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 6px;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* CARD DE FILTROS */
+.filter-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 7px;
+}
+
+.filter-group input,
+.filter-group select {
+    height: 44px;
+    padding: 0 13px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.btn-carregar {
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-carregar:hover {
+    background: var(--primary-hover);
+}
+
+/* TABELA DE LANÇAMENTOS */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+}
+
+.table-card.ativo {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background: #fafbfc;
+    padding: 14px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #263238;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+.input-afastamento {
+    width: 80px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.btn-salvar-linha {
+    height: 36px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-salvar-linha:hover {
+    background: var(--green-hover);
+}
+
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
+}
+
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+@media (max-width: 800px) {
+    .filter-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Gestão de Afastamentos</span>
+        <div class="status-conexao online">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
+            <span>Online</span>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <span>Escola</span>
+            <span>/</span>
+            <span>Lançamentos e Afastamentos</span>
+        </div>
+        <h1>Controle de Afastamentos Mensais</h1>
+        <p>Informe os dias de afastamento (licenças, faltas, etc.) dos servidores da sua unidade para o mês selecionado.</p>
+    </div>
+
+    <!-- CARD DE FILTROS -->
+    <section class="filter-card">
+        <div class="filter-group">
+            <label for="mesReferencia">Mês de Referência</label>
+            <input type="month" id="mesReferencia">
+        </div>
+
+        <div class="filter-group">
+            <label for="filtroEscola">Selecione a Escola</label>
+            <select id="filtroEscola">
+                <option value="">Selecione a unidade</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+            </select>
+        </div>
+
+        <button type="button" class="btn-carregar" onclick="carregarServidoresDaEscola()">
+            <span class="material-symbols-outlined">search</span>
+            Carregar Servidores
+        </button>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <!-- TABELA DE LANÇAMENTOS -->
+    <section id="tableCard" class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo / Lotação</th>
+                    <th>Dias de Afastamento</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo">
+                <!-- Inserido via JS -->
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+    });
+
+    // CARREGA OS SERVIDORES DA ESCOLA ESCOLHIDA PARA O MÊS
+    window.carregarServidoresDaEscola = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        const escola = document.getElementById("filtroEscola").value;
+        const msgDiv = document.getElementById("mensagem");
+        const tableCard = document.getElementById("tableCard");
+
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
+        tableCard.classList.remove("ativo");
+
+        if (!mesAno || !escola) {
+            mostrarMensagem("Selecione o mês de referência e a escola.", "erro");
+            return;
+        }
+
+        try {
+            // Busca servidores lotados nesta escola
+            const q = query(collection(db, "servidores"), where("escolas", "array-contains", escola));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado para esta escola.", "info");
+                return;
+            }
+
+            let linhasTabela = "";
+
+            for (const servidorDoc of querySnapshot.docs) {
+                const s = servidorDoc.data();
+                const servidorId = servidorDoc.id;
+
+                // Identifica qual matrícula pertence a esta escola
+                let matriculaInfo = "";
+                if (s.matricula1 && (s.matricula1.escola1?.nomeEscola === escola || s.matricula1.escola2?.nomeEscola === escola)) {
+                    matriculaInfo = `Matrícula 1: ${s.matricula1.numeroMatricula} (${s.matricula1.cargo})`;
+                } else if (s.matricula2 && (s.matricula2.escola1?.nomeEscola === escola || s.matricula2.escola2?.nomeEscola === escola)) {
+                    matriculaInfo = `Matrícula 2: ${s.matricula2.numeroMatricula} (${s.matricula2.cargo})`;
+                }
+
+                // Busca se já existe afastamento salvo para este servidor neste mês
+                const lancamentoId = `${mesAno}_${s.cpf.replace(/\D/g, "")}`;
+                const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
+                const lancSnap = await getDoc(lancRef);
+                const diasSalvos = lancSnap.exists() ? (lancSnap.data().diasAfastamento || 0) : 0;
+
+                linhasTabela += `
+                    <tr>
+                        <td><b>${s.nome}</b></td>
+                        <td>${s.cpf}</td>
+                        <td>${matriculaInfo}</td>
+                        <td>
+                            <input type="number" id="afastamento_${servidorId}" class="input-afastamento" value="${diasSalvos}" min="0" max="31" inputmode="numeric">
+                        </td>
+                        <td>
+                            <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${s.cpf}', '${servidorId}')">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            tableCard.classList.add("ativo");
+
+        } catch (erro) {
+            console.error("Erro ao carregar servidores:", erro);
+            mostrarMensagem("Erro ao carregar dados do banco.", "erro");
+        }
+    }
+
+    // SALVA O AFASTAMENTO DO SERVIDOR PARA O MÊS ESPECÍFICO
+    window.salvarAfastamento = async function(mesAno, cpfServidor, servidorId) {
+        const inputDias = document.getElementById(`afastamento_${servidorId}`);
+        const diasAfastamento = Number(inputDias.value) || 0;
+        const cpfLimpo = cpfServidor.replace(/\D/g, "");
+        const lancamentoId = `${mesAno}_${cpfLimpo}`;
+
+        try {
+            await setDoc(doc(db, "lancamentos_mensais", lancamentoId), {
+                mesReferencia: mesAno,
+                cpf: cpfServidor,
+                diasAfastamento: diasAfastamento,
+                dataAtualizacao: new Date().toISOString()
+            }, { merge: true });
+
+            // Feedback visual rápido de sucesso na linha
+            const btnOriginal = inputDias.parentElement.nextElementSibling.querySelector("button");
+            const textoOriginal = btnOriginal.innerHTML;
+            btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check</span> Salvo!';
+            btnOriginal.style.background = "#1b5e20";
+            
+            setTimeout(() => {
+                btnOriginal.innerHTML = textoOriginal;
+                btnOriginal.style.background = "";
+            }, 2000);
+
+        } catch (erro) {
+            console.error("Erro ao salvar afastamento:", erro);
+            alert("Erro ao salvar o afastamento. Verifique sua conexão.");
+        }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+</script>
+
+</body>
+</html>
