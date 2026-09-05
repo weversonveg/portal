@@ -339,13 +339,6 @@ tr:hover td {
     color: #334155;
 }
 
-.mensagem.sucesso {
-    display: block;
-    background: #edf7ee;
-    border: 1px solid #c8e6c9;
-    color: #2e7d32;
-}
-
 @media (max-width: 800px) {
     .filter-card {
         flex-direction: column;
@@ -392,7 +385,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Calcula a quantidade de vales considerando o calendário específico de cada escola e os afastamentos lançados.</p>
+        <p>Calcula a quantidade de vales descontando automaticamente os dias de afastamento lançados pelas escolas.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -425,7 +418,7 @@ tr:hover td {
     <!-- RESUMO DO CÁLCULO -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
-            <label>Referência SEMED</label>
+            <label>Dias Úteis Base</label>
             <p id="sumDiasUteis">0</p>
         </div>
         <div class="summary-box">
@@ -448,7 +441,7 @@ tr:hover td {
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
-                    <th>Dias Úteis da Escola</th>
+                    <th>Dias Úteis</th>
                     <th>Afastamentos</th>
                     <th>Total no Mês</th>
                 </tr>
@@ -481,7 +474,7 @@ tr:hover td {
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
-                mostrarMensagem(`Atenção: Não há dias úteis configurados pela SEMED para o mês ${mesAno}.`, "erro");
+                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
             } else {
                 ocultarMensagem();
             }
@@ -490,7 +483,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM CALENDÁRIO PRÓPRIO DA ESCOLA (MENOS OU MAIS DIAS)
+    // MOTOR DE CÁLCULO INTEGRADO COM AFASTAMENTOS
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -505,41 +498,30 @@ tr:hover td {
         }
 
         try {
-            // 1. Pega os dias úteis base da SEMED
+            // 1. Pega os dias úteis configurados para o mês
             const configRef = doc(db, "configuracoes", mesAno);
             const configSnap = await getDoc(configRef);
 
             if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados pela SEMED!`, "erro");
+                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Defina os dias úteis na tela de configuração primeiro.`, "erro");
                 return;
             }
 
-            const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
+            const diasUteisBase = configSnap.data().diasUteis;
 
-            // 2. Busca todas as customizações de dias úteis feitas pelas escolas para este mês
-            const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
-            const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
-            const diasEscolaMap = {};
-            escolaConfigsSnap.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.escola) {
-                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
-                }
-            });
-
-            // 3. Busca lançamentos de afastamentos individuais
+            // 2. Busca todos os afastamentos lançados para este mês de uma só vez (otimização de leitura)
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
             lancSnap.forEach(docSnap => {
                 const data = docSnap.data();
-                const dias = Number(data.diasAfastamento) || 0;
                 if (data.cpf) {
-                    afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
+                    const cpfLimpo = data.cpf.replace(/\D/g, "");
+                    afastamentosMap[cpfLimpo] = Number(data.diasAfastamento) || 0;
                 }
             });
 
-            // 4. Busca os servidores
+            // 3. Busca os servidores no Firebase
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -560,22 +542,18 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo cruzando dias da escola e faltas individuais
-            querySnapshot.forEach((docServidor) => {
-                const s = docServidor.data();
+            // 4. Processa o cálculo aplicando os descontos
+            querySnapshot.forEach((doc) => {
+                const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
                 const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
+                
+                // Dias efetivos de trabalho = dias úteis menos os afastamentos (garantindo que não fique negativo)
+                const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
-                    const nomeEscola = escolaObj.nomeEscola;
-                    if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
-
-                    // Pega os dias úteis específicos daquela escola (se customizado), senão usa o padrão SEMED
-                    const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
-
-                    // Dias efetivos = dias da escola menos as faltas individuais (garantindo que não fique negativo)
-                    const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
+                    if (escolaSelecionada !== "TODAS" && escolaObj.nomeEscola !== escolaSelecionada) return;
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
                     const totalMes = passesDiarios * diasEfetivos;
@@ -587,10 +565,10 @@ tr:hover td {
                         <tr>
                             <td><b>${s.nome}</b></td>
                             <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
-                            <td>${nomeEscola}</td>
+                            <td>${escolaObj.nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary);">(Ajustado)</small>' : ''}</td>
+                            <td>${diasUteisBase}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
@@ -609,15 +587,13 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            mostrarMensagem("Cálculo de vales realizado com sucesso considerando os calendários escolares e afastamentos!", "sucesso");
-
-            document.getElementById("sumDiasUteis").textContent = diasSemedDefault + " dias (Base)";
+            document.getElementById("sumDiasUteis").textContent = diasUteisBase;
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
