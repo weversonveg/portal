@@ -11,7 +11,7 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<title>Relatórios Avançados e PDF - Vale Transporte</title>
+<title>Relatórios Avançados e Exportação - Vale Transporte</title>
 
 <style>
 
@@ -23,6 +23,9 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
     --green: #2e7d32;
     --green-hover: #1b5e20;
     --green-light: #eaf6ec;
+
+    --blue: #0277bd;
+    --blue-hover: #01579b;
 
     --text: #263238;
     --text-secondary: #68737d;
@@ -141,6 +144,11 @@ body {
     color: var(--text-secondary);
 }
 
+.export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
 /* CARD DE FILTROS AVANÇADOS */
 .filter-card {
     background: var(--white);
@@ -236,27 +244,32 @@ body {
     background: var(--primary-hover);
 }
 
-.btn-pdf {
+.btn-export {
     height: 44px;
-    background: var(--green);
     color: white;
     border: none;
     border-radius: 6px;
-    padding: 0 20px;
+    padding: 0 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-size: 13px;
     transition: background 0.15s;
 }
 
-.btn-pdf:hover {
-    background: var(--green-hover);
-}
+.btn-pdf { background: var(--green); }
+.btn-pdf:hover { background: var(--green-hover); }
 
-.btn-pdf:disabled {
-    opacity: 0.5;
+.btn-csv { background: var(--blue); }
+.btn-csv:hover { background: var(--blue-hover); }
+
+.btn-xls { background: #1f7238; }
+.btn-xls:hover { background: #154c25; }
+
+.btn-export:disabled {
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -387,44 +400,19 @@ tr:hover td {
 
 /* IMPRESSÃO / PDF */
 @media print {
-    body {
-        background: white;
-    }
-    .topbar, .filter-card, .btn-gerar, .btn-pdf, .breadcrumb, .page-header p, .mensagem {
-        display: none !important;
-    }
-    .main {
-        width: 100% !important;
-        max-width: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    .print-report-header {
-        display: block !important;
-    }
-    .table-card {
-        border: none !important;
-        box-shadow: none !important;
-    }
-    table {
-        font-size: 11px !important;
-    }
-    th, td {
-        padding: 8px 10px !important;
-    }
+    body { background: white; }
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header p, .mensagem { display: none !important; }
+    .main { width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; }
+    .print-report-header { display: block !important; }
+    .table-card { border: none !important; box-shadow: none !important; }
+    table { font-size: 11px !important; }
+    th, td { padding: 8px 10px !important; }
 }
 
 @media (max-width: 900px) {
-    .filter-grid {
-        grid-template-columns: 1fr;
-    }
-    .summary-container {
-        grid-template-columns: 1fr;
-    }
-    table {
-        display: block;
-        overflow-x: auto;
-    }
+    .filter-grid { grid-template-columns: 1fr; }
+    .summary-container { grid-template-columns: 1fr; }
+    table { display: block; overflow-x: auto; }
 }
 
 </style>
@@ -448,26 +436,50 @@ tr:hover td {
                 <span class="material-symbols-outlined">home</span>
                 <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
                 <span>/</span>
-                <span>Relatórios Avançados e PDF</span>
+                <span>Relatórios e Exportação</span>
             </div>
-            <h1>Central de Relatórios de Vales</h1>
-            <p>Filtre por escola, cargo ou empresa e exporte relatórios consolidados em PDF.</p>
+            <h1>Central de Relatórios Avançados</h1>
+            <p>Filtre por período mensal/anual, escola, cargo ou empresa e exporte em PDF, CSV ou Excel.</p>
         </div>
-        <div>
-            <button type="button" id="btnExportarPdf" class="btn-pdf" onclick="exportarPDF()" disabled>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-                Exportar para PDF / Imprimir
+        <div class="export-buttons">
+            <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF ou Imprimir">
+                <span class="material-symbols-outlined" style="font-size:18px;">picture_as_pdf</span> PDF
+            </button>
+            <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar arquivo CSV">
+                <span class="material-symbols-outlined" style="font-size:18px;">csv</span> CSV
+            </button>
+            <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar planilha Excel (.xls)">
+                <span class="material-symbols-outlined" style="font-size:18px;">table_view</span> Excel
             </button>
         </div>
     </div>
 
-    <!-- CARD DE FILTROS AVANÇADOS -->
+    <!-- CARD DE FILTROS -->
     <section class="filter-card">
         <div class="filter-grid">
             
             <div class="filter-group">
+                <label for="tipoPeriodo">Tipo de Período</label>
+                <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
+                    <option value="mensal">Mensal (Mês Específico)</option>
+                    <option value="anual">Anual (Ano Inteiro)</option>
+                </select>
+            </div>
+
+            <!-- Campo Mês -->
+            <div class="filter-group" id="grupoMes">
                 <label for="mesReferencia">Mês de Referência <span>*</span></label>
                 <input type="month" id="mesReferencia">
+            </div>
+
+            <!-- Campo Ano (Oculto por padrão) -->
+            <div class="filter-group" id="grupoAno" style="display: none;">
+                <label for="anoReferencia">Ano de Referência <span>*</span></label>
+                <select id="anoReferencia">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
             </div>
 
             <div class="filter-group">
@@ -489,12 +501,12 @@ tr:hover td {
 
             <div class="filter-group">
                 <label for="filtroEmpresa">Empresa / Concessionária</label>
-                <input type="text" id="filtroEmpresa" placeholder="Ex: Viação X, Empresa Y...">
+                <input type="text" id="filtroEmpresa" placeholder="Ex: Viação X...">
             </div>
 
             <div class="filter-checkbox-group">
                 <input type="checkbox" id="filtroApenasFalta">
-                <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com dias de afastamento lançados</label>
+                <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
             </div>
 
         </div>
@@ -502,7 +514,7 @@ tr:hover td {
         <div class="filter-actions">
             <button type="button" class="btn-gerar" onclick="gerarRelatorio()">
                 <span class="material-symbols-outlined">description</span>
-                Gerar Relatório Avançado
+                Gerar Relatório Consolidado
             </button>
         </div>
     </section>
@@ -512,11 +524,11 @@ tr:hover td {
     <!-- RESUMO DO RELATÓRIO -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
-            <label>Dias Úteis de Referência</label>
-            <p id="sumDiasUteis">0 dias</p>
+            <label>Período Analisado</label>
+            <p id="sumPeriodo">-</p>
         </div>
         <div class="summary-box">
-            <label>Total de Vínculos Filtrados</label>
+            <label>Total de Vínculos</label>
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--green);">
@@ -540,9 +552,9 @@ tr:hover td {
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
-                    <th>Dias Efetivos</th>
-                    <th>Afast.</th>
-                    <th>Total no Mês</th>
+                    <th id="thColunaDias">Dias Efetivos</th>
+                    <th>Afast. Totais</th>
+                    <th>Total Passes</th>
                 </tr>
             </thead>
             <tbody id="tabelaCorpo">
@@ -561,171 +573,204 @@ tr:hover td {
         const ano = hoje.getFullYear();
         const mes = String(hoje.getMonth() + 1).padStart(2, '0');
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        document.getElementById("anoReferencia").value = ano;
     });
 
+    window.alternarTipoPeriodo = function() {
+        const tipo = document.getElementById("tipoPeriodo").value;
+        if (tipo === "mensal") {
+            document.getElementById("grupoMes").style.display = "flex";
+            document.getElementById("grupoAno").style.display = "none";
+        } else {
+            document.getElementById("grupoMes").style.display = "none";
+            document.getElementById("grupoAno").style.display = "flex";
+        }
+    }
+
     window.gerarRelatorio = async function() {
-        const mesAno = document.getElementById("mesReferencia").value;
+        const tipoPeriodo = document.getElementById("tipoPeriodo").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
         const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
         const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
         const apenasFalta = document.getElementById("filtroApenasFalta").checked;
 
         const msgDiv = document.getElementById("mensagem");
-        const btnPdf = document.getElementById("btnExportarPdf");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnCsv = document.getElementById("btnCsv");
+        const btnXls = document.getElementById("btnXls");
 
         msgDiv.className = "mensagem";
         msgDiv.textContent = "";
         btnPdf.disabled = true;
-
-        if (!mesAno) {
-            mostrarMensagem("Selecione o mês de referência.", "erro");
-            return;
-        }
+        btnCsv.disabled = true;
+        btnXls.disabled = true;
 
         try {
-            // 1. Busca dias úteis da SEMED
-            const configRef = doc(db, "configuracoes", mesAno);
-            const configSnap = await getDoc(configRef);
+            let mesesParaProcessar = [];
 
-            if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados pela SEMED!`, "erro");
-                document.getElementById("summaryContainer").classList.remove("ativo");
-                document.getElementById("tableCard").classList.remove("ativo");
-                return;
+            if (tipoPeriodo === "mensal") {
+                const mesAno = document.getElementById("mesReferencia").value;
+                if (!mesAno) {
+                    mostrarMensagem("Selecione o mês de referência.", "erro");
+                    return;
+                }
+                mesesParaProcessar.push(mesAno);
+            } else {
+                const anoSelecionado = document.getElementById("anoReferencia").value;
+                for (let m = 1; m <= 12; m++) {
+                    const mesStr = String(m).padStart(2, '0');
+                    mesesParaProcessar.push(`${anoSelecionado}-${mesStr}`);
+                }
             }
 
-            const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
-
-            // 2. Busca customizações de dias das escolas
-            const diasEscolaMap = {};
-            try {
-                const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
-                const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
-                escolaConfigsSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.escola) {
-                        diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
-                    }
-                });
-            } catch (e) {
-                console.log("Aviso: Configurações de dias por escola vazias.");
-            }
-
-            // 3. Busca afastamentos isolados por escola
-            const afastamentosMap = {};
-            try {
-                const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
-                const lancSnap = await getDocs(lancQuery);
-                lancSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const dias = Number(data.diasAfastamento) || 0;
-                    if (data.cpf) {
-                        const cpfLimpo = data.cpf.replace(/\D/g, "");
-                        if (data.escola) {
-                            afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
-                        }
-                        afastamentosMap[cpfLimpo] = dias;
-                    }
-                });
-            } catch (e) {
-                console.log("Aviso: Sem lançamentos mensais.");
-            }
-
-            // 4. Busca servidores
-            const querySnapshot = await getDocs(collection(db, "servidores"));
-
-            if (querySnapshot.empty) {
+            // Mapeia servidores e consolida dados
+            const servidoresSnap = await getDocs(collection(db, "servidores"));
+            if (servidoresSnap.empty) {
                 mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
-                document.getElementById("summaryContainer").classList.remove("ativo");
-                document.getElementById("tableCard").classList.remove("ativo");
                 return;
+            }
+
+            // Acumulador geral por vínculo (Chave: ServidorCPF_Escola_Cargo)
+            let resultadosConsolidados = {};
+            let totalDiasUteisPeriodo = 0;
+
+            for (const mesAno of mesesParaProcessar) {
+                // 1. Dias SEMED
+                const configRef = doc(db, "configuracoes", mesAno);
+                const configSnap = await getDoc(configRef);
+                if (!configSnap.exists()) continue; // Pula meses não configurados no modo anual
+
+                const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
+                totalDiasUteisPeriodo += diasSemedDefault;
+
+                // 2. Dias Escola
+                const diasEscolaMap = {};
+                try {
+                    const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
+                    const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+                    escolaConfigsSnap.forEach(d => {
+                        const data = d.data();
+                        if (data.escola) diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
+                    });
+                } catch (e) {}
+
+                // 3. Afastamentos
+                const afastamentosMap = {};
+                try {
+                    const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+                    const lancSnap = await getDocs(lancQuery);
+                    lancSnap.forEach(d => {
+                        const data = d.data();
+                        const dias = Number(data.diasAfastamento) || 0;
+                        if (data.cpf) {
+                            const cpfLimpo = data.cpf.replace(/\D/g, "");
+                            if (data.escola) afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
+                            afastamentosMap[cpfLimpo] = dias;
+                        }
+                    });
+                } catch (e) {}
+
+                // 4. Processa servidores para este mês
+                servidoresSnap.forEach((docServidor) => {
+                    const s = docServidor.data();
+                    const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+
+                    function processarVinculo(matriculaNum, cargo, escolaObj) {
+                        if (!escolaObj) return;
+                        const nomeEscola = escolaObj.nomeEscola;
+                        if (!nomeEscola) return;
+
+                        if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
+                        if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
+                        const empresa = escolaObj.empresa || "";
+                        if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
+
+                        const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
+                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
+
+                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
+                        const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
+                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        const totalMes = passesDiarios * diasEfetivos;
+
+                        const chaveUnica = `${cpfLimpo}_${nomeEscola}_${matriculaNum}`;
+                        if (!resultadosConsolidados[chaveUnica]) {
+                            resultadosConsolidados[chaveUnica] = {
+                                nome: s.nome,
+                                cpf: s.cpf,
+                                matricula: matriculaNum,
+                                cargo: cargo || '-',
+                                escola: nomeEscola,
+                                empresa: empresa || '-',
+                                passesDiarios: passesDiarios,
+                                diasEfetivosTotal: 0,
+                                afastamentosTotal: 0,
+                                passesTotal: 0
+                            };
+                        }
+
+                        resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
+                        resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
+                        resultadosConsolidados[chaveUnica].passesTotal += totalMes;
+                    }
+
+                    if (s.matricula1) {
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
+                    }
+                    if (s.matricula2) {
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
+                    }
+                });
             }
 
             let linhasTabela = "";
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            querySnapshot.forEach((docServidor) => {
-                const s = docServidor.data();
-                const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+            Object.values(resultadosConsolidados).forEach(item => {
+                if (apenasFalta && item.afastamentosTotal <= 0) return;
 
-                function processarEscola(matriculaNum, cargo, escolaObj) {
-                    if (!escolaObj) return;
-                    const nomeEscola = escolaObj.nomeEscola;
-                    if (!nomeEscola) return;
+                totalVinculos++;
+                totalGeralPasses += item.passesTotal;
 
-                    // Filtro por Escola
-                    if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
-
-                    // Filtro por Cargo (busca parcial sem diferenciar maiúsculas/minúsculas)
-                    if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
-
-                    // Filtro por Empresa (busca parcial)
-                    const empresa = escolaObj.empresa || "";
-                    if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
-
-                    const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                    const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
-
-                    // Filtro opcional: Apenas servidores com falta
-                    if (apenasFalta && diasAfastamento <= 0) return;
-
-                    const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
-                    const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
-
-                    const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
-                    const totalMes = passesDiarios * diasEfetivos;
-
-                    totalVinculos++;
-                    totalGeralPasses += totalMes;
-
-                    linhasTabela += `
-                        <tr>
-                            <td><b>${s.nome}</b></td>
-                            <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
-                            <td>${cargo || '-'}</td>
-                            <td>${nomeEscola}</td>
-                            <td>${empresa || '-'}</td>
-                            <td>${passesDiarios}</td>
-                            <td><b>${diasEfetivos} dias</b></td>
-                            <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento}</span></td>
-                            <td><b>${totalMes}</b></td>
-                        </tr>
-                    `;
-                }
-
-                if (s.matricula1) {
-                    processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
-                    processarEscola(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
-                }
-
-                if (s.matricula2) {
-                    processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
-                    processarEscola(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
-                }
+                linhasTabela += `
+                    <tr>
+                        <td><b>${item.nome}</b></td>
+                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                        <td>${item.cargo}</td>
+                        <td>${item.escola}</td>
+                        <td>${item.empresa}</td>
+                        <td>${item.passesDiarios}</td>
+                        <td><b>${item.diasEfetivosTotal} dias</b></td>
+                        <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                        <td><b>${item.passesTotal}</b></td>
+                    </tr>
+                `;
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para os filtros selecionados.", "info");
+                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            // Atualiza cabeçalho para impressão
-            document.getElementById("printSubtitulo").textContent = `Relatório de Fechamento - Mês: ${mesAno} | Escola: ${escolaSelecionada} | Cargo: ${cargoFiltro || 'Todos'} | Empresa: ${empresaFiltro || 'Todas'}`;
-
-            // Atualiza cards de resumo
-            document.getElementById("sumDiasUteis").textContent = diasSemedDefault + " dias (Base)";
+            const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${document.getElementById("mesReferencia").value}` : `Ano: ${document.getElementById("anoReferencia").value}`;
+            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escola: ${escolaSelecionada}`;
+            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal" ? document.getElementById("mesReferencia").value : `Ano ${document.getElementById("anoReferencia").value}`;
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
-            
+
             btnPdf.disabled = false;
-            mostrarMensagem("Relatório avançado gerado com sucesso!", "sucesso");
+            btnCsv.disabled = false;
+            btnXls.disabled = false;
+            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
 
         } catch (erro) {
             console.error("Erro ao gerar relatório:", erro);
@@ -733,8 +778,55 @@ tr:hover td {
         }
     }
 
+    // EXPORTAR PARA PDF / IMPRIMIR
     window.exportarPDF = function() {
         window.print();
+    }
+
+    // EXPORTAR PARA CSV
+    window.exportarCSV = function() {
+        let csv = [];
+        let rows = document.querySelectorAll("#tabelaCorpo tr");
+        let header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
+        csv.push(header.join(";"));
+
+        rows.forEach(row => {
+            let cols = row.querySelectorAll("td");
+            if (cols.length > 0) {
+                let nome = cols[0].innerText.trim();
+                let cpfMat = cols[1].innerText.split("\n");
+                let cpf = cpfMat[0] || "";
+                let mat = cpfMat[1] ? cpfMat[1].replace("Mat: ", "") : "";
+                let cargo = cols[2].innerText.trim();
+                let escola = cols[3].innerText.trim();
+                let empresa = cols[4].innerText.trim();
+                let passesDia = cols[5].innerText.trim();
+                let diasEfetivos = cols[6].innerText.trim();
+                let afastamentos = cols[7].innerText.trim();
+                let totalPasses = cols[8].innerText.trim();
+
+                let linha = [
+                    `"${nome}"`, `"${cpf}"`, `"${mat}"`, `"${cargo}"`, `"${escola}"`, `"${empresa}"`, passesDia, `"${diasEfetivos}"`, afastamentos, totalPasses
+                ];
+                csv.push(linha.join(";"));
+            }
+        });
+
+        let blob = new Blob(["\ufeff" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo").value}.csv`;
+        link.click();
+    }
+
+    // EXPORTAR PARA EXCEL (XLS)
+    window.exportarXLS = function() {
+        let htmlTable = document.getElementById("tableCard").querySelector("table").outerHTML;
+        let blob = new Blob(['\ufeff' + htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo").value}.xls`;
+        link.click();
     }
 
     function mostrarMensagem(texto, tipo) {
