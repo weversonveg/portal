@@ -500,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO ATUALIZADO COM O NOVO CARD DE DIAS DA UNIDADE
+    // MOTOR DE CÁLCULO OTIMIZADO E CORRIGIDO
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -526,7 +526,7 @@ tr:hover td {
 
             const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca todas as customizações de dias úteis feitas pelas escolas para este mês
+            // 2. Busca customizações de dias úteis das escolas
             const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
             const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
             const diasEscolaMap = {};
@@ -537,7 +537,7 @@ tr:hover td {
                 }
             });
 
-            // 3. Busca lançamentos de afastamentos individuais
+            // 3. Busca afastamentos individuais
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
@@ -549,7 +549,7 @@ tr:hover td {
                 }
             });
 
-            // 4. Busca os servidores
+            // 4. Busca os servidores de forma otimizada por escola (ou todos se selecionado "TODAS")
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -570,7 +570,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo cruzando dias da escola e faltas individuais
+            // 5. Processamento do cálculo
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -581,10 +581,7 @@ tr:hover td {
                     const nomeEscola = escolaObj.nomeEscola;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
-                    // Pega os dias úteis específicos daquela escola (se customizado), senão usa o padrão SEMED
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
-
-                    // Dias efetivos = dias da escola menos as faltas individuais
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
@@ -619,13 +616,13 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            // Atualiza os valores dos 4 cards do topo
+            // Atualiza os cards do topo com segurança
             document.getElementById("sumDiasSemed").textContent = diasSemedDefault + " dias";
 
             if (escolaSelecionada !== "TODAS") {
