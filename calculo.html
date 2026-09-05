@@ -241,10 +241,10 @@ body {
     background: var(--green-hover);
 }
 
-/* RESUMO E ESTATÍSTICAS */
+/* RESUMO E ESTATÍSTICAS (4 COLUNAS) */
 .summary-container {
     display: none;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -269,7 +269,7 @@ body {
 }
 
 .summary-box p {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #263238;
     margin-top: 6px;
@@ -346,17 +346,23 @@ tr:hover td {
     color: #2e7d32;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 950px) {
     .filter-card {
         flex-direction: column;
         align-items: stretch;
     }
     .summary-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
     table {
         display: block;
         overflow-x: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .summary-container {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -422,14 +428,18 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO CÁLCULO -->
+    <!-- RESUMO DO CÁLCULO (4 CARDS) -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Referência SEMED</label>
-            <p id="sumDiasUteis">0</p>
+            <p id="sumDiasSemed">0</p>
+        </div>
+        <div class="summary-box" style="border-left: 4px solid var(--primary);">
+            <label>Dias da Unidade (Escola)</label>
+            <p id="sumDiasEscola" style="color: var(--primary);">Padrão</p>
         </div>
         <div class="summary-box">
-            <label>Total de Vínculos / Lotações</label>
+            <label>Total de Vínculos</label>
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--green);">
@@ -490,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM CALENDÁRIO PRÓPRIO DA ESCOLA (MENOS OU MAIS DIAS)
+    // MOTOR DE CÁLCULO ATUALIZADO COM O NOVO CARD DE DIAS DA UNIDADE
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -574,7 +584,7 @@ tr:hover td {
                     // Pega os dias úteis específicos daquela escola (se customizado), senão usa o padrão SEMED
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
 
-                    // Dias efetivos = dias da escola menos as faltas individuais (garantindo que não fique negativo)
+                    // Dias efetivos = dias da escola menos as faltas individuais
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
@@ -590,7 +600,7 @@ tr:hover td {
                             <td>${nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary);">(Ajustado)</small>' : ''}</td>
+                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
@@ -615,17 +625,26 @@ tr:hover td {
                 return;
             }
 
-            mostrarMensagem("Cálculo de vales realizado com sucesso considerando os calendários escolares e afastamentos!", "sucesso");
+            // Atualiza os valores dos 4 cards do topo
+            document.getElementById("sumDiasSemed").textContent = diasSemedDefault + " dias";
 
-            document.getElementById("sumDiasUteis").textContent = diasSemedDefault + " dias (Base)";
+            if (escolaSelecionada !== "TODAS") {
+                const diasEscolaAtual = diasEscolaMap[escolaSelecionada] !== undefined ? diasEscolaMap[escolaSelecionada] : diasSemedDefault;
+                const statusStr = diasEscolaAtual !== diasSemedDefault ? " (Ajustado)" : " (Padrão)";
+                document.getElementById("sumDiasEscola").textContent = diasEscolaAtual + " dias" + statusStr;
+            } else {
+                const qtdCustomizadas = Object.keys(diasEscolaMap).length;
+                document.getElementById("sumDiasEscola").textContent = qtdCustomizadas > 0 ? `${qtdCustomizadas} unidade(s) c/ ajuste` : "Todas no Padrão";
+            }
+
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            mostrarMensagem("Cálculo de vales realizado com sucesso!", "sucesso");
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
 
-        } catch (erro) {
+        }하고자 (erro) {
             console.error("Erro no cálculo:", erro);
             mostrarMensagem("Erro ao processar o cálculo. Verifique sua conexão.", "erro");
         }
