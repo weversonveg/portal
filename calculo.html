@@ -241,7 +241,7 @@ body {
     background: var(--green-hover);
 }
 
-/* RESUMO E ESTATÍSTICAS */
+/* RESUMO E ESTATÍSTICAS (4 COLUNAS) */
 .summary-container {
     display: none;
     grid-template-columns: repeat(4, 1fr);
@@ -339,6 +339,13 @@ tr:hover td {
     color: #334155;
 }
 
+.mensagem.sucesso {
+    display: block;
+    background: #edf7ee;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
 @media (max-width: 950px) {
     .filter-card {
         flex-direction: column;
@@ -391,7 +398,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Calcula a quantidade de vales descontando automaticamente os dias de afastamento lançados pelas escolas.</p>
+        <p>Calcula a quantidade de vales considerando o calendário específico de cada escola e os afastamentos lançados.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -421,18 +428,18 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO CÁLCULO -->
+    <!-- RESUMO DO CÁLCULO (4 CARDS) -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
-            <label>Dias Úteis Base</label>
-            <p id="sumDiasUteis">0</p>
+            <label>Referência SEMED</label>
+            <p id="sumDiasSemed">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--primary);">
             <label>Dias da Unidade (Escola)</label>
             <p id="sumDiasEscola" style="color: var(--primary);">Padrão</p>
         </div>
         <div class="summary-box">
-            <label>Total de Vínculos / Lotações</label>
+            <label>Total de Vínculos</label>
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--green);">
@@ -451,7 +458,7 @@ tr:hover td {
                     <th>Escola / Lotação</th>
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
-                    <th>Dias Úteis</th>
+                    <th>Dias Úteis da Escola</th>
                     <th>Afastamentos</th>
                     <th>Total no Mês</th>
                 </tr>
@@ -484,7 +491,7 @@ tr:hover td {
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
-                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
+                mostrarMensagem(`Atenção: Não há dias úteis configurados pela SEMED para o mês ${mesAno}.`, "erro");
             } else {
                 ocultarMensagem();
             }
@@ -493,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM AFASTAMENTOS E DIAS AJUSTADOS DA ESCOLA
+    // MOTOR DE CÁLCULO SEPARANDO OS AFASTAMENTOS POR ESCOLA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -508,37 +515,38 @@ tr:hover td {
         }
 
         try {
-            // 1. Pega os dias úteis configurados para o mês
+            // 1. Pega os dias úteis base da SEMED
             const configRef = doc(db, "configuracoes", mesAno);
             const configSnap = await getDoc(configRef);
 
             if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Defina os dias úteis na tela de configuração primeiro.`, "erro");
+                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados pela SEMED!`, "erro");
                 return;
             }
 
-            const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
+            const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca customizações de dias úteis feitas pelas escolas para este mês
+            // 2. Busca customizações de dias úteis das escolas
             const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
             const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
             const diasEscolaMap = {};
             escolaConfigsSnap.forEach(docSnap => {
                 const data = docSnap.data();
                 if (data.escola) {
-                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasUteisBase;
+                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
                 }
             });
 
-            // 3. Busca todos os afastamentos lançados para este mês de uma só vez (otimização de leitura)
+            // 3. Busca afastamentos individuais vinculados à ESCOLA E CPF
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
             lancSnap.forEach(docSnap => {
                 const data = docSnap.data();
-                if (data.cpf) {
-                    const cpfLimpo = data.cpf.replace(/\D/g, "");
-                    afastamentosMap[cpfLimpo] = Number(data.diasAfastamento) || 0;
+                const dias = Number(data.diasAfastamento) || 0;
+                if (data.cpf && data.escola) {
+                    const chave = `${data.escola}_${data.cpf.replace(/\D/g, "")}`;
+                    afastamentosMap[chave] = dias;
                 }
             });
 
@@ -563,11 +571,10 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo aplicando os dias da escola e descontos de afastamento
-            querySnapshot.forEach((doc) => {
-                const s = doc.data();
+            // 5. Processamento do cálculo considerando a escola atual do vínculo
+            querySnapshot.forEach((docServidor) => {
+                const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-                const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
@@ -575,10 +582,11 @@ tr:hover td {
                     if (!nomeEscola) return;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
-                    // Pega os dias da unidade específica ou o padrão base
-                    const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
+                    // Busca o afastamento exclusivo desta escola para este CPF
+                    const chaveAfastamento = `${nomeEscola}_${cpfLimpo}`;
+                    const diasAfastamento = afastamentosMap[chaveAfastamento] || 0;
 
-                    // Dias efetivos = dias úteis da escola menos os afastamentos (garantindo que não fique negativo)
+                    const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
@@ -594,7 +602,7 @@ tr:hover td {
                             <td>${nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasUteisBase ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
+                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
@@ -613,17 +621,18 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            document.getElementById("sumDiasUteis").textContent = diasUteisBase + " dias";
+            // Atualiza os cards do topo com segurança
+            document.getElementById("sumDiasSemed").textContent = diasSemedDefault + " dias";
 
             if (escolaSelecionada !== "TODAS") {
-                const diasEscolaAtual = diasEscolaMap[escolaSelecionada] !== undefined ? diasEscolaMap[escolaSelecionada] : diasUteisBase;
-                const statusStr = diasEscolaAtual !== diasUteisBase ? " (Ajustado)" : " (Padrão)";
+                const diasEscolaAtual = diasEscolaMap[escolaSelecionada] !== undefined ? diasEscolaMap[escolaSelecionada] : diasSemedDefault;
+                const statusStr = diasEscolaAtual !== diasSemedDefault ? " (Ajustado)" : " (Padrão)";
                 document.getElementById("sumDiasEscola").textContent = diasEscolaAtual + " dias" + statusStr;
             } else {
                 const qtdCustomizadas = Object.keys(diasEscolaMap).length;
@@ -633,7 +642,7 @@ tr:hover td {
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            mostrarMensagem("Cálculo de vales realizado com sucesso!", "sucesso");
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
 
