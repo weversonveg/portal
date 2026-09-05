@@ -500,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO OTIMIZADO E CORRIGIDO
+    // MOTOR DE CÁLCULO SEGURO E ROBUSTO
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -549,18 +549,11 @@ tr:hover td {
                 }
             });
 
-            // 4. Busca os servidores de forma otimizada por escola (ou todos se selecionado "TODAS")
-            let q;
-            if (escolaSelecionada !== "TODAS") {
-                q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
-            } else {
-                q = collection(db, "servidores");
-            }
-
-            const querySnapshot = await getDocs(q);
+            // 4. Busca todos os servidores cadastrados (garante 100% de compatibilidade com qualquer estrutura de cadastro)
+            const querySnapshot = await getDocs(collection(db, "servidores"));
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor encontrado para o critério selecionado.", "info");
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
@@ -570,7 +563,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processamento do cálculo
+            // 5. Processamento do cálculo e filtragem por escola em memória
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -579,6 +572,9 @@ tr:hover td {
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
                     const nomeEscola = escolaObj.nomeEscola;
+                    if (!nomeEscola) return;
+                    
+                    // Se foi selecionada uma escola específica e não bate, ignora
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
