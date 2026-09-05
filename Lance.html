@@ -483,7 +483,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO COM CRUZAMENTO ROBUSTO POR ID E CPF
+    // MOTOR DE CÁLCULO COM AUDITORIA DE CONSOLE (F12)
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -509,7 +509,7 @@ tr:hover td {
 
             const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca todos os lançamentos de afastamento do mês
+            // 2. Busca lançamentos de afastamento e gera mapa de auditoria
             const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
             const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
@@ -517,11 +517,13 @@ tr:hover td {
             lancSnap.forEach(docSnap => {
                 const data = docSnap.data();
                 const dias = Number(data.diasAfastamento) || 0;
-                
-                // Mapeia tanto pelo ID do servidor quanto pelo CPF limpo para garantir compatibilidade
-                if (data.servidorId) afastamentosMap[data.servidorId] = dias;
-                if (data.cpf) afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
+                if (data.cpf) {
+                    const cpfL = data.cpf.replace(/\D/g, "");
+                    afastamentosMap[cpfL] = dias;
+                }
             });
+
+            console.log("=== AUDITORIA DE AFASTAMENTOS CARREGADOS ===", afastamentosMap);
 
             // 3. Busca os servidores
             let q;
@@ -544,14 +546,14 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 4. Processa o cálculo aplicando o desconto de forma garantida
+            // 4. Processa o cálculo cruzando o CPF
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
-                const servidorId = docServidor.id;
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
-                // Verifica o afastamento usando o ID do documento ou o CPF limpo
-                const diasAfastamento = afastamentosMap[servidorId] || afastamentosMap[cpfLimpo] || 0;
+                const diasAfastamento = afastamentosMap[cpfLimpo] || 0;
+                console.log(`Servidor: ${s.nome} | CPF Limpo: ${cpfLimpo} | Afastamentos encontrados: ${diasAfastamento}`);
+
                 const diasEfetivos = Math.max(0, diasUteisBase - diasAfastamento);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
