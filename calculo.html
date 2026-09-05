@@ -241,10 +241,10 @@ body {
     background: var(--green-hover);
 }
 
-/* RESUMO E ESTATÍSTICAS (4 CARDS) */
+/* RESUMO E ESTATÍSTICAS */
 .summary-container {
     display: none;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -269,7 +269,7 @@ body {
 }
 
 .summary-box p {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     color: #263238;
     margin-top: 6px;
@@ -346,23 +346,17 @@ tr:hover td {
     color: #2e7d32;
 }
 
-@media (max-width: 950px) {
+@media (max-width: 800px) {
     .filter-card {
         flex-direction: column;
         align-items: stretch;
     }
     .summary-container {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
     }
     table {
         display: block;
         overflow-x: auto;
-    }
-}
-
-@media (max-width: 600px) {
-    .summary-container {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -428,18 +422,14 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO CÁLCULO (4 CARDS SEGUROS) -->
+    <!-- RESUMO DO CÁLCULO -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Referência SEMED</label>
-            <p id="sumDiasSemed">0</p>
-        </div>
-        <div class="summary-box" style="border-left: 4px solid var(--primary);">
-            <label>Dias da Unidade (Escola)</label>
-            <p id="sumDiasEscola" style="color: var(--primary);">Padrão</p>
+            <p id="sumDiasUteis">0</p>
         </div>
         <div class="summary-box">
-            <label>Total de Vínculos</label>
+            <label>Total de Vínculos / Lotações</label>
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" style="border-left: 4px solid var(--green);">
@@ -500,7 +490,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO BLINDADO E ESTRITAMENTE FUNCIONAL
+    // MOTOR DE CÁLCULO INTEGRADO COM CALENDÁRIO PRÓPRIO DA ESCOLA (MENOS OU MAIS DIAS)
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -526,38 +516,30 @@ tr:hover td {
 
             const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca customizações de dias úteis das escolas (com proteção contra falha de coleção vazia)
+            // 2. Busca todas as customizações de dias úteis feitas pelas escolas para este mês
+            const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
+            const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
             const diasEscolaMap = {};
-            try {
-                const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
-                const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
-                escolaConfigsSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.escola) {
-                        diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
-                    }
-                });
-            } catch (e) {
-                console.log("Aviso: Coleção de configuração de escolas ainda não utilizada ou sem índice.");
-            }
+            escolaConfigsSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                if (data.escola) {
+                    diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
+                }
+            });
 
-            // 3. Busca afastamentos individuais
+            // 3. Busca lançamentos de afastamentos individuais
+            const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+            const lancSnap = await getDocs(lancQuery);
             const afastamentosMap = {};
-            try {
-                const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
-                const lancSnap = await getDocs(lancQuery);
-                lancSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const dias = Number(data.diasAfastamento) || 0;
-                    if (data.cpf) {
-                        afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
-                    }
-                });
-            } catch (e) {
-                console.log("Aviso: Sem lançamentos mensais para este período.");
-            }
+            lancSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                const dias = Number(data.diasAfastamento) || 0;
+                if (data.cpf) {
+                    afastamentosMap[data.cpf.replace(/\D/g, "")] = dias;
+                }
+            });
 
-            // 4. Busca os servidores usando a consulta exata original que funcionava
+            // 4. Busca os servidores
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -578,7 +560,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processamento das lotações exatamente como no original
+            // 5. Processa o cálculo cruzando dias da escola e faltas individuais
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -587,11 +569,12 @@ tr:hover td {
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
                     const nomeEscola = escolaObj.nomeEscola;
-                    if (!nomeEscola) return;
-                    
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
+                    // Pega os dias úteis específicos daquela escola (se customizado), senão usa o padrão SEMED
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
+
+                    // Dias efetivos = dias da escola menos as faltas individuais (garantindo que não fique negativo)
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
@@ -607,7 +590,7 @@ tr:hover td {
                             <td>${nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
-                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
+                            <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasSemedDefault ? '<small style="color:var(--primary);">(Ajustado)</small>' : ''}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
                             <td><b>${totalMes} passes</b></td>
                         </tr>
@@ -626,28 +609,19 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
             }
 
-            // Atualiza os cartões com total segurança
-            document.getElementById("sumDiasSemed").textContent = diasSemedDefault + " dias";
+            mostrarMensagem("Cálculo de vales realizado com sucesso considerando os calendários escolares e afastamentos!", "sucesso");
 
-            if (escolaSelecionada !== "TODAS") {
-                const diasEscolaAtual = diasEscolaMap[escolaSelecionada] !== undefined ? diasEscolaMap[escolaSelecionada] : diasSemedDefault;
-                const statusStr = diasEscolaAtual !== diasSemedDefault ? " (Ajustado)" : " (Padrão)";
-                document.getElementById("sumDiasEscola").textContent = diasEscolaAtual + " dias" + statusStr;
-            } else {
-                const qtdCustomizadas = Object.keys(diasEscolaMap).length;
-                document.getElementById("sumDiasEscola").textContent = qtdCustomizadas > 0 ? `${qtdCustomizadas} unidade(s) c/ ajuste` : "Todas no Padrão";
-            }
-
+            document.getElementById("sumDiasUteis").textContent = diasSemedDefault + " dias (Base)";
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
-            mostrarMensagem("Cálculo de vales realizado com sucesso!", "sucesso");
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
 
