@@ -162,7 +162,7 @@ body {
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-bottom: 18px;
 }
@@ -355,7 +355,7 @@ tr:hover td {
             <span>Controle de Férias e Folgas</span>
         </div>
         <h1>Lançamento de Férias e Folga Aniversário</h1>
-        <p>Busque o servidor por CPF, informe o tipo de ausência e registre o período ou data.</p>
+        <p>Busque o servidor por CPF, informe o tipo de ausência e o sistema calcula automaticamente o término.</p>
     </div>
 
     <!-- FORMULÁRIO DE CADASTRO -->
@@ -387,13 +387,21 @@ tr:hover td {
                     </select>
                 </div>
 
-                <div class="form-group" id="grupoDataInicio">
+                <div class="form-group" id="grupoDuracaoFerias">
+                    <label for="duracaoFerias">Duração das Férias <span>*</span></label>
+                    <select id="duracaoFerias" onchange="calcularDataFim()">
+                        <option value="30">30 Dias Corridos</option>
+                        <option value="15">15 Dias Corridos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
-                    <input type="date" id="dataInicio" required>
+                    <input type="date" id="dataInicio" required onchange="calcularDataFim()">
                 </div>
 
                 <div class="form-group" id="grupoDataFim">
-                    <label for="dataFim">Data de Término <span>*</span></label>
+                    <label for="dataFim">Data de Término (Calculada Automática) <span>*</span></label>
                     <input type="date" id="dataFim" required>
                 </div>
 
@@ -416,7 +424,7 @@ tr:hover td {
                     <th>Servidor</th>
                     <th>CPF</th>
                     <th>Tipo</th>
-                    <th>Início / Data</th>
+                    <th>Início</th>
                     <th>Término</th>
                     <th>Ações</th>
                 </tr>
@@ -457,19 +465,43 @@ tr:hover td {
     window.mudarTipoAusencia = function() {
         const tipo = document.getElementById("tipoAusencia").value;
         const grupoFim = document.getElementById("grupoDataFim");
+        const grupoDuracao = document.getElementById("grupoDuracaoFerias");
         const lblInicio = document.getElementById("labelDataInicio");
         const inputFim = document.getElementById("dataFim");
 
         if (tipo === "FOLGA_ANIVERSARIO") {
             grupoFim.style.display = "none";
+            grupoDuracao.style.display = "none";
             inputFim.removeAttribute("required");
             inputFim.value = "";
             lblInicio.innerHTML = "Data da Folga <span>*</span>";
         } else {
             grupoFim.style.display = "flex";
+            grupoDuracao.style.display = "flex";
             inputFim.setAttribute("required", "true");
             lblInicio.innerHTML = "Data de Início <span>*</span>";
+            calcularDataFim();
         }
+    }
+
+    window.calcularDataFim = function() {
+        const tipo = document.getElementById("tipoAusencia").value;
+        const dataInicioStr = document.getElementById("dataInicio").value;
+        const inputFim = document.getElementById("dataFim");
+        const duracaoDias = parseInt(document.getElementById("duracaoFerias").value) || 30;
+
+        if (!dataInicioStr || tipo === "FOLGA_ANIVERSARIO") return;
+
+        // Cria a data no fuso local adicionando os dias corridos
+        let dataInicio = new Date(dataInicioStr + "T00:00:00");
+        // Ex: Início dia 1 + 30 dias corridos = término no dia 30 (portanto adiciona dias - 1)
+        dataInicio.setDate(dataInicio.getDate() + (duracaoDias - 1));
+
+        let ano = dataInicio.getFullYear();
+        let mes = String(dataInicio.getMonth() + 1).padStart(2, '0');
+        let dia = String(dataInicio.getDate()).padStart(2, '0');
+
+        inputFim.value = `${ano}-${mes}-${dia}`;
     }
 
     window.buscarServidorPorCpf = async function() {
@@ -553,18 +585,13 @@ tr:hover td {
         }
 
         try {
-            // VERIFICAÇÃO DE DUPLICIDADE / CONFLITO DE DATAS NO BANCO
             const qExistente = query(collection(db, "registro_ferias_folgas"), where("cpf", "==", cpfValidado));
             const existentesSnap = await getDocs(qExistente);
             
             let temConflito = false;
             existentesSnap.forEach(docSnap => {
                 const r = docSnap.data();
-                const regInicio = r.dataInicio;
-                const regFim = r.dataFim;
-
-                // Checa sobreposição de períodos: !(dataFim < regInicio || dataInicio > regFim)
-                if (!(dataFim < regInicio || dataInicio > regFim)) {
+                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) {
                     temConflito = true;
                 }
             });
