@@ -571,7 +571,7 @@ tr:hover td {
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, query, where, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     document.addEventListener("DOMContentLoaded", function() {
         const hoje = new Date();
@@ -752,21 +752,31 @@ tr:hover td {
         const diasAfastamento = Number(inputDias.value) || 0;
         const cpfLimpo = cpfServidor.replace(/\D/g, "");
         const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
+        const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
 
         try {
-            await setDoc(doc(db, "lancamentos_mensais", lancamentoId), {
-                mesReferencia: mesAno,
-                escola: escola,
-                servidorId: servidorId,
-                cpf: cpfServidor,
-                diasAfastamento: diasAfastamento,
-                dataAtualizacao: new Date().toISOString()
-            }, { merge: true });
-
             const btnOriginal = inputDias.parentElement.nextElementSibling.querySelector("button");
             const textoOriginal = btnOriginal.innerHTML;
-            btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check</span> Salvo!';
-            btnOriginal.style.background = "#1b5e20";
+
+            if (diasAfastamento <= 0) {
+                // Se o valor for 0 ou vazio, deleta o documento do banco para evitar registros fantasmas
+                await deleteDoc(lancRef);
+                btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Removido!';
+                btnOriginal.style.background = "#c62828";
+            } else {
+                // Caso contrário, salva ou atualiza normalmente
+                await setDoc(lancRef, {
+                    mesReferencia: mesAno,
+                    escola: escola,
+                    servidorId: servidorId,
+                    cpf: cpfServidor,
+                    diasAfastamento: diasAfastamento,
+                    dataAtualizacao: new Date().toISOString()
+                }, { merge: true });
+
+                btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check</span> Salvo!';
+                btnOriginal.style.background = "#1b5e20";
+            }
             
             setTimeout(() => {
                 btnOriginal.innerHTML = textoOriginal;
@@ -775,8 +785,8 @@ tr:hover td {
             }, 1200);
 
         } catch (erro) {
-            console.error("Erro ao salvar afastamento:", erro);
-            alert("Erro ao salvar o afastamento. Verifique sua conexão.");
+            console.error("Erro ao salvar/remover afastamento:", erro);
+            alert("Erro ao atualizar o afastamento. Verifique sua conexão.");
         }
     }
 
