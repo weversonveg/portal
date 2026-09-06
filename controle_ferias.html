@@ -68,14 +68,14 @@ body {
     box-shadow: var(--shadow);
     display: flex;
     align-items: center;
-    padding: 0 24px;
+    padding: 0 20px;
 }
 
 .topbar-content {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .logo {
@@ -146,7 +146,7 @@ body {
     border: 1px solid #e0e4e7;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    padding: 24px;
+    padding: 20px;
     margin-bottom: 24px;
 }
 
@@ -162,7 +162,7 @@ body {
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 16px;
     margin-bottom: 18px;
 }
@@ -170,6 +170,10 @@ body {
 .form-group {
     display: flex;
     flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
 }
 
 .form-group label {
@@ -189,12 +193,19 @@ body {
     outline: none;
     font-size: 14px;
     color: #263238;
+    width: 100%;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.cpf-search-wrapper {
+    display: flex;
+    gap: 8px;
+    width: 100%;
 }
 
 .btn-acao {
@@ -212,6 +223,7 @@ body {
     gap: 6px;
     font-size: 13px;
     transition: background 0.15s;
+    flex-shrink: 0;
 }
 
 .btn-acao:hover {
@@ -220,6 +232,7 @@ body {
 
 .btn-salvar {
     background: var(--green);
+    width: 100%;
 }
 .btn-salvar:hover {
     background: var(--green-hover);
@@ -303,9 +316,19 @@ tr:hover td {
     color: #c62828;
 }
 
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
+@media (max-width: 600px) {
+    .topbar {
+        margin-top: 0;
+        border-radius: 0;
+    }
+    .main {
+        padding: 16px 12px;
+    }
+    .cpf-search-wrapper {
+        flex-direction: column;
+    }
+    .btn-acao {
+        width: 100%;
     }
 }
 
@@ -319,7 +342,7 @@ tr:hover td {
         <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
         <span class="system-name">Vale Transporte</span>
         <div class="system-divider"></div>
-        <span class="system-module">Semed - Lançamento de Férias e Folgas</span>
+        <span class="system-module">Semed - Férias e Folgas</span>
     </div>
 </header>
 
@@ -345,10 +368,10 @@ tr:hover td {
         <form id="formFerias" onsubmit="salvarRegistro(event)">
             <div class="form-grid">
                 
-                <div class="form-group">
+                <div class="form-group full-width">
                     <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="inputCpf" placeholder="Digite o CPF..." required style="flex-grow: 1;">
+                    <div class="cpf-search-wrapper">
+                        <input type="text" id="inputCpf" placeholder="Digite o CPF..." required>
                         <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
                             <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
                         </button>
@@ -435,7 +458,6 @@ tr:hover td {
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
-                // Tenta buscar removendo pontuações caso o banco salve formatado ou limpo
                 const q2 = query(collection(db, "servidores"));
                 const snap2 = await getDocs(q2);
                 let encontrado = null;
@@ -502,7 +524,7 @@ tr:hover td {
 
             mostrarMensagem("Período registrado com sucesso!", "sucesso");
             document.getElementById("formFerias").reset();
-            document.getElementById("nomeServidorEncontrado.textContent" || "nomeServidorEncontrado").textContent = "";
+            document.getElementById("nomeServidorEncontrado").textContent = "";
             cpfValidado = "";
             carregarRegistros();
         } catch (e) {
@@ -538,7 +560,7 @@ tr:hover td {
                     <tr>
                         <td><b>${nomeServidor}</b></td>
                         <td>${r.cpf || '-'}</td>
-                        <td><span class="badge-status ${r.tipo === 'FERIAS' ? 'badge-direito' : 'badge-aguardando'}">${tipoFormatado}</span></td>
+                        <td><span class="badge-status" style="background:${r.tipo === 'FERIAS' ? 'var(--green-light)' : '#fff3e0'}; color:${r.tipo === 'FERIAS' ? 'var(--green)' : '#e65100'};">${tipoFormatado}</span></td>
                         <td>${r.dataInicio.split('-').reverse().join('/')}</td>
                         <td>${r.dataFim.split('-').reverse().join('/')}</td>
                         <td>
