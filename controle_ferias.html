@@ -540,7 +540,6 @@ tr:hover td {
             return;
         }
 
-        // Se for folga aniversário, a data fim é igual à data início (apenas 1 dia)
         if (tipo === "FOLGA_ANIVERSARIO") {
             dataFim = dataInicio;
         } else if (!dataFim) {
@@ -554,6 +553,27 @@ tr:hover td {
         }
 
         try {
+            // VERIFICAÇÃO DE DUPLICIDADE / CONFLITO DE DATAS NO BANCO
+            const qExistente = query(collection(db, "registro_ferias_folgas"), where("cpf", "==", cpfValidado));
+            const existentesSnap = await getDocs(qExistente);
+            
+            let temConflito = false;
+            existentesSnap.forEach(docSnap => {
+                const r = docSnap.data();
+                const regInicio = r.dataInicio;
+                const regFim = r.dataFim;
+
+                // Checa sobreposição de períodos: !(dataFim < regInicio || dataInicio > regFim)
+                if (!(dataFim < regInicio || dataInicio > regFim)) {
+                    temConflito = true;
+                }
+            });
+
+            if (temConflito) {
+                mostrarMensagem("Já existe um registro de férias ou folga para este servidor que conflita com as datas informadas.", "erro");
+                return;
+            }
+
             await addDoc(collection(db, "registro_ferias_folgas"), {
                 cpf: cpfValidado,
                 tipo: tipo,
@@ -566,7 +586,7 @@ tr:hover td {
             document.getElementById("formFerias").reset();
             document.getElementById("nomeServidorEncontrado").textContent = "";
             cpfValidado = "";
-            mudarTipoAusencia(); // Reseta visibilidade da data fim
+            mudarTipoAusencia();
             carregarRegistros();
         } catch (e) {
             console.error("Erro ao salvar:", e);
