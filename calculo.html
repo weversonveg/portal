@@ -398,7 +398,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Calcula a quantidade de vales considerando o calendário específico de cada escola e os afastamentos lançados.</p>
+        <p>Calcula a quantidade de vales considerando o calendário da escola, faltas e o abatimento automático de férias e folgas.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -459,7 +459,7 @@ tr:hover td {
                     <th>Concessionária</th>
                     <th>Passes/Dia</th>
                     <th>Dias Úteis</th>
-                    <th>Afastamentos</th>
+                    <th>Afastamentos / Ausências</th>
                     <th>Total no Mês</th>
                 </tr>
             </thead>
@@ -500,7 +500,7 @@ tr:hover td {
         }
     }
 
-    // MOTOR DE CÁLCULO BLINDADO COM ISOLAMENTO DE ESCOLA E SUPORTE A DADOS ANTIGOS
+    // MOTOR DE CÁLCULO INTEGRADO COM FALTAS, FÉRIAS E FOLGAS
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -526,7 +526,7 @@ tr:hover td {
 
             const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
-            // 2. Busca customizações de dias úteis feitas pelas escolas (com proteção)
+            // 2. Busca customizações de dias úteis feitas pelas escolas
             const diasEscolaMap = {};
             try {
                 const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
@@ -538,10 +538,10 @@ tr:hover td {
                     }
                 });
             } catch (e) {
-                console.log("Aviso: Configurações de dias por escola não encontradas ou collection vazia.");
+                console.log("Aviso: Configurações de dias por escola não encontradas.");
             }
 
-            // 3. Busca afastamentos individuais (isolados por escola com fallback seguro)
+            // 3. Mapeia afastamentos e faltas da tela de lançamentos
             const afastamentosMap = {};
             try {
                 const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
@@ -554,7 +554,6 @@ tr:hover td {
                         if (data.escola) {
                             afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
                         }
-                        // Fallback para registros antigos sem o campo escola
                         afastamentosMap[cpfLimpo] = dias;
                     }
                 });
@@ -562,7 +561,39 @@ tr:hover td {
                 console.log("Aviso: Lançamentos mensais não encontrados.");
             }
 
-            // 4. Busca os servidores no Firebase
+            // 4. INTEGRAÇÃO AUTOMÁTICA: Busca Férias e Folgas cadastradas e abate do mês
+            try {
+                const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+                const [anoStr, mesStr] = mesAno.split("-");
+                const anoNum = parseInt(anoStr);
+                const mesNum = parseInt(mesStr) - 1;
+                const primeiroDiaMes = new Date(anoNum, mesNum, 1);
+                const ultimoDiaMes = new Date(anoNum, mesNum + 1, 0);
+
+                feriasSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.cpf && data.dataInicio && data.dataFim) {
+                        const cpfLimpo = data.cpf.replace(/\D/g, "");
+                        const inicio = new Date(data.dataInicio + "T00:00:00");
+                        const fim = new Date(data.dataFim + "T00:00:00");
+
+                        // Calcula intersecção do período de férias/folga com o mês de referência
+                        const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
+                        const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
+
+                        if (startOverlap <= endOverlap) {
+                            const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
+                            if (diasNoMes > 0) {
+                                afastamentosMap[cpfLimpo] = (afastamentosMap[cpfLimpo] || 0) + diasNoMes;
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.log("Aviso: Erro ao calcular intersecção de férias e folgas:", e);
+            }
+
+            // 5. Busca os servidores no Firebase
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -583,7 +614,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo aplicando os dias da escola e descontos de afastamento isolados
+            // 6. Processa o cálculo aplicando os dias da escola e os descontos totais de ausência
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -594,14 +625,10 @@ tr:hover td {
                     if (!nomeEscola) return;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
-                    // Busca afastamento específico daquela escola, se houver; senão usa o CPF geral como fallback
                     const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
                     const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
 
-                    // Pega os dias da unidade específica ou o padrão base
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
-
-                    // Dias efetivos = dias úteis da escola menos os afastamentos
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
                     const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
