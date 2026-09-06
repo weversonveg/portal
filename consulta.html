@@ -11,20 +11,29 @@ href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&displa
 <link rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<title>Consultar Servidores - Vale Transporte</title>
+<title>Consultar Servidor - Vale Transporte</title>
 
 <style>
 
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
+
     --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+
     --red: #c62828;
+    --red-hover: #a51f1f;
+
     --text: #263238;
     --text-secondary: #68737d;
+
     --border: #d9dee3;
     --background: #f4f6f8;
     --white: #ffffff;
+
     --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -47,6 +56,7 @@ body {
     color: var(--text);
 }
 
+/* BARRA SUPERIOR */
 .topbar {
     width: calc(100% - 64px);
     max-width: 1116px;
@@ -91,8 +101,46 @@ body {
 .system-module {
     font-size: 14px;
     color: var(--text-secondary);
+    flex-grow: 1;
 }
 
+/* INDICADOR DE SINAL DE REDE */
+.status-conexao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f5;
+    border: 1px solid #e2e8f0;
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: #2e7d32;
+    border-radius: 1px;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online {
+    color: #2e7d32;
+    background: #edf7ee;
+    border-color: #c8e6c9;
+}
+
+/* ÁREA PRINCIPAL */
 .main {
     width: calc(100% - 64px);
     max-width: 1116px;
@@ -129,225 +177,171 @@ body {
     color: var(--text-secondary);
 }
 
-.card {
-    width: 100%;
+/* CARD DE BUSCA */
+.search-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    overflow: hidden;
-}
-
-.card-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e8eb;
+    padding: 24px;
+    margin-bottom: 24px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
     gap: 16px;
-    flex-wrap: wrap;
+    align-items: flex-end;
 }
 
-.search-box {
-    position: relative;
-    width: 320px;
+.search-group {
+    display: flex;
+    flex-direction: column;
 }
 
-.search-box input {
-    width: 100%;
-    height: 40px;
-    padding: 0 13px 0 38px;
+.search-group.tipo {
+    width: 200px;
+}
+
+.search-group.input-container {
+    flex-grow: 1;
+}
+
+.search-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 7px;
+}
+
+.search-group input,
+.search-group select {
+    height: 44px;
+    padding: 0 13px;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 6px;
     outline: none;
-    font-size: 13px;
-    color: var(--text);
-    transition: border-color .15s ease, box-shadow .15s ease;
+    font-size: 14px;
+    color: #263238;
 }
 
-.search-box input:focus {
+.search-group input:focus,
+.search-group select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
 
-.search-box .material-symbols-outlined {
-    position: absolute;
-    left: 11px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    color: var(--text-secondary);
-}
-
-.table-container {
-    width: 100%;
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 13px;
-}
-
-th {
-    background: #fafbfc;
-    color: #455a64;
+.btn-pesquisar {
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
     font-weight: 600;
-    padding: 14px 20px;
-    border-bottom: 1px solid #e5e8eb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
 }
 
-td {
-    padding: 14px 20px;
-    border-bottom: 1px solid #f1f3f5;
+.btn-pesquisar:hover {
+    background: var(--primary-hover);
+}
+
+/* LISTA DE RESULTADOS */
+.results-container {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.results-container.ativo {
+    display: flex;
+}
+
+.servidor-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+}
+
+.servidor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e8eb;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+}
+
+.servidor-nome {
+    font-size: 16px;
+    font-weight: 700;
     color: #263238;
 }
 
-tr {
-    transition: background-color 0.12s ease;
-}
-
-tr:hover td {
-    background-color: #f1f3f5 !important;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.btn-acao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--text-secondary);
-}
-
-.btn-acao:hover {
-    background: #f1ebf6;
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn-acao .material-symbols-outlined {
-    font-size: 18px;
-}
-
-.table-footer {
-    padding: 16px 24px;
-    background: #fafbfc;
-    border-top: 1px solid #e5e8eb;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
+.servidor-meta {
     font-size: 13px;
     color: var(--text-secondary);
-}
-
-.pagination-controls {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
-.pagination-controls select {
-    height: 36px;
-    padding: 0 10px;
+.matricula-box {
+    background: #fafbfc;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: #fff;
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
+    padding: 14px;
+    margin-top: 10px;
 }
 
-.pagination-buttons {
+.matricula-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.btn-page {
-    height: 36px;
-    padding: 0 12px;
-    background: #fff;
-    border: 1px solid var(--border);
+.mensagem {
+    display: none;
+    padding: 12px 14px;
     border-radius: 6px;
-    color: var(--text);
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
+    margin-bottom: 16px;
 }
 
-.btn-page:hover:not(:disabled) {
-    background: #f1f3f5;
-    border-color: #b7c0c7;
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
 }
 
-.btn-page:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.btn-voltar {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 0 16px;
-    height: 40px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    text-decoration: none;
-    transition: background 0.15s;
-}
-
-.btn-voltar:hover {
-    background: var(--primary-hover);
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
 }
 
 @media (max-width: 700px) {
-    .topbar {
-        width: calc(100% - 24px);
-        margin-top: 12px;
-        padding: 0 16px;
-    }
-    .system-divider, .system-module {
-        display: none;
-    }
-    .main {
-        width: calc(100% - 24px);
-        padding: 20px 0;
-    }
-    .card-header, .table-footer {
+    .search-card {
         flex-direction: column;
         align-items: stretch;
     }
-    .search-box {
+    .search-group.tipo {
         width: 100%;
+    }
+    .servidor-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 }
 
@@ -361,7 +355,16 @@ tr:hover td {
         <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
         <span class="system-name">Vale Transporte</span>
         <div class="system-divider"></div>
-        <span class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</span>
+        <span class="system-module">Semed - Consulta de Servidores</span>
+        <div class="status-conexao online">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
+            <span>Online</span>
+        </div>
     </div>
 </header>
 
@@ -373,173 +376,227 @@ tr:hover td {
             <span>/</span>
             <span>Consulta</span>
         </div>
-        <h1>Servidores Cadastrados</h1>
-        <p>Lista em tempo real de todos os servidores salvos na nuvem.</p>
+        <h1>Consulta de Beneficiário</h1>
+        <p>Pesquise por CPF ou Escola de Lotação.</p>
     </div>
 
-    <section class="card">
-        <div class="card-header">
-            <div class="search-box">
-                <span class="material-symbols-outlined">search</span>
-                <input type="text" id="filtroBusca" placeholder="Pesquisar por nome ou CPF..." oninput="aoDigitarBusca()">
-            </div>
-            <!-- Aponta para a index.html (página principal de cadastro) -->
-            <a href="index.html" class="btn-voltar">
-                <span class="material-symbols-outlined">person_add</span>
-                Novo Cadastro
-            </a>
+    <!-- CARD DE PESQUISA (CPF OU ESCOLA) -->
+    <section class="search-card">
+        <div class="search-group tipo">
+            <label for="tipoBusca">Pesquisar por</label>
+            <select id="tipoBusca" onchange="mudarTipoBusca()">
+                <option value="cpf">CPF</option>
+                <option value="escola">Escola</option>
+            </select>
         </div>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nome Completo</th>
-                        <th>CPF</th>
-                        <th>E-mail</th>
-                        <th>Cargo</th>
-                        <th>Telefone</th>
-                        <th style="width: 80px; text-align: center;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaServidores">
-                    <tr>
-                        <td colspan="6" class="empty-state">Carregando servidores do banco de dados...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="search-group input-container" id="grupoInput">
+            <label for="termoBusca" id="labelTermo">Digite o CPF</label>
+            <input type="text" id="termoBusca" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCampoBusca(this)">
         </div>
 
-        <div class="table-footer">
-            <div id="infoPaginacao">Exibindo registros...</div>
-            <div class="pagination-controls">
-                <label for="itensPorPagina">Itens por página:</label>
-                <select id="itensPorPagina" onchange="mudarItensPorPagina()">
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50" selected>50</option>
-                    <option value="100">100</option>
-                </select>
-                <div class="pagination-buttons">
-                    <button class="btn-page" id="btnAnterior" onclick="mudarPagina(-1)" disabled>Anterior</button>
-                    <span id="paginaAtualSpan" style="padding: 0 6px; font-weight: 500;">Página 1</span>
-                    <button class="btn-page" id="btnProxima" onclick="mudarPagina(1)" disabled>Próxima</button>
-                </div>
-            </div>
-        </div>
+        <button type="button" class="btn-pesquisar" onclick="pesquisarServidor()">
+            <span class="material-symbols-outlined">search</span>
+            Pesquisar
+        </button>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <!-- CONTAINER DE RESULTADOS (LISTA DINÂMICA) -->
+    <section id="resultsContainer" class="results-container">
+        <!-- Os cards dos servidores encontrados entram aqui -->
     </section>
 </main>
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let listaGlobalServidores = [];
-    let listaFiltrada = [];
-    let paginaAtual = 1;
+    // Altera dinamicamente o campo de entrada conforme o tipo de busca selecionado (CPF ou Escola)
+    window.mudarTipoBusca = function() {
+        const tipo = document.getElementById("tipoBusca").value;
+        const grupoInput = document.getElementById("grupoInput");
+        const label = document.getElementById("labelTermo");
 
-    document.addEventListener("DOMContentLoaded", function() {
-        carregarServidoresTempoReal();
-    });
-
-    function carregarServidoresTempoReal() {
-        const q = query(collection(db, "servidores"), orderBy("dataCriacao", "desc"));
-
-        onSnapshot(q, (snapshot) => {
-            listaGlobalServidores = [];
-            snapshot.forEach((doc) => {
-                listaGlobalServidores.push({ id: doc.id, ...doc.data() });
-            });
-            aplicarFiltroEAtualizar();
-        }, (error) => {
-            console.error("Erro ao carregar dados: ", error);
-            document.getElementById("tabelaServidores").innerHTML = `
-                <tr><td colspan="6" class="empty-state" style="color: var(--red);">Erro ao carregar os dados do banco. Verifique sua conexão.</td></tr>
+        if (tipo === "cpf") {
+            label.textContent = "Digite o CPF";
+            grupoInput.innerHTML = `
+                <label for="termoBusca" id="labelTermo">Digite o CPF</label>
+                <input type="text" id="termoBusca" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="formatarCampoBusca(this)">
             `;
-        });
+        } else if (tipo === "escola") {
+            grupoInput.innerHTML = `
+                <label for="termoBusca" id="labelTermo">Selecione a Escola</label>
+                <select id="termoBusca">
+                    <option value="">Selecione a escola</option>
+                    <option value="CEAE">CEAE</option>
+                    <option value="CETEPE">CETEPE</option>
+                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                </select>
+            `;
+        }
     }
 
-    window.aoDigitarBusca = function() {
-        paginaAtual = 1;
-        aplicarFiltroEAtualizar();
+    // Formatação de CPF se o tipo ativo for CPF
+    window.formatarCampoBusca = function(input) {
+        const tipo = document.getElementById("tipoBusca").value;
+        if (tipo === "cpf") {
+            let valor = input.value.replace(/\D/g, "");
+            valor = valor.substring(0, 11);
+            if (valor.length > 9) {
+                valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+            } else if (valor.length > 6) {
+                valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+            } else if (valor.length > 3) {
+                valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+            }
+            input.value = valor;
+        }
+        ocultarMensagem();
     }
 
-    function aplicarFiltroEAtualizar() {
-        const campoBusca = document.getElementById("filtroBusca");
-        const termo = campoBusca ? campoBusca.value.toLowerCase().trim() : "";
-        
-        listaFiltrada = listaGlobalServidores.filter(serv => {
-            const nome = (serv.nome || "").toLowerCase();
-            const cpf = (serv.cpf || "").toLowerCase();
-            return nome.includes(termo) || cpf.includes(termo);
-        });
+    // PESQUISA DIRECIONADA NO FIREBASE
+    window.pesquisarServidor = async function() {
+        const tipo = document.getElementById("tipoBusca").value;
+        const termo = document.getElementById("termoBusca").value.trim();
+        const msgDiv = document.getElementById("mensagem");
+        const resultsContainer = document.getElementById("resultsContainer");
 
-        renderizarTabelaPaginada();
-    }
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
+        resultsContainer.classList.remove("ativo");
+        resultsContainer.innerHTML = "";
 
-    function renderizarTabelaPaginada() {
-        const tbody = document.getElementById("tabelaServidores");
-        const selectItens = document.getElementById("itensPorPagina");
-        const itensPorPagina = selectItens ? parseInt(selectItens.value) : 50;
-        const totalRegistros = listaFiltrada.length;
-        const totalPaginas = Math.ceil(totalRegistros / itensPorPagina) || 1;
-
-        if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
-        if (paginaAtual < 1) paginaAtual = 1;
-
-        const inicio = (paginaAtual - 1) * itensPorPagina;
-        const fim = inicio + itensPorPagina;
-        const itensDaPagina = listaFiltrada.slice(inicio, fim);
-
-        tbody.innerHTML = "";
-
-        if (totalRegistros === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhum servidor encontrado.</td></tr>`;
-            document.getElementById("infoPaginacao").textContent = "Nenhum registro encontrado";
-            document.getElementById("paginaAtualSpan").textContent = "Página 1 de 1";
-            document.getElementById("btnAnterior").disabled = true;
-            document.getElementById("btnProxima").disabled = true;
+        if (!termo) {
+            mostrarMensagem("Preencha o campo de pesquisa para continuar.", "erro");
             return;
         }
 
-        itensDaPagina.forEach(serv => {
-            const tr = document.createElement("tr");
-            
-            // Aponta o link de edição para a index.html passando o ID
-       const botaoEditar = `
-    <a href="editar.html?id=${serv.id}" class="btn-acao" title="Editar Servidor">
-        <span class="material-symbols-outlined">edit</span>
-    </a>
-`;
+        try {
+            let q;
+            if (tipo === "cpf") {
+                q = query(collection(db, "servidores"), where("cpf", "==", termo), limit(1));
+            } else if (tipo === "escola") {
+                q = query(collection(db, "servidores"), where("escolas", "array-contains", termo), limit(100));
+            }
 
-            tr.innerHTML = `
-                <td><strong>${serv.nome || ""}</strong></td>
-                <td>${serv.cpf || ""}</td>
-                <td>${serv.email || ""}</td>
-                <td>${serv.cargo || ""}</td>
-                <td>${serv.telefone || ""}</td>
-                <td style="text-align: center;">${botaoEditar}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+            const querySnapshot = await getDocs(q);
 
-        const inicioExibicao = inicio + 1;
-        const fimExibicao = Math.min(fim, totalRegistros);
-        document.getElementById("infoPaginacao").textContent = `Mostrando de ${inicioExibicao} até ${fimExibicao} de ${totalRegistros} registros`;
-        document.getElementById("paginaAtualSpan").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+            if (querySnapshot.empty) {
+                mostrarMensagem("Nenhum registro encontrado com o termo informado.", "info");
+                return;
+            }
 
-        document.getElementById("btnAnterior").disabled = paginaAtual === 1;
-        document.getElementById("btnProxima").disabled = paginaAtual === totalPaginas;
+            let htmlCards = "";
+            querySnapshot.forEach((doc) => {
+                const escolaFiltro = (tipo === "escola") ? termo : null;
+                htmlCards += montarCardServidor(doc.data(), escolaFiltro);
+            });
+
+            resultsContainer.innerHTML = htmlCards;
+            resultsContainer.classList.add("ativo");
+
+        } catch (erro) {
+            console.error("Erro na consulta:", erro);
+            mostrarMensagem("Erro ao realizar a busca no banco de dados. Verifique sua conexão.", "erro");
+        }
     }
 
-    window.mudarPagina = function(direcao) {
-        paginaAtual += direcao;
-        renderizarTabelaPaginada();
+    // MONTAGEM DO CARD COM FILTRAGEM INTELIGENTE DE ESCOLA
+    function montarCardServidor(servidor, escolaFiltro = null) {
+        let htmlMatriculas = "";
+
+        function escolaCombina(escolaObj) {
+            if (!escolaObj) return false;
+            if (!escolaFiltro) return true;
+            return escolaObj.nomeEscola === escolaFiltro;
+        }
+
+        // --- MATRÍCULA 1 ---
+        if (servidor.matricula1) {
+            const m1Escola1Match = escolaCombina(servidor.matricula1.escola1);
+            const m1Escola2Match = escolaCombina(servidor.matricula1.escola2);
+
+            const mostrarM1 = !escolaFiltro || m1Escola1Match || m1Escola2Match;
+
+            if (mostrarM1) {
+                htmlMatriculas += `
+                    <div class="matricula-box">
+                        <div class="matricula-title">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
+                            Matrícula 1: ${servidor.matricula1.numeroMatricula} (${servidor.matricula1.cargo})
+                        </div>
+                `;
+
+                if (m1Escola1Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula1.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola1.empresa} (${servidor.matricula1.escola1.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+                if (m1Escola2Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula1.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula1.escola2.empresa} (${servidor.matricula1.escola2.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+
+                htmlMatriculas += `</div>`;
+            }
+        }
+
+        // --- MATRÍCULA 2 ---
+        if (servidor.matricula2) {
+            const m2Escola1Match = escolaCombina(servidor.matricula2.escola1);
+            const m2Escola2Match = escolaCombina(servidor.matricula2.escola2);
+
+            const mostrarM2 = !escolaFiltro || m2Escola1Match || m2Escola2Match;
+
+            if (mostrarM2) {
+                htmlMatriculas += `
+                    <div class="matricula-box">
+                        <div class="matricula-title">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
+                            Matrícula 2: ${servidor.matricula2.numeroMatricula} (${servidor.matricula2.cargo})
+                        </div>
+                `;
+
+                if (m2Escola1Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula2.escola1.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola1.empresa} (${servidor.matricula2.escola1.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+                if (m2Escola2Match) {
+                    htmlMatriculas += `<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;"><b>Lotação:</b> ${servidor.matricula2.escola2.nomeEscola} — <b>Linha:</b> ${servidor.matricula2.escola2.empresa} (${servidor.matricula2.escola2.qtdPassagensDiarias} passes/dia)</p>`;
+                }
+
+                htmlMatriculas += `</div>`;
+            }
+        }
+
+        if (!htmlMatriculas) return "";
+
+        return `
+            <div class="servidor-card">
+                <div class="servidor-header">
+                    <span class="servidor-nome">${servidor.nome}</span>
+                    <div class="servidor-meta">
+                        <span><b>CPF:</b> ${servidor.cpf}</span>
+                        <span><b>Tel:</b> ${servidor.telefone}</span>
+                    </div>
+                </div>
+                ${htmlMatriculas}
+            </div>
+        `;
     }
 
-    window.mudarItensPorPagina = function() {
-        paginaAtual = 1;
-        renderizarTabelaPaginada();
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+
+    window.ocultarMensagem = function() {
+        const msg = document.getElementById("mensagem");
+        if (msg.classList.contains("erro") || msg.classList.contains("info")) {
+            msg.className = "mensagem";
+            msg.textContent = "";
+        }
     }
 </script>
 

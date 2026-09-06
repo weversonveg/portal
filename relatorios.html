@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Relatórios Avançados e Exportação - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+
+    --blue: #0277bd;
+    --blue-hover: #01579b;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR RESPONSIVA */
+.topbar {
+    width: 100%;
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 22px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: 100%;
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 8px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 4px;
+}
+
+.page-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.export-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* CARD DE FILTROS AVANÇADOS */
+.filter-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 6px;
+}
+
+.filter-group input,
+.filter-group select {
+    height: 42px;
+    padding: 0 12px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+/* CUSTOM MULTI-SELECT DROPDOWN PARA ESCOLAS */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-select-box {
+    height: 42px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-size: 14px;
+    color: #263238;
+    user-select: none;
+    transition: border-color 0.15s;
+}
+
+.dropdown-select-box:hover {
+    border-color: var(--primary);
+}
+
+.dropdown-options-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    padding: 8px;
+}
+
+.dropdown-options-panel.ativo {
+    display: block;
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.1s;
+}
+
+.dropdown-option:hover {
+    background: var(--primary-light);
+}
+
+.dropdown-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.filter-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.filter-checkbox-group input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e5e8eb;
+    padding-top: 16px;
+}
+
+.btn-gerar {
+    height: 42px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.btn-gerar:hover {
+    background: var(--primary-hover);
+}
+
+.btn-export {
+    height: 40px;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.btn-pdf { background: var(--green); }
+.btn-pdf:hover { background: var(--green-hover); }
+
+.btn-csv { background: var(--blue); }
+.btn-csv:hover { background: var(--blue-hover); }
+
+.btn-xls { background: #1f7238; }
+.btn-xls:hover { background: #154c25; }
+
+.btn-export:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* RESUMO E ESTATÍSTICAS */
+.summary-container {
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-container.ativo {
+    display: grid;
+}
+
+.summary-box {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+}
+
+.summary-box label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.summary-box p {
+    font-size: 18px;
+    font-weight: 700;
+    color: #263238;
+    margin-top: 4px;
+}
+
+/* TABELA DE RELATÓRIO RESPONSIVA */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    display: none;
+}
+
+.table-card.ativo {
+    display: block;
+}
+
+.print-report-header {
+    display: none;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #3d2450;
+}
+
+.print-report-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.print-report-header p {
+    font-size: 12px;
+    color: #555;
+    margin-top: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: #fafbfc;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #263238;
+    border-bottom: 1px solid #edf2f7;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
+}
+
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+.mensagem.sucesso {
+    display: block;
+    background: #edf7ee;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
+/* IMPRESSÃO / PDF */
+@media print {
+    body { background: white; }
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header p, .mensagem { display: none !important; }
+    .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .print-report-header { display: block !important; }
+    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; }
+    table { font-size: 10px !important; white-space: normal !important; }
+    th, td { padding: 6px 8px !important; }
+}
+
+@media (max-width: 768px) {
+    .topbar { width: 100%; margin-top: 0; border-radius: 0; }
+    .main { width: 100%; padding: 16px 12px; }
+    .page-header { flex-direction: column; align-items: stretch; }
+    .export-buttons { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .filter-actions { flex-direction: column; }
+    .btn-gerar { width: 100%; justify-content: center; }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Relatórios</span>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <span class="material-symbols-outlined">home</span>
+                <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+                <span>/</span>
+                <span>Relatórios Avançados</span>
+            </div>
+            <h1>Central de Relatórios de Vales</h1>
+            <p>Selecione as escolas pelo menu suspenso, defina o período e exporte em PDF, CSV ou Excel.</p>
+        </div>
+        <div class="export-buttons">
+            <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF">
+                <span class="material-symbols-outlined" style="font-size:16px;">picture_as_pdf</span> PDF
+            </button>
+            <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar CSV">
+                <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
+            </button>
+            <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar Excel">
+                <span class="material-symbols-outlined" style="font-size:16px;">table_view</span> Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- CARD DE FILTROS -->
+    <section class="filter-card">
+        <div class="filter-grid">
+            
+            <div class="filter-group">
+                <label for="tipoPeriodo">Tipo de Período</label>
+                <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
+                    <option value="mensal">Mensal (Mês Específico)</option>
+                    <option value="anual">Anual (Ano Inteiro)</option>
+                </select>
+            </div>
+
+            <!-- Campo Mês -->
+            <div class="filter-group" id="grupoMes">
+                <label for="mesReferencia">Mês de Referência <span>*</span></label>
+                <input type="month" id="mesReferencia">
+            </div>
+
+            <!-- Campo Ano -->
+            <div class="filter-group" id="grupoAno" style="display: none;">
+                <label for="anoReferencia">Ano de Referência <span>*</span></label>
+                <select id="anoReferencia">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroCargo">Cargo / Função</label>
+                <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroEmpresa">Empresa / Concessionária</label>
+                <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
+            </div>
+
+            <!-- SELECT CUSTOMIZADO COM CHECKBOXES OCULTOS PARA ESCOLAS -->
+            <div class="filter-group full-width">
+                <label>Escolas / Unidades de Ensino</label>
+                <div class="custom-dropdown" id="dropdownEscolasContainer">
+                    <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
+                        <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
+                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                    </div>
+                    <div class="dropdown-options-panel" id="dropdownPanel">
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>
+                        </label>
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE
+                        </label>
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE
+                        </label>
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ
+                        </label>
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO
+                        </label>
+                        <label class="dropdown-option">
+                            <input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-checkbox-group">
+                <input type="checkbox" id="filtroApenasFalta">
+                <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
+            </div>
+
+        </div>
+
+        <div class="filter-actions">
+            <button type="button" class="btn-gerar" onclick="gerarRelatorio()">
+                <span class="material-symbols-outlined">description</span>
+                Gerar Relatório Consolidado
+            </button>
+        </div>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <!-- RESUMO DO RELATÓRIO -->
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label>Período Analisado</label>
+            <p id="sumPeriodo">-</p>
+        </div>
+        <div class="summary-box">
+            <label>Total de Vínculos</label>
+            <p id="sumVinculos">0</p>
+        </div>
+        <div class="summary-box" style="border-left: 4px solid var(--green);">
+            <label>Total Geral de Passes</label>
+            <p id="sumTotalPasses" style="color: var(--green);">0 passes</p>
+        </div>
+    </section>
+
+    <!-- TABELA DE RELATÓRIO -->
+    <section id="tableCard" class="table-card">
+        <div class="print-report-header">
+            <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
+            <p id="printSubtitulo">Relatório Consolidado de Vale Transporte</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola / Lotação</th>
+                    <th>Concessionária</th>
+                    <th>Passes/Dia</th>
+                    <th>Dias Efetivos</th>
+                    <th>Afast. Totais</th>
+                    <th>Total Passes</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo">
+                <!-- Inserido via JS -->
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        document.getElementById("anoReferencia").value = ano;
+        atualizarTextoDropdown();
+
+        // Fecha o dropdown se clicar fora dele
+        document.addEventListener("click", function(e) {
+            const container = document.getElementById("dropdownEscolasContainer");
+            const panel = document.getElementById("dropdownPanel");
+            if (!container.contains(e.target)) {
+                panel.classList.remove("ativo");
+            }
+        });
+    });
+
+    window.alternarTipoPeriodo = function() {
+        const tipo = document.getElementById("tipoPeriodo").value;
+        if (tipo === "mensal") {
+            document.getElementById("grupoMes").style.display = "flex";
+            document.getElementById("grupoAno").style.display = "none";
+        } else {
+            document.getElementById("grupoMes").style.display = "none";
+            document.getElementById("grupoAno").style.display = "flex";
+        }
+    }
+
+    // Abre/fecha o menu suspenso das escolas
+    window.toggleDropdownEscolas = function() {
+        const panel = document.getElementById("dropdownPanel");
+        panel.classList.toggle("ativo");
+    }
+
+    // Controle do Master Checkbox "Todas as Escolas"
+    window.toggleTodasEscolas = function(master) {
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
+        checkboxes.forEach(cb => {
+            if (cb !== master) {
+                cb.checked = master.checked;
+            }
+        });
+        atualizarTextoDropdown();
+    }
+
+    window.atualizarTextoDropdown = function() {
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"])');
+        const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
+        const spanTexto = document.getElementById("dropdownTextoSelecionado");
+
+        if (master && master.checked) {
+            spanTexto.textContent = "Todas as Escolas Selecionadas";
+        } else if (marcadas.length === 0) {
+            spanTexto.textContent = "Nenhuma escola selecionada";
+            if(master) master.checked = false;
+        } else if (marcadas.length === checkboxes.length) {
+            spanTexto.textContent = "Todas as Escolas Selecionadas";
+            if(master) master.checked = true;
+        } else {
+            spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`;
+            if(master) master.checked = false;
+        }
+    }
+
+    window.gerarRelatorio = async function() {
+        const tipoPeriodo = document.getElementById("tipoPeriodo").value;
+        const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
+        const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
+        const apenasFalta = document.getElementById("filtroApenasFalta").checked;
+
+        const checkboxesEscola = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"]):checked');
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const todasEscolasMarcadas = master ? master.checked : false;
+        const escolasSelecionadas = Array.from(checkboxesEscola).map(cb => cb.value);
+
+        const msgDiv = document.getElementById("mensagem");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnCsv = document.getElementById("btnCsv");
+        const btnXls = document.getElementById("btnXls");
+
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
+        btnPdf.disabled = true;
+        btnCsv.disabled = true;
+        btnXls.disabled = true;
+
+        if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
+            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
+            return;
+        }
+
+        try {
+            let mesesParaProcessar = [];
+
+            if (tipoPeriodo === "mensal") {
+                const mesAno = document.getElementById("mesReferencia").value;
+                if (!mesAno) {
+                    mostrarMensagem("Selecione o mês de referência.", "erro");
+                    return;
+                }
+                mesesParaProcessar.push(mesAno);
+            } else {
+                const anoSelecionado = document.getElementById("anoReferencia").value;
+                for (let m = 1; m <= 12; m++) {
+                    const mesStr = String(m).padStart(2, '0');
+                    mesesParaProcessar.push(`${anoSelecionado}-${mesStr}`);
+                }
+            }
+
+            const servidoresSnap = await getDocs(collection(db, "servidores"));
+            if (servidoresSnap.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                return;
+            }
+
+            let resultadosConsolidados = {};
+
+            for (const mesAno of mesesParaProcessar) {
+                const configRef = doc(db, "configuracoes", mesAno);
+                const configSnap = await getDoc(configRef);
+                if (!configSnap.exists()) continue;
+
+                const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
+
+                const diasEscolaMap = {};
+                try {
+                    const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
+                    const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+                    escolaConfigsSnap.forEach(d => {
+                        const data = d.data();
+                        if (data.escola) diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
+                    });
+                } catch (e) {}
+
+                const afastamentosMap = {};
+                try {
+                    const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+                    const lancSnap = await getDocs(lancQuery);
+                    lancSnap.forEach(d => {
+                        const data = d.data();
+                        const dias = Number(data.diasAfastamento) || 0;
+                        if (data.cpf) {
+                            const cpfLimpo = data.cpf.replace(/\D/g, "");
+                            if (data.escola) afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
+                            afastamentosMap[cpfLimpo] = dias;
+                        }
+                    });
+                } catch (e) {}
+
+                servidoresSnap.forEach((docServidor) => {
+                    const s = docServidor.data();
+                    const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+
+                    function processarVinculo(matriculaNum, cargo, escolaObj) {
+                        if (!escolaObj) return;
+                        const nomeEscola = escolaObj.nomeEscola;
+                        if (!nomeEscola) return;
+
+                        if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
+                        if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
+                        const empresa = escolaObj.empresa || "";
+                        if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
+
+                        const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
+                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
+
+                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
+                        const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
+                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        const totalMes = passesDiarios * diasEfetivos;
+
+                        const chaveUnica = `${cpfLimpo}_${nomeEscola}_${matriculaNum}`;
+                        if (!resultadosConsolidados[chaveUnica]) {
+                            resultadosConsolidados[chaveUnica] = {
+                                nome: s.nome,
+                                cpf: s.cpf,
+                                matricula: matriculaNum,
+                                cargo: cargo || '-',
+                                escola: nomeEscola,
+                                empresa: empresa || '-',
+                                passesDiarios: passesDiarios,
+                                diasEfetivosTotal: 0,
+                                afastamentosTotal: 0,
+                                passesTotal: 0
+                            };
+                        }
+
+                        resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
+                        resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
+                        resultadosConsolidados[chaveUnica].passesTotal += totalMes;
+                    }
+
+                    if (s.matricula1) {
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
+                    }
+                    if (s.matricula2) {
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
+                    }
+                });
+            }
+
+            let linhasTabela = "";
+            let totalVinculos = 0;
+            let totalGeralPasses = 0;
+
+            Object.values(resultadosConsolidados).forEach(item => {
+                if (apenasFalta && item.afastamentosTotal <= 0) return;
+
+                totalVinculos++;
+                totalGeralPasses += item.passesTotal;
+
+                linhasTabela += `
+                    <tr>
+                        <td><b>${item.nome}</b></td>
+                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                        <td>${item.cargo}</td>
+                        <td>${item.escola}</td>
+                        <td>${item.empresa}</td>
+                        <td>${item.passesDiarios}</td>
+                        <td><b>${item.diasEfetivosTotal} dias</b></td>
+                        <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                        <td><b>${item.passesTotal}</b></td>
+                    </tr>
+                `;
+            });
+
+            if (totalVinculos === 0) {
+                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                return;
+            }
+
+            const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${document.getElementById("mesReferencia").value}` : `Ano: ${document.getElementById("anoReferencia").value}`;
+            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
+            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal" ? document.getElementById("mesReferencia").value : `Ano ${document.getElementById("anoReferencia").value}`;
+            document.getElementById("sumVinculos").textContent = totalVinculos;
+            document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            document.getElementById("summaryContainer").classList.add("ativo");
+            document.getElementById("tableCard").classList.add("ativo");
+
+            btnPdf.disabled = false;
+            btnCsv.disabled = false;
+            btnXls.disabled = false;
+            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
+
+        } catch (erro) {
+            console.error("Erro ao gerar relatório:", erro);
+            mostrarMensagem("Erro ao processar os dados.", "erro");
+        }
+    }
+
+    window.exportarPDF = function() {
+        window.print();
+    }
+
+    window.exportarCSV = function() {
+        let csv = [];
+        let rows = document.querySelectorAll("#tabelaCorpo tr");
+        let header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
+        csv.push(header.join(";"));
+
+        rows.forEach(row => {
+            let cols = row.querySelectorAll("td");
+            if (cols.length > 0) {
+                let nome = cols[0].innerText.trim();
+                let cpfMat = cols[1].innerText.split("\n");
+                let cpf = cpfMat[0] || "";
+                let mat = cpfMat[1] ? cpfMat[1].replace("Mat: ", "") : "";
+                let cargo = cols[2].innerText.trim();
+                let escola = cols[3].innerText.trim();
+                let empresa = cols[4].innerText.trim();
+                let passesDia = cols[5].innerText.trim();
+                let diasEfetivos = cols[6].innerText.trim();
+                let afastamentos = cols[7].innerText.trim();
+                let totalPasses = cols[8].innerText.trim();
+
+                let linha = [
+                    `"${nome}"`, `"${cpf}"`, `"${mat}"`, `"${cargo}"`, `"${escola}"`, `"${empresa}"`, passesDia, `"${diasEfetivos}"`, afastamentos, totalPasses
+                ];
+                csv.push(linha.join(";"));
+            }
+        });
+
+        let blob = new Blob(["\ufeff" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo").value}.csv`;
+        link.click();
+    }
+
+    window.exportarXLS = function() {
+        let htmlTable = document.getElementById("tableCard").querySelector("table").outerHTML;
+        let blob = new Blob(['\ufeff' + htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo.value" || "tipoPeriodo").value || 'periodo'}.xls`;
+        link.click();
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+</script>
+
+</body>
+</html>

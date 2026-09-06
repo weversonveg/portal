@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Lançamentos e Afastamentos - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+
+    --red: #c62828;
+    --red-hover: #a51f1f;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR */
+.topbar {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 24px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+/* INDICADOR DE SINAL DE REDE */
+.status-conexao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f3f5;
+    border: 1px solid #e2e8f0;
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: #2e7d32;
+    border-radius: 1px;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online {
+    color: #2e7d32;
+    background: #edf7ee;
+    border-color: #c8e6c9;
+}
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: calc(100% - 64px);
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 32px 0;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 10px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 6px;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* CARD DE FILTROS */
+.filter-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 7px;
+}
+
+.filter-group input,
+.filter-group select {
+    height: 44px;
+    padding: 0 13px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.btn-carregar {
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-carregar:hover {
+    background: var(--primary-hover);
+}
+
+/* CARD DE DIAS ÚTEIS ESPECÍFICOS DA ESCOLA */
+.school-config-card {
+    display: none;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.school-config-card.ativo {
+    display: flex;
+}
+
+.school-config-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.school-config-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.school-config-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.input-dias-escola {
+    width: 90px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary);
+}
+
+.btn-salvar-dias {
+    height: 40px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-salvar-dias:hover {
+    background: var(--green-hover);
+}
+
+/* RESUMO ESTATÍSTICO */
+.summary-container {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-container.ativo {
+    display: grid;
+}
+
+.summary-box {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+}
+
+.summary-box label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.summary-box p {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 6px;
+}
+
+/* TABELA DE LANÇAMENTOS */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+}
+
+.table-card.ativo {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background: #fafbfc;
+    padding: 14px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #263238;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+.input-afastamento {
+    width: 80px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.badge-salvo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #eaf6ec;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    margin-left: 8px;
+}
+
+.btn-salvar-linha {
+    height: 36px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-salvar-linha:hover {
+    background: var(--green-hover);
+}
+
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
+}
+
+.mensagem.info {
+    display: block;
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+@media (max-width: 800px) {
+    .filter-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .school-config-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .summary-container {
+        grid-template-columns: 1fr;
+    }
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Gestão de Afastamentos</span>
+        <div class="status-conexao online">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
+            <span>Online</span>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <span>Escola</span>
+            <span>/</span>
+            <span>Lançamentos e Afastamentos</span>
+        </div>
+        <h1>Controle de Afastamentos e Dias Úteis da Escola</h1>
+        <p>Ajuste o calendário específico da unidade e registre os afastamentos individuais (férias e folgas já entram automaticamente).</p>
+    </div>
+
+    <section class="filter-card">
+        <div class="filter-group">
+            <label for="mesReferencia">Mês de Referência</label>
+            <input type="month" id="mesReferencia">
+        </div>
+
+        <div class="filter-group">
+            <label for="filtroEscola">Selecione a Escola</label>
+            <select id="filtroEscola">
+                <option value="">Selecione a unidade</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+            </select>
+        </div>
+
+        <button type="button" class="btn-carregar" onclick="carregarDadosDaEscola()">
+            <span class="material-symbols-outlined">search</span>
+            Carregar Unidade
+        </button>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <section id="schoolConfigCard" class="school-config-card">
+        <div class="school-config-info">
+            <h3>Dias Úteis Efetivos para esta Escola</h3>
+            <p id="infoSemedDefault">Padrão SEMED para o mês: carregando...</p>
+        </div>
+        <div class="school-config-action">
+            <input type="number" id="inputDiasEscola" class="input-dias-escola" min="1" max="31" inputmode="numeric">
+            <button type="button" class="btn-salvar-dias" onclick="salvarDiasUteisEscola()">
+                <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Salvar Dias da Escola
+            </button>
+        </div>
+    </section>
+
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label>Servidores com Ausência no Mês</label>
+            <p id="sumComAfastamento">0 servidores</p>
+        </div>
+        <div class="summary-box">
+            <label>Total de Dias de Ausência Registrados</label>
+            <p id="sumTotalDias">0 dias</p>
+        </div>
+    </section>
+
+    <section id="tableCard" class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo / Lotação</th>
+                    <th>Dias de Ausência (Faltas / Férias / Folgas)</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo">
+                </tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+    });
+
+    window.carregarDadosDaEscola = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        const escola = document.getElementById("filtroEscola").value;
+        const msgDiv = document.getElementById("mensagem");
+        const tableCard = document.getElementById("tableCard");
+        const summaryContainer = document.getElementById("summaryContainer");
+        const schoolConfigCard = document.getElementById("schoolConfigCard");
+
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
+        tableCard.classList.remove("ativo");
+        summaryContainer.classList.remove("ativo");
+        schoolConfigCard.classList.remove("ativo");
+
+        if (!mesAno || !escola) {
+            mostrarMensagem("Selecione o mês de referência e a escola.", "erro");
+            return;
+        }
+
+        try {
+            const semedConfigRef = doc(db, "configuracoes", mesAno);
+            const semedSnap = await getDoc(semedConfigRef);
+
+            const diasSemedDefault = semedSnap.exists() ? (Number(semedSnap.data().diasUteis) || 22) : 22;
+            document.getElementById("infoSemedDefault").textContent = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
+
+            const configEscolaId = `${mesAno}_${escola}`;
+            const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
+            const configEscolaSnap = await getDoc(configEscolaRef);
+
+            const diasEfetivosEscola = configEscolaSnap.exists() ? Number(configEscolaSnap.data().diasUteisEscola) : diasSemedDefault;
+            document.getElementById("inputDiasEscola").value = diasEfetivosEscola;
+
+            schoolConfigCard.classList.add("ativo");
+
+            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS PARA SOMAR AOS AFASTAMENTOS
+            const feriasMap = {};
+            try {
+                const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+                const [anoStr, mesStr] = mesAno.split("-");
+                const anoNum = parseInt(anoStr);
+                const mesNum = parseInt(mesStr) - 1;
+                const primeiroDiaMes = new Date(anoNum, mesNum, 1);
+                const ultimoDiaMes = new Date(anoNum, mesNum + 1, 0);
+
+                feriasSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.cpf && data.dataInicio && data.dataFim) {
+                        const cpfLimpo = data.cpf.replace(/\D/g, "");
+                        const inicio = new Date(data.dataInicio + "T00:00:00");
+                        const fim = new Date(data.dataFim + "T00:00:00");
+
+                        const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
+                        const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
+
+                        if (startOverlap <= endOverlap) {
+                            const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
+                            if (diasNoMes > 0) {
+                                feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.log("Aviso: Erro ao carregar férias automáticas:", e);
+            }
+
+            const q = query(collection(db, "servidores"), where("escolas", "array-contains", escola));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado para esta escola.", "info");
+                return;
+            }
+
+            let linhasTabela = "";
+            let servidoresComFalta = 0;
+            let somaTotalDias = 0;
+
+            for (const servidorDoc of querySnapshot.docs) {
+                const s = servidorDoc.data();
+                const servidorId = servidorDoc.id;
+
+                let matriculaInfo = "";
+                if (s.matricula1 && (s.matricula1.escola1?.nomeEscola === escola || s.matricula1.escola2?.nomeEscola === escola)) {
+                    matriculaInfo = `Matrícula 1: ${s.matricula1.numeroMatricula} (${s.matricula1.cargo})`;
+                } else if (s.matricula2 && (s.matricula2.escola1?.nomeEscola === escola || s.matricula2.escola2?.nomeEscola === escola)) {
+                    matriculaInfo = `Matrícula 2: ${s.matricula2.numeroMatricula} (${s.matricula2.cargo})`;
+                }
+
+                const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+                
+                // Busca manual do banco
+                const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
+                const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
+                const lancSnap = await getDoc(lancRef);
+                
+                const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
+                
+                // Soma manual + férias/folgas automáticas
+                const diasFeriasAuto = feriasMap[cpfLimpo] || 0;
+                const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
+
+                if (diasTotalExibido > 0) {
+                    servidoresComFalta++;
+                    somaTotalDias += diasTotalExibido;
+                }
+
+                const badgeHtml = diasSalvosManual > 0 
+                    ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo</span>` 
+                    : (diasFeriasAuto > 0 ? `<span class="badge-salvo" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size: 14px;">event</span> Férias/Folga Auto</span>` : ``);
+
+                linhasTabela += `
+                    <tr>
+                        <td><b>${s.nome}</b></td>
+                        <td>${s.cpf}</td>
+                        <td>${matriculaInfo}</td>
+                        <td>
+                            <input type="number" id="afastamento_${servidorId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric">
+                            ${badgeHtml}
+                        </td>
+                        <td>
+                            <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}')">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById("sumComAfastamento").textContent = servidoresComFalta + " servidores";
+            document.getElementById("sumTotalDias").textContent = somaTotalDias + " dias";
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            tableCard.classList.add("ativo");
+            summaryContainer.classList.add("ativo");
+
+        } catch (erro) {
+            console.error("Erro ao carregar dados:", erro);
+            mostrarMensagem("Erro ao carregar dados do banco.", "erro");
+        }
+    }
+
+    window.salvarDiasUteisEscola = async function() {
+        const mesAno = document.getElementById("mesReferencia").value;
+        const escola = document.getElementById("filtroEscola").value;
+        const diasEfetivos = Number(document.getElementById("inputDiasEscola").value) || 0;
+
+        if (!mesAno || !escola) return;
+
+        const configEscolaId = `${mesAno}_${escola}`;
+
+        try {
+            await setDoc(doc(db, "escola_configuracoes_mensais", configEscolaId), {
+                mesReferencia: mesAno,
+                escola: escola,
+                diasUteisEscola: diasEfetivos,
+                dataAtualizacao: new Date().toISOString()
+            });
+
+            alert(`Dias úteis da escola ${escola} atualizados para ${diasEfetivos} dias neste mês!`);
+        } catch (erro) {
+            console.error("Erro ao salvar dias úteis da escola:", erro);
+            alert("Erro ao salvar os dias úteis da escola. Verifique sua conexão.");
+        }
+    }
+
+    window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId) {
+        const inputDias = document.getElementById(`afastamento_${servidorId}`);
+        const diasAfastamento = Number(inputDias.value) || 0;
+        const cpfLimpo = cpfServidor.replace(/\D/g, "");
+        const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
+        const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
+
+        try {
+            const btnOriginal = inputDias.parentElement.nextElementSibling.querySelector("button");
+            const textoOriginal = btnOriginal.innerHTML;
+
+            if (diasAfastamento <= 0) {
+                // Se o valor for 0 ou vazio, deleta o documento do banco para evitar registros fantasmas
+                await deleteDoc(lancRef);
+                btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Removido!';
+                btnOriginal.style.background = "#c62828";
+            } else {
+                // Caso contrário, salva ou atualiza normalmente
+                await setDoc(lancRef, {
+                    mesReferencia: mesAno,
+                    escola: escola,
+                    servidorId: servidorId,
+                    cpf: cpfServidor,
+                    diasAfastamento: diasAfastamento,
+                    dataAtualizacao: new Date().toISOString()
+                }, { merge: true });
+
+                btnOriginal.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">check</span> Salvo!';
+                btnOriginal.style.background = "#1b5e20";
+            }
+            
+            setTimeout(() => {
+                btnOriginal.innerHTML = textoOriginal;
+                btnOriginal.style.background = "";
+                carregarDadosDaEscola();
+            }, 1200);
+
+        } catch (erro) {
+            console.error("Erro ao salvar/remover afastamento:", erro);
+            alert("Erro ao atualizar o afastamento. Verifique sua conexão.");
+        }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+</script>
+
+</body>
+</html>

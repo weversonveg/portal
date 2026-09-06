@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Controle de Férias, Folgas e Licenças - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+
+    --red: #c62828;
+    --red-hover: #a51f1f;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR */
+.topbar {
+    width: 100%;
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 22px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: 100%;
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 8px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 4px;
+}
+
+.page-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* CARD DE CADASTRO */
+.form-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+    height: 42px;
+    padding: 0 12px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+    width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.cpf-search-wrapper {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.btn-acao {
+    height: 42px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-acao:hover {
+    background: var(--primary-hover);
+}
+
+.btn-salvar {
+    background: var(--green);
+    width: 100%;
+}
+.btn-salvar:hover {
+    background: var(--green-hover);
+}
+
+/* TABELA DE REGISTRADOS */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: #fafbfc;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #263238;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+.btn-excluir {
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-excluir:hover {
+    background: var(--red-hover);
+}
+
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.mensagem.sucesso {
+    display: block;
+    background: #edf7ee;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
+.mensagem.erro {
+    display: block;
+    background: #fff0f0;
+    border: 1px solid #efc5c5;
+    color: #c62828;
+}
+
+@media (max-width: 600px) {
+    .topbar {
+        margin-top: 0;
+        border-radius: 0;
+    }
+    .main {
+        padding: 16px 12px;
+    }
+    .cpf-search-wrapper {
+        flex-direction: column;
+    }
+    .btn-acao {
+        width: 100%;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Férias, Folgas e Licenças</span>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+            <span>/</span>
+            <span>Controle de Ausências</span>
+        </div>
+        <h1>Lançamento de Férias, Folga e Licenças</h1>
+        <p>Busque por CPF, selecione a matrícula/escola afetada, escolha o tipo de ausência e registre.</p>
+    </div>
+
+    <!-- FORMULÁRIO DE CADASTRO -->
+    <section class="form-card">
+        <div class="card-title">
+            <span class="material-symbols-outlined">event_note</span>
+            Registrar Período de Ausência
+        </div>
+
+        <form id="formFerias" onsubmit="salvarRegistro(event)">
+            <div class="form-grid">
+                
+                <div class="form-group full-width">
+                    <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
+                    <div class="cpf-search-wrapper">
+                        <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
+                        <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
+                        </button>
+                    </div>
+                    <small id="nomeServidorEncontrado" style="margin-top: 6px; font-weight: 600; color: var(--primary);"></small>
+                </div>
+
+                <!-- SELETOR DE VÍNCULO / MATRÍCULA -->
+                <div class="form-group full-width" id="grupoVinculo" style="display:none;">
+                    <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
+                    <select id="selectVinculo" required>
+                        <option value="">Selecione o vínculo...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
+                    <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
+                        <option value="FERIAS">Férias Regulamentares</option>
+                        <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
+                        <option value="LICENCA_MEDICA">Licença Médica</option>
+                        <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="grupoDuracaoFerias">
+                    <label for="duracaoFerias">Duração das Férias <span>*</span></label>
+                    <select id="duracaoFerias" onchange="calcularDataFim()">
+                        <option value="30">30 Dias Corridos</option>
+                        <option value="15">15 Dias Corridos</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="grupoDataInicio">
+                    <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
+                    <input type="date" id="dataInicio" required onchange="calcularDataFim()">
+                </div>
+
+                <div class="form-group" id="grupoDataFim">
+                    <label for="dataFim">Data de Término <span>*</span></label>
+                    <input type="date" id="dataFim" required>
+                </div>
+
+            </div>
+
+            <div id="mensagem" class="mensagem"></div>
+
+            <button type="submit" class="btn-acao btn-salvar">
+                <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
+                Salvar Lançamento
+            </button>
+        </form>
+    </section>
+
+    <!-- TABELA DE REGISTRADOS -->
+    <section class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Escola</th>
+                    <th>Tipo</th>
+                    <th>Início</th>
+                    <th>Término</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaRegistros">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let servidorCache = null; // Armazena dados do servidor buscado
+
+    document.addEventListener("DOMContentLoaded", function() {
+        carregarRegistros();
+
+        document.getElementById('inputCpf').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+            }
+            e.target.value = value;
+        });
+    });
+
+    window.mudarTipoAusencia = function() {
+        const tipo = document.getElementById("tipoAusencia").value;
+        const grupoFim = document.getElementById("grupoDataFim");
+        const grupoDuracao = document.getElementById("grupoDuracaoFerias");
+        const lblInicio = document.getElementById("labelDataInicio");
+        const inputFim = document.getElementById("dataFim");
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            grupoFim.style.display = "none";
+            grupoDuracao.style.display = "none";
+            inputFim.removeAttribute("required");
+            inputFim.value = "";
+            lblInicio.innerHTML = "Data da Folga <span>*</span>";
+        } else if (tipo === "FERIAS") {
+            grupoFim.style.display = "flex";
+            grupoDuracao.style.display = "flex";
+            inputFim.setAttribute("required", "true");
+            lblInicio.innerHTML = "Data de Início <span>*</span>";
+            calcularDataFim();
+        } else {
+            grupoFim.style.display = "flex";
+            grupoDuracao.style.display = "none";
+            inputFim.setAttribute("required", "true");
+            lblInicio.innerHTML = "Data de Início <span>*</span>";
+        }
+    }
+
+    window.calcularDataFim = function() {
+        const tipo = document.getElementById("tipoAusencia").value;
+        const dataInicioStr = document.getElementById("dataInicio").value;
+        const inputFim = document.getElementById("dataFim");
+        const duracaoDias = parseInt(document.getElementById("duracaoFerias").value) || 30;
+
+        if (!dataInicioStr || tipo !== "FERIAS") return;
+
+        let dataInicio = new Date(dataInicioStr + "T00:00:00");
+        dataInicio.setDate(dataInicio.getDate() + (duracaoDias - 1));
+
+        let ano = dataInicio.getFullYear();
+        let mes = String(dataInicio.getMonth() + 1).padStart(2, '0');
+        let dia = String(dataInicio.getDate()).padStart(2, '0');
+
+        inputFim.value = `${ano}-${mes}-${dia}`;
+    }
+
+    // OTIMIZAÇÃO: Consulta direcionada com where() em vez de baixar toda a coleção de servidores
+    window.buscarServidorPorCpf = async function() {
+        const cpfDigitado = document.getElementById("inputCpf").value.trim();
+        const lblNome = document.getElementById("nomeServidorEncontrado");
+        const grupoVinculo = document.getElementById("grupoVinculo");
+        const selectVinculo = document.getElementById("selectVinculo");
+
+        servidorCache = null;
+        grupoVinculo.style.display = "none";
+        selectVinculo.innerHTML = `<option value="">Selecione o vínculo...</option>`;
+
+        if (!cpfDigitado) {
+            alert("Digite um CPF para buscar.");
+            return;
+        }
+
+        const cpfLimpo = cpfDigitado.replace(/\D/g, "");
+        lblNome.textContent = "Buscando...";
+        lblNome.style.color = "var(--text-secondary)";
+
+        try {
+            let encontrado = null;
+
+            // Tenta buscar com a formatação exata digitada
+            let q = query(collection(db, "servidores"), where("cpf", "==", cpfDigitado));
+            let snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                encontrado = snapshot.docs[0].data();
+            } else {
+                // Caso não encontre, tenta buscar apenas com os números limpos
+                q = query(collection(db, "servidores"), where("cpf", "==", cpfLimpo));
+                snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    encontrado = snapshot.docs[0].data();
+                }
+            }
+
+            if (encontrado) {
+                servidorCache = encontrado;
+                lblNome.textContent = `✓ Servidor: ${encontrado.nome}`;
+                lblNome.style.color = "var(--green)";
+
+                let options = `<option value="">Selecione a matrícula e escola...</option>`;
+                
+                function adicionarEscolasDaMatricula(matObj) {
+                    if (!matObj) return;
+                    const numMat = matObj.numeroMatricula || 'S/N';
+                    const cargo = matObj.cargo || 'Cargo não informado';
+                    
+                    if (matObj.escola1?.nomeEscola) {
+                        options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola}</option>`;
+                    }
+                    if (matObj.escola2?.nomeEscola) {
+                        options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola}</option>`;
+                    }
+                }
+
+                adicionarEscolasDaMatricula(encontrado.matricula1);
+                adicionarEscolasDaMatricula(encontrado.matricula2);
+
+                selectVinculo.innerHTML = options;
+                grupoVinculo.style.display = "flex";
+
+            } else {
+                lblNome.textContent = "✗ Servidor não encontrado com este CPF.";
+                lblNome.style.color = "var(--red)";
+            }
+        } catch (e) {
+            console.error("Erro na busca:", e);
+            lblNome.textContent = "Erro ao buscar servidor.";
+            lblNome.style.color = "var(--red)";
+        }
+    }
+
+    window.salvarRegistro = async function(event) {
+        event.preventDefault();
+
+        if (!servidorCache) {
+            mostrarMensagem("Por favor, busque e valide o CPF do servidor antes de salvar.", "erro");
+            return;
+        }
+
+        const vinculoSelect = document.getElementById("selectVinculo").value;
+        if (!vinculoSelect) {
+            mostrarMensagem("Selecione a matrícula e a escola afetada.", "erro");
+            return;
+        }
+
+        const [matriculaEscolhida, escolaEscolhida] = vinculoSelect.split("|");
+        const tipo = document.getElementById("tipoAusencia").value;
+        const dataInicio = document.getElementById("dataInicio").value;
+        let dataFim = document.getElementById("dataFim").value;
+
+        if (!tipo || !dataInicio) {
+            mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+            return;
+        }
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            dataFim = dataInicio;
+        } else if (!dataFim) {
+            mostrarMensagem("Preencha a data de término.", "erro");
+            return;
+        }
+
+        if (dataInicio > dataFim) {
+            mostrarMensagem("A data de início não pode ser posterior à data de término.", "erro");
+            return;
+        }
+
+        try {
+            const qExistente = query(
+                collection(db, "registro_ferias_folgas"), 
+                where("cpf", "==", servidorCache.cpf),
+                where("escola", "==", escolaEscolhida)
+            );
+            const existentesSnap = await getDocs(qExistente);
+            
+            let temConflito = false;
+            existentesSnap.forEach(docSnap => {
+                const r = docSnap.data();
+                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) {
+                    temConflito = true;
+                }
+            });
+
+            if (temConflito) {
+                mostrarMensagem("Já existe um registro de ausência para este servidor nesta mesma escola que conflita com as datas informadas.", "erro");
+                return;
+            }
+
+            // OTIMIZAÇÃO: Salvamos o 'nome' direto no registro para evitar consultas extras na tabela
+            await addDoc(collection(db, "registro_ferias_folgas"), {
+                cpf: servidorCache.cpf,
+                nome: servidorCache.nome,
+                matricula: matriculaEscolhida,
+                escola: escolaEscolhida,
+                tipo: tipo,
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                dataRegistro: new Date().toISOString()
+            });
+
+            mostrarMensagem("Período registrado com sucesso!", "sucesso");
+            document.getElementById("formFerias").reset();
+            document.getElementById("nomeServidorEncontrado").textContent = "";
+            document.getElementById("grupoVinculo").style.display = "none";
+            servidorCache = null;
+            mudarTipoAusencia();
+            carregarRegistros();
+        } catch (e) {
+            console.error("Erro ao salvar:", e);
+            mostrarMensagem("Erro ao salvar o registro no banco.", "erro");
+        }
+    }
+
+    // OTIMIZAÇÃO: Lê apenas a coleção de registros, usando o nome armazenado (sem baixar a coleção de servidores)
+    async function carregarRegistros() {
+        const tbody = document.getElementById("tabelaRegistros");
+        try {
+            const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+            if (regSnap.empty) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Nenhum registro de ausência cadastrado.</td></tr>`;
+                return;
+            }
+
+            let linhas = "";
+            regSnap.forEach(d => {
+                const r = d.data();
+                const nomeServidor = r.nome || "Servidor não identificado";
+                
+                let tipoLabel = "Férias Regulamentares";
+                let badgeColor = "var(--green)";
+                let badgeBg = "var(--green-light)";
+
+                if (r.tipo === "FOLGA_ANIVERSARIO") {
+                    tipoLabel = "Folga Aniversário";
+                    badgeColor = "#e65100";
+                    badgeBg = "#fff3e0";
+                } else if (r.tipo === "LICENCA_MEDICA") {
+                    tipoLabel = "Licença Médica";
+                    badgeColor = "#0277bd";
+                    badgeBg = "#e1f5fe";
+                } else if (r.tipo === "LICENCA_OUTRAS") {
+                    tipoLabel = "Outras Licenças";
+                    badgeColor = "#6a1b9a";
+                    badgeBg = "#f3e5f5";
+                }
+
+                const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
+
+                linhas += `
+                    <tr>
+                        <td><b>${nomeServidor}</b></td>
+                        <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
+                        <td>${r.escola || '-'}</td>
+                        <td><span class="badge-status" style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
+                        <td>${r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-'}</td>
+                        <td>${terminoFormatado}</td>
+                        <td>
+                            <button type="button" class="btn-excluir" onclick="excluirRegistro('${d.id}')">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = linhas;
+        } catch (e) {
+            console.error("Erro ao carregar registros:", e);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--red);">Erro ao carregar dados.</td></tr>`;
+        }
+    }
+
+    window.excluirRegistro = async function(id) {
+        if (confirm("Deseja realmente excluir este registro de ausência?")) {
+            try {
+                await deleteDoc(doc(db, "registro_ferias_folgas", id));
+                mostrarMensagem("Registro excluído com sucesso.", "sucesso");
+                carregarRegistros();
+            } catch (e) {
+                console.error("Erro ao excluir:", e);
+                mostrarMensagem("Erro ao excluir o registro.", "erro");
+            }
+        }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+</script>
+
+</body>
+</html>

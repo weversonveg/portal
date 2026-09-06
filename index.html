@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Início - Gestão de Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --sidebar-width: 280px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--background);
+    color: var(--text);
+    overflow: hidden;
+}
+
+.layout-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* MENU LATERAL (SIDEBAR) */
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    height: 100%;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease, min-width 0.3s ease, opacity 0.2s ease;
+    overflow: hidden;
+    z-index: 100;
+}
+
+.sidebar.fechado {
+    width: 0;
+    min-width: 0;
+    border-right: none;
+    opacity: 0;
+}
+
+.sidebar-inner {
+    width: var(--sidebar-width);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    height: 70px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.sidebar-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 20px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-grow: 1;
+    overflow-y: auto;
+    white-space: nowrap;
+}
+
+.menu-item a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.menu-item a:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.menu-item.ativo a {
+    background: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.menu-item .material-symbols-outlined {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+/* CONTEÚDO PRINCIPAL */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: var(--background);
+}
+
+/* TOOBAR SUPERIOR */
+.topbar {
+    height: 70px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    flex-shrink: 0;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-menu-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--white);
+    transition: all 0.15s;
+}
+
+.btn-menu-toggle:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.topbar-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+/* ÁREA DE TRABALHO / DASHBOARD */
+.dashboard-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 36px;
+}
+
+.hero-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, #47206b 100%);
+    color: var(--white);
+    padding: 36px 40px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow);
+}
+
+.hero-banner h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.hero-banner p {
+    font-size: 14px;
+    opacity: 0.9;
+    max-width: 700px;
+    line-height: 1.5;
+}
+
+.section-heading {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+}
+
+/* GRID DE MÓDULOS */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+}
+
+.nav-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.nav-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(91,42,134,0.08);
+}
+
+.card-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-icon-box .material-symbols-outlined {
+    font-size: 28px;
+}
+
+.nav-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.nav-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        padding: 0 16px;
+    }
+    .dashboard-body {
+        padding: 20px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="layout-wrapper">
+    
+    <!-- MENU LATERAL -->
+    <aside class="sidebar" id="sidebarMenu">
+        <div class="sidebar-inner">
+            <div class="sidebar-header">
+                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+                <span class="sidebar-brand">Vale Transporte</span>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-item ativo">
+                    <a href="index.html">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        <span>Painel Inicial</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="servidores.html">
+                        <span class="material-symbols-outlined">badge</span>
+                        <span>Servidores & Vínculos</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="configuracao.html">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                        <span>Dias Úteis (SEMED)</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="lancamentos.html">
+                        <span class="material-symbols-outlined">edit_note</span>
+                        <span>Lançamentos da Unidade</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="ferias.html">
+                        <span class="material-symbols-outlined">event_note</span>
+                        <span>Férias, Folgas e Licenças</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="calculo.html">
+                        <span class="material-symbols-outlined">calculate</span>
+                        <span>Cálculo e Vales</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="relatorios.html">
+                        <span class="material-symbols-outlined">description</span>
+                        <span>Relatórios</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content">
+        
+        <!-- BARRA SUPERIOR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-menu-toggle" onclick="alternarMenu()" title="Abrir/Fechar Menu">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <span class="topbar-title">Secretaria Municipal de Educação - SEMED</span>
+            </div>
+            <div class="user-badge">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--primary);">account_circle</span>
+                <span>Operador SEMED</span>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <main class="dashboard-body">
+            <div class="hero-banner">
+                <h1>Painel de Controle - Vale Transporte</h1>
+                <p>Gerencie o cadastro de professores, calendários oficiais da SEMED, os ajustes descentralizados por escola, o controle rigoroso de férias/licenças e o motor de cálculo financeiro.</p>
+            </div>
+
+            <h2 class="section-heading">Acesso Rápido aos Módulos</h2>
+
+            <div class="cards-grid">
+                
+                <a href="servidores.html" class="nav-card">
+                    <div class="card-icon-box">
+                        <span class="material-symbols-outlined">badge</span>
+                    </div>
+                    <h3>Cadastro de Servidores</h3>
+                    <p>Gerencie os dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
+                </a>
+
+                <a href="dias.html" class="nav-card">
+                    <div class="card-icon-box">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                    </div>
+                    <h3>Configuração SEMED</h3>
+                    <p>Defina a quantidade de dias úteis letivos de referência oficial para cada mês da rede de ensino.</p>
+                </a>
+
+                <a href="escola.html" class="nav-card">
+                    <div class="card-icon-box">
+                        <span class="material-symbols-outlined">edit_note</span>
+                    </div>
+                    <h3>Lançamentos da Escola</h3>
+                    <p>Ajuste o calendário específico da unidade (como semanas comemorativas) e registre faltas e afastamentos.</p>
+                </a>
+
+                <a href="controle_ferias.html" class="nav-card">
+                    <div class="card-icon-box">
+                        <span class="material-symbols-outlined">event_note</span>
+                    </div>
+                    <h3>Férias, Folgas e Licenças</h3>
+                    <p>Registre e controle o usufruto de férias regulamentares, folgas de aniversário e afastamentos médicos dos servidores.</p>
+                </a>
+
+                <a href="calculo.html" class="nav-card">
+                    <div class="card-icon-box" style="background: var(--green-light); color: var(--green);">
+                        <span class="material-symbols-outlined">calculate</span>
+                    </div>
+                    <h3>Cálculo de Vales</h3>
+                    <p>Gere o fechamento financeiro completo cruzando os dias ajustados da escola e os afastamentos por CPF.</p>
+                </a>
+
+                <a href="relatorios.html" class="nav-card">
+                    <div class="card-icon-box">
+                        <span class="material-symbols-outlined">description</span>
+                    </div>
+                    <h3>Relatórios Gerais</h3>
+                    <p>Consulte e exporte consolidados detalhados de pagamentos, frequências e ausências de toda a rede municipal.</p>
+                </a>
+
+            </div>
+        </main>
+
+    </div>
+
+</div>
+
+<script>
+    function alternarMenu() {
+        const sidebar = document.getElementById("sidebarMenu");
+        sidebar.classList.toggle("fechado");
+    }
+</script>
+
+</body>
+</html>
