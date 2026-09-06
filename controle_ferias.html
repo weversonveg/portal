@@ -355,7 +355,7 @@ tr:hover td {
             <span>Controle de Férias e Folgas</span>
         </div>
         <h1>Lançamento de Férias e Folga Aniversário</h1>
-        <p>Busque o servidor por CPF, informe o tipo de ausência e registre o período.</p>
+        <p>Busque o servidor por CPF, informe o tipo de ausência e registre o período ou data.</p>
     </div>
 
     <!-- FORMULÁRIO DE CADASTRO -->
@@ -371,7 +371,7 @@ tr:hover td {
                 <div class="form-group full-width">
                     <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
                     <div class="cpf-search-wrapper">
-                        <input type="text" id="inputCpf" placeholder="Digite o CPF..." required>
+                        <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
                         <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
                             <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
                         </button>
@@ -381,18 +381,18 @@ tr:hover td {
 
                 <div class="form-group">
                     <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
-                    <select id="tipoAusencia" required>
+                    <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
                         <option value="FERIAS">Férias Regulamentares</option>
                         <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="dataInicio">Data de Início <span>*</span></label>
+                <div class="form-group" id="grupoDataInicio">
+                    <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
                     <input type="date" id="dataInicio" required>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="grupoDataFim">
                     <label for="dataFim">Data de Término <span>*</span></label>
                     <input type="date" id="dataFim" required>
                 </div>
@@ -416,7 +416,7 @@ tr:hover td {
                     <th>Servidor</th>
                     <th>CPF</th>
                     <th>Tipo</th>
-                    <th>Início</th>
+                    <th>Início / Data</th>
                     <th>Término</th>
                     <th>Ações</th>
                 </tr>
@@ -438,7 +438,39 @@ tr:hover td {
 
     document.addEventListener("DOMContentLoaded", function() {
         carregarRegistros();
+
+        // MÁSCARA PARA O CPF
+        document.getElementById('inputCpf').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+            }
+            e.target.value = value;
+        });
     });
+
+    window.mudarTipoAusencia = function() {
+        const tipo = document.getElementById("tipoAusencia").value;
+        const grupoFim = document.getElementById("grupoDataFim");
+        const lblInicio = document.getElementById("labelDataInicio");
+        const inputFim = document.getElementById("dataFim");
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            grupoFim.style.display = "none";
+            inputFim.removeAttribute("required");
+            inputFim.value = "";
+            lblInicio.innerHTML = "Data da Folga <span>*</span>";
+        } else {
+            grupoFim.style.display = "flex";
+            inputFim.setAttribute("required", "true");
+            lblInicio.innerHTML = "Data de Início <span>*</span>";
+        }
+    }
 
     window.buscarServidorPorCpf = async function() {
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
@@ -501,10 +533,18 @@ tr:hover td {
 
         const tipo = document.getElementById("tipoAusencia").value;
         const dataInicio = document.getElementById("dataInicio").value;
-        const dataFim = document.getElementById("dataFim").value;
+        let dataFim = document.getElementById("dataFim").value;
 
-        if (!tipo || !dataInicio || !dataFim) {
+        if (!tipo || !dataInicio) {
             mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+            return;
+        }
+
+        // Se for folga aniversário, a data fim é igual à data início (apenas 1 dia)
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            dataFim = dataInicio;
+        } else if (!dataFim) {
+            mostrarMensagem("Preencha a data de término.", "erro");
             return;
         }
 
@@ -526,6 +566,7 @@ tr:hover td {
             document.getElementById("formFerias").reset();
             document.getElementById("nomeServidorEncontrado").textContent = "";
             cpfValidado = "";
+            mudarTipoAusencia(); // Reseta visibilidade da data fim
             carregarRegistros();
         } catch (e) {
             console.error("Erro ao salvar:", e);
@@ -555,6 +596,7 @@ tr:hover td {
                 const cpfLimpo = r.cpf ? r.cpf.replace(/\D/g, "") : "";
                 const nomeServidor = nomeMap[cpfLimpo] || "Servidor não encontrado";
                 const tipoFormatado = r.tipo === "FERIAS" ? "Férias Regulamentares" : "Folga Aniversário";
+                const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : r.dataFim.split('-').reverse().join('/');
 
                 linhas += `
                     <tr>
@@ -562,7 +604,7 @@ tr:hover td {
                         <td>${r.cpf || '-'}</td>
                         <td><span class="badge-status" style="background:${r.tipo === 'FERIAS' ? 'var(--green-light)' : '#fff3e0'}; color:${r.tipo === 'FERIAS' ? 'var(--green)' : '#e65100'};">${tipoFormatado}</span></td>
                         <td>${r.dataInicio.split('-').reverse().join('/')}</td>
-                        <td>${r.dataFim.split('-').reverse().join('/')}</td>
+                        <td>${terminoFormatado}</td>
                         <td>
                             <button type="button" class="btn-excluir" onclick="excluirRegistro('${d.id}')">
                                 <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir
