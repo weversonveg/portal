@@ -492,7 +492,6 @@ tr:hover td {
             lblInicio.innerHTML = "Data de Início <span>*</span>";
             calcularDataFim();
         } else {
-            // Licenças (médica ou outras) requerem início e término manuais livres
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "none";
             inputFim.setAttribute("required", "true");
@@ -518,6 +517,7 @@ tr:hover td {
         inputFim.value = `${ano}-${mes}-${dia}`;
     }
 
+    // OTIMIZAÇÃO: Consulta direcionada com where() em vez de baixar toda a coleção de servidores
     window.buscarServidorPorCpf = async function() {
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
         const lblNome = document.getElementById("nomeServidorEncontrado");
@@ -538,23 +538,28 @@ tr:hover td {
         lblNome.style.color = "var(--text-secondary)";
 
         try {
-            const q = query(collection(db, "servidores"));
-            const snapshot = await getDocs(q);
             let encontrado = null;
 
-            snapshot.forEach(d => {
-                const s = d.data();
-                if (s.cpf && s.cpf.replace(/\D/g, "") === cpfLimpo) {
-                    encontrado = s;
+            // Tenta buscar com a formatação exata digitada
+            let q = query(collection(db, "servidores"), where("cpf", "==", cpfDigitado));
+            let snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                encontrado = snapshot.docs[0].data();
+            } else {
+                // Caso não encontre, tenta buscar apenas com os números limpos
+                q = query(collection(db, "servidores"), where("cpf", "==", cpfLimpo));
+                snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    encontrado = snapshot.docs[0].data();
                 }
-            });
+            }
 
             if (encontrado) {
                 servidorCache = encontrado;
                 lblNome.textContent = `✓ Servidor: ${encontrado.nome}`;
                 lblNome.style.color = "var(--green)";
 
-                // Mapeia todas as matrículas e escolas do servidor
                 let options = `<option value="">Selecione a matrícula e escola...</option>`;
                 
                 function adicionarEscolasDaMatricula(matObj) {
@@ -624,7 +629,6 @@ tr:hover td {
         }
 
         try {
-            // Verifica conflito apenas para o mesmo CPF E mesma escola/matrícula
             const qExistente = query(
                 collection(db, "registro_ferias_folgas"), 
                 where("cpf", "==", servidorCache.cpf),
@@ -645,8 +649,10 @@ tr:hover td {
                 return;
             }
 
+            // OTIMIZAÇÃO: Salvamos o 'nome' direto no registro para evitar consultas extras na tabela
             await addDoc(collection(db, "registro_ferias_folgas"), {
                 cpf: servidorCache.cpf,
+                nome: servidorCache.nome,
                 matricula: matriculaEscolhida,
                 escola: escolaEscolhida,
                 tipo: tipo,
@@ -668,16 +674,10 @@ tr:hover td {
         }
     }
 
+    // OTIMIZAÇÃO: Lê apenas a coleção de registros, usando o nome armazenado (sem baixar a coleção de servidores)
     async function carregarRegistros() {
         const tbody = document.getElementById("tabelaRegistros");
         try {
-            const servSnap = await getDocs(collection(db, "servidores"));
-            const nomeMap = {};
-            servSnap.forEach(d => {
-                const s = d.data();
-                if (s.cpf) nomeMap[s.cpf.replace(/\D/g, "")] = s.nome;
-            });
-
             const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
             if (regSnap.empty) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Nenhum registro de ausência cadastrado.</td></tr>`;
@@ -687,8 +687,7 @@ tr:hover td {
             let linhas = "";
             regSnap.forEach(d => {
                 const r = d.data();
-                const cpfLimpo = r.cpf ? r.cpf.replace(/\D/g, "") : "";
-                const nomeServidor = nomeMap[cpfLimpo] || "Servidor não encontrado";
+                const nomeServidor = r.nome || "Servidor não identificado";
                 
                 let tipoLabel = "Férias Regulamentares";
                 let badgeColor = "var(--green)";
@@ -708,7 +707,7 @@ tr:hover td {
                     badgeBg = "#f3e5f5";
                 }
 
-                const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : r.dataFim.split('-').reverse().join('/');
+                const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
 
                 linhas += `
                     <tr>
@@ -716,7 +715,7 @@ tr:hover td {
                         <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
                         <td>${r.escola || '-'}</td>
                         <td><span class="badge-status" style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
-                        <td>${r.dataInicio.split('-').reverse().join('/')}</td>
+                        <td>${r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-'}</td>
                         <td>${terminoFormatado}</td>
                         <td>
                             <button type="button" class="btn-excluir" onclick="excluirRegistro('${d.id}')">
