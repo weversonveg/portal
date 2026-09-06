@@ -48,6 +48,7 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 html, body {
     width: 100%;
     min-height: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -58,7 +59,7 @@ body {
 
 /* BARRA SUPERIOR */
 .topbar {
-    width: calc(100% - 64px);
+    width: 100%;
     max-width: 1116px;
     height: 68px;
     margin: 16px auto 0;
@@ -89,6 +90,7 @@ body {
     font-size: 17px;
     font-weight: 700;
     color: #3d2450;
+    white-space: nowrap;
 }
 
 .system-divider {
@@ -102,6 +104,9 @@ body {
     font-size: 14px;
     color: var(--text-secondary);
     flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* INDICADOR DE SINAL DE REDE */
@@ -115,6 +120,7 @@ body {
     border-radius: 20px;
     background: #f1f3f5;
     border: 1px solid #e2e8f0;
+    flex-shrink: 0;
 }
 
 .signal-bars {
@@ -142,10 +148,10 @@ body {
 
 /* ÁREA PRINCIPAL */
 .main {
-    width: calc(100% - 64px);
+    width: 100%;
     max-width: 1116px;
     margin: 0 auto;
-    padding: 32px 0;
+    padding: 32px 16px;
 }
 
 .page-header {
@@ -159,6 +165,7 @@ body {
     font-size: 13px;
     color: #7b858e;
     margin-bottom: 10px;
+    flex-wrap: wrap;
 }
 
 .breadcrumb .material-symbols-outlined {
@@ -213,6 +220,7 @@ body {
     outline: none;
     font-size: 14px;
     color: #263238;
+    width: 100%;
 }
 
 .filter-group input:focus,
@@ -232,6 +240,7 @@ body {
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     transition: background 0.15s;
     flex-shrink: 0;
@@ -289,10 +298,17 @@ body {
     display: block;
 }
 
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
+    white-space: nowrap;
 }
 
 th {
@@ -346,6 +362,7 @@ tr:hover td {
     color: #2e7d32;
 }
 
+/* MEDIA QUERIES PARA RESPONSIVIDADE */
 @media (max-width: 950px) {
     .filter-card {
         flex-direction: column;
@@ -354,9 +371,32 @@ tr:hover td {
     .summary-container {
         grid-template-columns: repeat(2, 1fr);
     }
-    table {
-        display: block;
-        overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        margin: 8px 12px 0;
+        width: calc(100% - 24px);
+        padding: 0 12px;
+        height: 60px;
+    }
+    .system-module {
+        display: none;
+    }
+    .system-divider {
+        display: none;
+    }
+    .main {
+        padding: 20px 12px;
+    }
+    .page-header h1 {
+        font-size: 20px;
+    }
+    .filter-card {
+        padding: 16px;
+    }
+    .btn-calcular {
+        width: 100%;
     }
 }
 
@@ -450,23 +490,25 @@ tr:hover td {
 
     <!-- TABELA DE RESULTADOS -->
     <section id="tableCard" class="table-card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Servidor</th>
-                    <th>CPF / Matrícula</th>
-                    <th>Escola / Lotação</th>
-                    <th>Concessionária</th>
-                    <th>Passes/Dia</th>
-                    <th>Dias Úteis</th>
-                    <th>Afastamentos / Ausências</th>
-                    <th>Total no Mês</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaCorpo">
-                <!-- Inserido via JS -->
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servidor</th>
+                        <th>CPF / Matrícula</th>
+                        <th>Escola / Lotação</th>
+                        <th>Concessionária</th>
+                        <th>Passes/Dia</th>
+                        <th>Dias Úteis</th>
+                        <th>Afastamentos / Ausências</th>
+                        <th>Total no Mês</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaCorpo">
+                    <!-- Inserido via JS -->
+                </tbody>
+            </table>
+        </div>
     </section>
 </main>
 
