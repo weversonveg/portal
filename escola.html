@@ -299,6 +299,12 @@ body {
     color: var(--primary);
 }
 
+.input-dias-escola:disabled {
+    background-color: #f1f3f5;
+    color: #68737d;
+    cursor: not-allowed;
+}
+
 .btn-salvar-dias {
     height: 40px;
     background: var(--green);
@@ -409,6 +415,12 @@ tr:hover td {
     border-radius: 4px;
     text-align: center;
     font-weight: 600;
+}
+
+.input-afastamento:disabled {
+    background-color: #f1f3f5;
+    color: #68737d;
+    cursor: not-allowed;
 }
 
 .badge-salvo {
@@ -657,15 +669,33 @@ tr:hover td {
             const semedConfigRef = doc(db, "configuracoes", mesAno);
             const semedSnap = await getDoc(semedConfigRef);
 
-            const diasSemedDefault = semedSnap.exists() ? (Number(semedSnap.data().diasUteis) || 22) : 22;
-            document.getElementById("infoSemedDefault").textContent = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
+            const semedData = semedSnap.exists() ? semedSnap.data() : {};
+            const diasSemedDefault = Number(semedData.diasUteis) || 22;
+            
+            // TRAVA DE BLOQUEIO DE MESES
+            const mesBloqueado = semedData.bloqueado === true || semedData.fechado === true || semedData.mesFechado === true;
+
+            let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
+            if (mesBloqueado) {
+                textoInfo += " 🔒 [MÊS BLOQUEADO PELA SEMED]";
+                mostrarMensagem("Este mês está bloqueado/fechado pela SEMED. Os lançamentos e alterações estão desativados.", "erro");
+            }
+            document.getElementById("infoSemedDefault").textContent = textoInfo;
 
             const configEscolaId = `${mesAno}_${escola}`;
             const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
             const configEscolaSnap = await getDoc(configEscolaRef);
 
             const diasEfetivosEscola = configEscolaSnap.exists() ? Number(configEscolaSnap.data().diasUteisEscola) : diasSemedDefault;
-            document.getElementById("inputDiasEscola").value = diasEfetivosEscola;
+            
+            const inputDiasEscolaEl = document.getElementById("inputDiasEscola");
+            inputDiasEscolaEl.value = diasEfetivosEscola;
+            inputDiasEscolaEl.disabled = mesBloqueado;
+
+            const btnSalvarDiasEl = document.querySelector(".btn-salvar-dias");
+            if (btnSalvarDiasEl) {
+                btnSalvarDiasEl.style.display = mesBloqueado ? "none" : "flex";
+            }
 
             schoolConfigCard.classList.add("ativo");
 
@@ -772,19 +802,23 @@ tr:hover td {
 
                             const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
 
+                            const acaoHtml = mesBloqueado 
+                                ? `<span style="font-size: 12px; color: var(--red); font-weight: 600;">🔒 Bloqueado</span>`
+                                : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
+                                       <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                                   </button>`;
+
                             linhasTabela += `
                                 <tr>
                                     <td><b>${s.nome}</b></td>
                                     <td>${s.cpf}</td>
                                     <td>${matriculaInfo}</td>
                                     <td>
-                                        <input type="number" id="${inputId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric">
+                                        <input type="number" id="${inputId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric" ${mesBloqueado ? 'disabled' : ''}>
                                         ${badgeHtml}
                                     </td>
                                     <td>
-                                        <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
-                                            <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
-                                        </button>
+                                        ${acaoHtml}
                                     </td>
                                 </tr>
                             `;
@@ -820,6 +854,20 @@ tr:hover td {
 
         if (!mesAno || !escola) return;
 
+        // TRAVA DE SEGURANÇA CONTRA SALVAMENTO SE O MÊS ESTIVER BLOQUEADO
+        try {
+            const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
+            if (semedSnap.exists()) {
+                const data = semedSnap.data();
+                if (data.bloqueado === true || data.fechado === true || data.mesFechado === true) {
+                    alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível alterar os dias úteis.");
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao verificar bloqueio:", e);
+        }
+
         const configEscolaId = `${mesAno}_${escola}`;
 
         try {
@@ -838,6 +886,20 @@ tr:hover td {
     }
 
     window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
+        // TRAVA DE SEGURANÇA CONTRA SALVAMENTO SE O MÊS ESTIVER BLOQUEADO
+        try {
+            const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
+            if (semedSnap.exists()) {
+                const data = semedSnap.data();
+                if (data.bloqueado === true || data.fechado === true || data.mesFechado === true) {
+                    alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível salvar alterações.");
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao verificar bloqueio:", e);
+        }
+
         const inputDias = document.getElementById(`afastamento_${servidorId}_${numeroMatricula}`);
         const diasAfastamento = Number(inputDias.value) || 0;
         const cpfLimpo = cpfServidor.replace(/\D/g, "");
