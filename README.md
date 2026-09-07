@@ -4,7 +4,10 @@ terceira mudança barra de pesquisa no controle de férias
 quarta mudança página de escola mostrava só uma matrícula 
 quinta mudança página de cálculos soma férias lançadas mais lançamentos manuais pela escola o lançamento manual estava sobre escrevendo as férias não somava
 
-Conversa com o Gemini
+sexta mudança página de lançamento das escolas mostrava férias lançadas para as duas matrículas do mesmo servidor isso foi corrigido agora ao lançar férias para uma determinada matrícula a página de lançamentos da escola reconhece que é só para uma matrícula mesmo estando na mesma escola 
+
+sétima mudança a mesma história na página de cálculo ao lançar férias para um servidor em uma determinada matrícula a página de cálculo é calculava esse lançamento para as duas matrículas ou seja ele reconhecia pelo CPF agora o cálculo foi atualizado e é por matrícula funcionando normalmente
+
 Quando a escola lança férias, na página de lançamentos, mostra os 30 dias, por exemplo. Aí, no cálculo, mostra também os 30 dias. Mas se a pessoa vai lá e edita, põe 2 dias, por exemplo, aí ele soma 32 dias, mas na página de cálculo, ele mostra só 2. Ou seja, na página de lançamentos fica 32 dias e na página de cálculo, 2 dias.
 
 Esse comportamento ocorre porque há uma divergência entre duas fontes de dados no seu sistema:
