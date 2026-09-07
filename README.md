@@ -1,3 +1,14 @@
+Melhorias que contém nesta versão:
+importação csv
+link para a página de edição 
+Campo data de lançamento de férias aceita qualquer tempo de data ex: 18 dias de férias 
+
+
+
+
+
+
+
 primeira mudança página de cálculo responsiva
 segunda mudança página da escola responsiva
 terceira mudança barra de pesquisa no controle de férias
