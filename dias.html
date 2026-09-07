@@ -285,6 +285,72 @@ body {
     border-color: var(--green-border) !important;
 }
 
+/* ESTILOS DO SWITCH (TOGGLE) CONGELAR MÊS */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .3s;
+}
+
+input:checked + .slider {
+    background-color: #d32f2f;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.status-aberto {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.status-fechado {
+    color: #d32f2f;
+    font-weight: 600;
+}
+
 /* MENSAGEM */
 .mensagem {
     display: none;
@@ -552,6 +618,21 @@ button:disabled {
                         >
                     </div>
 
+                    <!-- STATUS DO MÊS (CONGELADO/ABERTO) -->
+                    <div class="form-group full">
+                        <label>Status do Mês</label>
+                        <div class="toggle-container">
+                            <label class="switch">
+                                <input type="checkbox" id="toggleCongelado">
+                                <span class="slider round"></span>
+                            </label>
+                            <span id="textoStatusMes" class="status-aberto">Mês Aberto</span>
+                        </div>
+                        <small style="color: var(--text-secondary); margin-top: 6px; display: block;">
+                            Ao fechar o mês, novos lançamentos e cálculos de vales serão bloqueados para evitar divergências.
+                        </small>
+                    </div>
+
                     <!-- OBSERVAÇÕES -->
                     <div class="form-group full">
                         <label for="observacoes">
@@ -632,7 +713,23 @@ button:disabled {
         
         carregarConfiguracao(mesAtualStr);
         carregarTodasConfiguracoes();
+
+        // Evento para mudar texto dinâmico quando clica no switch
+        document.getElementById("toggleCongelado").addEventListener("change", (e) => {
+            atualizarTextoStatus(e.target.checked);
+        });
     });
+
+    window.atualizarTextoStatus = function(isCongelado) {
+        const textoStatus = document.getElementById("textoStatusMes");
+        if (isCongelado) {
+            textoStatus.textContent = "🔒 Mês Fechado";
+            textoStatus.className = "status-fechado";
+        } else {
+            textoStatus.textContent = "Mês Aberto";
+            textoStatus.className = "status-aberto";
+        }
+    }
 
     window.atualizarCorCampo = function(campo) {
         if (campo.value && campo.value.trim() !== "") {
@@ -666,14 +763,26 @@ button:disabled {
 
             docsList.forEach(item => {
                 const obsTexto = item.observacoes ? item.observacoes.replace(/'/g, "\\'") : '';
+                const isCongelado = item.congelado || false;
+                
+                // Exibição visual do status na tabela
+                const statusBadge = isCongelado 
+                    ? `<span style="display: inline-block; margin-top: 4px; color: #d32f2f; font-size: 11px; font-weight: 700; background: #fff0f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #efc5c5;">🔒 Fechado</span>` 
+                    : `<span style="display: inline-block; margin-top: 4px; color: #2e7d32; font-size: 11px; font-weight: 700; background: #edf7ee; padding: 2px 6px; border-radius: 4px; border: 1px solid #c8e6c9;">Aberto</span>`;
+
                 linhas += `
                     <tr>
-                        <td><b>${formatarMesAno(item.mesReferencia)}</b> <small style="color:var(--text-secondary)">(${item.mesReferencia})</small></td>
+                        <td>
+                            <b>${formatarMesAno(item.mesReferencia)}</b> 
+                            <small style="color:var(--text-secondary)">(${item.mesReferencia})</small>
+                            <br>
+                            ${statusBadge}
+                        </td>
                         <td><span style="font-weight: 700; color: var(--primary);">${item.diasUteis} dias</span></td>
                         <td>${item.observacoes || '<span style="color:#9aa3aa;">Nenhuma observação</span>'}</td>
                         <td>
                             <div class="acoes-grupo">
-                                <button type="button" class="btn-acao" onclick="selecionarMes('${item.mesReferencia}', ${item.diasUteis}, '${obsTexto}')">
+                                <button type="button" class="btn-acao" onclick="selecionarMes('${item.mesReferencia}', ${item.diasUteis}, '${obsTexto}', ${isCongelado})">
                                     <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Editar
                                 </button>
                                 <button type="button" class="btn-acao btn-excluir" onclick="excluirConfiguracao('${item.mesReferencia}')">
@@ -692,10 +801,15 @@ button:disabled {
         }
     }
 
-    window.selecionarMes = function(mesAno, dias, obs) {
+    window.selecionarMes = function(mesAno, dias, obs, isCongelado) {
         document.getElementById("mesReferencia").value = mesAno;
         document.getElementById("diasUteis").value = dias;
         document.getElementById("observacoes").value = obs === 'null' ? '' : obs;
+        
+        // Atualiza a chave de congelação e o texto correspondente
+        document.getElementById("toggleCongelado").checked = isCongelado;
+        atualizarTextoStatus(isCongelado);
+
         atualizarCorCampo(document.getElementById("mesReferencia"));
         atualizarCorCampo(document.getElementById("diasUteis"));
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -727,17 +841,28 @@ button:disabled {
 
             const inputDias = document.getElementById("diasUteis");
             const inputObs = document.getElementById("observacoes");
+            const toggleCongelado = document.getElementById("toggleCongelado");
 
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 inputDias.value = dados.diasUteis || "";
                 inputObs.value = dados.observacoes || "";
+                
+                // Carrega o status de congelamento, padrão falso
+                const isCongelado = dados.congelado || false;
+                toggleCongelado.checked = isCongelado;
+                atualizarTextoStatus(isCongelado);
+
                 atualizarCorCampo(inputDias);
                 mostrarMensagem("Configuração carregada para este mês.", "sucesso");
             } else {
                 inputDias.value = "";
                 inputObs.value = "";
                 inputDias.classList.remove("preenchido");
+                
+                // Mês novo não cadastrado = aberto
+                toggleCongelado.checked = false;
+                atualizarTextoStatus(false);
             }
         } catch (erro) {
             console.error("Erro ao carregar configuração:", erro);
@@ -750,6 +875,7 @@ button:disabled {
         const mesReferencia = document.getElementById("mesReferencia").value;
         const diasUteis = document.getElementById("diasUteis").value;
         const observacoes = document.getElementById("observacoes").value.trim();
+        const isCongelado = document.getElementById("toggleCongelado").checked; // Pega o status da chave
 
         if (!mesReferencia || !diasUteis) {
             mostrarMensagem("Preencha o mês de referência e os dias úteis.", "erro");
@@ -765,14 +891,16 @@ button:disabled {
         iconeSalvar.textContent = "sync";
 
         try {
+            // Utilizamos { merge: true } implicitamente ou mandando todos os campos
             await setDoc(doc(db, "configuracoes", mesReferencia), {
                 mesReferencia: mesReferencia,
                 diasUteis: Number(diasUteis),
                 observacoes: observacoes,
+                congelado: isCongelado, // Salvando no banco se está fechado ou não
                 dataAtualizacao: new Date().toISOString()
-            });
+            }, { merge: true });
 
-            mostrarMensagem("Configuração de dias úteis salva com sucesso!", "sucesso");
+            mostrarMensagem("Configuração salva com sucesso!", "sucesso");
             carregarTodasConfiguracoes();
         } catch (erro) {
             console.error("Erro ao salvar configuração:", erro);
@@ -788,6 +916,11 @@ button:disabled {
         document.getElementById("diasUteis").value = "";
         document.getElementById("observacoes").value = "";
         document.getElementById("diasUteis").classList.remove("preenchido");
+        
+        // Reseta o switch para aberto
+        document.getElementById("toggleCongelado").checked = false;
+        atualizarTextoStatus(false);
+
         ocultarMensagem();
     }
 
