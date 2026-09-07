@@ -606,12 +606,12 @@ tr:hover td {
                 console.log("Aviso: Configurações de dias por escola não encontradas.");
             }
 
-            // 3. ESTRUTURAS SEPARADAS PARA SOMAR FÉRIAS AUTOMÁTICAS + LANÇAMENTOS MANUAIS
+            // 3. ESTRUTURAS SEPARADAS POR MATRÍCULA PARA ISOLAR OS LANÇAMENTOS
             const feriasMap = {};
             const manualEscolaMap = {};
             const manualGeralMap = {};
 
-            // 3.1. Carrega Férias e Folgas automáticas (Calculadas por período)
+            // 3.1. Carrega Férias e Folgas automáticas (Chave composta por CPF e Matrícula)
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
                 const [anoStr, mesStr] = mesAno.split("-");
@@ -623,6 +623,7 @@ tr:hover td {
                 feriasSnap.forEach(docSnap => {
                     const data = docSnap.data();
                     const cpfRaw = data.cpf || data.cpfServidor || data.servidorCpf || "";
+                    const matriculaRaw = data.numeroMatricula || data.matricula || "";
                     const inicioRaw = data.dataInicio || data.inicio || data.dataInicioFerias;
                     const fimRaw = data.dataFim || data.fim || data.dataFimFerias;
 
@@ -638,6 +639,10 @@ tr:hover td {
                             if (startOverlap <= endOverlap) {
                                 const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
                                 if (diasNoMes > 0) {
+                                    if (matriculaRaw) {
+                                        const chaveFeriasMat = `${cpfLimpo}_${matriculaRaw}`;
+                                        feriasMap[chaveFeriasMat] = (feriasMap[chaveFeriasMat] || 0) + diasNoMes;
+                                    }
                                     feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
                                 }
                             }
@@ -648,7 +653,7 @@ tr:hover td {
                 console.log("Aviso: Erro ao calcular intersecção de férias e folgas:", e);
             }
 
-            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas
+            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas (Isolados por Matrícula e Escola)
             try {
                 const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
                 const lancSnap = await getDocs(lancQuery);
@@ -657,10 +662,20 @@ tr:hover td {
                     const dias = Number(data.diasAfastamento) || 0;
                     if (data.cpf && dias > 0) {
                         const cpfLimpo = data.cpf.replace(/\D/g, "");
+                        const matriculaRaw = data.numeroMatricula || data.matricula || "";
+
                         if (data.escola) {
+                            if (matriculaRaw) {
+                                const chaveEscolaCpfMat = `${data.escola}_${cpfLimpo}_${matriculaRaw}`;
+                                manualEscolaMap[chaveEscolaCpfMat] = (manualEscolaMap[chaveEscolaCpfMat] || 0) + dias;
+                            }
                             const chaveEscolaCpf = `${data.escola}_${cpfLimpo}`;
                             manualEscolaMap[chaveEscolaCpf] = (manualEscolaMap[chaveEscolaCpf] || 0) + dias;
                         } else {
+                            if (matriculaRaw) {
+                                const chaveGeralMat = `${cpfLimpo}_${matriculaRaw}`;
+                                manualGeralMap[chaveGeralMat] = (manualGeralMap[chaveGeralMat] || 0) + dias;
+                            }
                             manualGeralMap[cpfLimpo] = (manualGeralMap[cpfLimpo] || 0) + dias;
                         }
                     }
@@ -690,7 +705,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo SOMANDO Férias Automáticas + Ajustes Manuais da Escola
+            // 5. Processa o cálculo utilizando chaves específicas por matrícula
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -701,10 +716,18 @@ tr:hover td {
                     if (!nomeEscola) return;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
-                    // Soma correta: Férias do sistema + Ajuste manual da escola para este vínculo
-                    const diasFerias = feriasMap[cpfLimpo] || 0;
+                    // Busca priorizando a matrícula exata, com fallback seguro
+                    const chaveFeriasMat = `${cpfLimpo}_${matriculaNum}`;
+                    const diasFerias = feriasMap[chaveFeriasMat] !== undefined ? feriasMap[chaveFeriasMat] : (feriasMap[cpfLimpo] || 0);
+
+                    const chaveEscolaCpfMat = `${nomeEscola}_${cpfLimpo}_${matriculaNum}`;
                     const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                    const diasManual = manualEscolaMap[chaveEscolaCpf] !== undefined ? manualEscolaMap[chaveEscolaCpf] : (manualGeralMap[cpfLimpo] || 0);
+                    const chaveGeralMat = `${cpfLimpo}_${matriculaNum}`;
+
+                    const diasManual = manualEscolaMap[chaveEscolaCpfMat] !== undefined ? 
+                        manualEscolaMap[chaveEscolaCpfMat] : 
+                        (manualEscolaMap[chaveEscolaCpf] !== undefined ? manualEscolaMap[chaveEscolaCpf] : 
+                        (manualGeralMap[chaveGeralMat] !== undefined ? manualGeralMap[chaveGeralMat] : (manualGeralMap[cpfLimpo] || 0)));
                     
                     const diasAfastamento = diasFerias + diasManual;
 
