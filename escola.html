@@ -595,8 +595,8 @@ tr:hover td {
 
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
-            <label>Servidores com Ausência no Mês</label>
-            <p id="sumComAfastamento">0 servidores</p>
+            <label>Vínculos com Ausência no Mês</label>
+            <p id="sumComAfastamento">0 vínculos</p>
         </div>
         <div class="summary-box">
             <label>Total de Dias de Ausência Registrados</label>
@@ -610,8 +610,8 @@ tr:hover td {
                 <thead>
                     <tr>
                         <th>Servidor</th>
-                        <th>CPF / Matrícula</th>
-                        <th>Cargo / Lotação</th>
+                        <th>CPF</th>
+                        <th>Vínculo / Matrícula / Cargo / Lotação</th>
                         <th>Dias de Ausência (Faltas / Férias / Folgas)</th>
                         <th>Ação</th>
                     </tr>
@@ -681,10 +681,14 @@ tr:hover td {
 
                 feriasSnap.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (data.cpf && data.dataInicio && data.dataFim) {
-                        const cpfLimpo = data.cpf.replace(/\D/g, "");
-                        const inicio = new Date(data.dataInicio + "T00:00:00");
-                        const fim = new Date(data.dataFim + "T00:00:00");
+                    const cpfRaw = data.cpf || data.cpfServidor || data.servidorCpf || "";
+                    const inicioRaw = data.dataInicio || data.inicio || data.dataInicioFerias;
+                    const fimRaw = data.dataFim || data.fim || data.dataFimFerias;
+
+                    if (cpfRaw && inicioRaw && fimRaw) {
+                        const cpfLimpo = cpfRaw.replace(/\D/g, "");
+                        const inicio = new Date(inicioRaw + "T00:00:00");
+                        const fim = new Date(fimRaw + "T00:00:00");
 
                         const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
                         const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
@@ -710,61 +714,87 @@ tr:hover td {
             }
 
             let linhasTabela = "";
-            let servidoresComFalta = 0;
+            let vinculosComFalta = 0;
             let somaTotalDias = 0;
 
             for (const servidorDoc of querySnapshot.docs) {
                 const s = servidorDoc.data();
                 const servidorId = servidorDoc.id;
-
-                let matriculaInfo = "";
-                if (s.matricula1 && (s.matricula1.escola1?.nomeEscola === escola || s.matricula1.escola2?.nomeEscola === escola)) {
-                    matriculaInfo = `Matrícula 1: ${s.matricula1.numeroMatricula} (${s.matricula1.cargo})`;
-                } else if (s.matricula2 && (s.matricula2.escola1?.nomeEscola === escola || s.matricula2.escola2?.nomeEscola === escola)) {
-                    matriculaInfo = `Matrícula 2: ${s.matricula2.numeroMatricula} (${s.matricula2.cargo})`;
-                }
-
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-                
-                // Busca manual do banco
-                const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
-                const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
-                const lancSnap = await getDoc(lancRef);
-                
-                const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
-                
-                // Soma manual + férias/folgas automáticas
-                const diasFeriasAuto = feriasMap[cpfLimpo] || 0;
-                const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
 
-                if (diasTotalExibido > 0) {
-                    servidoresComFalta++;
-                    somaTotalDias += diasTotalExibido;
+                // Função interna para avaliar cada matrícula/vínculo do servidor na escola selecionada
+                async function avaliarVinculo(matriculaObj, tipoMatriculaStr) {
+                    if (!matriculaObj) return;
+                    const numeroMatricula = matriculaObj.numeroMatricula || "";
+                    const cargo = matriculaObj.cargo || "";
+
+                    // Verifica escola1 e escola2 de forma independente
+                    const escolasDoVinculo = [matriculaObj.escola1, matriculaObj.escola2];
+
+                    for (const escolaObj of escolasDoVinculo) {
+                        if (escolaObj && escolaObj.nomeEscola === escola) {
+                            const matriculaInfo = `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${escolaObj.nomeEscola}`;
+                            
+                            // Busca manual por matrícula específica (mantendo compatibilidade com o formato antigo)
+                            const lancamentoIdNew = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
+                            const lancamentoIdOld = `${mesAno}_${escola}_${cpfLimpo}`;
+                            
+                            let lancRef = doc(db, "lancamentos_mensais", lancamentoIdNew);
+                            let lancSnap = await getDoc(lancRef);
+                            
+                            if (!lancSnap.exists()) {
+                                const lancRefOld = doc(db, "lancamentos_mensais", lancamentoIdOld);
+                                const lancSnapOld = await getDoc(lancRefOld);
+                                if (lancSnapOld.exists()) {
+                                    lancSnap = lancSnapOld;
+                                    lancRef = lancRefOld;
+                                }
+                            }
+                            
+                            const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
+                            const diasFeriasAuto = feriasMap[cpfLimpo] || 0;
+                            const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
+
+                            if (diasTotalExibido > 0) {
+                                vinculosComFalta++;
+                                somaTotalDias += diasTotalExibido;
+                            }
+
+                            const badgeHtml = diasSalvosManual > 0 
+                                ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo</span>` 
+                                : (diasFeriasAuto > 0 ? `<span class="badge-salvo" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size: 14px;">event</span> Férias/Folga Auto</span>` : ``);
+
+                            const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
+
+                            linhasTabela += `
+                                <tr>
+                                    <td><b>${s.nome}</b></td>
+                                    <td>${s.cpf}</td>
+                                    <td>${matriculaInfo}</td>
+                                    <td>
+                                        <input type="number" id="${inputId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric">
+                                        ${badgeHtml}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
                 }
 
-                const badgeHtml = diasSalvosManual > 0 
-                    ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo</span>` 
-                    : (diasFeriasAuto > 0 ? `<span class="badge-salvo" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size: 14px;">event</span> Férias/Folga Auto</span>` : ``);
-
-                linhasTabela += `
-                    <tr>
-                        <td><b>${s.nome}</b></td>
-                        <td>${s.cpf}</td>
-                        <td>${matriculaInfo}</td>
-                        <td>
-                            <input type="number" id="afastamento_${servidorId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric">
-                            ${badgeHtml}
-                        </td>
-                        <td>
-                            <button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}')">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                if (s.matricula1) {
+                    await avaliarVinculo(s.matricula1, "Matrícula 1");
+                }
+                if (s.matricula2) {
+                    await avaliarVinculo(s.matricula2, "Matrícula 2");
+                }
             }
 
-            document.getElementById("sumComAfastamento").textContent = servidoresComFalta + " servidores";
+            document.getElementById("sumComAfastamento").textContent = vinculosComFalta + " vínculos";
             document.getElementById("sumTotalDias").textContent = somaTotalDias + " dias";
 
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
@@ -801,11 +831,11 @@ tr:hover td {
         }
     }
 
-    window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId) {
-        const inputDias = document.getElementById(`afastamento_${servidorId}`);
+    window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
+        const inputDias = document.getElementById(`afastamento_${servidorId}_${numeroMatricula}`);
         const diasAfastamento = Number(inputDias.value) || 0;
         const cpfLimpo = cpfServidor.replace(/\D/g, "");
-        const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}`;
+        const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
         const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
 
         try {
@@ -822,6 +852,7 @@ tr:hover td {
                     escola: escola,
                     servidorId: servidorId,
                     cpf: cpfServidor,
+                    numeroMatricula: numeroMatricula,
                     diasAfastamento: diasAfastamento,
                     dataAtualizacao: new Date().toISOString()
                 }, { merge: true });
