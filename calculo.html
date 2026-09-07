@@ -565,7 +565,7 @@ tr:hover td {
         return null;
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM SOMATÓRIO DE FÉRIAS E LANÇAMENTOS MANUAIS
+    // MOTOR DE CÁLCULO INTEGRADO COM SEPARAÇÃO ESTRITA POR MATRÍCULA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -606,12 +606,12 @@ tr:hover td {
                 console.log("Aviso: Configurações de dias por escola não encontradas.");
             }
 
-            // 3. ESTRUTURAS SEPARADAS POR MATRÍCULA PARA ISOLAR OS LANÇAMENTOS
+            // 3. ESTRUTURAS COM ISOLAMENTO EXCLUSIVO POR MATRÍCULA
             const feriasMap = {};
             const manualEscolaMap = {};
             const manualGeralMap = {};
 
-            // 3.1. Carrega Férias e Folgas automáticas (Chave composta por CPF e Matrícula)
+            // 3.1. Carrega Férias e Folgas automáticas
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
                 const [anoStr, mesStr] = mesAno.split("-");
@@ -623,7 +623,7 @@ tr:hover td {
                 feriasSnap.forEach(docSnap => {
                     const data = docSnap.data();
                     const cpfRaw = data.cpf || data.cpfServidor || data.servidorCpf || "";
-                    const matriculaRaw = data.numeroMatricula || data.matricula || "";
+                    const matriculaRaw = data.numeroMatricula || data.matricula || data.matriculaServidor || data.mat || "";
                     const inicioRaw = data.dataInicio || data.inicio || data.dataInicioFerias;
                     const fimRaw = data.dataFim || data.fim || data.dataFimFerias;
 
@@ -640,10 +640,13 @@ tr:hover td {
                                 const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
                                 if (diasNoMes > 0) {
                                     if (matriculaRaw) {
-                                        const chaveFeriasMat = `${cpfLimpo}_${matriculaRaw}`;
+                                        // Armazenamento estrito por matrícula
+                                        const chaveFeriasMat = `${cpfLimpo}_${String(matriculaRaw).trim()}`;
                                         feriasMap[chaveFeriasMat] = (feriasMap[chaveFeriasMat] || 0) + diasNoMes;
+                                    } else {
+                                        // Legado sem matrícula
+                                        feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
                                     }
-                                    feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
                                 }
                             }
                         }
@@ -653,30 +656,35 @@ tr:hover td {
                 console.log("Aviso: Erro ao calcular intersecção de férias e folgas:", e);
             }
 
-            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas (Isolados por Matrícula e Escola)
+            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas
             try {
                 const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
                 const lancSnap = await getDocs(lancQuery);
                 lancSnap.forEach(docSnap => {
                     const data = docSnap.data();
-                    const dias = Number(data.diasAfastamento) || 0;
+                    const dias = Number(data.diasAfastamento) || Number(data.faltas) || Number(data.diasFalta) || 0;
                     if (data.cpf && dias > 0) {
                         const cpfLimpo = data.cpf.replace(/\D/g, "");
-                        const matriculaRaw = data.numeroMatricula || data.matricula || "";
+                        const matriculaRaw = data.numeroMatricula || data.matricula || data.matriculaServidor || data.mat || "";
+                        const escolaNome = data.escola || data.nomeEscola || "";
 
-                        if (data.escola) {
-                            if (matriculaRaw) {
-                                const chaveEscolaCpfMat = `${data.escola}_${cpfLimpo}_${matriculaRaw}`;
+                        if (matriculaRaw) {
+                            const matClean = String(matriculaRaw).trim();
+                            if (escolaNome) {
+                                const chaveEscolaCpfMat = `${escolaNome}_${cpfLimpo}_${matClean}`;
                                 manualEscolaMap[chaveEscolaCpfMat] = (manualEscolaMap[chaveEscolaCpfMat] || 0) + dias;
-                            }
-                            const chaveEscolaCpf = `${data.escola}_${cpfLimpo}`;
-                            manualEscolaMap[chaveEscolaCpf] = (manualEscolaMap[chaveEscolaCpf] || 0) + dias;
-                        } else {
-                            if (matriculaRaw) {
-                                const chaveGeralMat = `${cpfLimpo}_${matriculaRaw}`;
+                            } else {
+                                const chaveGeralMat = `${cpfLimpo}_${matClean}`;
                                 manualGeralMap[chaveGeralMat] = (manualGeralMap[chaveGeralMat] || 0) + dias;
                             }
-                            manualGeralMap[cpfLimpo] = (manualGeralMap[cpfLimpo] || 0) + dias;
+                        } else {
+                            // Legado sem matrícula
+                            if (escolaNome) {
+                                const chaveEscolaCpf = `${escolaNome}_${cpfLimpo}`;
+                                manualEscolaMap[chaveEscolaCpf] = (manualEscolaMap[chaveEscolaCpf] || 0) + dias;
+                            } else {
+                                manualGeralMap[cpfLimpo] = (manualGeralMap[cpfLimpo] || 0) + dias;
+                            }
                         }
                     }
                 });
@@ -705,10 +713,13 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo utilizando chaves específicas por matrícula
+            // 5. Processa o cálculo com isolamento rigoroso por matrícula
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+                
+                // Verifica se o servidor possui múltiplas matrículas
+                const temMultiplasMatriculas = Boolean(s.matricula1 && s.matricula2);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
                     if (!escolaObj) return;
@@ -716,19 +727,36 @@ tr:hover td {
                     if (!nomeEscola) return;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
-                    // Busca priorizando a matrícula exata, com fallback seguro
-                    const chaveFeriasMat = `${cpfLimpo}_${matriculaNum}`;
-                    const diasFerias = feriasMap[chaveFeriasMat] !== undefined ? feriasMap[chaveFeriasMat] : (feriasMap[cpfLimpo] || 0);
+                    const matClean = matriculaNum ? String(matriculaNum).trim() : "";
 
-                    const chaveEscolaCpfMat = `${nomeEscola}_${cpfLimpo}_${matriculaNum}`;
-                    const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                    const chaveGeralMat = `${cpfLimpo}_${matriculaNum}`;
+                    // --- BUSCA DE FÉRIAS (COM TRAVA DE MÚLTIPLAS MATRÍCULAS) ---
+                    const chaveFeriasMat = `${cpfLimpo}_${matClean}`;
+                    let diasFerias = 0;
+                    if (matClean && feriasMap[chaveFeriasMat] !== undefined) {
+                        diasFerias = feriasMap[chaveFeriasMat];
+                    } else if (!temMultiplasMatriculas && feriasMap[cpfLimpo] !== undefined) {
+                        diasFerias = feriasMap[cpfLimpo]; // Apenas legado se tiver 1 matrícula
+                    }
 
-                    const diasManual = manualEscolaMap[chaveEscolaCpfMat] !== undefined ? 
-                        manualEscolaMap[chaveEscolaCpfMat] : 
-                        (manualEscolaMap[chaveEscolaCpf] !== undefined ? manualEscolaMap[chaveEscolaCpf] : 
-                        (manualGeralMap[chaveGeralMat] !== undefined ? manualGeralMap[chaveGeralMat] : (manualGeralMap[cpfLimpo] || 0)));
-                    
+                    // --- BUSCA DE LANÇAMENTOS MANUAIS (COM TRAVA DE MÚLTIPLAS MATRÍCULAS) ---
+                    const chaveEscolaMat = `${nomeEscola}_${cpfLimpo}_${matClean}`;
+                    const chaveGeralMat = `${cpfLimpo}_${matClean}`;
+                    const chaveEscolaGeral = `${nomeEscola}_${cpfLimpo}`;
+
+                    let diasManual = 0;
+                    if (matClean && manualEscolaMap[chaveEscolaMat] !== undefined) {
+                        diasManual = manualEscolaMap[chaveEscolaMat];
+                    } else if (matClean && manualGeralMap[chaveGeralMat] !== undefined) {
+                        diasManual = manualGeralMap[chaveGeralMat];
+                    } else if (!temMultiplasMatriculas) {
+                        // Fallback apenas para servidores com 1 única matrícula (legado)
+                        if (manualEscolaMap[chaveEscolaGeral] !== undefined) {
+                            diasManual = manualEscolaMap[chaveEscolaGeral];
+                        } else if (manualGeralMap[cpfLimpo] !== undefined) {
+                            diasManual = manualGeralMap[cpfLimpo];
+                        }
+                    }
+
                     const diasAfastamento = diasFerias + diasManual;
 
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
@@ -743,7 +771,7 @@ tr:hover td {
                     linhasTabela += `
                         <tr>
                             <td><b>${s.nome}</b></td>
-                            <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matriculaNum}</small></td>
+                            <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matClean || 'N/A'}</small></td>
                             <td>${nomeEscola}</td>
                             <td>${escolaObj.empresa}</td>
                             <td>${passesDiarios}</td>
