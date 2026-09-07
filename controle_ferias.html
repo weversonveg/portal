@@ -244,6 +244,65 @@ body {
     border: 1px solid #e0e4e7;
     border-radius: 8px;
     box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-header-actions {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid #e5e8eb;
+    flex-wrap: wrap;
+    background: #fafbfc;
+}
+
+.table-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-table-wrapper {
+    position: relative;
+    min-width: 280px;
+    flex: 1;
+    max-width: 360px;
+}
+
+.search-table-wrapper input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px 0 38px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    background: #ffffff;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-table-wrapper input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.search-table-wrapper .material-symbols-outlined {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--text-secondary);
+}
+
+.table-responsive {
+    width: 100%;
     overflow-x: auto;
 }
 
@@ -329,6 +388,13 @@ tr:hover td {
     }
     .btn-acao {
         width: 100%;
+    }
+    .table-header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-table-wrapper {
+        max-width: 100%;
     }
 }
 
@@ -428,24 +494,36 @@ tr:hover td {
 
     <!-- TABELA DE REGISTRADOS -->
     <section class="table-card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Servidor</th>
-                    <th>CPF / Matrícula</th>
-                    <th>Escola</th>
-                    <th>Tipo</th>
-                    <th>Início</th>
-                    <th>Término</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaRegistros">
-                <tr>
-                    <td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-header-actions">
+            <div class="table-title">
+                <span class="material-symbols-outlined">list_alt</span>
+                Registros Cadastrados
+            </div>
+            <div class="search-table-wrapper">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" id="filtroTabela" placeholder="Filtrar por nome, CPF, escola..." oninput="filtrarTabela()">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servidor</th>
+                        <th>CPF / Matrícula</th>
+                        <th>Escola</th>
+                        <th>Tipo</th>
+                        <th>Início</th>
+                        <th>Término</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaRegistros">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </main>
 
@@ -454,6 +532,7 @@ tr:hover td {
     import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let servidorCache = null; // Armazena dados do servidor buscado
+    let registrosCache = [];  // Armazena os registros para o filtro de busca da tabela
 
     document.addEventListener("DOMContentLoaded", function() {
         carregarRegistros();
@@ -517,7 +596,6 @@ tr:hover td {
         inputFim.value = `${ano}-${mes}-${dia}`;
     }
 
-    // OTIMIZAÇÃO: Consulta direcionada com where() em vez de baixar toda a coleção de servidores
     window.buscarServidorPorCpf = async function() {
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
         const lblNome = document.getElementById("nomeServidorEncontrado");
@@ -540,14 +618,12 @@ tr:hover td {
         try {
             let encontrado = null;
 
-            // Tenta buscar com a formatação exata digitada
             let q = query(collection(db, "servidores"), where("cpf", "==", cpfDigitado));
             let snapshot = await getDocs(q);
 
             if (!snapshot.empty) {
                 encontrado = snapshot.docs[0].data();
             } else {
-                // Caso não encontre, tenta buscar apenas com os números limpos
                 q = query(collection(db, "servidores"), where("cpf", "==", cpfLimpo));
                 snapshot = await getDocs(q);
                 if (!snapshot.empty) {
@@ -649,7 +725,6 @@ tr:hover td {
                 return;
             }
 
-            // OTIMIZAÇÃO: Salvamos o 'nome' direto no registro para evitar consultas extras na tabela
             await addDoc(collection(db, "registro_ferias_folgas"), {
                 cpf: servidorCache.cpf,
                 nome: servidorCache.nome,
@@ -674,63 +749,101 @@ tr:hover td {
         }
     }
 
-    // OTIMIZAÇÃO: Lê apenas a coleção de registros, usando o nome armazenado (sem baixar a coleção de servidores)
     async function carregarRegistros() {
         const tbody = document.getElementById("tabelaRegistros");
         try {
             const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
-            if (regSnap.empty) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Nenhum registro de ausência cadastrado.</td></tr>`;
-                return;
-            }
-
-            let linhas = "";
+            registrosCache = [];
+            
             regSnap.forEach(d => {
-                const r = d.data();
-                const nomeServidor = r.nome || "Servidor não identificado";
-                
-                let tipoLabel = "Férias Regulamentares";
-                let badgeColor = "var(--green)";
-                let badgeBg = "var(--green-light)";
-
-                if (r.tipo === "FOLGA_ANIVERSARIO") {
-                    tipoLabel = "Folga Aniversário";
-                    badgeColor = "#e65100";
-                    badgeBg = "#fff3e0";
-                } else if (r.tipo === "LICENCA_MEDICA") {
-                    tipoLabel = "Licença Médica";
-                    badgeColor = "#0277bd";
-                    badgeBg = "#e1f5fe";
-                } else if (r.tipo === "LICENCA_OUTRAS") {
-                    tipoLabel = "Outras Licenças";
-                    badgeColor = "#6a1b9a";
-                    badgeBg = "#f3e5f5";
-                }
-
-                const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
-
-                linhas += `
-                    <tr>
-                        <td><b>${nomeServidor}</b></td>
-                        <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
-                        <td>${r.escola || '-'}</td>
-                        <td><span class="badge-status" style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
-                        <td>${r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-'}</td>
-                        <td>${terminoFormatado}</td>
-                        <td>
-                            <button type="button" class="btn-excluir" onclick="excluirRegistro('${d.id}')">
-                                <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                registrosCache.push({
+                    id: d.id,
+                    ...d.data()
+                });
             });
 
-            tbody.innerHTML = linhas;
+            renderizarTabela(registrosCache);
         } catch (e) {
             console.error("Erro ao carregar registros:", e);
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--red);">Erro ao carregar dados.</td></tr>`;
         }
+    }
+
+    window.filtrarTabela = function() {
+        const termo = document.getElementById("filtroTabela").value.toLowerCase().trim();
+        
+        if (!termo) {
+            renderizarTabela(registrosCache);
+            return;
+        }
+
+        const filtrados = registrosCache.filter(r => {
+            const nome = (r.nome || "").toLowerCase();
+            const cpf = (r.cpf || "").toLowerCase();
+            const matricula = (r.matricula || "").toLowerCase();
+            const escola = (r.escola || "").toLowerCase();
+            const tipo = (r.tipo || "").toLowerCase();
+
+            return nome.includes(termo) ||
+                   cpf.includes(termo) ||
+                   matricula.includes(termo) ||
+                   escola.includes(termo) ||
+                   tipo.includes(termo);
+        });
+
+        renderizarTabela(filtrados);
+    }
+
+    function renderizarTabela(dados) {
+        const tbody = document.getElementById("tabelaRegistros");
+        
+        if (dados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>`;
+            return;
+        }
+
+        let linhas = "";
+        dados.forEach(r => {
+            const nomeServidor = r.nome || "Servidor não identificado";
+            
+            let tipoLabel = "Férias Regulamentares";
+            let badgeColor = "var(--green)";
+            let badgeBg = "var(--green-light)";
+
+            if (r.tipo === "FOLGA_ANIVERSARIO") {
+                tipoLabel = "Folga Aniversário";
+                badgeColor = "#e65100";
+                badgeBg = "#fff3e0";
+            } else if (r.tipo === "LICENCA_MEDICA") {
+                tipoLabel = "Licença Médica";
+                badgeColor = "#0277bd";
+                badgeBg = "#e1f5fe";
+            } else if (r.tipo === "LICENCA_OUTRAS") {
+                tipoLabel = "Outras Licenças";
+                badgeColor = "#6a1b9a";
+                badgeBg = "#f3e5f5";
+            }
+
+            const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
+
+            linhas += `
+                <tr>
+                    <td><b>${nomeServidor}</b></td>
+                    <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
+                    <td>${r.escola || '-'}</td>
+                    <td><span class="badge-status" style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
+                    <td>${r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-'}</td>
+                    <td>${terminoFormatado}</td>
+                    <td>
+                        <button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = linhas;
     }
 
     window.excluirRegistro = async function(id) {
