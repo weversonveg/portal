@@ -646,21 +646,10 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
-    // Função auxiliar robusta para verificar se o mês está bloqueado/fechado
+    // Função unificada com o padrão da tela de configurações para verificação de bloqueio
     function verificarMesBloqueado(data) {
         if (!data) return false;
-        console.log("🔍 Dados do mês no Firestore (configuracoes):", data);
-
-        // Verifica vários nomes de campos possíveis e vários tipos (boolean ou string)
-        const campos = ['bloqueado', 'fechado', 'mesFechado', 'bloqueio', 'status', 'fechamento'];
-
-        for (const campo of campos) {
-            const val = data[campo];
-            if (val === true || val === "true" || val === "TRUE" || val === "S" || val === "SIM" || val === "sim" || val === "fechado" || val === "bloqueado" || val === 1 || val === "1") {
-                return true;
-            }
-        }
-        return false;
+        return data.bloqueado === true || data.status === 'fechado' || data.fechado === true;
     }
 
     window.carregarDadosDaEscola = async function() {
@@ -689,7 +678,6 @@ tr:hover td {
             const semedData = semedSnap.exists() ? semedSnap.data() : {};
             const diasSemedDefault = Number(semedData.diasUteis) || 22;
             
-            // VERIFICAÇÃO ROBUSTA DE BLOQUEIO
             const mesBloqueado = verificarMesBloqueado(semedData);
 
             let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
@@ -818,7 +806,7 @@ tr:hover td {
                             const acaoHtml = mesBloqueado 
                                 ? `<span style="font-size: 12px; color: var(--red); font-weight: 600;">🔒 Bloqueado</span>`
                                 : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
-                                       <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                                        <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
                                    </button>`;
 
                             linhasTabela += `
