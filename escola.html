@@ -669,7 +669,7 @@ tr:hover td {
 
             schoolConfigCard.classList.add("ativo");
 
-            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS PARA SOMAR AOS AFASTAMENTOS
+            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS INDEXADAS POR CHAVE COMPOSTA (CPF + Matrícula)
             const feriasMap = {};
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
@@ -682,6 +682,7 @@ tr:hover td {
                 feriasSnap.forEach(docSnap => {
                     const data = docSnap.data();
                     const cpfRaw = data.cpf || data.cpfServidor || data.servidorCpf || "";
+                    const matriculaRaw = String(data.matricula || data.numeroMatricula || "").trim();
                     const inicioRaw = data.dataInicio || data.inicio || data.dataInicioFerias;
                     const fimRaw = data.dataFim || data.fim || data.dataFimFerias;
 
@@ -695,8 +696,9 @@ tr:hover td {
 
                         if (startOverlap <= endOverlap) {
                             const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
-                            if (diasNoMes > 0) {
-                                feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
+                            if (diasNoMes > 0 && matriculaRaw) {
+                                const chaveFerias = `${cpfLimpo}_${matriculaRaw}`;
+                                feriasMap[chaveFerias] = (feriasMap[chaveFerias] || 0) + diasNoMes;
                             }
                         }
                     }
@@ -725,7 +727,7 @@ tr:hover td {
                 // Função interna para avaliar cada matrícula/vínculo do servidor na escola selecionada
                 async function avaliarVinculo(matriculaObj, tipoMatriculaStr) {
                     if (!matriculaObj) return;
-                    const numeroMatricula = matriculaObj.numeroMatricula || "";
+                    const numeroMatricula = String(matriculaObj.numeroMatricula || "").trim();
                     const cargo = matriculaObj.cargo || "";
 
                     // Verifica escola1 e escola2 de forma independente
@@ -735,7 +737,7 @@ tr:hover td {
                         if (escolaObj && escolaObj.nomeEscola === escola) {
                             const matriculaInfo = `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${escolaObj.nomeEscola}`;
                             
-                            // Busca manual por matrícula específica (mantendo compatibilidade com o formato antigo)
+                            // Busca manual por matrícula específica
                             const lancamentoIdNew = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
                             const lancamentoIdOld = `${mesAno}_${escola}_${cpfLimpo}`;
                             
@@ -752,7 +754,11 @@ tr:hover td {
                             }
                             
                             const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
-                            const diasFeriasAuto = feriasMap[cpfLimpo] || 0;
+                            
+                            // VALIDAÇÃO POR CHAVE COMPOSTA (CPF + Matrícula exata)
+                            const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
+                            const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
+                            
                             const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
 
                             if (diasTotalExibido > 0) {
