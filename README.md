@@ -1,4 +1,19 @@
-Melhorias que contém nesta versão:
+versão 1.4
+
+Melhorias que  contém nesta versão:
+1. Criação do bloqueio dos meses  com opção de configuração na página de configuração da Semed e na página das escolas. Escola só faz lançamentos se o mês estiver aberto 
+
+Melhorias que não contém nesta versão:
+importação csv
+link para a página de edição 
+Campo data de lançamento de férias aceita qualquer tempo de data ex: 18 dias de férias 
+
+
+
+_____________________________
+-----------------------------
+versão 1.3
+Melhorias que não contém nesta versão:
 importação csv
 link para a página de edição 
 Campo data de lançamento de férias aceita qualquer tempo de data ex: 18 dias de férias 
