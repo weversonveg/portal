@@ -26,6 +26,8 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 
     --red: #c62828;
     --red-hover: #a51f1f;
+    --red-light: #fff0f0;
+    --red-border: #efc5c5;
 
     --text: #263238;
     --text-secondary: #68737d;
@@ -250,6 +252,31 @@ body {
     background: var(--primary-hover);
 }
 
+/* ALERTA DE MÊS BLOQUEADO */
+.lock-banner {
+    display: none;
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+}
+
+.lock-banner.ativo {
+    display: flex;
+}
+
+.lock-banner .material-symbols-outlined {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
 /* CARD DE DIAS ÚTEIS ESPECÍFICOS DA ESCOLA */
 .school-config-card {
     display: none;
@@ -303,6 +330,7 @@ body {
     background-color: #f1f3f5;
     color: #68737d;
     cursor: not-allowed;
+    border-color: #cbd5e1;
 }
 
 .btn-salvar-dias {
@@ -421,6 +449,7 @@ tr:hover td {
     background-color: #f1f3f5;
     color: #68737d;
     cursor: not-allowed;
+    border-color: #cbd5e1;
 }
 
 .badge-salvo {
@@ -435,6 +464,19 @@ tr:hover td {
     color: #2e7d32;
     border: 1px solid #c8e6c9;
     margin-left: 8px;
+}
+
+.badge-bloqueado-tabela {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red);
+    background: var(--red-light);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--red-border);
 }
 
 .btn-salvar-linha {
@@ -590,6 +632,13 @@ tr:hover td {
         </button>
     </section>
 
+    <div id="lockBanner" class="lock-banner">
+        <span class="material-symbols-outlined">lock</span>
+        <div>
+            <strong>Mês Fechado / Bloqueado pela SEMED:</strong> Este período encontra-se encerrado. Os lançamentos de afastamentos e alterações de dias úteis estão desativados para todas as escolas.
+        </div>
+    </div>
+
     <div id="mensagem" class="mensagem"></div>
 
     <section id="schoolConfigCard" class="school-config-card">
@@ -599,7 +648,7 @@ tr:hover td {
         </div>
         <div class="school-config-action">
             <input type="number" id="inputDiasEscola" class="input-dias-escola" min="1" max="31" inputmode="numeric">
-            <button type="button" class="btn-salvar-dias" onclick="salvarDiasUteisEscola()">
+            <button type="button" id="btnSalvarDias" class="btn-salvar-dias" onclick="salvarDiasUteisEscola()">
                 <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Salvar Dias da Escola
             </button>
         </div>
@@ -646,10 +695,17 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
-    // Função unificada com o padrão da tela de configurações para verificação de bloqueio
+    // Função rigorosa para checar se o mês está bloqueado/fechado na coleção 'configuracoes'
     function verificarMesBloqueado(data) {
         if (!data) return false;
-        return data.bloqueado === true || data.status === 'fechado' || data.fechado === true;
+        return (
+            data.bloqueado === true || 
+            data.fechado === true || 
+            data.status === 'fechado' || 
+            data.status === 'bloqueado' ||
+            data.situacao === 'fechado' ||
+            data.situacao === 'bloqueado'
+        );
     }
 
     window.carregarDadosDaEscola = async function() {
@@ -659,12 +715,14 @@ tr:hover td {
         const tableCard = document.getElementById("tableCard");
         const summaryContainer = document.getElementById("summaryContainer");
         const schoolConfigCard = document.getElementById("schoolConfigCard");
+        const lockBanner = document.getElementById("lockBanner");
 
         msgDiv.className = "mensagem";
         msgDiv.textContent = "";
         tableCard.classList.remove("ativo");
         summaryContainer.classList.remove("ativo");
         schoolConfigCard.classList.remove("ativo");
+        lockBanner.classList.remove("ativo");
 
         if (!mesAno || !escola) {
             mostrarMensagem("Selecione o mês de referência e a escola.", "erro");
@@ -672,6 +730,7 @@ tr:hover td {
         }
 
         try {
+            // Busca configuração do mês na SEMED
             const semedConfigRef = doc(db, "configuracoes", mesAno);
             const semedSnap = await getDoc(semedConfigRef);
 
@@ -680,13 +739,17 @@ tr:hover td {
             
             const mesBloqueado = verificarMesBloqueado(semedData);
 
+            if (mesBloqueado) {
+                lockBanner.classList.add("ativo");
+            }
+
             let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
             if (mesBloqueado) {
-                textoInfo += " 🔒 [MÊS BLOQUEADO PELA SEMED]";
-                mostrarMensagem("Este mês está bloqueado/fechado pela SEMED. Os lançamentos e alterações estão desativados.", "erro");
+                textoInfo += " 🔒 [PERÍODO ENCERRADO PELO ADMINISTRADOR]";
             }
             document.getElementById("infoSemedDefault").textContent = textoInfo;
 
+            // Busca dias úteis específicos da escola para o mês
             const configEscolaId = `${mesAno}_${escola}`;
             const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
             const configEscolaSnap = await getDoc(configEscolaRef);
@@ -697,7 +760,7 @@ tr:hover td {
             inputDiasEscolaEl.value = diasEfetivosEscola;
             inputDiasEscolaEl.disabled = mesBloqueado;
 
-            const btnSalvarDiasEl = document.querySelector(".btn-salvar-dias");
+            const btnSalvarDiasEl = document.getElementById("btnSalvarDias");
             if (btnSalvarDiasEl) {
                 btnSalvarDiasEl.style.display = mesBloqueado ? "none" : "flex";
             }
@@ -804,7 +867,7 @@ tr:hover td {
                             const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
 
                             const acaoHtml = mesBloqueado 
-                                ? `<span style="font-size: 12px; color: var(--red); font-weight: 600;">🔒 Bloqueado</span>`
+                                ? `<span class="badge-bloqueado-tabela"><span class="material-symbols-outlined" style="font-size: 14px;">lock</span> Bloqueado</span>`
                                 : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
                                         <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
                                    </button>`;
@@ -858,7 +921,8 @@ tr:hover td {
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
             if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-                alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível alterar os dias úteis.");
+                alert("Atenção: Este mês está fechado/bloqueado pela SEMED. Não é possível alterar os dias úteis.");
+                location.reload();
                 return;
             }
         } catch (e) {
@@ -886,7 +950,8 @@ tr:hover td {
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
             if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-                alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível salvar alterações.");
+                alert("Atenção: Este mês está fechado/bloqueado pela SEMED. As alterações foram desativadas.");
+                location.reload();
                 return;
             }
         } catch (e) {
