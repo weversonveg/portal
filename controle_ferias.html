@@ -14,7 +14,6 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 <title>Controle de Férias, Folgas e Licenças - Vale Transporte</title>
 
 <style>
-
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
@@ -56,7 +55,6 @@ body {
     color: var(--text);
 }
 
-/* BARRA SUPERIOR */
 .topbar {
     width: 100%;
     max-width: 1116px;
@@ -103,7 +101,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* ÁREA PRINCIPAL */
 .main {
     width: 100%;
     max-width: 1116px;
@@ -140,7 +137,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* CARD DE CADASTRO */
 .form-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -238,7 +234,6 @@ body {
     background: var(--green-hover);
 }
 
-/* TABELA DE REGISTRADOS */
 .table-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -399,7 +394,6 @@ tr:hover td {
         max-width: 100%;
     }
 }
-
 </style>
 </head>
 
@@ -707,10 +701,11 @@ tr:hover td {
         }
 
         try {
+            // CORREÇÃO APLICADA AQUI: Adicionado filtro por "matricula" para evitar conflito entre vínculos do mesmo CPF
             const qExistente = query(
                 collection(db, "registro_ferias_folgas"), 
                 where("cpf", "==", servidorCache.cpf),
-                where("escola", "==", escolaEscolhida)
+                where("matricula", "==", matriculaEscolhida)
             );
             const existentesSnap = await getDocs(qExistente);
             
@@ -723,7 +718,7 @@ tr:hover td {
             });
 
             if (temConflito) {
-                mostrarMensagem("Já existe um registro de ausência para este servidor nesta mesma escola que conflita com as datas informadas.", "erro");
+                mostrarMensagem("Já existe um registro de ausência para esta mesma matrícula que conflita com as datas informadas.", "erro");
                 return;
             }
 
