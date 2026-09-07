@@ -542,6 +542,29 @@ tr:hover td {
         }
     }
 
+    // Função auxiliar robusta para converter datas do Firestore/Inputs em objetos Date sem fuso horário
+    function parseDate(val) {
+        if (!val) return null;
+        if (typeof val.toDate === 'function') {
+            const d = val.toDate();
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        }
+        if (val instanceof Date) {
+            return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+        }
+        if (typeof val === 'string') {
+            const parts = val.split('T')[0].split('-');
+            if (parts.length === 3) {
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            const d = new Date(val);
+            if (!isNaN(d)) {
+                return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            }
+        }
+        return null;
+    }
+
     // MOTOR DE CÁLCULO INTEGRADO COM FALTAS, FÉRIAS E FOLGAS
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
@@ -603,7 +626,7 @@ tr:hover td {
                 console.log("Aviso: Lançamentos mensais não encontrados.");
             }
 
-            // 4. INTEGRAÇÃO AUTOMÁTICA: Busca Férias e Folgas cadastradas e abate do mês
+            // 4. INTEGRAÇÃO AUTOMÁTICA: Busca Férias e Folgas cadastradas e abate do mês (Robusto)
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
                 const [anoStr, mesStr] = mesAno.split("-");
@@ -614,19 +637,25 @@ tr:hover td {
 
                 feriasSnap.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (data.cpf && data.dataInicio && data.dataFim) {
-                        const cpfLimpo = data.cpf.replace(/\D/g, "");
-                        const inicio = new Date(data.dataInicio + "T00:00:00");
-                        const fim = new Date(data.dataFim + "T00:00:00");
+                    const cpfRaw = data.cpf || data.cpfServidor || data.servidorCpf || "";
+                    const inicioRaw = data.dataInicio || data.inicio || data.dataInicioFerias;
+                    const fimRaw = data.dataFim || data.fim || data.dataFimFerias;
 
-                        // Calcula intersecção do período de férias/folga com o mês de referência
-                        const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
-                        const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
+                    if (cpfRaw && inicioRaw && fimRaw) {
+                        const cpfLimpo = cpfRaw.replace(/\D/g, "");
+                        const inicio = parseDate(inicioRaw);
+                        const fim = parseDate(fimRaw);
 
-                        if (startOverlap <= endOverlap) {
-                            const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
-                            if (diasNoMes > 0) {
-                                afastamentosMap[cpfLimpo] = (afastamentosMap[cpfLimpo] || 0) + diasNoMes;
+                        if (inicio && fim && !isNaN(inicio) && !isNaN(fim)) {
+                            // Calcula intersecção do período de férias/folga com o mês de referência
+                            const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
+                            const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
+
+                            if (startOverlap <= endOverlap) {
+                                const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
+                                if (diasNoMes > 0) {
+                                    afastamentosMap[cpfLimpo] = (afastamentosMap[cpfLimpo] || 0) + diasNoMes;
+                                }
                             }
                         }
                     }
@@ -728,6 +757,9 @@ tr:hover td {
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
+
+            mostrarMensagem("Cálculo realizado com sucesso!", "sucesso");
+            setTimeout(ocultarMensagem, 3000);
 
         } catch (erro) {
             console.error("Erro no cálculo:", erro);
