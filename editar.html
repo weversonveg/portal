@@ -1,566 +1,280 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <meta charset="UTF-8">
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Editar Servidor - Vale Transporte</title>
+    <title>Servidores</title>
 
-<style>
+    <style>
 
-:root {
-    --primary: #5b2a86;
-    --primary-hover: #47206b;
-    --primary-light: #f1ebf6;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f5f5;
+        }
 
-    --green: #2e7d32;
-    --green-hover: #1b5e20;
-    --green-light: #eaf6ec;
+        h1 {
+            margin-bottom: 20px;
+        }
 
-    --red: #c62828;
-    --red-hover: #a51f1f;
+        .tabela-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
 
-    --text: #263238;
-    --text-secondary: #68737d;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-    --border: #d9dee3;
-    --background: #f4f6f8;
-    --white: #ffffff;
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
 
-    --shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
+        th {
+            background: #eeeeee;
+        }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-}
+        button {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1976d2;
+            color: white;
+        }
 
-html, body {
-    width: 100%;
-    min-height: 100%;
-}
+        button:hover {
+            background: #125ca5;
+        }
 
-body {
-    min-height: 100vh;
-    background: var(--background);
-    color: var(--text);
-}
+        #mensagem {
+            margin-bottom: 15px;
+        }
 
-/* BARRA SUPERIOR */
-.topbar {
-    width: 100%;
-    max-width: 1116px;
-    height: 68px;
-    margin: 16px auto 0;
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-}
+    </style>
 
-.topbar-content {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.logo {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.system-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #3d2450;
-}
-
-.system-divider {
-    width: 1px;
-    height: 22px;
-    background: #dfe3e6;
-    margin: 0 2px;
-}
-
-.system-module {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-/* ÁREA PRINCIPAL */
-.main {
-    width: 100%;
-    max-width: 1116px;
-    margin: 0 auto;
-    padding: 24px 16px;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: #7b858e;
-    margin-bottom: 8px;
-}
-
-.breadcrumb .material-symbols-outlined {
-    font-size: 17px;
-}
-
-.page-header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #263238;
-    margin-bottom: 4px;
-}
-
-.page-header p {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-/* CARDS */
-.form-card {
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.card-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-subtitle {
-    font-size: 14px;
-    font-weight: 700;
-    color: #455a64;
-    margin: 16px 0 12px 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #edf2f7;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-    margin-bottom: 18px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group.full-width {
-    grid-column: 1 / -1;
-}
-
-.form-group label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #455a64;
-    margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group select {
-    height: 42px;
-    padding: 0 12px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    outline: none;
-    font-size: 14px;
-    color: #263238;
-    width: 100%;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
-}
-
-.cpf-search-wrapper {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
-
-.btn-acao {
-    height: 42px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0 16px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 13px;
-    transition: background 0.15s;
-    flex-shrink: 0;
-}
-
-.btn-acao:hover {
-    background: var(--primary-hover);
-}
-
-.btn-salvar {
-    background: var(--green);
-}
-.btn-salvar:hover {
-    background: var(--green-hover);
-}
-
-.btn-excluir {
-    background: var(--red);
-}
-.btn-excluir:hover {
-    background: var(--red-hover);
-}
-
-.actions-container {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.mensagem {
-    display: none;
-    padding: 12px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 16px;
-}
-
-.mensagem.sucesso {
-    display: block;
-    background: #edf7ee;
-    border: 1px solid #c8e6c9;
-    color: #2e7d32;
-}
-
-.mensagem.erro {
-    display: block;
-    background: #fff0f0;
-    border: 1px solid #efc5c5;
-    color: #c62828;
-}
-
-@media (max-width: 600px) {
-    .topbar {
-        margin-top: 0;
-        border-radius: 0;
-    }
-    .main {
-        padding: 16px 12px;
-    }
-    .cpf-search-wrapper {
-        flex-direction: column;
-    }
-    .btn-acao {
-        width: 100%;
-    }
-    .actions-container {
-        flex-direction: column;
-    }
-}
-
-</style>
 </head>
+
 
 <body>
 
-<header class="topbar">
-    <div class="topbar-content">
-        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
-        <span class="system-name">Vale Transporte</span>
-        <div class="system-divider"></div>
-        <span class="system-module">Semed - Edição de Cadastro</span>
-    </div>
-</header>
 
-<main class="main">
-    <div class="page-header">
-        <div class="breadcrumb">
-            <span class="material-symbols-outlined">home</span>
-            <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
-            <span>/</span>
-            <span>Editar Servidor</span>
-        </div>
-        <h1>Editar Dados do Servidor</h1>
-        <p>Busque pelo CPF do servidor para carregar e atualizar informações cadastrais, vínculos e escolas.</p>
+    <h1>Servidores cadastrados</h1>
+
+
+    <div id="mensagem">
+        Carregando servidores...
     </div>
 
-    <!-- CARD DE BUSCA -->
-    <section class="form-card">
-        <div class="card-title">
-            <span class="material-symbols-outlined">search</span>
-            Localizar Servidor
-        </div>
 
-        <div class="form-group full-width">
-            <label for="inputCpfBusca">CPF do Servidor <span>*</span></label>
-            <div class="cpf-search-wrapper">
-                <input type="text" id="inputCpfBusca" placeholder="000.000.000-00" maxlength="14">
-                <button type="button" class="btn-acao" onclick="buscarServidor()">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
-                </button>
-            </div>
-            <small id="statusBusca" style="margin-top: 6px; font-weight: 600; color: var(--text-secondary);"></small>
-        </div>
-    </section>
+    <div class="tabela-container">
 
-    <!-- FORMULÁRIO DE EDIÇÃO (OCULTO ATÉ A BUSCA) -->
-    <section class="form-card" id="cardEdicao" style="display: none;">
-        <div class="card-title">
-            <span class="material-symbols-outlined">badge</span>
-            Atualizar Informações Cadastrais
-        </div>
+        <table>
 
-        <form id="formEditarServidor" onsubmit="salvarAlteracoes(event)">
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="editNome">Nome Completo <span>*</span></label>
-                    <input type="text" id="editNome" required>
-                </div>
-                <div class="form-group">
-                    <label for="editCpf">CPF <span>*</span></label>
-                    <input type="text" id="editCpf" required readonly style="background: #f4f6f8; cursor: not-allowed;">
-                </div>
-            </div>
+            <thead>
 
-            <!-- MATRÍCULA 1 -->
-            <div class="section-subtitle">
-                <span class="material-symbols-outlined" style="font-size: 18px;">school</span> Matrícula 01
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="m1Numero">Número da Matrícula</label>
-                    <input type="text" id="m1Numero">
-                </div>
-                <div class="form-group">
-                    <label for="m1Cargo">Cargo / Função</label>
-                    <input type="text" id="m1Cargo">
-                </div>
-                <div class="form-group">
-                    <label for="m1Escola1">Escola de Lotação Principal</label>
-                    <input type="text" id="m1Escola1">
-                </div>
-                <div class="form-group">
-                    <label for="m1Escola2">Escola de Lotação Secundária (Opcional)</label>
-                    <input type="text" id="m1Escola2">
-                </div>
-            </div>
+                <tr>
 
-            <!-- MATRÍCULA 2 -->
-            <div class="section-subtitle">
-                <span class="material-symbols-outlined" style="font-size: 18px;">school</span> Matrícula 02 (Opcional)
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label	for="m2Numero">Número da Matrícula</label>
-                    <input type="text" id="m2Numero">
-                </div>
-                <div class="form-group">
-                    <label for="m2Cargo">Cargo / Função</label>
-                    <input type="text" id="m2Cargo">
-                </div>
-                <div class="form-group">
-                    <label for="m2Escola1">Escola de Lotação Principal</label>
-                    <input type="text" id="m2Escola1">
-                </div>
-                <div class="form-group">
-                    <label for="m2Escola2">Escola de Lotação Secundária (Opcional)</label>
-                    <input type="text" id="m2Escola2">
-                </div>
-            </div>
+                    <th>Nome</th>
 
-            <div id="mensagem" class="mensagem"></div>
+                    <th>CPF</th>
 
-            <div class="actions-container">
-                <button type="submit" class="btn-acao btn-salvar" style="flex: 1;">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
-                    Salvar Alterações
-                </button>
-                <button type="button" class="btn-acao btn-excluir" onclick="excluirServidor()">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
-                    Excluir Servidor
-                </button>
-            </div>
-        </form>
-    </section>
-</main>
+                    <th>E-mail</th>
+
+                    <th>Escola</th>
+
+                    <th>Ação</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="tabelaServidores">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
 
 <script type="module">
+
+
+    // Conexão com o Firebase
     import { db } from "./firebase.js";
-    import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    let cpfDocId = null;
 
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('inputCpfBusca').addEventListener('input', function (e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            if (value.length > 9) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-            } else if (value.length > 6) {
-                value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
-            } else if (value.length > 3) {
-                value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
-            }
-            e.target.value = value;
-        });
-    });
+    // Funções do Firestore
+    import {
+        collection,
+        getDocs
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // LEITURA OTIMIZADA: Acesso direto por ID do documento (1 única leitura no Firestore)
-    window.buscarServidor = async function() {
-        const cpfDigitado = document.getElementById("inputCpfBusca").value.trim();
-        const lblStatus = document.getElementById("statusBusca");
-        const cardEdicao = document.getElementById("cardEdicao");
 
-        cpfDocId = null;
-        cardEdicao.style.display = "none";
 
-        if (!cpfDigitado) {
-            alert("Digite o CPF para realizar a busca.");
-            return;
-        }
+    // =====================================================
+    // CARREGAR SERVIDORES
+    // =====================================================
 
-        const cpfLimpo = cpfDigitado.replace(/\D/g, "");
-        lblStatus.textContent = "Buscando servidor...";
-        lblStatus.style.color = "var(--text-secondary)";
+    async function carregarServidores() {
+
+        const tabela = document.getElementById("tabelaServidores");
+
+        const mensagem = document.getElementById("mensagem");
+
 
         try {
-            const docRef = doc(db, "servidores", cpfLimpo);
-            const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists()) {
-                cpfDocId = cpfLimpo;
-                const data = docSnap.data();
 
-                document.getElementById("editNome").value = data.nome || "";
-                document.getElementById("editCpf").value = data.cpf || cpfDigitado;
+            // Pega a coleção "servidores"
+            const consulta = await getDocs(
+                collection(db, "servidores")
+            );
 
-                document.getElementById("m1Numero").value = data.matricula1?.numeroMatricula || "";
-                document.getElementById("m1Cargo").value = data.matricula1?.cargo || "";
-                document.getElementById("m1Escola1").value = data.matricula1?.escola1?.nomeEscola || "";
-                document.getElementById("m1Escola2").value = data.matricula1?.escola2?.nomeEscola || "";
 
-                document.getElementById("m2Numero").value = data.matricula2?.numeroMatricula || "";
-                document.getElementById("m2Cargo").value = data.matricula2?.cargo || "";
-                document.getElementById("m2Escola1").value = data.matricula2?.escola1?.nomeEscola || "";
-                document.getElementById("m2Escola2").value = data.matricula2?.escola2?.nomeEscola || "";
+            // Limpa a tabela
+            tabela.innerHTML = "";
 
-                lblStatus.textContent = `✓ Servidor encontrado com sucesso.`;
-                lblStatus.style.color = "var(--green)";
-                cardEdicao.style.display = "block";
-            } else {
-                lblStatus.textContent = "✗ Nenhum servidor encontrado com este CPF.";
-                lblStatus.style.color = "var(--red)";
+
+            // Verifica se não existe nenhum cadastro
+            if (consulta.empty) {
+
+                mensagem.textContent = "Nenhum servidor cadastrado.";
+
+                return;
+
             }
-        } catch (e) {
-            console.error("Erro na busca:", e);
-            lblStatus.textContent = "Erro ao buscar dados no banco.";
-            lblStatus.style.color = "var(--red)";
+
+
+            // Percorre todos os documentos
+            consulta.forEach((documento) => {
+
+
+                // Dados do servidor
+                const servidor = documento.data();
+
+
+                // ID do documento no Firebase
+                const id = documento.id;
+
+
+                // Cria uma linha
+                const linha = document.createElement("tr");
+
+
+                // Descobre a primeira escola
+                let escola = "";
+
+                if (
+                    servidor.matricula1 &&
+                    servidor.matricula1.escola1
+                ) {
+
+                    escola = servidor.matricula1.escola1.nomeEscola;
+
+                }
+
+
+                // Monta a linha
+                linha.innerHTML = `
+
+                    <td>${servidor.nome || ""}</td>
+
+                    <td>${servidor.cpf || ""}</td>
+
+                    <td>${servidor.email || ""}</td>
+
+                    <td>${escola}</td>
+
+                    <td>
+
+                        <button onclick="editarServidor('${id}')">
+
+                            ✏️ Editar
+
+                        </button>
+
+                    </td>
+
+                `;
+
+
+                // Coloca a linha na tabela
+                tabela.appendChild(linha);
+
+
+            });
+
+
+            mensagem.textContent =
+                `${consulta.size} servidor(es) encontrado(s).`;
+
+
+        } catch (erro) {
+
+
+            console.error(
+                "Erro ao carregar servidores:",
+                erro
+            );
+
+
+            mensagem.textContent =
+                "Erro ao carregar os servidores.";
+
         }
+
     }
 
-    window.salvarAlteracoes = async function(event) {
-        event.preventDefault();
 
-        if (!cpfDocId) {
-            mostrarMensagem("Nenhum registro selecionado para atualização.", "erro");
-            return;
-        }
 
-        const dadosAtualizados = {
-            nome: document.getElementById("editNome").value.trim(),
-            cpf: document.getElementById("editCpf").value.trim(),
-            matricula1: {
-                numeroMatricula: document.getElementById("m1Numero").value.trim(),
-                cargo: document.getElementById("m1Cargo").value.trim(),
-                escola1: { nomeEscola: document.getElementById("m1Escola1").value.trim() },
-                escola2: { nomeEscola: document.getElementById("m1Escola2").value.trim() }
-            },
-            matricula2: {
-                numeroMatricula: document.getElementById("m2Numero").value.trim(),
-                cargo: document.getElementById("m2Cargo").value.trim(),
-                escola1: { nomeEscola: document.getElementById("m2Escola1").value.trim() },
-                escola2: { nomeEncola: document.getElementById("m2Escola2").value.trim() } // corrigido
-            }
-        };
+    // =====================================================
+    // BOTÃO EDITAR
+    // =====================================================
 
-        try {
-            const servRef = doc(db, "servidores", cpfDocId);
-            await updateDoc(servRef, dadosAtualizados);
-            mostrarMensagem("Dados do servidor atualizados com sucesso!", "sucesso");
-        } catch (e) {
-            console.error("Erro ao atualizar:", e);
-            mostrarMensagem("Erro ao salvar as alterações no banco.", "erro");
-        }
+    window.editarServidor = function(id) {
+
+
+        console.log(
+            "ID do servidor selecionado:",
+            id
+        );
+
+
+        alert(
+            "Servidor selecionado.\n\nID: " + id
+        );
+
+
     }
 
-    window.excluirServidor = async function() {
-        if (!cpfDocId) return;
 
-        if (confirm("Tem certeza que deseja excluir permanentemente este cadastro de servidor?")) {
-            try {
-                await deleteDoc(doc(db, "servidores", cpfDocId));
-                alert("Servidor excluído com sucesso.");
-                location.reload();
-            } catch (e) {
-                console.error("Erro ao excluir:", e);
-                mostrarMensagem("Erro ao excluir o servidor.", "erro");
-            }
-        }
-    }
 
-    function mostrarMensagem(texto, tipo) {
-        const msg = document.getElementById("mensagem");
-        msg.textContent = texto;
-        msg.className = "mensagem " + tipo;
-    }
+    // =====================================================
+    // INICIAR
+    // =====================================================
+
+    carregarServidores();
+
+
 </script>
 
+
 </body>
+
 </html>
+```
