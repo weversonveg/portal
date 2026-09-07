@@ -646,6 +646,23 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
+    // Função auxiliar robusta para verificar se o mês está bloqueado/fechado
+    function verificarMesBloqueado(data) {
+        if (!data) return false;
+        console.log("🔍 Dados do mês no Firestore (configuracoes):", data);
+
+        // Verifica vários nomes de campos possíveis e vários tipos (boolean ou string)
+        const campos = ['bloqueado', 'fechado', 'mesFechado', 'bloqueio', 'status', 'fechamento'];
+
+        for (const campo of campos) {
+            const val = data[campo];
+            if (val === true || val === "true" || val === "TRUE" || val === "S" || val === "SIM" || val === "sim" || val === "fechado" || val === "bloqueado" || val === 1 || val === "1") {
+                return true;
+            }
+        }
+        return false;
+    }
+
     window.carregarDadosDaEscola = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escola = document.getElementById("filtroEscola").value;
@@ -672,8 +689,8 @@ tr:hover td {
             const semedData = semedSnap.exists() ? semedSnap.data() : {};
             const diasSemedDefault = Number(semedData.diasUteis) || 22;
             
-            // TRAVA DE BLOQUEIO DE MESES
-            const mesBloqueado = semedData.bloqueado === true || semedData.fechado === true || semedData.mesFechado === true;
+            // VERIFICAÇÃO ROBUSTA DE BLOQUEIO
+            const mesBloqueado = verificarMesBloqueado(semedData);
 
             let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
             if (mesBloqueado) {
@@ -699,7 +716,7 @@ tr:hover td {
 
             schoolConfigCard.classList.add("ativo");
 
-            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS INDEXADAS POR CHAVE COMPOSTA (CPF + Matrícula)
+            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS
             const feriasMap = {};
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
@@ -754,20 +771,17 @@ tr:hover td {
                 const servidorId = servidorDoc.id;
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
-                // Função interna para avaliar cada matrícula/vínculo do servidor na escola selecionada
                 async function avaliarVinculo(matriculaObj, tipoMatriculaStr) {
                     if (!matriculaObj) return;
                     const numeroMatricula = String(matriculaObj.numeroMatricula || "").trim();
                     const cargo = matriculaObj.cargo || "";
 
-                    // Verifica escola1 e escola2 de forma independente
                     const escolasDoVinculo = [matriculaObj.escola1, matriculaObj.escola2];
 
                     for (const escolaObj of escolasDoVinculo) {
                         if (escolaObj && escolaObj.nomeEscola === escola) {
                             const matriculaInfo = `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${escolaObj.nomeEscola}`;
                             
-                            // Busca manual por matrícula específica
                             const lancamentoIdNew = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
                             const lancamentoIdOld = `${mesAno}_${escola}_${cpfLimpo}`;
                             
@@ -785,7 +799,6 @@ tr:hover td {
                             
                             const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
                             
-                            // VALIDAÇÃO POR CHAVE COMPOSTA (CPF + Matrícula exata)
                             const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
                             const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
                             
@@ -854,15 +867,11 @@ tr:hover td {
 
         if (!mesAno || !escola) return;
 
-        // TRAVA DE SEGURANÇA CONTRA SALVAMENTO SE O MÊS ESTIVER BLOQUEADO
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-            if (semedSnap.exists()) {
-                const data = semedSnap.data();
-                if (data.bloqueado === true || data.fechado === true || data.mesFechado === true) {
-                    alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível alterar os dias úteis.");
-                    return;
-                }
+            if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
+                alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível alterar os dias úteis.");
+                return;
             }
         } catch (e) {
             console.error("Erro ao verificar bloqueio:", e);
@@ -886,15 +895,11 @@ tr:hover td {
     }
 
     window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
-        // TRAVA DE SEGURANÇA CONTRA SALVAMENTO SE O MÊS ESTIVER BLOQUEADO
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-            if (semedSnap.exists()) {
-                const data = semedSnap.data();
-                if (data.bloqueado === true || data.fechado === true || data.mesFechado === true) {
-                    alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível salvar alterações.");
-                    return;
-                }
+            if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
+                alert("Atenção: Este mês está bloqueado/fechado pela SEMED. Não é possível salvar alterações.");
+                return;
             }
         } catch (e) {
             console.error("Erro ao verificar bloqueio:", e);
