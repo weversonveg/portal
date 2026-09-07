@@ -1,2061 +1,1324 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 <!-- Estilo moderno do calendário (Flatpickr) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
-
 <title>Novo Servidor - Vale Transporte</title>
-
 <style>
-
 :root {
-    --primary: #5b2a86;
-    --primary-hover: #47206b;
-
-    --green: #2e7d32;
-    --green-hover: #1b5e20;
-    --green-light: #eaf6ec;
-    --green-border: #72b879;
-
-    --red: #c62828;
-    --red-hover: #a51f1f;
-
-    --text: #263238;
-    --text-secondary: #68737d;
-
-    --border: #d9dee3;
-    --background: #f4f6f8;
-    --white: #ffffff;
-
-    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --primary: #5b2a86;
+  --primary-hover: #47206b;
+  --green: #2e7d32;
+  --green-hover: #1b5e20;
+  --green-light: #eaf6ec;
+  --green-border: #72b879;
+  --red: #c62828;
+  --red-hover: #a51f1f;
+  --text: #263238;
+  --text-secondary: #68737d;
+  --border: #d9dee3;
+  --background: #f4f6f8;
+  --white: #ffffff;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-
-
-/* =====================================================
-    RESET
-===================================================== */
-
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-
-    font-family:
-        'Inter',
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        sans-serif;
-
-    -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
-
-
-html,
+html, body {
+  width: 100%;
+  min-height: 100%;
+}
 body {
-    width: 100%;
-    min-height: 100%;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
 }
-
-
-body {
-    min-height: 100vh;
-
-    background: var(--background);
-
-    color: var(--text);
-}
-
-
-/* =====================================================
-    BARRA SUPERIOR
-===================================================== */
-
 .topbar {
-    width: calc(100% - 64px);
-    max-width: 1116px;
-
-    height: 68px;
-
-    margin: 16px auto 0;
-
-    background: var(--white);
-
-    border: 1px solid #e0e4e7;
-
-    border-radius: 8px;
-
-    box-shadow: var(--shadow);
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 0 24px;
+  width: calc(100% - 64px);
+  max-width: 1116px;
+  height: 68px;
+  margin: 16px auto 0;
+  background: var(--white);
+  border: 1px solid #e0e4e7;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
 }
-
-
 .topbar-content {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-
-
 .logo {
-    width: 38px;
-    height: 38px;
-
-    object-fit: contain;
-
-    flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
-
-
 .system-name {
-    font-size: 17px;
-
-    font-weight: 700;
-
-    color: #3d2450;
+  font-size: 17px;
+  font-weight: 700;
+  color: #3d2450;
 }
-
-
 .system-divider {
-    width: 1px;
-
-    height: 24px;
-
-    background: #dfe3e6;
-
-    margin: 0 2px;
+  width: 1px;
+  height: 24px;
+  background: #dfe3e6;
+  margin: 0 2px;
 }
-
-
 .system-module {
-    font-size: 14px;
-
-    color: var(--text-secondary);
-    flex-grow: 1;
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-grow: 1;
 }
-
-
-/* =====================================================
-    INDICADOR DE SINAL DE REDE (ESTILO WI-FI/CELULAR)
-===================================================== */
 .status-conexao {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 20px;
-    background: #f1f3f5;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f1f3f5;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
 }
-
-/* Container das barrinhas */
 .signal-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
 }
-
-/* Estilo de cada barra individual */
 .signal-bars .bar {
-    width: 3px;
-    background-color: #cbd5e1;
-    border-radius: 1px;
-    transition: background-color 0.3s ease;
+  width: 3px;
+  background-color: #cbd5e1;
+  border-radius: 1px;
+  transition: background-color 0.3s ease;
 }
-
-/* Alturas progressivas para formar o ícone de sinal */
 .signal-bars .bar-1 { height: 3px; }
 .signal-bars .bar-2 { height: 6px; }
 .signal-bars .bar-3 { height: 9px; }
 .signal-bars .bar-4 { height: 12px; }
 
-/* Estado Online / Conectado (Todas as barras acesas em Verde) */
 .status-conexao.online {
-    color: #2e7d32;
-    background: #edf7ee;
-    border-color: #c8e6c9;
+  color: #2e7d32;
+  background: #edf7ee;
+  border-color: #c8e6c9;
 }
 .status-conexao.online .signal-bars .bar {
-    background-color: #2e7d32;
+  background-color: #2e7d32;
 }
-
-/* Estado de Rede Lenta / Instável (Ex: 3G - Apenas 2 barras acesas) */
 .status-conexao.instavel {
-    color: #b45309;
-    background: #fef3c7;
-    border-color: #fde68a;
+  color: #b45309;
+  background: #fef3c7;
+  border-color: #fde68a;
 }
 .status-conexao.instavel .signal-bars .bar-1,
 .status-conexao.instavel .signal-bars .bar-2 {
-    background-color: #d97706;
+  background-color: #d97706;
 }
-
-/* Estado Offline / Sem Conexão (Barrinhas vermelhas animadas) */
 .status-conexao.offline {
-    color: #c62828;
-    background: #fff0f0;
-    border-color: #efc5c5;
+  color: #c62828;
+  background: #fff0f0;
+  border-color: #efc5c5;
 }
 .status-conexao.offline .signal-bars .bar {
-    background-color: #ef4444;
-    animation: pulsar-sinal 1.2s infinite ease-in-out;
+  background-color: #ef4444;
+  animation: pulsar-sinal 1.2s infinite ease-in-out;
 }
-
 @keyframes pulsar-sinal {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
-
-
-/* =====================================================
-    ÁREA PRINCIPAL
-===================================================== */
-
 .main {
-    width: calc(100% - 64px);
-
-    max-width: 1116px;
-
-    margin: 0 auto;
-
-    padding: 32px 0;
+  width: calc(100% - 64px);
+  max-width: 1116px;
+  margin: 0 auto;
+  padding: 32px 0;
 }
-
-
-/* =====================================================
-    CABEÇALHO
-===================================================== */
-
 .page-header {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 }
-
-
 .breadcrumb {
-    display: flex;
-
-    align-items: center;
-
-    gap: 7px;
-
-    font-size: 13px;
-
-    color: #7b858e;
-
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #7b858e;
+  margin-bottom: 10px;
 }
-
-
 .breadcrumb .material-symbols-outlined {
-    font-size: 17px;
+  font-size: 17px;
 }
-
-
 .page-header h1 {
-    font-size: 24px;
-
-    font-weight: 700;
-
-    color: #263238;
-
-    margin-bottom: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #263238;
+  margin-bottom: 6px;
 }
-
-
 .page-header p {
-    font-size: 14px;
-
-    color: var(--text-secondary);
+  font-size: 14px;
+  color: var(--text-secondary);
 }
-
-
-/* =====================================================
-    CARD
-===================================================== */
-
 .form-card {
-    width: 100%;
-
-    background: var(--white);
-
-    border: 1px solid #e0e4e7;
-
-    border-radius: 8px;
-
-    box-shadow: var(--shadow);
-
-    overflow: hidden;
+  width: 100%;
+  background: var(--white);
+  border: 1px solid #e0e4e7;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
-
-
-/* =====================================================
-    CABEÇALHO DO CARD
-===================================================== */
-
 .card-header {
-    min-height: 68px;
-
-    padding: 18px 24px;
-
-    border-bottom: 1px solid #e5e8eb;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 13px;
+  min-height: 68px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e5e8eb;
+  display: flex;
+  align-items: center;
+  gap: 13px;
 }
-
-
 .card-icon {
-    width: 38px;
-    height: 38px;
-
-    border-radius: 7px;
-
-    background: #f1ebf6;
-
-    color: var(--primary);
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: #f1ebf6;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-
 .card-icon .material-symbols-outlined {
-    font-size: 22px;
+  font-size: 22px;
 }
-
-
 .card-title {
-    font-size: 16px;
-
-    font-weight: 700;
-
-    color: #37474f;
+  font-size: 16px;
+  font-weight: 700;
+  color: #37474f;
 }
-
-
 .card-description {
-    font-size: 13px;
-
-    color: var(--text-secondary);
-
-    margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
-
-
-/* =====================================================
-    FORMULÁRIO
-===================================================== */
-
 .form {
-    width: 100%;
+  width: 100%;
 }
-
-
 .form-body {
-    padding: 28px 24px;
+  padding: 28px 24px;
 }
-
-
 .form-grid {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 22px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 24px;
 }
-
-/* Divisor de Sessão dentro do Form */
 .form-section-title {
-    grid-column: 1 / -1;
-    font-size: 15px;
-    font-weight: 700;
-    color: #37474f;
-    margin-top: 12px;
-    margin-bottom: -6px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e5e8eb;
+  grid-column: 1/-1;
+  font-size: 15px;
+  font-weight: 700;
+  color: #37474f;
+  margin-top: 12px;
+  margin-bottom: -6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e8eb;
 }
-
-
 .form-group {
-    display: flex;
-
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
-
-
 .form-group.full {
-    grid-column: 1 / -1;
+  grid-column: 1/-1;
 }
-
-
 .form-group label {
-    font-size: 13px;
-
-    font-weight: 600;
-
-    color: #455a64;
-
-    margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #455a64;
+  margin-bottom: 7px;
 }
-
-
 .form-group label span {
-    color: #c62828;
+  color: #c62828;
 }
-
-
-/* =====================================================
-    BLOCOS DINÂMICOS (DISPLAY: CONTENTS PARA ALINHAMENTO PERFEITO)
-===================================================== */
 .bloco-segundo-vinculo {
-    display: none;
+  display: none;
 }
-
 .bloco-segundo-vinculo.ativo {
-    display: contents;
+  display: contents;
 }
-
 .escola-extra {
-    display: none;
-    grid-column: 1 / -1;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px 24px;
-    background: #f1f5f9;
-    padding: 16px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
+  display: none;
+  grid-column: 1/-1;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 24px;
+  background: #f1f5f9;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
 }
-
 .escola-extra.ativo {
-    display: grid;
+  display: grid;
 }
-
-/* Botão discreto para adicionar escola/condução */
 .btn-link-adicionar {
-    grid-column: 1 / -1;
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    width: fit-content;
-    padding: 4px 0;
-    transition: opacity 0.2s;
+  grid-column: 1/-1;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 4px 0;
+  transition: opacity 0.2s;
 }
-
 .btn-link-adicionar:hover {
-    opacity: 0.8;
+  opacity: 0.8;
 }
-
-
-/* =====================================================
-    CAMPOS (INPUTS E SELECTS)
-===================================================== */
-
 .form-group input,
 .form-group select {
-    width: 100%;
-
-    height: 44px;
-
-    padding: 0 13px;
-
-    background: #ffffff;
-
-    border: 1px solid var(--border);
-
-    border-radius: 6px;
-
-    outline: none;
-
-    font-size: 14px;
-
-    color: #263238;
-
-    transition:
-        border-color .15s ease,
-        box-shadow .15s ease,
-        background-color .15s ease;
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  color: #263238;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-
-
 .form-group input:hover,
 .form-group select:hover {
-    border-color: #b7c0c7;
+  border-color: #b7c0c7;
 }
-
-
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--primary);
-
-    box-shadow:
-        0 0 0 3px rgba(91,42,134,.10);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
-
-
-/* =====================================================
-    CAMPOS PREENCHIDOS
-===================================================== */
-
 .form-group input.preenchido,
 .form-group select.preenchido {
-    background: var(--green-light) !important;
-
-    border-color: var(--green-border) !important;
-
-    color: #263238 !important;
+  background: var(--green-light) !important;
+  border-color: var(--green-border) !important;
+  color: #263238 !important;
 }
-
-
 .form-group input.preenchido:focus,
 .form-group select.preenchido:focus {
-    border-color: var(--green) !important;
-
-    box-shadow:
-        0 0 0 3px rgba(46,125,50,.12) !important;
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(46,125,50,.12) !important;
 }
-
-
-/* =====================================================
-    CAMPO COM ERRO (EX: CPF DUPLICADO)
-===================================================== */
 .form-group input.erro-input {
-    background: #fff0f0 !important;
-    border-color: #c62828 !important;
-    color: #c62828 !important;
+  background: #fff0f0 !important;
+  border-color: #c62828 !important;
+  color: #c62828 !important;
 }
-
 .form-group input.erro-input:focus {
-    border-color: #c62828 !important;
-    box-shadow: 0 0 0 3px rgba(198,40,40,.12) !important;
+  border-color: #c62828 !important;
+  box-shadow: 0 0 0 3px rgba(198,40,40,.12) !important;
 }
-
-
-/* =====================================================
-    PLACEHOLDER
-===================================================== */
-
 .form-group input::placeholder {
-    color: #9aa3aa;
+  color: #9aa3aa;
 }
-
-
-/* =====================================================
-    MENSAGEM
-===================================================== */
-
 .mensagem {
-    display: none;
-
-    margin: 0 24px 24px;
-
-    padding: 12px 14px;
-
-    border-radius: 6px;
-
-    font-size: 13px;
-
-    font-weight: 500;
+  display: none;
+  margin: 0 24px 24px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
 }
-
-
 .mensagem.sucesso {
-    display: block;
-
-    background: #edf7ee;
-
-    border: 1px solid #c8e6c9;
-
-    color: #2e7d32;
+  display: block;
+  background: #edf7ee;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
 }
-
-
 .mensagem.erro {
-    display: block;
-
-    background: #fff0f0;
-
-    border: 1px solid #efc5c5;
-
-    color: #c62828;
+  display: block;
+  background: #fff0f0;
+  border: 1px solid #efc5c5;
+  color: #c62828;
 }
-
-
-/* =====================================================
-    RODAPÉ
-===================================================== */
-
 .form-footer {
-    min-height: 76px;
-
-    padding: 14px 24px;
-
-    background: #fafbfc;
-
-    border-top: 1px solid #e5e8eb;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
+  min-height: 76px;
+  padding: 14px 24px;
+  background: #fafbfc;
+  border-top: 1px solid #e5e8eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-
-
 .footer-info {
-    font-size: 12px;
-
-    color: #7a858d;
+  font-size: 12px;
+  color: #7a858d;
 }
-
-
 .footer-buttons {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-
-/* =====================================================
-    BOTÕES
-===================================================== */
-
 button {
-    height: 40px;
-
-    border-radius: 6px;
-
-    padding: 0 17px;
-
-    border: none;
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 7px;
-
-    transition:
-        background-color .15s ease,
-        border-color .15s ease,
-        transform .1s ease;
+  height: 40px;
+  border-radius: 6px;
+  padding: 0 17px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
-
-
 button:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
 }
-
-
 button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
 }
-
-
 button .material-symbols-outlined {
-    font-size: 19px;
+  font-size: 19px;
 }
-
-
-/* =====================================================
-    CANCELAR
-===================================================== */
-
 .btn-cancelar {
-    background: var(--red);
-
-    color: #ffffff;
-
-    border: 1px solid var(--red);
+  background: var(--red);
+  color: #ffffff;
+  border: 1px solid var(--red);
 }
-
-
 .btn-cancelar:hover {
-    background: var(--red-hover);
-
-    border-color: var(--red-hover);
+  background: var(--red-hover);
+  border-color: var(--red-hover);
 }
-
-
-/* =====================================================
-    SALVAR
-===================================================== */
-
 .btn-salvar {
-    background: var(--green);
-
-    color: #ffffff;
-
-    border: 1px solid var(--green);
+  background: var(--green);
+  color: #ffffff;
+  border: 1px solid var(--green);
 }
-
-
 .btn-salvar:hover {
-    background: var(--green-hover);
-
-    border-color: var(--green-hover);
+  background: var(--green-hover);
+  border-color: var(--green-hover);
 }
-
-
-/* =====================================================
-    IMPORTAR CSV
-===================================================== */
-
 .btn-importar {
-    background: var(--green);
-
-    color: #ffffff;
-
-    border: 1px solid var(--green);
+  background: var(--green);
+  color: #ffffff;
+  border: 1px solid var(--green);
 }
-
-
 .btn-importar:hover {
-    background: var(--green-hover);
-
-    border-color: var(--green-hover);
+  background: var(--green-hover);
+  border-color: var(--green-hover);
 }
-
-
-/* =====================================================
-    RESPONSIVO
-===================================================== */
-
 @media (max-width: 700px) {
-
-    .topbar {
-        width: calc(100% - 24px);
-
-        margin-top: 12px;
-
-        padding: 0 16px;
-    }
-
-
-    .system-divider,
-    .system-module {
-        display: none;
-    }
-
-
-    .main {
-        width: calc(100% - 24px);
-
-        padding: 20px 0;
-    }
-
-
-    .form-grid {
-        grid-template-columns: 1fr;
-
-        gap: 18px;
-    }
-
-    .escola-extra {
-        grid-template-columns: 1fr;
-    }
-
-
-    .form-group.full {
-        grid-column: auto;
-    }
-
-
-    .form-body {
-        padding: 22px 18px;
-    }
-
-
-    .form-footer {
-        padding: 16px 18px;
-
-        flex-direction: column;
-
-        align-items: stretch;
-
-        gap: 14px;
-    }
-
-
-    .footer-info {
-        text-align: center;
-    }
-
-
-    .footer-buttons {
-        display: grid;
-
-        grid-template-columns: 1fr;
-
-        width: 100%;
-    }
-
-
-    .footer-buttons button {
-        width: 100%;
-    }
-
+  .topbar {
+    width: calc(100% - 24px);
+    margin-top: 12px;
+    padding: 0 16px;
+  }
+  .system-divider,
+  .system-module {
+    display: none;
+  }
+  .main {
+    width: calc(100% - 24px);
+    padding: 20px 0;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .escola-extra {
+    grid-template-columns: 1fr;
+  }
+  .form-group.full {
+    grid-column: auto;
+  }
+  .form-body {
+    padding: 22px 18px;
+  }
+  .form-footer {
+    padding: 16px 18px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .footer-info {
+    text-align: center;
+  }
+  .footer-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .footer-buttons button {
+    width: 100%;
+  }
 }
-
 </style>
 </head>
-
-
 <body>
 
-
-<!-- =====================================================
-     BARRA SUPERIOR
-===================================================== -->
-
 <header class="topbar">
-
-    <div class="topbar-content">
-
-        <img
-            class="logo"
-            src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ"
-            alt="Logo"
-        >
-
-        <span class="system-name">
-            Vale Transporte
-        </span>
-
-        <div class="system-divider"></div>
-
-        <span class="system-module">
-           Semed-Recursos Humanos-Gestão de Benefícios
-        </span>
-
-        <!-- INDICADOR DE SINAL DE REDE (ESTÉTICO E DINÂMICO) -->
-        <div id="statusConexao" class="status-conexao online" title="Conexão estável">
-            <div class="signal-bars">
-                <span class="bar bar-1"></span>
-                <span class="bar bar-2"></span>
-                <span class="bar bar-3"></span>
-                <span class="bar bar-4"></span>
-            </div>
-            <span id="statusTexto">Online</span>
-        </div>
-
+  <div class="topbar-content">
+    <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+    <span class="system-name">Vale Transporte</span>
+    <div class="system-divider"></div>
+    <span class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</span>
+    
+    <div id="statusConexao" class="status-conexao online" title="Conexão estável">
+      <div class="signal-bars">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+        <span class="bar bar-4"></span>
+      </div>
+      <span id="statusTexto">Online</span>
     </div>
-
+  </div>
 </header>
 
-
-<!-- =====================================================
-     CONTEÚDO
-===================================================== -->
-
 <main class="main">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span class="material-symbols-outlined">home</span>
+      <span>Servidores</span>
+      <span>/</span>
+      <span>Novo cadastro</span>
+    </div>
+    <h1>Novo Servidor</h1>
+    <p>Cadastre um novo servidor no sistema de Vale Transporte[cite: 1].</p>
+  </div>
 
-
-    <div class="page-header">
-
-        <div class="breadcrumb">
-
-            <span class="material-symbols-outlined">
-                home
-            </span>
-
-            <span>Servidores</span>
-
-            <span>/</span>
-
-            <span>Novo cadastro</span>
-
-        </div>
-
-
-        <h1>
-            Novo Servidor
-        </h1>
-
-
-        <p>
-            Cadastre um novo servidor no sistema de Vale Transporte.
-        </p>
-
+  <section class="form-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <span class="material-symbols-outlined">person_add</span>
+      </div>
+      <div>
+        <div class="card-title">Dados do servidor</div>
+        <div class="card-description">Informe os dados cadastrais abaixo[cite: 1].</div>
+      </div>
     </div>
 
+    <form class="form" id="formServidor" onsubmit="salvarServidor(event)">
+      <div class="form-body">
+        <div class="form-grid">
+          
+          <div class="form-section-title">Dados Pessoais e Contato</div>
+          
+          <!-- NOME -->
+          <div class="form-group full">
+            <label for="nome">Nome completo <span>*</span></label>
+            <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" autocomplete="name" required>
+          </div>
 
-    <!-- =================================================
-         CARD
-    ================================================ -->
+          <!-- CPF -->
+          <div class="form-group">
+            <label for="cpf">CPF <span>*</span></label>
+            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required oninput="formatarCPF(this)" onblur="verificarCpfDuplicado(this)">
+          </div>
 
-    <section class="form-card">
+          <!-- EMAIL -->
+          <div class="form-group">
+            <label for="email">E-mail <span>*</span></label>
+            <input type="email" id="email" name="email" placeholder="servidor@exemplo.com" autocomplete="email" required>
+          </div>
 
+          <!-- DATA NASCIMENTO -->
+          <div class="form-group">
+            <label for="dataNascimento">Data de nascimento <span>*</span></label>
+            <input type="date" id="dataNascimento" name="dataNascimento" required>
+          </div>
 
-        <div class="card-header">
+          <!-- DATA ADMISSÃO -->
+          <div class="form-group">
+            <label for="dataAdmissao">Data de admissão <span>*</span></label>
+            <input type="date" id="dataAdmissao" name="dataAdmissao" required>
+          </div>
 
-            <div class="card-icon">
+          <!-- TELEFONE -->
+          <div class="form-group full">
+            <label for="telefone">Telefone para contato <span>*</span></label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" autocomplete="tel" required oninput="formatarTelefone(this)">
+          </div>
 
-                <span class="material-symbols-outlined">
-                    person_add
-                </span>
+          <div class="form-section-title">Endereço Residencial</div>
 
+          <!-- CEP -->
+          <div class="form-group">
+            <label for="cep">CEP <span>*</span></label>
+            <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric" required oninput="formatarCEP(this)" onblur="buscarCEP(this)">
+          </div>
+
+          <!-- BAIRRO -->
+          <div class="form-group">
+            <label for="bairro">Bairro <span>*</span></label>
+            <input type="text" id="bairro" name="bairro" placeholder="Digite o bairro" required>
+          </div>
+
+          <!-- RUA/LOGRADOURO -->
+          <div class="form-group full">
+            <label for="logradouro">Logradouro (Rua, Av.) <span>*</span></label>
+            <input type="text" id="logradouro" name="logradouro" placeholder="Digite o logradouro" required>
+          </div>
+
+          <!-- NÚMERO -->
+          <div class="form-group">
+            <label for="numero">Número <span>*</span></label>
+            <input type="text" id="numero" name="numero" placeholder="Ex: 123, S/N" required>
+          </div>
+
+          <!-- COMPLEMENTO -->
+          <div class="form-group">
+            <label for="complemento">Complemento</label>
+            <input type="text" id="complemento" name="complemento" placeholder="Apto, Bloco, etc.">
+          </div>
+
+          <!-- CIDADE -->
+          <div class="form-group">
+            <label for="cidade">Cidade <span>*</span></label>
+            <input type="text" id="cidade" name="cidade" placeholder="Digite a cidade" required>
+          </div>
+
+          <!-- UF -->
+          <div class="form-group">
+            <label for="uf">UF <span>*</span></label>
+            <input type="text" id="uf" name="uf" placeholder="Ex: MG" maxlength="2" required>
+          </div>
+
+          <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
+
+          <!-- NÚMERO DA MATRÍCULA 1 -->
+          <div class="form-group">
+            <label for="numeroMatricula1">Nº da Matrícula 1 <span>*</span></label>
+            <input type="text" id="numeroMatricula1" name="numeroMatricula1" placeholder="Ex: 12345" required>
+          </div>
+
+          <!-- CARGO 1 -->
+          <div class="form-group">
+            <label for="cargo1">Cargo / Função (Matrícula 1) <span>*</span></label>
+            <input type="text" id="cargo1" name="cargo1" placeholder="Digite o cargo" required>
+          </div>
+
+          <!-- ESCOLA/LOTAÇÃO 1 (PRINCIPAL) -->
+          <div class="form-group full">
+            <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
+            <select id="escola1_m1" name="escola1_m1" required>
+              <option value="">Selecione a escola</option>
+              <option value="CEAE">CEAE</option>
+              <option value="CETEPE">CETEPE</option>
+              <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+              <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+              <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+            </select>
+          </div>
+
+          <!-- EMPRESA 1 (M1 - Escola 1) -->
+          <div class="form-group">
+            <label for="empresa1_m1">Concessionária (Linha de Ônibus) <span>*</span></label>
+            <select id="empresa1_m1" name="empresa1_m1" required>
+              <option value="">Selecione a empresa</option>
+              <option value="Trancid">Trancid</option>
+              <option value="Transpratur">Transpratur</option>
+              <option value="Exdil">Exdil</option>
+              <option value="Teixeira">Teixeira</option>
+            </select>
+          </div>
+
+          <!-- PASSES DIÁRIOS 1 (M1 - Escola 1) -->
+          <div class="form-group">
+            <label for="qtdPassagens1_m1">Passes Diários <span>*</span></label>
+            <input type="number" id="qtdPassagens1_m1" name="qtdPassagens1_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" required oninput="atualizarCorCampo(this)">
+          </div>
+
+          <!-- BOTÃO ADICIONAR SEGUNDA ESCOLA NA MATRÍCULA 1 -->
+          <button type="button" id="btnToggleEscola1" class="btn-link-adicionar" onclick="toggleEscolaExtra(1)">
+            <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+            Adicionar segunda escola / lotação para esta matrícula
+          </button>
+
+          <!-- ESCOLA EXTRA / 2ª LOTAÇÃO (M1) -->
+          <div id="escolaExtra1" class="escola-extra">
+            <div class="form-group full">
+              <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
+              <select id="escola2_m1" name="escola2_m1">
+                <option value="">Selecione a segunda escola</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="empresa_escola2_m1">Concessionária (Escola 2)</label>
+              <select id="empresa_escola2_m1" name="empresa_escola2_m1">
+                <option value="">Selecione a empresa</option>
+                <option value="Trancid">Trancid</option>
+                <option value="Transpratur">Transpratur</option>
+                <option value="Exdil">Exdil</option>
+                <option value="Teixeira">Teixeira</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qtdPassagens_escola2_m1">Passes Diários (Escola 2)</label>
+              <input type="number" id="qtdPassagens_escola2_m1" name="qtdPassagens_escola2_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+            </div>
+          </div>
+
+          <!-- SEGUNDO VÍNCULO (CHECKBOX) -->
+          <div class="form-group full" style="margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--primary);">
+              <input type="checkbox" id="possuiSegundoVinculo" onchange="toggleSegundoVinculo()" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+              <span>Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?</span>
+            </label>
+          </div>
+
+          <!-- MATRÍCULA 2 -->
+          <div id="blocoSegundoVinculo" class="bloco-segundo-vinculo">
+            <div class="form-section-title">Matrícula 2 (Segundo Vínculo)</div>
+            
+            <div class="form-group">
+              <label for="numeroMatricula2">Nº da Matrícula 2 <span>*</span></label>
+              <input type="text" id="numeroMatricula2" name="numeroMatricula2" placeholder="Ex: 67890">
             </div>
 
-
-            <div>
-
-                <div class="card-title">
-                    Dados do servidor
-                </div>
-
-                <div class="card-description">
-                    Informe os dados cadastrais abaixo.
-                </div>
-
+            <div class="form-group">
+              <label for="cargo2">Cargo / Função (Matrícula 2) <span>*</span></label>
+              <input type="text" id="cargo2" name="cargo2" placeholder="Digite o cargo">
             </div>
+
+            <div class="form-group full">
+              <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
+              <select id="escola1_m2" name="escola1_m2">
+                <option value="">Selecione a escola</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="empresa1_m2">Concessionária (Linha de Ônibus) <span>*</span></label>
+              <select id="empresa1_m2" name="empresa1_m2">
+                <option value="">Selecione a empresa</option>
+                <option value="Trancid">Trancid</option>
+                <option value="Transpratur">Transpratur</option>
+                <option value="Exdil">Exdil</option>
+                <option value="Teixeira">Teixeira</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="qtdPassagens1_m2">Passes Diários <span>*</span></label>
+              <input type="number" id="qtdPassagens1_m2" name="qtdPassagens1_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+            </div>
+
+            <button type="button" id="btnToggleEscola2" class="btn-link-adicionar" onclick="toggleEscolaExtra(2)">
+              <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+              Adicionar segunda escola / lotação para esta matrícula
+            </button>
+
+            <div id="escolaExtra2" class="escola-extra">
+              <div class="form-group full">
+                <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
+                <select id="escola2_m2" name="escola2_m2">
+                  <option value="">Selecione a segunda escola</option>
+                  <option value="CEAE">CEAE</option>
+                  <option value="CETEPE">CETEPE</option>
+                  <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                  <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                  <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="empresa_escola2_m2">Concessionária (Escola 2)</label>
+                <select id="empresa_escola2_m2" name="empresa_escola2_m2">
+                  <option value="">Selecione a empresa</option>
+                  <option value="Trancid">Trancid</option>
+                  <option value="Transpratur">Transpratur</option>
+                  <option value="Exdil">Exdil</option>
+                  <option value="Teixeira">Teixeira</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="qtdPassagens_escola2_m2">Passes Diários (Escola 2)</label>
+                <input type="number" id="qtdPassagens_escola2_m2" name="qtdPassagens_escola2_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+              </div>
+            </div>
+          </div>
 
         </div>
-
-
-        <!-- =================================================
-             FORMULÁRIO
-    ================================================ -->
-
-        <form
-            class="form"
-            id="formServidor"
-            onsubmit="salvarServidor(event)"
-        >
-
-
-            <div class="form-body">
-
-
-                <div class="form-grid">
-
-                    <div class="form-section-title">Dados Pessoais e Contato</div>
-
-                    <!-- NOME -->
-
-                    <div class="form-group full">
-
-                        <label for="nome">
-                            Nome completo <span>*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            id="nome"
-                            name="nome"
-                            placeholder="Digite o nome completo"
-                            autocomplete="name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- CPF -->
-
-                    <div class="form-group">
-
-                        <label for="cpf">
-                            CPF <span>*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            id="cpf"
-                            name="cpf"
-                            placeholder="000.000.000-00"
-                            maxlength="14"
-                            inputmode="numeric"
-                            required
-                            oninput="formatarCPF(this)"
-                            onblur="verificarCpfDuplicado(this)"
-                        >
-
-                    </div>
-
-
-                    <!-- EMAIL -->
-
-                    <div class="form-group">
-
-                        <label for="email">
-                            E-mail <span>*</span>
-                        </label>
-
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            placeholder="servidor@exemplo.com"
-                            autocomplete="email"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- DATA NASCIMENTO -->
-
-                    <div class="form-group">
-
-                        <label for="dataNascimento">
-                            Data de nascimento <span>*</span>
-                        </label>
-
-                        <input
-                            type="date"
-                            id="dataNascimento"
-                            name="dataNascimento"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- DATA ADMISSÃO -->
-
-                    <div class="form-group">
-
-                        <label for="dataAdmissao">
-                            Data de admissão <span>*</span>
-                        </label>
-
-                        <input
-                            type="date"
-                            id="dataAdmissao"
-                            name="dataAdmissao"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- TELEFONE -->
-
-                    <div class="form-group full">
-
-                        <label for="telefone">
-                            Telefone para contato <span>*</span>
-                        </label>
-
-                        <input
-                            type="tel"
-                            id="telefone"
-                            name="telefone"
-                            placeholder="(00) 00000-0000"
-                            maxlength="15"
-                            inputmode="numeric"
-                            autocomplete="tel"
-                            required
-                            oninput="formatarTelefone(this)"
-                        >
-
-                    </div>
-
-
-                    <!-- =================================================
-                         BLOCO DE ENDEREÇO
-                    ================================================ -->
-
-                    <div class="form-section-title">Endereço Residencial</div>
-
-                    <!-- CEP -->
-                    <div class="form-group">
-                        <label for="cep">
-                            CEP <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="cep"
-                            name="cep"
-                            placeholder="00000-000"
-                            maxlength="9"
-                            inputmode="numeric"
-                            required
-                            oninput="formatarCEP(this)"
-                            onblur="buscarCEP(this)"
-                        >
-                    </div>
-
-                    <!-- BAIRRO -->
-                    <div class="form-group">
-                        <label for="bairro">
-                            Bairro <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="bairro"
-                            name="bairro"
-                            placeholder="Digite o bairro"
-                            required
-                        >
-                    </div>
-
-                    <!-- RUA / LOGRADOURO -->
-                    <div class="form-group full">
-                        <label for="logradouro">
-                            Logradouro (Rua, Av.) <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="logradouro"
-                            name="logradouro"
-                            placeholder="Digite o logradouro"
-                            required
-                        >
-                    </div>
-
-                    <!-- NÚMERO -->
-                    <div class="form-group">
-                        <label for="numero">
-                            Número <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="numero"
-                            name="numero"
-                            placeholder="Ex: 123, S/N"
-                            required
-                        >
-                    </div>
-
-                    <!-- COMPLEMENTO -->
-                    <div class="form-group">
-                        <label for="complemento">
-                            Complemento
-                        </label>
-                        <input
-                            type="text"
-                            id="complemento"
-                            name="complemento"
-                            placeholder="Apto, Bloco, etc."
-                        >
-                    </div>
-
-                    <!-- CIDADE -->
-                    <div class="form-group">
-                        <label for="cidade">
-                            Cidade <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="cidade"
-                            name="cidade"
-                            placeholder="Digite a cidade"
-                            required
-                        >
-                    </div>
-
-                    <!-- UF -->
-                    <div class="form-group">
-                        <label for="uf">
-                            UF <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="uf"
-                            name="uf"
-                            placeholder="Ex: MG"
-                            maxlength="2"
-                            required
-                        >
-                    </div>
-
-
-                    <!-- =================================================
-                         MATRÍCULA 1 (VÍNCULO PRINCIPAL)
-                    ================================================ -->
-
-                    <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
-
-                    <!-- NÚMERO DA MATRÍCULA 1 -->
-                    <div class="form-group">
-                        <label for="numeroMatricula1">
-                            Nº da Matrícula 1 <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="numeroMatricula1"
-                            name="numeroMatricula1"
-                            placeholder="Ex: 12345"
-                            required
-                        >
-                    </div>
-
-                    <!-- CARGO 1 -->
-                    <div class="form-group">
-                        <label for="cargo1">
-                            Cargo / Função (Matrícula 1) <span>*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="cargo1"
-                            name="cargo1"
-                            placeholder="Digite o cargo"
-                            required
-                        >
-                    </div>
-
-                    <!-- ESCOLA / LOTAÇÃO 1 (PRINCIPAL) -->
-                    <div class="form-group full">
-                        <label for="escola1_m1">
-                            Escola / Unidade de Lotação (Escola 1) <span>*</span>
-                        </label>
-                        <select id="escola1_m1" name="escola1_m1" required>
-                            <option value="">Selecione a escola</option>
-                            <option value="CEAE">CEAE</option>
-                            <option value="CETEPE">CETEPE</option>
-                            <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                            <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                            <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                        </select>
-                    </div>
-
-                    <!-- EMPRESA 1 (M1 - Escola 1) -->
-                    <div class="form-group">
-                        <label for="empresa1_m1">
-                            Concessionária (Linha de Ônibus) <span>*</span>
-                        </label>
-                        <select id="empresa1_m1" name="empresa1_m1" required>
-                            <option value="">Selecione a empresa</option>
-                            <option value="Trancid">Trancid</option>
-                            <option value="Transpratur">Transpratur</option>
-                            <option value="Exdil">Exdil</option>
-                            <option value="Teixeira">Teixeira</option>
-                        </select>
-                    </div>
-
-                    <!-- PASSES DIÁRIOS 1 (M1 - Escola 1) -->
-                    <div class="form-group">
-                        <label for="qtdPassagens1_m1">
-                            Passes Diários <span>*</span>
-                        </label>
-                        <input
-                            type="number"
-                            id="qtdPassagens1_m1"
-                            name="qtdPassagens1_m1"
-                            placeholder="Ex: 2 ou 4"
-                            min="0"
-                            inputmode="numeric"
-                            required
-                            oninput="atualizarCorCampo(this)"
-                        >
-                    </div>
-
-                    <!-- BOTÃO ADICIONAR SEGUNDA ESCOLA NA MATRÍCULA 1 -->
-                    <button type="button" id="btnToggleEscola1" class="btn-link-adicionar" onclick="toggleEscolaExtra(1)">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
-                        Adicionar segunda escola / lotação para esta matrícula
-                    </button>
-
-                    <!-- ESCOLA EXTRA / 2ª LOTAÇÃO (M1 - OCULTA POR PADRÃO) -->
-                    <div id="escolaExtra1" class="escola-extra">
-                        <div class="form-group full">
-                            <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
-                            <select id="escola2_m1" name="escola2_m1">
-                                <option value="">Selecione a segunda escola</option>
-                                <option value="CEAE">CEAE</option>
-                                <option value="CETEPE">CETEPE</option>
-                                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="empresa_escola2_m1">Concessionária (Escola 2)</label>
-                            <select id="empresa_escola2_m1" name="empresa_escola2_m1">
-                                <option value="">Selecione a empresa</option>
-                                <option value="Trancid">Trancid</option>
-                                <option value="Transpratur">Transpratur</option>
-                                <option value="Exdil">Exdil</option>
-                                <option value="Teixeira">Teixeira</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="qtdPassagens_escola2_m1">Passes Diários (Escola 2)</label>
-                            <input
-                                type="number"
-                                id="qtdPassagens_escola2_m1"
-                                name="qtdPassagens_escola2_m1"
-                                placeholder="Ex: 2 ou 4"
-                                min="0"
-                                inputmode="numeric"
-                                oninput="atualizarCorCampo(this)"
-                            >
-                        </div>
-                    </div>
-
-
-                    <!-- =================================================
-                         SEGUNDO VÍNCULO (CHECKBOX TOGGLE)
-                    ================================================ -->
-                    <div class="form-group full" style="margin-top: 10px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--primary);">
-                            <input type="checkbox" id="possuiSegundoVinculo" onchange="toggleSegundoVinculo()" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
-                            <span>Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?</span>
-                        </label>
-                    </div>
-
-
-                    <!-- =================================================
-                         MATRÍCULA 2 (OCULTO POR PADRÃO)
-                    ================================================ -->
-                    <div id="blocoSegundoVinculo" class="bloco-segundo-vinculo">
-
-                        <div class="form-section-title">Matrícula 2 (Segundo Vínculo)</div>
-
-                        <!-- NÚMERO DA MATRÍCULA 2 -->
-                        <div class="form-group">
-                            <label for="numeroMatricula2">
-                                Nº da Matrícula 2 <span>*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="numeroMatricula2"
-                                name="numeroMatricula2"
-                                placeholder="Ex: 67890"
-                            >
-                        </div>
-
-                        <!-- CARGO 2 -->
-                        <div class="form-group">
-                            <label for="cargo2">
-                                Cargo / Função (Matrícula 2) <span>*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="cargo2"
-                                name="cargo2"
-                                placeholder="Digite o cargo"
-                            >
-                        </div>
-
-                        <!-- ESCOLA 1 (M2) -->
-                        <div class="form-group full">
-                            <label for="escola1_m2">
-                                Escola / Unidade de Lotação (Escola 1) <span>*</span>
-                            </label>
-                            <select id="escola1_m2" name="escola1_m2">
-                                <option value="">Selecione a escola</option>
-                                <option value="CEAE">CEAE</option>
-                                <option value="CETEPE">CETEPE</option>
-                                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                            </select>
-                        </div>
-
-                        <!-- EMPRESA 1 (M2) -->
-                        <div class="form-group">
-                            <label for="empresa1_m2">
-                                Concessionária (Linha de Ônibus) <span>*</span>
-                            </label>
-                            <select id="empresa1_m2" name="empresa1_m2">
-                                <option value="">Selecione a empresa</option>
-                                <option value="Trancid">Trancid</option>
-                                <option value="Transpratur">Transpratur</option>
-                                <option value="Exdil">Exdil</option>
-                                <option value="Teixeira">Teixeira</option>
-                            </select>
-                        </div>
-
-                        <!-- PASSES DIÁRIOS 1 (M2) -->
-                        <div class="form-group">
-                            <label for="qtdPassagens1_m2">
-                                Passes Diários <span>*</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="qtdPassagens1_m2"
-                                name="qtdPassagens1_m2"
-                                placeholder="Ex: 2 ou 4"
-                                min="0"
-                                inputmode="numeric"
-                                oninput="atualizarCorCampo(this)"
-                            />
-                        </div>
-
-                        <!-- BOTÃO ADICIONAR SEGUNDA ESCOLA NA MATRÍCULA 2 -->
-                        <button type="button" id="btnToggleEscola2" class="btn-link-adicionar" onclick="toggleEscolaExtra(2)">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
-                            Adicionar segunda escola / lotação para esta matrícula
-                        </button>
-
-                        <!-- ESCOLA EXTRA / 2ª LOTAÇÃO (M2 - OCULTA POR PADRÃO) -->
-                        <div id="escolaExtra2" class="escola-extra">
-                            <div class="form-group full">
-                                <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
-                                <select id="escola2_m2" name="escola2_m2">
-                                    <option value="">Selecione a segunda escola</option>
-                                    <option value="CEAE">CEAE</option>
-                                    <option value="CETEPE">CETEPE</option>
-                                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="empresa_escola2_m2">Concessionária (Escola 2)</label>
-                                <select id="empresa_escola2_m2" name="empresa_escola2_m2">
-                                    <option value="">Selecione a empresa</option>
-                                    <option value="Trancid">Trancid</option>
-                                    <option value="Transpratur">Transpratur</option>
-                                    <option value="Exdil">Exdil</option>
-                                    <option value="Teixeira">Teixeira</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="qtdPassagens_escola2_m2">Passes Diários (Escola 2)</label>
-                                <input
-                                    type="number"
-                                    id="qtdPassagens_escola2_m2"
-                                    name="qtdPassagens_escola2_m2"
-                                    placeholder="Ex: 2 ou 4"
-                                    min="0"
-                                    inputmode="numeric"
-                                    oninput="atualizarCorCampo(this)"
-                                >
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 MENSAGEM
-            ================================================ -->
-
-            <div
-                id="mensagem"
-                class="mensagem"
-            ></div>
-
-
-            <!-- =================================================
-                 RODAPÉ
-            ================================================ -->
-
-            <div class="form-footer">
-
-
-                <div class="footer-info">
-
-                    <span>*</span>
-                    Campos obrigatórios
-
-                </div>
-
-
-                <div class="footer-buttons">
-
-
-                    <button
-                        type="button"
-                        class="btn-importar"
-                        onclick="importarCSV()"
-                    >
-
-                        <span class="material-symbols-outlined">
-                            upload_file
-                        </span>
-
-                        Importar CSV
-
-                    </button>
-                    
-
-                    <button
-                        type="submit"
-                        id="btnSalvar"
-                        class="btn-salvar"
-                    >
-
-                        <span class="material-symbols-outlined" id="iconeSalvar">
-                            save
-                        </span>
-
-                        <span id="textoBotao">Salvar</span>
-
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn-cancelar"
-                        onclick="cancelar()"
-                    >
-
-                        Cancelar
-
-                    </button>
-
-
-                </div>
-
-            </div>
-
-        </form>
-
-    </section>
-
+      </div>
+
+      <div id="mensagem" class="mensagem"></div>
+
+      <div class="form-footer">
+        <div class="footer-info"><span>*</span> Campos obrigatórios</div>
+        <div class="footer-buttons">
+          <button type="button" class="btn-importar" onclick="importarCSV()">
+            <span class="material-symbols-outlined">upload_file</span>
+            Importar CSV
+          </button>
+          <button type="submit" id="btnSalvar" class="btn-salvar">
+            <span class="material-symbols-outlined" id="iconeSalvar">save</span>
+            <span id="textoBotao">Salvar</span>
+          </button>
+          <button type="button" class="btn-cancelar" onclick="cancelar()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
 </main>
 
-
-<!-- Script do Flatpickr (Calendário Moderno) -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
-<!-- SCRIPT MODULARIZADO COM FIREBASE -->
 <script type="module">
-    // Importa a conexão central do nosso firebase.js e os módulos de consulta
-    import { db } from "./firebase.js";
-    import { collection, addDoc, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db } from "./firebase.js";
+import { collection, addDoc, doc, getDoc, updateDoc, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    /* =====================================================
-       MONITOR DE CONEXÃO INTELIGENTE COM BARRINHAS
-    ===================================================== */
-    function atualizarStatusConexao() {
-        const statusDiv = document.getElementById("statusConexao");
-        const statusTexto = document.getElementById("statusTexto");
+const urlParams = new URLSearchParams(window.location.search);
+const servidorId = urlParams.get('id');
 
-        if (!navigator.onLine) {
-            statusDiv.className = "status-conexao offline";
-            statusTexto.textContent = "Sem Conexão";
-            statusDiv.title = "Computador desconectado da internet";
-            return;
-        }
-
-        const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        
-        if (conexao) {
-            if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
-                statusDiv.className = "status-conexao instavel";
-                statusTexto.textContent = "Instável";
-                statusDiv.title = "Rede móvel ou conexão lenta detectada";
-            } else {
-                statusDiv.className = "status-conexao online";
-                statusTexto.textContent = "Online";
-                statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
-            }
-        } else {
-            statusDiv.className = "status-conexao online";
-            statusTexto.textContent = "Online";
-            statusDiv.title = "Sistema Conectado";
-        }
+function atualizarStatusConexao() {
+  const statusDiv = document.getElementById("statusConexao");
+  const statusTexto = document.getElementById("statusTexto");
+  if (!navigator.onLine) {
+    statusDiv.className = "status-conexao offline";
+    statusTexto.textContent = "Sem Conexão";
+    statusDiv.title = "Computador desconectado da internet";
+    return;
+  }
+  const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conexao) {
+    if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
+      statusDiv.className = "status-conexao instavel";
+      statusTexto.textContent = "Instável";
+      statusDiv.title = "Rede móvel ou conexão lenta detectada";
+    } else {
+      statusDiv.className = "status-conexao online";
+      statusTexto.textContent = "Online";
+      statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
     }
+  } else {
+    statusDiv.className = "status-conexao online";
+    statusTexto.textContent = "Online";
+    statusDiv.title = "Sistema Conectado";
+  }
+}
 
-    window.addEventListener('online', atualizarStatusConexao);
-    window.addEventListener('offline', atualizarStatusConexao);
+window.addEventListener('online', atualizarStatusConexao);
+window.addEventListener('offline', atualizarStatusConexao);
 
-    if (navigator.connection) {
-        navigator.connection.addEventListener('change', atualizarStatusConexao);
+document.addEventListener("DOMContentLoaded", async function() {
+  atualizarStatusConexao();
+  flatpickr("input[type='date']", {
+    locale: "pt",
+    dateFormat: "Y-m-d",
+    allowInput: false,
+    onChange: function(selectedDates, dateStr, instance) {
+      window.atualizarCorCampo(instance.element);
+      ocultarMensagem();
     }
+  });
 
-    /* =====================================================
-        INICIALIZAÇÃO DO CALENDAR FLATPICKR E CAMPOS
-    ===================================================== */
-    document.addEventListener("DOMContentLoaded", function() {
-        atualizarStatusConexao();
-
-        flatpickr("input[type='date']", {
-            locale: "pt",
-            dateFormat: "Y-m-d",
-            allowInput: false,
-            onChange: function(selectedDates, dateStr, instance) {
-                window.atualizarCorCampo(instance.element);
-                ocultarMensagem();
-            }
-        });
-
-        const campos = document.querySelectorAll("#formServidor input, #formServidor select");
-
-        campos.forEach(function(campo) {
-            campo.addEventListener("input", function() {
-                atualizarCorCampo(campo);
-                ocultarMensagem();
-            });
-
-            campo.addEventListener("change", function() {
-                atualizarCorCampo(campo);
-                ocultarMensagem();
-            });
-
-            atualizarCorCampo(campo);
-        });
+  const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+  campos.forEach(function(campo) {
+    campo.addEventListener("input", function() {
+      atualizarCorCampo(campo);
+      ocultarMensagem();
     });
+    campo.addEventListener("change", function() {
+      atualizarCorCampo(campo);
+      ocultarMensagem();
+    });
+    atualizarCorCampo(campo);
+  });
 
-    /* =====================================================
-        CAMPOS PREENCHIDOS
-    ===================================================== */
-    window.atualizarCorCampo = function(campo) {
-        if (campo.value && campo.value.trim() !== "") {
-            if (!campo.classList.contains("erro-input")) {
-                campo.classList.add("preenchido");
-            }
-        } else {
-            campo.classList.remove("preenchido");
-            campo.classList.remove("erro-input");
+  if (servidorId) {
+    document.title = "Editar Servidor - Vale Transporte";
+    document.querySelector(".breadcrumb span:last-child").textContent = "Editar cadastro";
+    document.querySelector(".page-header h1").textContent = "Editar Servidor";
+    document.querySelector(".page-header p").textContent = "Atualize os dados cadastrais do servidor no sistema.";
+    document.querySelector(".card-title").textContent = "Editar dados do servidor";
+    document.getElementById("textoBotao").textContent = "Atualizar";
+    document.getElementById("iconeSalvar").textContent = "update";
+
+    await carregarDadosServidor(servidorId);
+  }
+});
+
+async function carregarDadosServidor(id) {
+  try {
+    const docRef = doc(db, "servidores", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const d = docSnap.data();
+
+      document.getElementById("nome").value = d.nome || "";
+      document.getElementById("cpf").value = d.cpf || "";
+      document.getElementById("email").value = d.email || "";
+      document.getElementById("dataNascimento").value = d.dataNascimento || "";
+      document.getElementById("dataAdmissao").value = d.dataAdmissao || "";
+      document.getElementById("telefone").value = d.telefone || "";
+
+      if (d.dataNascimento && document.getElementById("dataNascimento")._flatpickr) {
+        document.getElementById("dataNascimento")._flatpickr.setDate(d.dataNascimento);
+      }
+      if (d.dataAdmissao && document.getElementById("dataAdmissao")._flatpickr) {
+        document.getElementById("dataAdmissao")._flatpickr.setDate(d.dataAdmissao);
+      }
+
+      document.getElementById("cep").value = d.cep || "";
+      document.getElementById("bairro").value = d.bairro || "";
+      document.getElementById("logradouro").value = d.logradouro || "";
+      document.getElementById("numero").value = d.numero || "";
+      document.getElementById("complemento").value = d.complemento || "";
+      document.getElementById("cidade").value = d.cidade || "";
+      document.getElementById("uf").value = d.uf || "";
+
+      if (d.matricula1) {
+        document.getElementById("numeroMatricula1").value = d.matricula1.numeroMatricula || "";
+        document.getElementById("cargo1").value = d.matricula1.cargo || "";
+        if (d.matricula1.escola1) {
+          document.getElementById("escola1_m1").value = d.matricula1.escola1.nomeEscola || "";
+          document.getElementById("empresa1_m1").value = d.matricula1.escola1.empresa || "";
+          document.getElementById("qtdPassagens1_m1").value = d.matricula1.escola1.qtdPassagensDiarias || "";
         }
+        if (d.matricula1.escola2) {
+          toggleEscolaExtra(1);
+          document.getElementById("escola2_m1").value = d.matricula1.escola2.nomeEscola || "";
+          document.getElementById("empresa_escola2_m1").value = d.matricula1.escola2.empresa || "";
+          document.getElementById("qtdPassagens_escola2_m1").value = d.matricula1.escola2.qtdPassagensDiarias || "";
+        }
+      }
+
+      if (d.matricula2) {
+        document.getElementById("possuiSegundoVinculo").checked = true;
+        toggleSegundoVinculo();
+        document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
+        document.getElementById("cargo2").value = d.matricula2.cargo || "";
+        if (d.matricula2.escola1) {
+          document.getElementById("escola1_m2").value = d.matricula2.escola1.nomeEscola || "";
+          document.getElementById("empresa1_m2").value = d.matricula2.escola1.empresa || "";
+          document.getElementById("qtdPassagens1_m2").value = d.matricula2.escola1.qtdPassagensDiarias || "";
+        }
+        if (d.matricula2.escola2) {
+          toggleEscolaExtra(2);
+          document.getElementById("escola2_m2").value = d.matricula2.escola2.nomeEscola || "";
+          document.getElementById("empresa_escola2_m2").value = d.matricula2.escola2.empresa || "";
+          document.getElementById("qtdPassagens_escola2_m2").value = d.matricula2.escola2.qtdPassagensDiarias || "";
+        }
+      }
+
+      const camposPreenchidos = document.querySelectorAll("#formServidor input, #formServidor select");
+      camposPreenchidos.forEach(c => atualizarCorCampo(c));
+
+    } else {
+      mostrarMensagem("Servidor não encontrado.", "erro");
     }
+  } catch (erro) {
+    console.error("Erro ao carregar dados do servidor para edição:", erro);
+    mostrarMensagem("Erro ao carregar os dados.", "erro");
+  }
+}
 
-    /* =====================================================
-        CPF
-    ===================================================== */
-    window.formatarCPF = function(input) {
-        let valor = input.value.replace(/\D/g, "");
-        valor = valor.substring(0, 11);
-
-        if (valor.length > 9) {
-            valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
-        } else if (valor.length > 6) {
-            valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
-        } else if (valor.length > 3) {
-            valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
-        }
-
-        input.value = valor;
-        input.classList.remove("erro-input");
-        atualizarCorCampo(input);
+window.atualizarCorCampo = function(campo) {
+  if (campo.value && campo.value.trim() !== "") {
+    if (!campo.classList.contains("erro-input")) {
+      campo.classList.add("preenchido");
     }
+  } else {
+    campo.classList.remove("preenchido");
+    campo.classList.remove("erro-input");
+  }
+}
 
-    /* =====================================================
-        VERIFICAÇÃO DE CPF PONTUAL (GASTA APENAS 1 LEITURA)
-    ===================================================== */
-    window.verificarCpfDuplicado = async function(input) {
-        const cpf = input.value.trim();
-        const cpfNumeros = cpf.replace(/\D/g, "");
+window.formatarCPF = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 11);
+  if (valor.length > 9) {
+    valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+  } else if (valor.length > 6) {
+    valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+  } else if (valor.length > 3) {
+    valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+  }
+  input.value = valor;
+  input.classList.remove("erro-input");
+  atualizarCorCampo(input);
+}
 
-        if (cpfNumeros.length === 11) {
-            try {
-                const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) {
-                    mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
-                    input.classList.remove("preenchido");
-                    input.classList.add("erro-input");
-                    input.focus();
-                } else {
-                    input.classList.remove("erro-input");
-                    atualizarCorCampo(input);
-                    ocultarMensagem();
-                }
-            } catch (erro) {
-                console.error("Erro ao verificar CPF no Firebase:", erro);
-            }
-        } else {
-            input.classList.remove("erro-input");
-        }
-    }
-
-    /* =====================================================
-        TELEFONE
-    ===================================================== */
-    window.formatarTelefone = function(input) {
-        let valor = input.value.replace(/\D/g, "");
-        valor = valor.substring(0, 11);
-
-        if (valor.length > 10) {
-            valor = valor.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, "($1) $2-$3");
-        } else if (valor.length > 6) {
-            valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
-        } else if (valor.length > 2) {
-            valor = valor.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
-        } else if (valor.length > 0) {
-            valor = valor.replace(/^(\d{0,2})/, "($1");
-        }
-
-        input.value = valor;
-        atualizarCorCampo(input);
-    }
-
-    /* =====================================================
-        CEP - VIA CEP INTEGRAÇÃO
-    ===================================================== */
-    window.formatarCEP = function(input) {
-        let valor = input.value.replace(/\D/g, "");
-        valor = valor.substring(0, 8);
-        if (valor.length > 5) {
-            valor = valor.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
-        }
-        input.value = valor;
-        input.classList.remove("erro-input");
-        atualizarCorCampo(input);
-    }
-
-    window.buscarCEP = async function(input) {
-        let cep = input.value.replace(/\D/g, "");
-        
-        if (cep.length === 8) {
-            try {
-                input.disabled = true;
-                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                const data = await response.json();
-
-                if (!data.erro) {
-                    document.getElementById("logradouro").value = data.logradouro;
-                    document.getElementById("bairro").value = data.bairro;
-                    document.getElementById("cidade").value = data.localidade;
-                    document.getElementById("uf").value = data.uf;
-                    
-                    atualizarCorCampo(document.getElementById("logradouro"));
-                    atualizarCorCampo(document.getElementById("bairro"));
-                    atualizarCorCampo(document.getElementById("cidade"));
-                    atualizarCorCampo(document.getElementById("uf"));
-
-                    input.classList.remove("erro-input");
-                    document.getElementById("numero").focus(); 
-                    ocultarMensagem();
-                } else {
-                    mostrarMensagem("CEP não encontrado.", "erro");
-                    input.classList.add("erro-input");
-                }
-            } catch (error) {
-                console.error("Erro ao buscar CEP:", error);
-                mostrarMensagem("Erro ao consultar o CEP. Verifique sua internet.", "erro");
-            } finally {
-                input.disabled = false;
-            }
-        } else if(cep.length > 0) {
-            input.classList.add("erro-input");
-        }
-    }
-
-    /* =====================================================
-        CONTROLE DE ESCOLA EXTRA (LOTAÇÃO MÚLTIPLA)
-    ===================================================== */
-    window.toggleEscolaExtra = function(numMatricula) {
-        const blocoExtra = document.getElementById("escolaExtra" + numMatricula);
-        const botao = document.getElementById("btnToggleEscola" + numMatricula);
-
-        if (blocoExtra.classList.contains("ativo")) {
-            blocoExtra.classList.remove("ativo");
-            document.getElementById("escola2_m" + numMatricula).value = "";
-            document.getElementById("empresa_escola2_m" + numMatricula).value = "";
-            document.getElementById("qtdPassagens_escola2_m" + numMatricula).value = "";
-            botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-        } else {
-            blocoExtra.classList.add("ativo");
-            botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">remove_circle</span> Remover segunda escola';
-        }
-    }
-
-    /* =====================================================
-        CONTROLE DO SEGUNDO VÍNCULO (MATRÍCULA 2)
-    ===================================================== */
-    window.toggleSegundoVinculo = function() {
-        const checkbox = document.getElementById("possuiSegundoVinculo");
-        const bloco = document.getElementById("blocoSegundoVinculo");
-        
-        if (checkbox.checked) {
-            bloco.classList.add("ativo");
-        } else {
-            bloco.classList.remove("ativo");
-            document.getElementById("numeroMatricula2").value = "";
-            document.getElementById("cargo2").value = "";
-            document.getElementById("escola1_m2").value = "";
-            document.getElementById("empresa1_m2").value = "";
-            document.getElementById("qtdPassagens1_m2").value = "";
-            
-            document.getElementById("escolaExtra2").classList.remove("ativo");
-            document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-
-            const camposM2 = bloco.querySelectorAll("input, select");
-            camposM2.forEach(c => {
-                c.classList.remove("preenchido");
-                c.classList.remove("erro-input");
-            });
-        }
-    }
-
-    /* =====================================================
-        SALVAR NO FIREBASE
-    ===================================================== */
-    window.salvarServidor = async function(event) {
-        event.preventDefault();
-
-        const nome = document.getElementById("nome").value.trim();
-        const cpf = document.getElementById("cpf").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const dataNascimento = document.getElementById("dataNascimento").value;
-        const dataAdmissao = document.getElementById("dataAdmissao").value;
-        const telefone = document.getElementById("telefone").value.trim();
-
-        const cep = document.getElementById("cep").value.trim();
-        const bairro = document.getElementById("bairro").value.trim();
-        const logradouro = document.getElementById("logradouro").value.trim();
-        const numero = document.getElementById("numero").value.trim();
-        const complemento = document.getElementById("complemento").value.trim();
-        const cidade = document.getElementById("cidade").value.trim();
-        const uf = document.getElementById("uf").value.trim();
-
-        // Matrícula 1
-        const numeroMatricula1 = document.getElementById("numeroMatricula1").value.trim();
-        const cargo1 = document.getElementById("cargo1").value.trim();
-        const escola1_m1 = document.getElementById("escola1_m1").value;
-        const empresa1_m1 = document.getElementById("empresa1_m1").value;
-        const qtdPassagens1_m1 = document.getElementById("qtdPassagens1_m1").value.trim();
-        
-        const temEscola2_m1 = document.getElementById("escolaExtra1").classList.contains("ativo");
-        const escola2_m1 = temEscola2_m1 ? document.getElementById("escola2_m1").value : null;
-        const empresaEscola2_m1 = temEscola2_m1 ? document.getElementById("empresa_escola2_m1").value : null;
-        const qtdPassagensEscola2_m1 = temEscola2_m1 ? document.getElementById("qtdPassagens_escola2_m1").value.trim() : null;
-
-        // Matrícula 2
-        const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
-        const numeroMatricula2 = temSegundoVinculo ? document.getElementById("numeroMatricula2").value.trim() : null;
-        const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
-        const escola1_m2 = temSegundoVinculo ? document.getElementById("escola1_m2").value : null;
-        const empresa1_m2 = temSegundoVinculo ? document.getElementById("empresa1_m2").value : null;
-        const qtdPassagens1_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens1_m2").value.trim() : null;
-
-        const temEscola2_m2 = temSegundoVinculo && document.getElementById("escolaExtra2").classList.contains("ativo");
-        const escola2_m2 = temEscola2_m2 ? document.getElementById("escola2_m2").value : null;
-        const empresaEscola2_m2 = temEscola2_m2 ? document.getElementById("empresa_escola2_m2").value : null;
-        const qtdPassagensEscola2_m2 = temEscola2_m2 ? document.getElementById("qtdPassagens_escola2_m2").value.trim() : null;
-
-        // Monta o array de escolas para consulta rápida otimizada
-        let escolasArray = [];
-        if (escola1_m1) escolasArray.push(escola1_m1);
-        if (temEscola2_m1 && escola2_m1) escolasArray.push(escola2_m1);
-        if (temSegundoVinculo) {
-            if (escola1_m2) escolasArray.push(escola1_m2);
-            if (temEscola2_m2 && escola2_m2) escolasArray.push(escola2_m2);
-        }
-        escolasArray = [...new Set(escolasArray)]; // Remove duplicadas
-
-        const cpfNumeros = cpf.replace(/\D/g, "");
-        const telefoneNumeros = telefone.replace(/\D/g, "");
-
-        if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !numeroMatricula1 || !cargo1 || !escola1_m1 || !empresa1_m1 || !qtdPassagens1_m1) {
-            mostrarMensagem("Preencha todos os campos obrigatórios da Matrícula 1, Pessoais e Endereço.", "erro");
-            return;
-        }
-
-        if (temSegundoVinculo && (!numeroMatricula2 || !cargo2 || !escola1_m2 || !empresa1_m2 || !qtdPassagens1_m2)) {
-            mostrarMensagem("Preencha os campos obrigatórios da Matrícula 2 (Segundo Vínculo).", "erro");
-            return;
-        }
-
-        if (cpfNumeros.length !== 11) {
-            mostrarMensagem("O CPF deve possuir exatamente 11 dígitos.", "erro");
-            document.getElementById("cpf").focus();
-            return;
-        }
-
-        if (telefoneNumeros.length !== 10 && telefoneNumeros.length !== 11) {
-            mostrarMensagem("Informe um telefone válido.", "erro");
-            document.getElementById("telefone").focus();
-            return;
-        }
-
-        try {
-            const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
-                const campoCpf = document.getElementById("cpf");
-                campoCpf.classList.remove("preenchido");
-                campoCpf.classList.add("erro-input");
-                campoCpf.focus();
-                return;
-            }
-        } catch (erro) {
-            console.error("Erro ao validar CPF duplicado antes de salvar:", erro);
-            mostrarMensagem("Erro ao verificar duplicidade. Verifique sua conexão.", "erro");
-            return;
-        }
-
-        const btnSalvar = document.getElementById("btnSalvar");
-        const textoBotao = document.getElementById("textoBotao");
-        const iconeSalvar = document.getElementById("iconeSalvar");
-
-        btnSalvar.disabled = true;
-        textoBotao.textContent = "Salvando...";
-        iconeSalvar.textContent = "sync";
-
-        try {
-            await addDoc(collection(db, "servidores"), {
-                nome: nome,
-                cpf: cpf,
-                email: email,
-                dataNascimento: dataNascimento,
-                dataAdmissao: dataAdmissao,
-                telefone: telefone,
-                cep: cep,
-                bairro: bairro,
-                logradouro: logradouro,
-                numero: numero,
-                complemento: complemento,
-                cidade: cidade,
-                uf: uf,
-                escolas: escolasArray, // Campo auxiliar otimizado para a busca por escola
-                matricula1: {
-                    numeroMatricula: numeroMatricula1,
-                    cargo: cargo1,
-                    escola1: {
-                        nomeEscola: escola1_m1,
-                        empresa: empresa1_m1,
-                        qtdPassagensDiarias: Number(qtdPassagens1_m1)
-                    },
-                    escola2: temEscola2_m1 ? {
-                        nomeEscola: escola2_m1,
-                        empresa: empresaEscola2_m1,
-                        qtdPassagensDiarias: Number(qtdPassagensEscola2_m1)
-                    } : null
-                },
-                matricula2: temSegundoVinculo ? {
-                    numeroMatricula: numeroMatricula2,
-                    cargo: cargo2,
-                    escola1: {
-                        nomeEscola: escola1_m2,
-                        empresa: empresa1_m2,
-                        qtdPassagensDiarias: Number(qtdPassagens1_m2)
-                    },
-                    escola2: temEscola2_m2 ? {
-                        nomeEscola: escola2_m2,
-                        empresa: empresaEscola2_m2,
-                        qtdPassagensDiarias: Number(qtdPassagensEscola2_m2)
-                    } : null
-                } : null,
-                dataCriacao: new Date().toISOString()
-            });
-
-            document.getElementById("formServidor").reset();
-            document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
-            document.getElementById("escolaExtra1").classList.remove("ativo");
-            document.getElementById("escolaExtra2").classList.remove("ativo");
-            document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-            document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-            
-            const dateInputs = document.querySelectorAll("input[type='date']");
-            dateInputs.forEach(input => {
-                if (input._flatpickr) {
-                    input._flatpickr.clear();
-                }
-            });
-
-            const campos = document.querySelectorAll("#formServidor input, #formServidor select");
-            campos.forEach(function(campo) {
-                campo.classList.remove("preenchido");
-                campo.classList.remove("erro-input");
-            });
-
-            mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
-
-        } catch (erro) {
-            console.error("Erro ao salvar no Firebase: ", erro);
-            mostrarMensagem("Erro de conexão! Não foi possível salvar. Verifique sua internet.", "erro");
-        } finally {
-            btnSalvar.disabled = false;
-            textoBotao.textContent = "Salvar";
-            iconeSalvar.textContent = "save";
-        }
-    }
-
-    /* =====================================================
-        IMPORTAR CSV
-    ===================================================== */
-    window.importarCSV = function() {
-        alert("Função de importação CSV será implementada.");
-    }
-
-    /* =====================================================
-        CANCELAR / LIMPAR
-    ===================================================== */
-    window.cancelar = function() {
-        document.getElementById("formServidor").reset();
-        document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
-        document.getElementById("escolaExtra1").classList.remove("ativo");
-        document.getElementById("escolaExtra2").classList.remove("ativo");
-        document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-        document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
-
-        const dateInputs = document.querySelectorAll("input[type='date']");
-        dateInputs.forEach(input => {
-            if (input._flatpickr) {
-                input._flatpickr.clear();
-            }
+window.verificarCpfDuplicado = async function(input) {
+  const cpf = input.value.trim();
+  const cpfNumeros = cpf.replace(/\D/g, "");
+  if (cpfNumeros.length === 11) {
+    try {
+      const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        let duplicado = false;
+        querySnapshot.forEach((docSnap) => {
+          if (servidorId && docSnap.id === servidorId) return;
+          duplicado = true;
         });
+        if (duplicado) {
+          mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+          input.classList.remove("preenchido");
+          input.classList.add("erro-input");
+          input.focus();
+          return;
+        }
+      }
+      input.classList.remove("erro-input");
+      atualizarCorCampo(input);
+      ocultarMensagem();
+    } catch (erro) {
+      console.error("Erro ao verificar CPF no Firebase:", erro);
+    }
+  } else {
+    input.classList.remove("erro-input");
+  }
+}
 
-        const campos = document.querySelectorAll("#formServidor input, #formServidor select");
-        campos.forEach(function(campo) {
-            campo.classList.remove("preenchido");
-            campo.classList.remove("erro-input");
-        });
+window.formatarTelefone = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 11);
+  if (valor.length > 10) {
+    valor = valor.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (valor.length > 6) {
+    valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (valor.length > 2) {
+    valor = valor.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+  } else if (valor.length > 0) {
+    valor = valor.replace(/^(\d{0,2})/, "($1");
+  }
+  input.value = valor;
+  atualizarCorCampo(input);
+}
 
+window.formatarCEP = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 8);
+  if (valor.length > 5) {
+    valor = valor.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
+  }
+  input.value = valor;
+  input.classList.remove("erro-input");
+  atualizarCorCampo(input);
+}
+
+window.buscarCEP = async function(input) {
+  let cep = input.value.replace(/\D/g, "");
+  if (cep.length === 8) {
+    try {
+      input.disabled = true;
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        document.getElementById("logradouro").value = data.logradouro;
+        document.getElementById("bairro").value = data.bairro;
+        document.getElementById("cidade").value = data.localidade;
+        document.getElementById("uf").value = data.uf;
+        atualizarCorCampo(document.getElementById("logradouro"));
+        atualizarCorCampo(document.getElementById("bairro"));
+        atualizarCorCampo(document.getElementById("cidade"));
+        atualizarCorCampo(document.getElementById("uf"));
+        input.classList.remove("erro-input");
+        document.getElementById("numero").focus();
         ocultarMensagem();
+      } else {
+        mostrarMensagem("CEP não encontrado.", "erro");
+        input.classList.add("erro-input");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
+      mostrarMensagem("Erro ao consultar o CEP. Verifique sua internet.", "erro");
+    } finally {
+      input.disabled = false;
     }
+  } else if (cep.length > 0) {
+    input.classList.add("erro-input");
+  }
+}
 
-    /* =====================================================
-        MENSAGEM
-    ===================================================== */
-    window.mostrarMensagem = function(texto, tipo) {
-        const mensagem = document.getElementById("mensagem");
-        mensagem.textContent = texto;
-        mensagem.className = "mensagem " + tipo;
-    }
+window.toggleEscolaExtra = function(numMatricula) {
+  const blocoExtra = document.getElementById("escolaExtra" + numMatricula);
+  const botao = document.getElementById("btnToggleEscola" + numMatricula);
+  if (blocoExtra.classList.contains("ativo")) {
+    blocoExtra.classList.remove("ativo");
+    document.getElementById("escola2_m" + numMatricula).value = "";
+    document.getElementById("empresa_escola2_m" + numMatricula).value = "";
+    document.getElementById("qtdPassagens_escola2_m" + numMatricula).value = "";
+    botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  } else {
+    blocoExtra.classList.add("ativo");
+    botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">remove_circle</span> Remover segunda escola';
+  }
+}
 
-    window.ocultarMensagem = function() {
-        const mensagem = document.getElementById("mensagem");
-        if (mensagem.classList.contains("sucesso") || mensagem.classList.contains("erro")) {
-            mensagem.className = "mensagem";
-            mensagem.textContent = "";
-        }
+window.toggleSegundoVinculo = function() {
+  const checkbox = document.getElementById("possuiSegundoVinculo");
+  const bloco = document.getElementById("blocoSegundoVinculo");
+  if (checkbox.checked) {
+    bloco.classList.add("ativo");
+  } else {
+    bloco.classList.remove("ativo");
+    document.getElementById("numeroMatricula2").value = "";
+    document.getElementById("cargo2").value = "";
+    document.getElementById("escola1_m2").value = "";
+    document.getElementById("empresa1_m2").value = "";
+    document.getElementById("qtdPassagens1_m2").value = "";
+    document.getElementById("escolaExtra2").classList.remove("ativo");
+    document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+    const camposM2 = bloco.querySelectorAll("input, select");
+    camposM2.forEach(c => {
+      c.classList.remove("preenchido");
+      c.classList.remove("erro-input");
+    });
+  }
+}
+
+window.salvarServidor = async function(event) {
+  event.preventDefault();
+  const nome = document.getElementById("nome").value.trim();
+  const cpf = document.getElementById("cpf").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const dataNascimento = document.getElementById("dataNascimento").value;
+  const dataAdmissao = document.getElementById("dataAdmissao").value;
+  const telefone = document.getElementById("telefone").value.trim();
+  const cep = document.getElementById("cep").value.trim();
+  const bairro = document.getElementById("bairro").value.trim();
+  const logradouro = document.getElementById("logradouro").value.trim();
+  const numero = document.getElementById("numero").value.trim();
+  const complemento = document.getElementById("complemento").value.trim();
+  const cidade = document.getElementById("cidade").value.trim();
+  const uf = document.getElementById("uf").value.trim();
+
+  const numeroMatricula1 = document.getElementById("numeroMatricula1").value.trim();
+  const cargo1 = document.getElementById("cargo1").value.trim();
+  const escola1_m1 = document.getElementById("escola1_m1").value;
+  const empresa1_m1 = document.getElementById("empresa1_m1").value;
+  const qtdPassagens1_m1 = document.getElementById("qtdPassagens1_m1").value.trim();
+  const temEscola2_m1 = document.getElementById("escolaExtra1").classList.contains("ativo");
+  const escola2_m1 = temEscola2_m1 ? document.getElementById("escola2_m1").value : null;
+  const empresaEscola2_m1 = temEscola2_m1 ? document.getElementById("empresa_escola2_m1").value : null;
+  const qtdPassagensEscola2_m1 = temEscola2_m1 ? document.getElementById("qtdPassagens_escola2_m1").value.trim() : null;
+
+  const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
+  const numeroMatricula2 = temSegundoVinculo ? document.getElementById("numeroMatricula2").value.trim() : null;
+  const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
+  const escola1_m2 = temSegundoVinculo ? document.getElementById("escola1_m2").value : null;
+  const empresa1_m2 = temSegundoVinculo ? document.getElementById("empresa1_m2").value : null;
+  const qtdPassagens1_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens1_m2").value.trim() : null;
+  const temEscola2_m2 = temSegundoVinculo && document.getElementById("escolaExtra2").classList.contains("ativo");
+  const escola2_m2 = temEscola2_m2 ? document.getElementById("escola2_m2").value : null;
+  const empresaEscola2_m2 = temEscola2_m2 ? document.getElementById("empresa_escola2_m2").value : null;
+  const qtdPassagensEscola2_m2 = temEscola2_m2 ? document.getElementById("qtdPassagens_escola2_m2").value.trim() : null;
+
+  let escolasArray = [];
+  if (escola1_m1) escolasArray.push(escola1_m1);
+  if (temEscola2_m1 && escola2_m1) escolasArray.push(escola2_m1);
+  if (temSegundoVinculo) {
+    if (escola1_m2) escolasArray.push(escola1_m2);
+    if (temEscola2_m2 && escola2_m2) escolasArray.push(escola2_m2);
+  }
+  escolasArray = [...new Set(escolasArray)];
+
+  const cpfNumeros = cpf.replace(/\D/g, "");
+  const telefoneNumeros = telefone.replace(/\D/g, "");
+
+  if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !numeroMatricula1 || !cargo1 || !escola1_m1 || !empresa1_m1 || !qtdPassagens1_m1) {
+    mostrarMensagem("Preencha todos os campos obrigatórios da Matrícula 1, Pessoais e Endereço.", "erro");
+    return;
+  }
+  if (temSegundoVinculo && (!numeroMatricula2 || !cargo2 || !escola1_m2 || !empresa1_m2 || !qtdPassagens1_m2)) {
+    mostrarMensagem("Preencha os campos obrigatórios da Matrícula 2 (Segundo Vínculo).", "erro");
+    return;
+  }
+  if (cpfNumeros.length !== 11) {
+    mostrarMensagem("O CPF deve possuir exatamente 11 dígitos.", "erro");
+    document.getElementById("cpf").focus();
+    return;
+  }
+  if (telefoneNumeros.length !== 10 && telefoneNumeros.length !== 11) {
+    mostrarMensagem("Informe um telefone válido.", "erro");
+    document.getElementById("telefone").focus();
+    return;
+  }
+
+  try {
+    const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      let duplicado = false;
+      querySnapshot.forEach((docSnap) => {
+        if (servidorId && docSnap.id === servidorId) return;
+        duplicado = true;
+      });
+      if (duplicado) {
+        mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
+        const campoCpf = document.getElementById("cpf");
+        campoCpf.classList.remove("preenchido");
+        campoCpf.classList.add("erro-input");
+        campoCpf.focus();
+        return;
+      }
     }
+  } catch (erro) {
+    console.error("Erro ao validar CPF duplicado antes de salvar:", erro);
+    mostrarMensagem("Erro ao verificar duplicidade. Verifique sua conexão.", "erro");
+    return;
+  }
+
+  const btnSalvar = document.getElementById("btnSalvar");
+  const textoBotao = document.getElementById("textoBotao");
+  const iconeSalvar = document.getElementById("iconeSalvar");
+  btnSalvar.disabled = true;
+  textoBotao.textContent = servidorId ? "Atualizando..." : "Salvando...";
+  iconeSalvar.textContent = "sync";
+
+  const dadosObjeto = {
+    nome: nome,
+    cpf: cpf,
+    email: email,
+    dataNascimento: dataNascimento,
+    dataAdmissao: dataAdmissao,
+    telefone: telefone,
+    cep: cep,
+    bairro: bairro,
+    logradouro: logradouro,
+    numero: numero,
+    complemento: complemento,
+    cidade: cidade,
+    uf: uf,
+    escolas: escolasArray,
+    matricula1: {
+      numeroMatricula: numeroMatricula1,
+      cargo: cargo1,
+      escola1: {
+        nomeEscola: escola1_m1,
+        empresa: empresa1_m1,
+        qtdPassagensDiarias: Number(qtdPassagens1_m1)
+      },
+      escola2: temEscola2_m1 ? {
+        nomeEscola: escola2_m1,
+        empresa: empresaEscola2_m1,
+        qtdPassagensDiarias: Number(qtdPassagensEscola2_m1)
+      } : null
+    },
+    matricula2: temSegundoVinculo ? {
+      numeroMatricula: numeroMatricula2,
+      cargo: cargo2,
+      escola1: {
+        nomeEscola: escola1_m2,
+        empresa: empresa1_m2,
+        qtdPassagensDiarias: Number(qtdPassagens1_m2)
+      },
+      escola2: temEscola2_m2 ? {
+        nomeEscola: escola2_m2,
+        empresa: empresaEscola2_m2,
+        qtdPassagensDiarias: Number(qtdPassagensEscola2_m2)
+      } : null
+    } : null
+  };
+
+  try {
+    if (servidorId) {
+      const docRef = doc(db, "servidores", servidorId);
+      await updateDoc(docRef, dadosObjeto);
+      mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
+      setTimeout(() => {
+        window.location.href = "servidores.html";
+      }, 1200);
+    } else {
+      dadosObjeto.dataCriacao = new Date().toISOString();
+      await addDoc(collection(db, "servidores"), dadosObjeto);
+      document.getElementById("formServidor").reset();
+      document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+      document.getElementById("escolaExtra1").classList.remove("ativo");
+      document.getElementById("escolaExtra2").classList.remove("ativo");
+      document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+      document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+      
+      const dateInputs = document.querySelectorAll("input[type='date']");
+      dateInputs.forEach(input => {
+        if (input._flatpickr) input._flatpickr.clear();
+      });
+      const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+      campos.forEach(function(campo) {
+        campo.classList.remove("preenchido");
+        campo.classList.remove("erro-input");
+      });
+      mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
+    }
+  } catch (erro) {
+    console.error("Erro ao salvar no Firebase: ", erro);
+    mostrarMensagem("Erro de conexão! Não foi possível salvar. Verifique sua internet.", "erro");
+  } finally {
+    btnSalvar.disabled = false;
+    textoBotao.textContent = servidorId ? "Atualizar" : "Salvar";
+    iconeSalvar.textContent = servidorId ? "update" : "save";
+  }
+}
+
+window.importarCSV = function() {
+  alert("Função de importação CSV será implementada.");
+}
+
+window.cancelar = function() {
+  if (servidorId) {
+    window.location.href = "servidores.html";
+    return;
+  }
+  document.getElementById("formServidor").reset();
+  document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+  document.getElementById("escolaExtra1").classList.remove("ativo");
+  document.getElementById("escolaExtra2").classList.remove("ativo");
+  document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  const dateInputs = document.querySelectorAll("input[type='date']");
+  dateInputs.forEach(input => {
+    if (input._flatpickr) input._flatpickr.clear();
+  });
+  const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+  campos.forEach(function(campo) {
+    campo.classList.remove("preenchido");
+    campo.classList.remove("erro-input");
+  });
+  ocultarMensagem();
+}
+
+window.mostrarMensagem = function(texto, tipo) {
+  const mensagem = document.getElementById("mensagem");
+  mensagem.textContent = texto;
+  mensagem.className = "mensagem " + tipo;
+}
+
+window.ocultarMensagem = function() {
+  const mensagem = document.getElementById("mensagem");
+  if (mensagem.classList.contains("sucesso") || mensagem.classList.contains("erro")) {
+    mensagem.className = "mensagem";
+    mensagem.textContent = "";
+  }
+}
 </script>
 
 </body>
