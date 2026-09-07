@@ -5,16 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
 <title>Lançamentos e Afastamentos - Vale Transporte</title>
 
 <style>
-
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
@@ -572,7 +568,6 @@ tr:hover td {
         width: 100%;
     }
 }
-
 </style>
 </head>
 
@@ -635,7 +630,7 @@ tr:hover td {
     <div id="lockBanner" class="lock-banner">
         <span class="material-symbols-outlined">lock</span>
         <div>
-            <strong>Mês Fechado / Bloqueado pela SEMED:</strong> Este período encontra-se encerrado. Os lançamentos de afastamentos e alterações de dias úteis estão desativados para todas as escolas.
+            <strong>Mês Fechado / Congelado pela SEMED:</strong> Este período encontra-se encerrado. Os lançamentos de afastamentos e alterações de dias úteis estão desativados para todas as escolas.
         </div>
     </div>
 
@@ -695,10 +690,11 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
-    // Função rigorosa para checar se o mês está bloqueado/fechado na coleção 'configuracoes'
+    // Função rigorosa sincronizada com o painel da SEMED (lê flag 'congelado' e variantes)
     function verificarMesBloqueado(data) {
         if (!data) return false;
         return (
+            data.congelado === true || 
             data.bloqueado === true || 
             data.fechado === true || 
             data.status === 'fechado' || 
@@ -730,7 +726,7 @@ tr:hover td {
         }
 
         try {
-            // Busca configuração do mês na SEMED
+            // Busca configuração do mês cadastrada pela SEMED
             const semedConfigRef = doc(db, "configuracoes", mesAno);
             const semedSnap = await getDoc(semedConfigRef);
 
@@ -745,11 +741,11 @@ tr:hover td {
 
             let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
             if (mesBloqueado) {
-                textoInfo += " 🔒 [PERÍODO ENCERRADO PELO ADMINISTRADOR]";
+                textoInfo += " 🔒 [MÊS CONGELADO / FECHADO PELA SEMED]";
             }
             document.getElementById("infoSemedDefault").textContent = textoInfo;
 
-            // Busca dias úteis específicos da escola para o mês
+            // Busca dias úteis específicos definidos pela escola
             const configEscolaId = `${mesAno}_${escola}`;
             const configEscolaRef = doc(db, "escola_configuracoes_mensais", configEscolaId);
             const configEscolaSnap = await getDoc(configEscolaRef);
@@ -767,7 +763,7 @@ tr:hover td {
 
             schoolConfigCard.classList.add("ativo");
 
-            // BUSCA FÉRIAS/FOLGAS AUTOMÁTICAS DO MÊS
+            // BUSCA FÉRIAS / FOLGAS AUTOMÁTICAS DO MÊS
             const feriasMap = {};
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
@@ -921,7 +917,7 @@ tr:hover td {
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
             if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-                alert("Atenção: Este mês está fechado/bloqueado pela SEMED. Não é possível alterar os dias úteis.");
+                alert("Atenção: Este mês está congelado/fechado pela SEMED. Não é possível alterar os dias úteis.");
                 location.reload();
                 return;
             }
@@ -950,7 +946,7 @@ tr:hover td {
         try {
             const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
             if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-                alert("Atenção: Este mês está fechado/bloqueado pela SEMED. As alterações foram desativadas.");
+                alert("Atenção: Este mês está congelado/fechado pela SEMED. As alterações foram desativadas.");
                 location.reload();
                 return;
             }
