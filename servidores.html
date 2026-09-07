@@ -177,31 +177,6 @@ body {
     background-color: #2e7d32;
 }
 
-.status-conexao.instavel {
-    color: #b45309;
-    background: #fef3c7;
-    border-color: #fde68a;
-}
-.status-conexao.instavel .signal-bars .bar-1,
-.status-conexao.instavel .signal-bars .bar-2 {
-    background-color: #d97706;
-}
-
-.status-conexao.offline {
-    color: #c62828;
-    background: #fff0f0;
-    border-color: #efc5c5;
-}
-.status-conexao.offline .signal-bars .bar {
-    background-color: #ef4444;
-    animation: pulsar-sinal 1.2s infinite ease-in-out;
-}
-
-@keyframes pulsar-sinal {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
-}
-
 
 /* =====================================================
     ÁREA PRINCIPAL
@@ -1009,10 +984,10 @@ button .material-symbols-outlined {
     </section>
 </main>
 
-<!-- Scripts do Firebase e Lógica de Salvamento -->
+<!-- Scripts do Firebase e Lógica de Salvamento / Consulta -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // Configuração do Firebase (Substitua com suas credenciais)
     const firebaseConfig = {
@@ -1080,8 +1055,72 @@ button .material-symbols-outlined {
         bloco.classList.toggle('ativo');
     }
 
-    window.verificarCpfDuplicado = function(input) {
+    // =========================================================================
+    // 1. API DO CORREIO (VIACEP)
+    // =========================================================================
+    window.buscarCEP = async function(input) {
+        let cepLimpo = input.value.replace(/\D/g, '');
+        if (cepLimpo.length !== 8) return;
+
+        const feedback = document.getElementById('mensagemFeedback');
+
+        try {
+            let response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+            let data = await response.json();
+
+            if (!data.erro) {
+                document.getElementById('logradouro').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('uf').value = data.uf || '';
+
+                // Atualizar classes visuais de preenchimento
+                atualizarCorCampo(document.getElementById('logradouro'));
+                atualizarCorCampo(document.getElementById('bairro'));
+                atualizarCorCampo(document.getElementById('cidade'));
+                atualizarCorCampo(document.getElementById('uf'));
+                
+                feedback.className = "mensagem";
+                feedback.innerText = "";
+            } else {
+                feedback.className = "mensagem erro";
+                feedback.innerText = "CEP não encontrado na base dos Correios.";
+            }
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            feedback.className = "mensagem erro";
+            feedback.innerText = "Erro ao consultar o serviço de CEP.";
+        }
+    }
+
+    // =========================================================================
+    // 2. VERIFICAÇÃO DE CPF DUPLICADO NO FIRESTORE
+    // =========================================================================
+    window.verificarCpfDuplicado = async function(input) {
         atualizarCorCampo(input);
+        let cpfLimpo = input.value.replace(/\D/g, '');
+        const feedback = document.getElementById('mensagemFeedback');
+
+        if (cpfLimpo.length !== 11) return;
+
+        try {
+            const docRef = doc(db, "servidores", cpfLimpo);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                feedback.className = "mensagem erro";
+                feedback.innerText = "Atenção: Já existe um servidor cadastrado com este CPF!";
+                input.classList.add('erro-input');
+                document.getElementById('btnSalvar').disabled = true;
+            } else {
+                feedback.className = "mensagem";
+                feedback.innerText = "";
+                input.classList.remove('erro-input');
+                document.getElementById('btnSalvar').disabled = false;
+            }
+        } catch (error) {
+            console.error("Erro ao verificar CPF no Firestore:", error);
+        }
     }
 
     window.salvarServidor = async function(event) {
@@ -1125,7 +1164,6 @@ button .material-symbols-outlined {
             atualizadoEm: new Date().toISOString()
         };
 
-        // Adiciona escola extra 1 se preenchida
         const escola2_m1 = document.getElementById('escola2_m1').value;
         if (escola2_m1) {
             dadosServidor.matricula1.escola2 = {
@@ -1135,7 +1173,6 @@ button .material-symbols-outlined {
             };
         }
 
-        // Adiciona segundo vínculo se marcado
         const possuiSegundoVinculo = document.getElementById('possuiSegundoVinculo').checked;
         if (possuiSegundoVinculo) {
             dadosServidor.matricula2 = {
@@ -1153,13 +1190,11 @@ button .material-symbols-outlined {
             btnSalvar.disabled = true;
             btnSalvar.innerText = "Salvando...";
 
-            // AQUI ESTÁ A MUDANÇA: setDoc com o CPF limpo como ID único do documento
             await setDoc(doc(db, "servidores", cpfLimpo), dadosServidor, { merge: true });
 
             feedback.className = "mensagem sucesso";
             feedback.innerText = "Servidor salvo com sucesso! CPF utilizado como identificador único.";
             
-            // Opcional: Limpar formulário após alguns segundos
             setTimeout(() => {
                 document.getElementById('formServidor').reset();
                 feedback.className = "mensagem";
