@@ -438,7 +438,7 @@ tr:hover td {
             <span>Cálculo de Vales</span>
         </div>
         <h1>Fechamento e Cálculo de Passes</h1>
-        <p>Calcula a quantidade de vales considerando o calendário da escola, faltas e o abatimento automático de férias e folgas.</p>
+        <p>Calcula a quantidade de vales considerando o calendário da escola, faltas e o somatório automático de férias e lançamentos manuais.</p>
     </div>
 
     <!-- CARD DE FILTROS -->
@@ -565,7 +565,7 @@ tr:hover td {
         return null;
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM FALTAS, FÉRIAS E FOLGAS
+    // MOTOR DE CÁLCULO INTEGRADO COM SOMATÓRIO DE FÉRIAS E LANÇAMENTOS MANUAIS
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -606,27 +606,12 @@ tr:hover td {
                 console.log("Aviso: Configurações de dias por escola não encontradas.");
             }
 
-            // 3. Mapeia afastamentos e faltas da tela de lançamentos
-            const afastamentosMap = {};
-            try {
-                const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
-                const lancSnap = await getDocs(lancQuery);
-                lancSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const dias = Number(data.diasAfastamento) || 0;
-                    if (data.cpf) {
-                        const cpfLimpo = data.cpf.replace(/\D/g, "");
-                        if (data.escola) {
-                            afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
-                        }
-                        afastamentosMap[cpfLimpo] = dias;
-                    }
-                });
-            } catch (e) {
-                console.log("Aviso: Lançamentos mensais não encontrados.");
-            }
+            // 3. ESTRUTURAS SEPARADAS PARA SOMAR FÉRIAS AUTOMÁTICAS + LANÇAMENTOS MANUAIS
+            const feriasMap = {};
+            const manualEscolaMap = {};
+            const manualGeralMap = {};
 
-            // 4. INTEGRAÇÃO AUTOMÁTICA: Busca Férias e Folgas cadastradas e abate do mês (Robusto)
+            // 3.1. Carrega Férias e Folgas automáticas (Calculadas por período)
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
                 const [anoStr, mesStr] = mesAno.split("-");
@@ -647,14 +632,13 @@ tr:hover td {
                         const fim = parseDate(fimRaw);
 
                         if (inicio && fim && !isNaN(inicio) && !isNaN(fim)) {
-                            // Calcula intersecção do período de férias/folga com o mês de referência
                             const startOverlap = new Date(Math.max(inicio, primeiroDiaMes));
                             const endOverlap = new Date(Math.min(fim, ultimoDiaMes));
 
                             if (startOverlap <= endOverlap) {
                                 const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
                                 if (diasNoMes > 0) {
-                                    afastamentosMap[cpfLimpo] = (afastamentosMap[cpfLimpo] || 0) + diasNoMes;
+                                    feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
                                 }
                             }
                         }
@@ -664,7 +648,28 @@ tr:hover td {
                 console.log("Aviso: Erro ao calcular intersecção de férias e folgas:", e);
             }
 
-            // 5. Busca os servidores no Firebase
+            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas
+            try {
+                const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
+                const lancSnap = await getDocs(lancQuery);
+                lancSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dias = Number(data.diasAfastamento) || 0;
+                    if (data.cpf && dias > 0) {
+                        const cpfLimpo = data.cpf.replace(/\D/g, "");
+                        if (data.escola) {
+                            const chaveEscolaCpf = `${data.escola}_${cpfLimpo}`;
+                            manualEscolaMap[chaveEscolaCpf] = (manualEscolaMap[chaveEscolaCpf] || 0) + dias;
+                        } else {
+                            manualGeralMap[cpfLimpo] = (manualGeralMap[cpfLimpo] || 0) + dias;
+                        }
+                    }
+                });
+            } catch (e) {
+                console.log("Aviso: Lançamentos mensais não encontrados.");
+            }
+
+            // 4. Busca os servidores no Firebase
             let q;
             if (escolaSelecionada !== "TODAS") {
                 q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
@@ -685,7 +690,7 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 6. Processa o cálculo aplicando os dias da escola e os descontos totais de ausência
+            // 5. Processa o cálculo SOMANDO Férias Automáticas + Ajustes Manuais da Escola
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
@@ -696,8 +701,12 @@ tr:hover td {
                     if (!nomeEscola) return;
                     if (escolaSelecionada !== "TODAS" && nomeEscola !== escolaSelecionada) return;
 
+                    // Soma correta: Férias do sistema + Ajuste manual da escola para este vínculo
+                    const diasFerias = feriasMap[cpfLimpo] || 0;
                     const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                    const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
+                    const diasManual = manualEscolaMap[chaveEscolaCpf] !== undefined ? manualEscolaMap[chaveEscolaCpf] : (manualGeralMap[cpfLimpo] || 0);
+                    
+                    const diasAfastamento = diasFerias + diasManual;
 
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
