@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -9,7 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<!-- Biblioteca SheetJS para manipulação de Excel (.xlsx) e CSV no navegador -->
+<!-- Biblioteca SheetJS para manipulação de Excel (.xlsx), LibreOffice (.ods) e CSV no navegador -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <title>Painel do Administrador - Backup, Planilhas e CSV</title>
@@ -28,6 +27,9 @@
     --blue-hover: #0d47a1;
     --blue-light: #e3f2fd;
     --blue-border: #90caf9;
+
+    --teal: #00796b;
+    --teal-hover: #004d40;
 
     --red: #c62828;
     --red-hover: #a51f1f;
@@ -274,6 +276,13 @@ body {
     background: var(--green-hover);
 }
 
+.btn-admin.ods {
+    background: var(--teal);
+}
+.btn-admin.ods:hover {
+    background: var(--teal-hover);
+}
+
 .btn-admin.csv {
     background: var(--blue);
 }
@@ -416,10 +425,10 @@ body {
             <span class="material-symbols-outlined">admin_panel_settings</span>
             <span>Administração</span>
             <span>/</span>
-            <span>Exportação e Importação (JSON, Excel e CSV)</span>
+            <span>Exportação e Importação (JSON, Excel, LibreOffice e CSV)</span>
         </div>
         <h1>Painel de Controle e Gestão de Dados em Múltiplos Formatos</h1>
-        <p>Exporte e importe registros do banco de dados utilizando arquivos de backup estruturados em JSON, planilhas organizadas em abas (.xlsx) ou tabelas planas (.csv).</p>
+        <p>Exporte e importe registros do banco de dados utilizando arquivos de backup estruturados em JSON, planilhas organizadas em abas (.xlsx ou .ods) ou tabelas planas (.csv).</p>
     </div>
 
     <div id="mensagem" class="mensagem"></div>
@@ -432,7 +441,7 @@ body {
                     <span class="material-symbols-outlined">download</span>
                     <h2>Exportar Registros</h2>
                 </div>
-                <p>Baixe os dados do sistema no formato desejado: JSON (completo), Planilha Excel com múltiplas abas (.xlsx) ou CSV.</p>
+                <p>Baixe os dados do sistema no formato desejado: JSON (completo), Excel (.xlsx), LibreOffice Calc (.ods) ou CSV.</p>
             </div>
             <div class="btn-group-actions">
                 <button type="button" class="btn-admin" onclick="exportarBancoJSON()">
@@ -442,6 +451,10 @@ body {
                 <button type="button" class="btn-admin excel" onclick="exportarPlanilhaExcel()">
                     <span class="material-symbols-outlined" style="font-size: 18px;">table_view</span>
                     Exportar Planilha Excel (.xlsx)
+                </button>
+                <button type="button" class="btn-admin ods" onclick="exportarPlanilhaODS()">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">grid_on</span>
+                    Exportar LibreOffice Calc (.ods)
                 </button>
                 <button type="button" class="btn-admin csv" onclick="exportarCSVPrincipal()">
                     <span class="material-symbols-outlined" style="font-size: 18px;">description</span>
@@ -457,14 +470,14 @@ body {
                     <span class="material-symbols-outlined">upload</span>
                     <h2>Importar Registros</h2>
                 </div>
-                <p>Selecione um arquivo de backup nos formatos <b>.json</b>, <b>.xlsx</b> ou <b>.csv</b> para atualizar ou restaurar os dados no Firestore.</p>
+                <p>Selecione um arquivo de backup nos formatos <b>.json</b>, <b>.xlsx</b>, <b>.ods</b> ou <b>.csv</b> para atualizar ou restaurar os dados no Firestore.</p>
             </div>
             <div class="file-input-wrapper">
-                <button type="button" class="btn-admin excel">
+                <button type="button" class="btn-admin ods">
                     <span class="material-symbols-outlined">cloud_upload</span>
-                    Selecionar Arquivo (JSON, XLSX ou CSV)
+                    Selecionar Arquivo (JSON, XLSX, ODS ou CSV)
                 </button>
-                <input type="file" id="inputFileBackup" accept=".json, .xlsx, .xls, .csv" onchange="importarArquivoGeral(event)">
+                <input type="file" id="inputFileBackup" accept=".json, .xlsx, .xls, .ods, .csv" onchange="importarArquivoGeral(event)">
             </div>
         </section>
     </div>
@@ -544,7 +557,6 @@ body {
                 const linhas = [];
                 snap.forEach(d => {
                     const rowData = { id: d.id, ...d.data() };
-                    // Converte objetos aninhados em string para caber na planilha
                     for (const key of Object.keys(rowData)) {
                         if (typeof rowData[key] === 'object' && rowData[key] !== null) {
                             rowData[key] = JSON.stringify(rowData[key]);
@@ -555,7 +567,7 @@ body {
 
                 if (linhas.length > 0) {
                     const ws = XLSX.utils.json_to_sheet(linhas);
-                    XLSX.utils.book_append_sheet(wb, ws, col.substring(0, 31)); // Nome da aba limitado a 31 caracteres
+                    XLSX.utils.book_append_sheet(wb, ws, col.substring(0, 31));
                     registrarLog(`-> Aba "${col}" criada com ${linhas.length} registros.`);
                 } else {
                     const ws = XLSX.utils.json_to_sheet([{ aviso: "Nenhum registro encontrado" }]);
@@ -572,7 +584,48 @@ body {
         }
     }
 
-    // 3. EXPORTAR CSV (Foco na coleção principal: lançamentos_mensais)
+    // 3. EXPORTAR PLANILHA LIBREOFFICE CALC (.ODS) COM MÚLTIPLAS ABAS
+    window.exportarPlanilhaODS = async function() {
+        registrarLog("Iniciando exportação para LibreOffice Calc (.ods)...");
+        mostrarMensagem("Gerando arquivo LibreOffice Calc com abas...", "info");
+
+        try {
+            const wb = XLSX.utils.book_new();
+
+            for (const col of COLECOES_SISTEMA) {
+                const snap = await getDocs(collection(db, col));
+                const linhas = [];
+                snap.forEach(d => {
+                    const rowData = { id: d.id, ...d.data() };
+                    for (const key of Object.keys(rowData)) {
+                        if (typeof rowData[key] === 'object' && rowData[key] !== null) {
+                            rowData[key] = JSON.stringify(rowData[key]);
+                        }
+                    }
+                    linhas.push(rowData);
+                });
+
+                if (linhas.length > 0) {
+                    const ws = XLSX.utils.json_to_sheet(linhas);
+                    XLSX.utils.book_append_sheet(wb, ws, col.substring(0, 31));
+                    registrarLog(`-> Aba ODS "${col}" criada com ${linhas.length} registros.`);
+                } else {
+                    const ws = XLSX.utils.json_to_sheet([{ aviso: "Nenhum registro encontrado" }]);
+                    XLSX.utils.book_append_sheet(wb, ws, col.substring(0, 31));
+                }
+            }
+
+            // O SheetJS gerencia a exportação nativa ODS definindo a extensão .ods no nome do arquivo
+            XLSX.writeFile(wb, `valetransporte_dados_${new Date().toISOString().slice(0,10)}.ods`);
+            registrarLog("Exportação LibreOffice Calc (.ods) concluída com sucesso!");
+            mostrarMensagem("Planilha LibreOffice Calc (.ods) gerada com sucesso!", "sucesso");
+        } catch (e) {
+            registrarLog(`Erro ODS: ${e.message}`);
+            mostrarMensagem("Erro ao gerar planilha LibreOffice Calc.", "erro");
+        }
+    }
+
+    // 4. EXPORTAR CSV (Foco na coleção principal: lançamentos_mensais)
     window.exportarCSVPrincipal = async function() {
         registrarLog("Iniciando exportação de CSV...");
         mostrarMensagem("Gerando arquivo CSV...", "info");
@@ -609,7 +662,7 @@ body {
         }
     }
 
-    // 4. IMPORTAÇÃO INTELIGENTE DE ARQUIVOS (JSON, XLSX, CSV)
+    // 5. IMPORTAÇÃO INTELIGENTE DE ARQUIVOS (JSON, XLSX, ODS, CSV)
     window.importarArquivoGeral = async function(event) {
         const arquivo = event.target.files[0];
         if (!arquivo) return;
@@ -652,7 +705,7 @@ body {
             };
             leitor.readAsText(arquivo);
 
-        } else if (nomeArquivo.endsWith(".xlsx") || nomeArquivo.endsWith(".xls")) {
+        } else if (nomeArquivo.endsWith(".xlsx") || nomeArquivo.endsWith(".xls") || nomeArquivo.endsWith(".ods")) {
             leitor.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
@@ -668,9 +721,8 @@ body {
                         registrarLog(`Processando aba "${sheetName}" (${rows.length} linhas)...`);
                         for (const row of rows) {
                             const docId = row.id || `reg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                            delete row.id; // Remove id do corpo do dado
+                            delete row.id;
 
-                            // Restaura objetos JSON se necessário
                             for (const k of Object.keys(row)) {
                                 try {
                                     if (typeof row[k] === 'string' && (row[k].startsWith("{") || row[k].startsWith("["))) {
@@ -683,11 +735,11 @@ body {
                             total++;
                         }
                     }
-                    registrarLog(`Importação Excel concluída. ${total} registros atualizados.`);
+                    registrarLog(`Importação de planilha concluída. ${total} registros atualizados.`);
                     mostrarMensagem(`Planilha importada com sucesso (${total} registros)!`, "sucesso");
                 } catch (err) {
-                    registrarLog(`Erro Excel: ${err.message}`);
-                    mostrarMensagem("Erro ao processar planilha Excel.", "erro");
+                    registrarLog(`Erro na planilha: ${err.message}`);
+                    mostrarMensagem("Erro ao processar planilha.", "erro");
                 } finally {
                     event.target.value = "";
                 }
@@ -720,7 +772,7 @@ body {
             };
             leitor.readAsText(arquivo, "UTF-8");
         } else {
-            alert("Formato de arquivo não suportado. Utilize .json, .xlsx ou .csv");
+            alert("Formato de arquivo não suportado. Utilize .json, .xlsx, .ods ou .csv");
             event.target.value = "";
         }
     }
