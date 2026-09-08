@@ -1,3 +1,9 @@
+Versão Atual 
+Painel Admin com botões exportação e importação 
+
+
+_____________________________
+-----------------------------
 versão 1.4
 
 Melhorias que  contém nesta versão:
