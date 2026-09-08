@@ -356,18 +356,22 @@ input:checked + .slider:before {
 
 /* BOTÕES DE EXPORTAÇÃO */
 .btn-export {
-    height: 36px;
-    padding: 0 12px;
+    height: 40px;
+    padding: 0 16px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     border: none;
     color: white;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.btn-export:active {
+    transform: scale(0.98);
 }
 
 .btn-export.excel {
@@ -415,6 +419,7 @@ input:checked + .slider:before {
     border-radius: 8px;
     box-shadow: var(--shadow);
     overflow: hidden;
+    margin-bottom: 24px;
 }
 
 table {
@@ -703,7 +708,7 @@ button:disabled {
 
     <!-- TABELA DE HISTÓRICO DE MESES CONFIGURADOS -->
     <section class="table-card">
-        <div class="card-header" style="border-bottom: 1px solid #e5e8eb; background: #fafbfc; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div class="card-header" style="border-bottom: 1px solid #e5e8eb; background: #fafbfc;">
             <div style="display: flex; align-items: center; gap: 13px;">
                 <div class="card-icon" style="background: #eef2f7; color: #334155;">
                     <span class="material-symbols-outlined">history</span>
@@ -712,18 +717,6 @@ button:disabled {
                     <div class="card-title">Meses Já Configurados</div>
                     <div class="card-description">Lista de todos os períodos salvos no sistema.</div>
                 </div>
-            </div>
-            
-            <!-- Botões de Exportação -->
-            <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-export excel" onclick="exportarExcel()">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">table_view</span>
-                    Planilha (.xlsx)
-                </button>
-                <button type="button" class="btn-export csv" onclick="exportarCSV()">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">description</span>
-                    CSV (.csv)
-                </button>
             </div>
         </div>
         <table>
@@ -741,6 +734,29 @@ button:disabled {
                 </tr>
             </tbody>
         </table>
+    </section>
+
+    <!-- NOVO CARD: EXPORTAÇÃO DE ARQUIVOS -->
+    <section class="form-card">
+        <div class="card-header">
+            <div class="card-icon" style="background: #e1f5fe; color: #0288d1;">
+                <span class="material-symbols-outlined">download</span>
+            </div>
+            <div>
+                <div class="card-title">Exportação todos os arquivos finalizados mensal</div>
+                <div class="card-description">Baixe os relatórios completos e atualizados com os dados mensais configurados.</div>
+            </div>
+        </div>
+        <div class="form-body" style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn-export excel" onclick="exportarExcel()">
+                <span class="material-symbols-outlined" style="font-size: 18px;">table_view</span>
+                Planilha Excel (.xlsx)
+            </button>
+            <button type="button" class="btn-export csv" onclick="exportarCSV()">
+                <span class="material-symbols-outlined" style="font-size: 18px;">description</span>
+                Arquivo CSV (.csv)
+            </button>
+        </div>
     </section>
 </main>
 
@@ -812,7 +828,6 @@ button:disabled {
                 const obsTexto = item.observacoes ? item.observacoes.replace(/'/g, "\\'") : '';
                 const isCongelado = item.congelado || false;
                 
-                // Exibição visual do status na tabela
                 const statusBadge = isCongelado 
                     ? `<span style="display: inline-block; margin-top: 4px; color: #d32f2f; font-size: 11px; font-weight: 700; background: #fff0f0; padding: 2px 6px; border-radius: 4px; border: 1px solid #efc5c5;">🔒 Fechado</span>` 
                     : `<span style="display: inline-block; margin-top: 4px; color: #2e7d32; font-size: 11px; font-weight: 700; background: #edf7ee; padding: 2px 6px; border-radius: 4px; border: 1px solid #c8e6c9;">Aberto</span>`;
@@ -853,7 +868,6 @@ button:disabled {
         document.getElementById("diasUteis").value = dias;
         document.getElementById("observacoes").value = obs === 'null' ? '' : obs;
         
-        // Atualiza a chave de congelação e o texto correspondente
         document.getElementById("toggleCongelado").checked = isCongelado;
         atualizarTextoStatus(isCongelado);
 
@@ -863,7 +877,6 @@ button:disabled {
         mostrarMensagem(`Carregado mês ${formatarMesAno(mesAno)} para edição.`, "sucesso");
     }
 
-    // EXCLUI A CONFIGURAÇÃO DO MÊS COM CONFIRMAÇÃO
     window.excluirConfiguracao = async function(mesAno) {
         if (confirm(`Deseja realmente excluir a configuração do mês ${formatarMesAno(mesAno)}?`)) {
             try {
@@ -895,7 +908,6 @@ button:disabled {
                 inputDias.value = dados.diasUteis || "";
                 inputObs.value = dados.observacoes || "";
                 
-                // Carrega o status de congelamento, padrão falso
                 const isCongelado = dados.congelado || false;
                 toggleCongelado.checked = isCongelado;
                 atualizarTextoStatus(isCongelado);
@@ -907,7 +919,6 @@ button:disabled {
                 inputObs.value = "";
                 inputDias.classList.remove("preenchido");
                 
-                // Mês novo não cadastrado = aberto
                 toggleCongelado.checked = false;
                 atualizarTextoStatus(false);
             }
@@ -990,7 +1001,6 @@ button:disabled {
                 });
             });
 
-            // Ordena os dados por competência decrescente
             dados.sort((a, b) => b["Mês/Ano"].localeCompare(a["Mês/Ano"]));
 
             const wb = XLSX.utils.book_new();
