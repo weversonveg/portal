@@ -78,7 +78,6 @@
         import { db } from "./firebase.js";
         import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Máscara opcional para CPF caso o usuário digite números formatáveis
         document.getElementById('termoBusca').addEventListener('input', function(e) {
             let value = e.target.value;
             if (/^[0-9.\-]*$/.test(value) && value.replace(/\D/g, '').length <= 11) {
@@ -137,7 +136,6 @@
             
             if (!dia || !mes) return null;
             
-            // Dia seguinte ao aniversário
             let dataFolga = new Date(ano, mes - 1, dia + 1);
             dataFolga.setHours(0, 0, 0, 0);
             return dataFolga;
@@ -156,7 +154,6 @@
                 const colRef = collection(db, 'servidores');
                 let mapIds = new Map();
 
-                // Busca exata por ID
                 let docSnap = await getDoc(doc(db, 'servidores', termoInput));
                 if (docSnap.exists()) mapIds.set(docSnap.id, docSnap);
 
@@ -165,7 +162,6 @@
                     if (docSnapLimpo.exists()) mapIds.set(docSnapLimpo.id, docSnapLimpo);
                 }
 
-                // Queries em campos comuns
                 const queries = [
                     getDocs(query(colRef, where('cpf', '==', termoInput))),
                     getDocs(query(colRef, where('cpf', '==', termoLimpo))),
@@ -184,7 +180,6 @@
                     }
                 });
 
-                // Varredura abrangente caso nada retorne nas queries diretas
                 if (mapIds.size === 0) {
                     const todosSnap = await getDocs(colRef);
                     todosSnap.forEach(d => {
@@ -205,8 +200,7 @@
                     return;
                 }
 
-                // Agrega dados e matrículas (caso o CPF tenha mais de um vínculo)
-                processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
+                await processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
 
             } catch (error) {
                 console.error("Erro detalhado do Firebase:", error);
@@ -219,7 +213,6 @@
             const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
             const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
             
-            // Coleta todas as matrículas e IDs associados
             const matriculasSet = new Set();
             const servidorIds = [];
             let cpfsSet = new Set();
@@ -228,7 +221,7 @@
             servidoresDocs.forEach(d => {
                 servidorIds.push(d.id);
                 const data = d.data();
-                const mat = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula;
+                const mat = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo;
                 if (mat) matriculasSet.add(mat.toString());
                 
                 const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
@@ -247,17 +240,9 @@
                 }
             });
 
-            const listaMatriculas = Array.from(matriculasSet);
-            const matriculaExibicao = listaMatriculas.length > 0 ? listaMatriculas.join(' / ') : 'Não informada';
             const cpfEfetivo = cpfsSet.size > 0 ? Array.from(cpfsSet)[0] : termoBusca;
 
-            // Preenche dados cadastrais na tela
-            document.getElementById('nomeServidor').innerText = nomeServidor;
-            document.getElementById('matriculaServidor').innerText = matriculaExibicao;
-            document.getElementById('admissaoServidor').innerText = formatarData(primeiroData.data_admissao || primeiroData.dataAdmissao) || 'Não informado';
-            document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
-
-            // Busca histórico de férias e folgas de TODAS as matrículas/IDs do servidor
+            // Busca histórico de férias e folgas e extrai matrículas de lá também
             const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
             const registros = [];
 
@@ -269,12 +254,22 @@
 
                 const matchCpf = cpfEfetivo && regCpf === cpfEfetivo;
                 const matchId = servidorIds.includes(regServId);
-                const matchMat = listaMatriculas.includes(regMat);
+                const matchMat = Array.from(matriculasSet).includes(regMat);
 
                 if (matchCpf || matchId || matchMat) {
                     registros.push(regData);
+                    if (regMat) matriculasSet.add(regMat);
                 }
             });
+
+            const listaMatriculasFinal = Array.from(matriculasSet);
+            const matriculaExibicao = listaMatriculasFinal.length > 0 ? listaMatriculasFinal.join(' / ') : 'Não informada';
+
+            // Preenche dados cadastrais na tela
+            document.getElementById('nomeServidor').innerText = nomeServidor;
+            document.getElementById('matriculaServidor').innerText = matriculaExibicao;
+            document.getElementById('admissaoServidor').innerText = formatarData(primeiroData.data_admissao || primeiroData.dataAdmissao) || 'Não informado';
+            document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
 
             processarLinhaDoTempo({
                 anoAdmissao: menorAnoAdmissao,
