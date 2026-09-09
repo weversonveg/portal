@@ -104,36 +104,59 @@
             const cpfLimpo = cpfInput.replace(/\D/g, '');
 
             try {
-                // Busca na coleção 'servidores' (tratando variações de máscara e maiúsculas)
-                let servidorSnapshot = await db.collection('servidores').where('cpf', '==', cpfLimpo).get();
-                
-                if (servidorSnapshot.empty) {
-                    servidorSnapshot = await db.collection('servidores').where('cpf', '==', cpfInput).get();
-                }
-                if (servidorSnapshot.empty) {
-                    servidorSnapshot = await db.collection('servidores').where('CPF', '==', cpfLimpo).get();
+                let servidorDoc = null;
+
+                // 1. Tenta buscar direto pelo ID do documento (caso o CPF seja a chave do doc)
+                let docRef = await db.collection('servidores').doc(cpfLimpo).get();
+                if (docRef.exists) {
+                    servidorDoc = docRef;
+                } else {
+                    docRef = await db.collection('servidores').doc(cpfInput).get();
+                    if (docRef.exists) {
+                        servidorDoc = docRef;
+                    }
                 }
 
-                if (servidorSnapshot.empty) {
-                    alert('Servidor não encontrado na coleção "servidores". Verifique o CPF digitado.');
+                // 2. Se não achou pelo ID, tenta buscar pelos campos de texto
+                if (!servidorDoc || !servidorDoc.exists) {
+                    let servidorSnapshot = await db.collection('servidores').where('cpf', '==', cpfLimpo).get();
+                    if (servidorSnapshot.empty) {
+                        servidorSnapshot = await db.collection('servidores').where('cpf', '==', cpfInput).get();
+                    }
+                    if (servidorSnapshot.empty) {
+                        servidorSnapshot = await db.collection('servidores').where('CPF', '==', cpfLimpo).get();
+                    }
+                    if (servidorSnapshot.empty) {
+                        servidorSnapshot = await db.collection('servidores').where('CPF', '==', cpfInput).get();
+                    }
+
+                    if (!servidorSnapshot.empty) {
+                        servidorDoc = servidorSnapshot.docs[0];
+                    }
+                }
+
+                if (!servidorDoc || !servidorDoc.exists) {
+                    alert('Servidor não encontrado. Verifique se o CPF está correto.');
                     document.getElementById('resultadoContainer').classList.add('hidden');
                     return;
                 }
 
-                const servidorDoc = servidorSnapshot.docs[0];
                 const servidor = servidorDoc.data();
-                const cpfBuscaEfetivo = servidor.cpf || servidor.CPF || cpfLimpo;
+                const servidorId = servidorDoc.id;
+                const cpfBuscaEfetivo = servidor.cpf || servidor.CPF || servidorId;
 
-                // Preenche dados cadastrais
+                // Preenche dados cadastrais (suportando variações de maiúsculas/minúsculas)
                 document.getElementById('nomeServidor').innerText = servidor.nome || servidor.Nome || 'Não informado';
                 document.getElementById('admissaoServidor').innerText = servidor.data_admissao || servidor.dataAdmissao || 'Não informado';
                 document.getElementById('nascimentoServidor').innerText = servidor.data_nascimento || servidor.dataNascimento || 'Não informado';
 
                 // Busca na coleção 'registro_ferias_folgas'
                 let historicoSnapshot = await db.collection('registro_ferias_folgas').where('cpf', '==', cpfBuscaEfetivo).get();
-                
                 if (historicoSnapshot.empty) {
                     historicoSnapshot = await db.collection('registro_ferias_folgas').where('CPF', '==', cpfBuscaEfetivo).get();
+                }
+                if (historicoSnapshot.empty) {
+                    historicoSnapshot = await db.collection('registro_ferias_folgas').where('servidorId', '==', servidorId).get();
                 }
 
                 const registros = [];
@@ -146,7 +169,7 @@
 
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
-                alert('Erro ao consultar o banco de dados. Verifique o console para detalhes técnicos.');
+                alert('Erro ao consultar o banco de dados. Verifique o console.');
             }
         }
 
