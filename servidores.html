@@ -497,7 +497,7 @@ button .material-symbols-outlined {
       <span>Novo cadastro</span>
     </div>
     <h1>Novo Servidor</h1>
-    <p>Cadastre um novo servidor no sistema de Vale Transporte.</p>
+    <p>Cadastre um novo servidor no sistema de Vale Transporte[cite: 1].</p>
   </div>
 
   <section class="form-card">
@@ -507,7 +507,7 @@ button .material-symbols-outlined {
       </div>
       <div>
         <div class="card-title">Dados do servidor</div>
-        <div class="card-description">Informe os dados cadastrais abaixo.</div>
+        <div class="card-description">Informe os dados cadastrais abaixo[cite: 1].</div>
       </div>
     </div>
 
@@ -697,12 +697,6 @@ button .material-symbols-outlined {
             <div class="form-group">
               <label for="cargo2">Cargo / Função (Matrícula 2) <span>*</span></label>
               <input type="text" id="cargo2" name="cargo2" placeholder="Digite o cargo">
-            </div>
-
-            <!-- SEGUNDO CAMPO DE DATA PARA MATRÍCULA 2 -->
-            <div class="form-group full">
-              <label for="dataAdmissao2">Data de Admissão (Matrícula 2)</label>
-              <input type="date" id="dataAdmissao2" name="dataAdmissao2">
             </div>
 
             <div class="form-group full">
@@ -921,10 +915,6 @@ async function carregarDadosServidor(id) {
         toggleSegundoVinculo();
         document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
         document.getElementById("cargo2").value = d.matricula2.cargo || "";
-        document.getElementById("dataAdmissao2").value = d.matricula2.dataAdmissao || "";
-        if (d.matricula2.dataAdmissao && document.getElementById("dataAdmissao2")._flatpickr) {
-          document.getElementById("dataAdmissao2")._flatpickr.setDate(d.matricula2.dataAdmissao);
-        }
         if (d.matricula2.escola1) {
           document.getElementById("escola1_m2").value = d.matricula2.escola1.nomeEscola || "";
           document.getElementById("empresa1_m2").value = d.matricula2.escola1.empresa || "";
@@ -973,7 +963,363 @@ window.formatarCPF = function(input) {
   }
   input.value = valor;
   input.classList.remove("erro-input");
+  atualizarCorCampo(input);
+}
+
+window.verificarCpfDuplicado = async function(input) {
+  const cpf = input.value.trim();
+  const cpfNumeros = cpf.replace(/\D/g, "");
+  if (cpfNumeros.length === 11) {
+    try {
+      const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        let duplicado = false;
+        querySnapshot.forEach((docSnap) => {
+          if (servidorId && docSnap.id === servidorId) return;
+          duplicado = true;
+        });
+        if (duplicado) {
+          mostrarMensagem("Atenção: Este CPF já está cadastrado no sistema!", "erro");
+          input.classList.remove("preenchido");
+          input.classList.add("erro-input");
+          input.focus();
+          return;
+        }
+      }
+      input.classList.remove("erro-input");
+      atualizarCorCampo(input);
+      ocultarMensagem();
+    } catch (erro) {
+      console.error("Erro ao verificar CPF no Firebase:", erro);
+    }
+  } else {
+    input.classList.remove("erro-input");
+  }
+}
+
+window.formatarTelefone = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 11);
+  if (valor.length > 10) {
+    valor = valor.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (valor.length > 6) {
+    valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (valor.length > 2) {
+    valor = valor.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+  } else if (valor.length > 0) {
+    valor = valor.replace(/^(\d{0,2})/, "($1");
+  }
+  input.value = valor;
+  atualizarCorCampo(input);
+}
+
+window.formatarCEP = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 8);
+  if (valor.length > 5) {
+    valor = valor.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
+  }
+  input.value = valor;
+  input.classList.remove("erro-input");
+  atualizarCorCampo(input);
+}
+
+window.buscarCEP = async function(input) {
+  let cep = input.value.replace(/\D/g, "");
+  if (cep.length === 8) {
+    try {
+      input.disabled = true;
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        document.getElementById("logradouro").value = data.logradouro;
+        document.getElementById("bairro").value = data.bairro;
+        document.getElementById("cidade").value = data.localidade;
+        document.getElementById("uf").value = data.uf;
+        atualizarCorCampo(document.getElementById("logradouro"));
+        atualizarCorCampo(document.getElementById("bairro"));
+        atualizarCorCampo(document.getElementById("cidade"));
+        atualizarCorCampo(document.getElementById("uf"));
+        input.classList.remove("erro-input");
+        document.getElementById("numero").focus();
+        ocultarMensagem();
+      } else {
+        mostrarMensagem("CEP não encontrado.", "erro");
+        input.classList.add("erro-input");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar CEP:", error);
+      mostrarMensagem("Erro ao consultar o CEP. Verifique sua internet.", "erro");
+    } finally {
+      input.disabled = false;
+    }
+  } else if (cep.length > 0) {
+    input.classList.add("erro-input");
+  }
+}
+
+window.toggleEscolaExtra = function(numMatricula) {
+  const blocoExtra = document.getElementById("escolaExtra" + numMatricula);
+  const botao = document.getElementById("btnToggleEscola" + numMatricula);
+  if (blocoExtra.classList.contains("ativo")) {
+    blocoExtra.classList.remove("ativo");
+    document.getElementById("escola2_m" + numMatricula).value = "";
+    document.getElementById("empresa_escola2_m" + numMatricula).value = "";
+    document.getElementById("qtdPassagens_escola2_m" + numMatricula).value = "";
+    botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  } else {
+    blocoExtra.classList.add("ativo");
+    botao.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">remove_circle</span> Remover segunda escola';
+  }
+}
+
+window.toggleSegundoVinculo = function() {
+  const checkbox = document.getElementById("possuiSegundoVinculo");
+  const bloco = document.getElementById("blocoSegundoVinculo");
+  if (checkbox.checked) {
+    bloco.classList.add("ativo");
+  } else {
+    bloco.classList.remove("ativo");
+    document.getElementById("numeroMatricula2").value = "";
+    document.getElementById("cargo2").value = "";
+    document.getElementById("escola1_m2").value = "";
+    document.getElementById("empresa1_m2").value = "";
+    document.getElementById("qtdPassagens1_m2").value = "";
+    document.getElementById("escolaExtra2").classList.remove("ativo");
+    document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+    const camposM2 = bloco.querySelectorAll("input, select");
+    camposM2.forEach(c => {
+      c.classList.remove("preenchido");
+      c.classList.remove("erro-input");
+    });
+  }
+}
+
+window.salvarServidor = async function(event) {
+  event.preventDefault();
+  const nome = document.getElementById("nome").value.trim();
+  const cpf = document.getElementById("cpf").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const dataNascimento = document.getElementById("dataNascimento").value;
+  const dataAdmissao = document.getElementById("dataAdmissao").value;
+  const telefone = document.getElementById("telefone").value.trim();
+  const cep = document.getElementById("cep").value.trim();
+  const bairro = document.getElementById("bairro").value.trim();
+  const logradouro = document.getElementById("logradouro").value.trim();
+  const numero = document.getElementById("numero").value.trim();
+  const complemento = document.getElementById("complemento").value.trim();
+  const cidade = document.getElementById("cidade").value.trim();
+  const uf = document.getElementById("uf").value.trim();
+
+  const numeroMatricula1 = document.getElementById("numeroMatricula1").value.trim();
+  const cargo1 = document.getElementById("cargo1").value.trim();
+  const escola1_m1 = document.getElementById("escola1_m1").value;
+  const empresa1_m1 = document.getElementById("empresa1_m1").value;
+  const qtdPassagens1_m1 = document.getElementById("qtdPassagens1_m1").value.trim();
+  const temEscola2_m1 = document.getElementById("escolaExtra1").classList.contains("ativo");
+  const escola2_m1 = temEscola2_m1 ? document.getElementById("escola2_m1").value : null;
+  const empresaEscola2_m1 = temEscola2_m1 ? document.getElementById("empresa_escola2_m1").value : null;
+  const qtdPassagensEscola2_m1 = temEscola2_m1 ? document.getElementById("qtdPassagens_escola2_m1").value.trim() : null;
+
+  const temSegundoVinculo = document.getElementById("possuiSegundoVinculo").checked;
+  const numeroMatricula2 = temSegundoVinculo ? document.getElementById("numeroMatricula2").value.trim() : null;
+  const cargo2 = temSegundoVinculo ? document.getElementById("cargo2").value.trim() : null;
+  const escola1_m2 = temSegundoVinculo ? document.getElementById("escola1_m2").value : null;
+  const empresa1_m2 = temSegundoVinculo ? document.getElementById("empresa1_m2").value : null;
+  const qtdPassagens1_m2 = temSegundoVinculo ? document.getElementById("qtdPassagens1_m2").value.trim() : null;
+  const temEscola2_m2 = temSegundoVinculo && document.getElementById("escolaExtra2").classList.contains("ativo");
+  const escola2_m2 = temEscola2_m2 ? document.getElementById("escola2_m2").value : null;
+  const empresaEscola2_m2 = temEscola2_m2 ? document.getElementById("empresa_escola2_m2").value : null;
+  const qtdPassagensEscola2_m2 = temEscola2_m2 ? document.getElementById("qtdPassagens_escola2_m2").value.trim() : null;
+
+  let escolasArray = [];
+  if (escola1_m1) escolasArray.push(escola1_m1);
+  if (temEscola2_m1 && escola2_m1) escolasArray.push(escola2_m1);
+  if (temSegundoVinculo) {
+    if (escola1_m2) escolasArray.push(escola1_m2);
+    if (temEscola2_m2 && escola2_m2) escolasArray.push(escola2_m2);
+  }
+  escolasArray = [...new Set(escolasArray)];
+
+  const cpfNumeros = cpf.replace(/\D/g, "");
+  const telefoneNumeros = telefone.replace(/\D/g, "");
+
+  if (!nome || !cpf || !email || !dataNascimento || !dataAdmissao || !telefone || !cep || !logradouro || !numero || !bairro || !cidade || !uf || !numeroMatricula1 || !cargo1 || !escola1_m1 || !empresa1_m1 || !qtdPassagens1_m1) {
+    mostrarMensagem("Preencha todos os campos obrigatórios da Matrícula 1, Pessoais e Endereço.", "erro");
+    return;
+  }
+  if (temSegundoVinculo && (!numeroMatricula2 || !cargo2 || !escola1_m2 || !empresa1_m2 || !qtdPassagens1_m2)) {
+    mostrarMensagem("Preencha os campos obrigatórios da Matrícula 2 (Segundo Vínculo).", "erro");
+    return;
+  }
+  if (cpfNumeros.length !== 11) {
+    mostrarMensagem("O CPF deve possuir exatamente 11 dígitos.", "erro");
+    document.getElementById("cpf").focus();
+    return;
+  }
+  if (telefoneNumeros.length !== 10 && telefoneNumeros.length !== 11) {
+    mostrarMensagem("Informe um telefone válido.", "erro");
+    document.getElementById("telefone").focus();
+    return;
+  }
+
+  try {
+    const q = query(collection(db, "servidores"), where("cpf", "==", cpf), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      let duplicado = false;
+      querySnapshot.forEach((docSnap) => {
+        if (servidorId && docSnap.id === servidorId) return;
+        duplicado = true;
+      });
+      if (duplicado) {
+        mostrarMensagem("Este CPF já está cadastrado no sistema!", "erro");
+        const campoCpf = document.getElementById("cpf");
+        campoCpf.classList.remove("preenchido");
+        campoCpf.classList.add("erro-input");
+        campoCpf.focus();
+        return;
+      }
+    }
+  } catch (erro) {
+    console.error("Erro ao validar CPF duplicado antes de salvar:", erro);
+    mostrarMensagem("Erro ao verificar duplicidade. Verifique sua conexão.", "erro");
+    return;
+  }
+
+  const btnSalvar = document.getElementById("btnSalvar");
+  const textoBotao = document.getElementById("textoBotao");
+  const iconeSalvar = document.getElementById("iconeSalvar");
+  btnSalvar.disabled = true;
+  textoBotao.textContent = servidorId ? "Atualizando..." : "Salvando...";
+  iconeSalvar.textContent = "sync";
+
+  const dadosObjeto = {
+    nome: nome,
+    cpf: cpf,
+    email: email,
+    dataNascimento: dataNascimento,
+    dataAdmissao: dataAdmissao,
+    telefone: telefone,
+    cep: cep,
+    bairro: bairro,
+    logradouro: logradouro,
+    numero: numero,
+    complemento: complemento,
+    cidade: cidade,
+    uf: uf,
+    escolas: escolasArray,
+    matricula1: {
+      numeroMatricula: numeroMatricula1,
+      cargo: cargo1,
+      escola1: {
+        nomeEscola: escola1_m1,
+        empresa: empresa1_m1,
+        qtdPassagensDiarias: Number(qtdPassagens1_m1)
+      },
+      escola2: temEscola2_m1 ? {
+        nomeEscola: escola2_m1,
+        empresa: empresaEscola2_m1,
+        qtdPassagensDiarias: Number(qtdPassagensEscola2_m1)
+      } : null
+    },
+    matricula2: temSegundoVinculo ? {
+      numeroMatricula: numeroMatricula2,
+      cargo: cargo2,
+      escola1: {
+        nomeEscola: escola1_m2,
+        empresa: empresa1_m2,
+        qtdPassagensDiarias: Number(qtdPassagens1_m2)
+      },
+      escola2: temEscola2_m2 ? {
+        nomeEscola: escola2_m2,
+        empresa: empresaEscola2_m2,
+        qtdPassagensDiarias: Number(qtdPassagensEscola2_m2)
+      } : null
+    } : null
+  };
+
+  try {
+    if (servidorId) {
+      const docRef = doc(db, "servidores", servidorId);
+      await updateDoc(docRef, dadosObjeto);
+      mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
+      setTimeout(() => {
+        window.location.href = "servidores.html";
+      }, 1200);
+    } else {
+      dadosObjeto.dataCriacao = new Date().toISOString();
+      await addDoc(collection(db, "servidores"), dadosObjeto);
+      document.getElementById("formServidor").reset();
+      document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+      document.getElementById("escolaExtra1").classList.remove("ativo");
+      document.getElementById("escolaExtra2").classList.remove("ativo");
+      document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+      document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+      
+      const dateInputs = document.querySelectorAll("input[type='date']");
+      dateInputs.forEach(input => {
+        if (input._flatpickr) input._flatpickr.clear();
+      });
+      const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+      campos.forEach(function(campo) {
+        campo.classList.remove("preenchido");
+        campo.classList.remove("erro-input");
+      });
+      mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
+    }
+  } catch (erro) {
+    console.error("Erro ao salvar no Firebase: ", erro);
+    mostrarMensagem("Erro de conexão! Não foi possível salvar. Verifique sua internet.", "erro");
+  } finally {
+    btnSalvar.disabled = false;
+    textoBotao.textContent = servidorId ? "Atualizar" : "Salvar";
+    iconeSalvar.textContent = servidorId ? "update" : "save";
+  }
+}
+
+window.importarCSV = function() {
+  alert("Função de importação CSV será implementada.");
+}
+
+window.cancelar = function() {
+  if (servidorId) {
+    window.location.href = "servidores.html";
+    return;
+  }
+  document.getElementById("formServidor").reset();
+  document.getElementById("blocoSegundoVinculo").classList.remove("ativo");
+  document.getElementById("escolaExtra1").classList.remove("ativo");
+  document.getElementById("escolaExtra2").classList.remove("ativo");
+  document.getElementById("btnToggleEscola1").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  document.getElementById("btnToggleEscola2").innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar segunda escola / lotação para esta matrícula';
+  const dateInputs = document.querySelectorAll("input[type='date']");
+  dateInputs.forEach(input => {
+    if (input._flatpickr) input._flatpickr.clear();
+  });
+  const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+  campos.forEach(function(campo) {
+    campo.classList.remove("preenchido");
+    campo.classList.remove("erro-input");
+  });
+  ocultarMensagem();
+}
+
+window.mostrarMensagem = function(texto, tipo) {
+  const mensagem = document.getElementById("mensagem");
+  mensagem.textContent = texto;
+  mensagem.className = "mensagem " + tipo;
+}
+
+window.ocultarMensagem = function() {
+  const mensagem = document.getElementById("mensagem");
+  if (mensagem.classList.contains("sucesso") || mensagem.classList.contains("erro")) {
+    mensagem.className = "mensagem";
+    mensagem.textContent = "";
+  }
 }
 </script>
+
 </body>
 </html>
