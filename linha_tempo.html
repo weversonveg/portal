@@ -75,9 +75,8 @@
     <!-- Script Modular do Firebase v10 -->
     <script type="module">
         import { db } from "./firebase.js";
-        import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Expõe a função globalmente para o onclick do botão HTML
         window.buscarServidor = async function() {
             let cpfInput = document.getElementById('cpfBusca').value.trim();
             if (!cpfInput) {
@@ -90,7 +89,7 @@
             try {
                 let servidorDoc = null;
 
-                // 1. Tenta buscar direto pelo ID do documento
+                // 1. Tenta buscar pelo ID direto
                 let docRef = doc(db, 'servidores', cpfLimpo);
                 let docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
@@ -103,27 +102,16 @@
                     }
                 }
 
-                // 2. Se não achou pelo ID, busca pelos campos de texto
+                // 2. Se não achou pelo ID, varre a coleção de servidores buscando pelo campo CPF
                 if (!servidorDoc || !servidorDoc.exists()) {
-                    let q = query(collection(db, 'servidores'), where('cpf', '==', cpfLimpo));
-                    let querySnapshot = await getDocs(q);
-
-                    if (querySnapshot.empty) {
-                        q = query(collection(db, 'servidores'), where('cpf', '==', cpfInput));
-                        querySnapshot = await getDocs(q);
-                    }
-                    if (querySnapshot.empty) {
-                        q = query(collection(db, 'servidores'), where('CPF', '==', cpfLimpo));
-                        querySnapshot = await getDocs(q);
-                    }
-                    if (querySnapshot.empty) {
-                        q = query(collection(db, 'servidores'), where('CPF', '==', cpfInput));
-                        querySnapshot = await getDocs(q);
-                    }
-
-                    if (!querySnapshot.empty) {
-                        servidorDoc = querySnapshot.docs[0];
-                    }
+                    const snapshotServidores = await getDocs(collection(db, 'servidores'));
+                    snapshotServidores.forEach(d => {
+                        const data = d.data();
+                        const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
+                        if (c === cpfLimpo || data.cpf === cpfInput || data.CPF === cpfInput) {
+                            servidorDoc = d;
+                        }
+                    });
                 }
 
                 if (!servidorDoc || !servidorDoc.exists()) {
@@ -134,29 +122,25 @@
 
                 const servidor = servidorDoc.data();
                 const servidorId = servidorDoc.id;
-                const cpfBuscaEfetivo = servidor.cpf || servidor.CPF || servidorId;
+                const cpfBuscaEfetivo = (servidor.cpf || servidor.CPF || cpfLimpo).toString().replace(/\D/g, '');
 
                 // Preenche dados cadastrais
                 document.getElementById('nomeServidor').innerText = servidor.nome || servidor.Nome || 'Não informado';
                 document.getElementById('admissaoServidor').innerText = servidor.data_admissao || servidor.dataAdmissao || 'Não informado';
                 document.getElementById('nascimentoServidor').innerText = servidor.data_nascimento || servidor.dataNascimento || 'Não informado';
 
-                // Busca na coleção 'registro_ferias_folgas'
-                let qHistorico = query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfBuscaEfetivo));
-                let historicoSnapshot = await getDocs(qHistorico);
-
-                if (historicoSnapshot.empty) {
-                    qHistorico = query(collection(db, 'registro_ferias_folgas'), where('CPF', '==', cpfBuscaEfetivo));
-                    historicoSnapshot = await getDocs(qHistorico);
-                }
-                if (historicoSnapshot.empty) {
-                    qHistorico = query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', servidorId));
-                    historicoSnapshot = await getDocs(qHistorico);
-                }
-
+                // 3. Busca inteligente e robusta na coleção 'registro_ferias_folgas' (evita falhas de nome de campo)
+                const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
                 const registros = [];
-                historicoSnapshot.forEach(docSnap => {
-                    registros.push(docSnap.data());
+
+                snapshotHistorico.forEach(docSnap => {
+                    const regData = docSnap.data();
+                    const regCpf = (regData.cpf || regData.CPF || regData.servidor_cpf || '').toString().replace(/\D/g, '');
+                    const regServId = regData.servidorId || regData.servidor_id || '';
+
+                    if (regCpf === cpfBuscaEfetivo || regServId === servidorId || regCpf === cpfLimpo) {
+                        registros.push(regData);
+                    }
                 });
 
                 processarLinhaDoTempo(servidor, registros);
@@ -175,18 +159,36 @@
             const dataAdmissaoStr = servidor.data_admissao || servidor.dataAdmissao;
             if (!dataAdmissaoStr) return;
 
-            const partesAdmissao = dataAdmissaoStr.split('/');
-            const anoAdmissao = parseInt(partesAdmissao[2] || partesAdmissao[0]);
+            // Extração segura do ano de admissão (independente de ser DD/MM/AAAA ou AAAA-MM-DD)
+            let anoAdmissao = 2020;
+            if (dataAdmissaoStr.includes('/')) {
+                const partes = dataAdmissaoStr.split('/');
+                anoAdmissao = parseInt(partes[2] || partes[0]);
+            } else if (dataAdmissaoStr.includes('-')) {
+                const partes = dataAdmissaoStr.split('-');
+                anoAdmissao = parseInt(partes[0] || partes[2]);
+            }
+
             const anoAtual = new Date().getFullYear();
 
+            // Total de períodos adquiridos ano a ano desde a admissão
             let totalPeriodosDireito = 0;
             for (let ano = anoAdmissao; ano <= anoAtual; ano++) {
                 totalPeriodosDireito++;
             }
 
-            const feriasTiradas = registros.filter(r => r.tipo === 'ferias');
-            const folgasAniversario = registros.filter(r => r.tipo === 'folga_aniversario');
+            // Filtro flexível para Férias e Folga Aniversário
+            const feriasTiradas = registros.filter(r => {
+                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
 
+            const folgasAniversario = registros.filter(r => {
+                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+
+            // Desconto oficial das férias tiradas
             const periodosGozadosCount = feriasTiradas.length;
             const periodosPendentes = Math.max(0, totalPeriodosDireito - periodosGozadosCount);
 
@@ -207,30 +209,40 @@
                 alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
             }
 
-            // Status da Folga Aniversário do Ano Atual
-            const folgaAnoAtual = folgasAniversario.find(f => f.ano_referencia == anoAtual || (f.data && f.data.includes(anoAtual)));
+            // Verificação da Folga Aniversário do Ano Atual
+            const folgaAnoAtual = folgasAniversario.find(f => {
+                const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
+                const dataStr = (f.data || f.data_gozo || f.data_inicio || '').toString();
+                return anoRef == anoAtual || dataStr.includes(anoAtual);
+            });
+
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             if (folgaAnoAtual) {
-                statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${folgaAnoAtual.data || folgaAnoAtual.data_gozo || 'Data não especificada'}</span>`;
+                const dataUso = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || 'Registrada';
+                statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUso}</span>`;
             } else {
                 statusFolgaEl.innerHTML = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
             }
 
-            // Montagem do Histórico Cronológico
+            // Montagem da Linha do Tempo Cronológica
             registros.forEach(reg => {
+                const tipoReg = (reg.tipo || reg.tipo_registro || 'Registro').toString();
+                const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
+                const dataInfo = reg.data_inicio && reg.data_termino ? `Período de ${reg.data_inicio} até ${reg.data_termino}` : `Utilizada em ${reg.data || reg.data_gozo || reg.data_inicio || 'Data não informada'}`;
+
                 const itemDiv = document.createElement('div');
                 itemDiv.className = "relative pl-6";
                 itemDiv.innerHTML = `
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-blue-600 border-2 border-white"></div>
-                    <span class="text-xs text-gray-400 font-semibold uppercase">${reg.tipo === 'ferias' ? 'Férias' : 'Folga Aniversário'}</span>
-                    <p class="text-sm font-medium text-gray-800">${reg.descricao || (reg.tipo === 'ferias' ? `Período de ${reg.data_inicio} até ${reg.data_termino}` : `Utilizada em ${reg.data || reg.data_gozo}`)}</p>
-                    <span class="text-xs text-gray-500">Ano Referência: ${reg.ano_referencia || 'N/A'}</span>
+                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full ${isFerias ? 'bg-blue-600' : 'bg-green-600'} border-2 border-white"></div>
+                    <span class="text-xs text-gray-400 font-semibold uppercase">${tipoReg}</span>
+                    <p class="text-sm font-medium text-gray-800">${reg.descricao || dataInfo}</p>
+                    <span class="text-xs text-gray-500">Ano Referência: ${reg.ano_referencia || reg.ano || 'N/A'}</span>
                 `;
                 timelineEl.appendChild(itemDiv);
             });
 
             if (registros.length === 0) {
-                timelineEl.innerHTML = `<p class="text-sm text-gray-500">Nenhum registro de férias ou folga encontrado para este CPF na coleção registro_ferias_folgas.</p>`;
+                timelineEl.innerHTML = `<p class="text-sm text-gray-500">Nenhum registro de férias ou folga encontrado para este servidor.</p>`;
             }
         }
     </script>
