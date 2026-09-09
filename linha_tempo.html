@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linha do Tempo do Servidor - SEMED v1.4</title>
-    <!-- Tailwind CSS para estilização moderna -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Conexão local do Firebase da versão 1.4 -->
-    <script src="firebase.js"></script>
+    <!-- Firebase App SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen">
 
@@ -74,8 +76,24 @@
         </div>
     </div>
 
-    <!-- Script de Lógica e Consultas -->
+    <!-- Script de Inicialização e Lógica -->
     <script>
+        // Configuração do Firebase da SEMED (Substitua pelas credenciais reais do seu projeto)
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        // Inicializa o Firebase de forma segura
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
         async function buscarServidor() {
             let cpfInput = document.getElementById('cpfBusca').value.trim();
             if (!cpfInput) {
@@ -86,7 +104,7 @@
             const cpfLimpo = cpfInput.replace(/\D/g, '');
 
             try {
-                // Busca robusta na coleção 'servidores' (tratando variações de máscara e maiúsculas)
+                // Busca na coleção 'servidores' (tratando variações de máscara e maiúsculas)
                 let servidorSnapshot = await db.collection('servidores').where('cpf', '==', cpfLimpo).get();
                 
                 if (servidorSnapshot.empty) {
@@ -106,7 +124,7 @@
                 const servidor = servidorDoc.data();
                 const cpfBuscaEfetivo = servidor.cpf || servidor.CPF || cpfLimpo;
 
-                // Preenche dados básicos suportando variações de nomenclatura de campos
+                // Preenche dados cadastrais
                 document.getElementById('nomeServidor').innerText = servidor.nome || servidor.Nome || 'Não informado';
                 document.getElementById('admissaoServidor').innerText = servidor.data_admissao || servidor.dataAdmissao || 'Não informado';
                 document.getElementById('nascimentoServidor').innerText = servidor.data_nascimento || servidor.dataNascimento || 'Não informado';
@@ -128,7 +146,7 @@
 
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
-                alert('Erro ao consultar o banco de dados. Verifique a conexão do Firebase.');
+                alert('Erro ao consultar o banco de dados. Verifique o console para detalhes técnicos.');
             }
         }
 
@@ -139,7 +157,6 @@
             const dataAdmissaoStr = servidor.data_admissao || servidor.dataAdmissao;
             if (!dataAdmissaoStr) return;
 
-            // Extração de ano da admissão
             const partesAdmissao = dataAdmissaoStr.split('/');
             const anoAdmissao = parseInt(partesAdmissao[2] || partesAdmissao[0]);
             const anoAtual = new Date().getFullYear();
