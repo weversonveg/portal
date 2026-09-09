@@ -23,7 +23,7 @@
         <div class="bg-white shadow rounded-lg p-6 mb-6">
             <label for="cpfBusca" class="block text-sm font-medium text-gray-700 mb-2">Digite o CPF do Servidor</label>
             <div class="flex gap-4">
-                <input type="text" id="cpfBusca" placeholder="Ex: 000.000.000-00 ou apenas números" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="cpfBusca" maxlength="14" placeholder="000.000.000-00" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <button onclick="buscarServidor()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Buscar</button>
             </div>
         </div>
@@ -77,6 +77,37 @@
         import { db } from "./firebase.js";
         import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Aplicação automática de máscara de CPF no input
+        document.getElementById('cpfBusca').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{1,3}).*/, '$1.$2');
+            }
+            e.target.value = value;
+        });
+
+        // Função para formatar datas de YYYY-MM-DD para DD/MM/YYYY
+        function formatarData(dataStr) {
+            if (!dataStr) return '';
+            if (typeof dataStr.toDate === 'function') {
+                dataStr = dataStr.toDate().toISOString().split('T')[0];
+            }
+            dataStr = dataStr.toString().trim();
+            // Se estiver no formato AAAA-MM-DD ou AAAA-MM-DDTHH:mm...
+            if (dataStr.includes('-') && dataStr.length >= 10) {
+                const partes = dataStr.substring(0, 10).split('-');
+                if (partes.length === 3) {
+                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+            }
+            return dataStr; // Retorna original se já estiver formatada ou em outro padrão
+        }
+
         window.buscarServidor = async function() {
             let cpfInput = document.getElementById('cpfBusca').value.trim();
             if (!cpfInput) {
@@ -124,12 +155,12 @@
                 const servidorId = servidorDoc.id;
                 const cpfBuscaEfetivo = (servidor.cpf || servidor.CPF || cpfLimpo).toString().replace(/\D/g, '');
 
-                // Preenche dados cadastrais
+                // Preenche dados cadastrais com datas formatadas
                 document.getElementById('nomeServidor').innerText = servidor.nome || servidor.Nome || 'Não informado';
-                document.getElementById('admissaoServidor').innerText = servidor.data_admissao || servidor.dataAdmissao || 'Não informado';
-                document.getElementById('nascimentoServidor').innerText = servidor.data_nascimento || servidor.dataNascimento || 'Não informado';
+                document.getElementById('admissaoServidor').innerText = formatarData(servidor.data_admissao || servidor.dataAdmissao) || 'Não informado';
+                document.getElementById('nascimentoServidor').innerText = formatarData(servidor.data_nascimento || servidor.dataNascimento) || 'Não informado';
 
-                // 3. Busca inteligente e robusta na coleção 'registro_ferias_folgas'
+                // 3. Busca na coleção 'registro_ferias_folgas'
                 const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
                 const registros = [];
 
@@ -156,10 +187,11 @@
             const timelineEl = document.getElementById('timelineHistorico');
             timelineEl.innerHTML = '';
 
-            const dataAdmissaoStr = servidor.data_admissao || servidor.dataAdmissao;
-            if (!dataAdmissaoStr) return;
+            const dataAdmissaoRaw = servidor.data_admissao || servidor.dataAdmissao;
+            if (!dataAdmissaoRaw) return;
 
             let anoAdmissao = 2020;
+            const dataAdmissaoStr = dataAdmissaoRaw.toString();
             if (dataAdmissaoStr.includes('/')) {
                 const partes = dataAdmissaoStr.split('/');
                 anoAdmissao = parseInt(partes[2] || partes[0]);
@@ -214,21 +246,21 @@
 
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             if (folgaAnoAtual) {
-                const dataUso = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
-                statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUso}</span>`;
+                const dataUsoRaw = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
+                const dataUsoFormatada = formatarData(dataUsoRaw);
+                statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUsoFormatada}</span>`;
             } else {
                 statusFolgaEl.innerHTML = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
             }
 
-            // Montagem da Linha do Tempo Cronológica com extração flexível de datas
+            // Montagem da Linha do Tempo Cronológica
             registros.forEach(reg => {
                 const tipoReg = (reg.tipo || reg.tipo_registro || 'Registro').toString();
                 const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
 
-                // Varre qualquer variação possível de nome de campo de data no documento
-                const dtInicio = reg.data_inicio || reg.dataInicio || reg.inicio || reg.data;
-                const dtTermino = reg.data_termino || reg.dataTermino || reg.termino || reg.fim;
-                const dtGozo = reg.data_gozo || reg.dataGozo || reg.data;
+                const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+                const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim);
+                const dtGozo = formatarData(reg.data_gozo || reg.dataGozo || reg.data);
 
                 let textoDetalhe = '';
                 if (isFerias) {
