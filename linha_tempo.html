@@ -23,16 +23,8 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 border border-gray-100">
             <label for="termoBusca" class="block text-sm font-semibold text-gray-700 mb-2">Digite o CPF ou a Matrícula do Servidor</label>
             <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="termoBusca" maxlength="14" placeholder="Ex: 000.000.000-00 ou Matrícula" class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="termoBusca" maxlength="20" placeholder="Ex: 000.000.000-00 ou Matrícula" class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <button onclick="buscarServidor()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-sm">Buscar</button>
-            </div>
-        </div>
-
-        <!-- Seletor de Múltiplas Matrículas (Caso o CPF tenha mais de uma) -->
-        <div id="seletorMatriculasContainer" class="hidden bg-amber-50 border border-amber-200 shadow-sm rounded-xl p-5 mb-6">
-            <h3 class="text-sm font-bold text-amber-800 mb-2">Este CPF possui mais de uma matrícula. Selecione abaixo qual deseja consultar:</h3>
-            <div id="listaMatriculasOpcoes" class="flex flex-wrap gap-2 mt-3">
-                <!-- Preenchido via JS -->
             </div>
         </div>
 
@@ -44,7 +36,7 @@
                 <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dados Cadastrais</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Nome:</span> <strong id="nomeServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Matrícula:</span> <strong id="matriculaServidor" class="text-gray-900 text-base">-</strong></div>
+                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Matrícula(s):</span> <strong id="matriculaServidor" class="text-gray-900 text-base">-</strong></div>
                     <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data de Admissão:</span> <strong id="admissaoServidor" class="text-gray-900 text-base">-</strong></div>
                     <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data de Nascimento:</span> <strong id="nascimentoServidor" class="text-gray-900 text-base">-</strong></div>
                 </div>
@@ -86,10 +78,9 @@
         import { db } from "./firebase.js";
         import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Aplicação automática de máscara de CPF no input (caso digite CPF)
+        // Máscara opcional para CPF caso o usuário digite números formatáveis
         document.getElementById('termoBusca').addEventListener('input', function(e) {
             let value = e.target.value;
-            // Se parecer com número de CPF (sem letras)
             if (/^[0-9.\-]*$/.test(value) && value.replace(/\D/g, '').length <= 11) {
                 let nums = value.replace(/\D/g, '');
                 if (nums.length > 11) nums = nums.slice(0, 11);
@@ -146,7 +137,7 @@
             
             if (!dia || !mes) return null;
             
-            // Dia após o aniversário
+            // Dia seguinte ao aniversário
             let dataFolga = new Date(ano, mes - 1, dia + 1);
             dataFolga.setHours(0, 0, 0, 0);
             return dataFolga;
@@ -163,10 +154,9 @@
 
             try {
                 const colRef = collection(db, 'servidores');
-                let servidoresEncontrados = [];
                 let mapIds = new Map();
 
-                // 1. Busca por ID direto
+                // Busca exata por ID
                 let docSnap = await getDoc(doc(db, 'servidores', termoInput));
                 if (docSnap.exists()) mapIds.set(docSnap.id, docSnap);
 
@@ -175,7 +165,7 @@
                     if (docSnapLimpo.exists()) mapIds.set(docSnapLimpo.id, docSnapLimpo);
                 }
 
-                // 2. Consultas por campos (CPF, matricula)
+                // Queries em campos comuns
                 const queries = [
                     getDocs(query(colRef, where('cpf', '==', termoInput))),
                     getDocs(query(colRef, where('cpf', '==', termoLimpo))),
@@ -184,7 +174,7 @@
                     getDocs(query(colRef, where('matricula', '==', termoInput))),
                     getDocs(query(colRef, where('Matricula', '==', termoInput))),
                     getDocs(query(colRef, where('matricula', '==', termoLimpo ? Number(termoLimpo) : null))),
-                    getDocs(query(colRef, where('matricula', '==', termoInput)))
+                    getDocs(query(colRef, where('matricula_servidor', '==', termoInput)))
                 ];
 
                 const resultados = await Promise.all(queries.map(q => q.catch(() => ({ empty: true }))));
@@ -194,36 +184,29 @@
                     }
                 });
 
-                // Se nada achou nas queries exatas, faz varredura ampla para casos variados
+                // Varredura abrangente caso nada retorne nas queries diretas
                 if (mapIds.size === 0) {
                     const todosSnap = await getDocs(colRef);
                     todosSnap.forEach(d => {
                         const data = d.data();
                         const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                        const m = (data.matricula || data.Matricula || '').toString().toLowerCase();
+                        const m = (data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || '').toString().toLowerCase();
                         if (c === termoLimpo || c === termoInput || m === termoInput.toLowerCase() || d.id === termoInput) {
                             mapIds.set(d.id, d);
                         }
                     });
                 }
 
-                servidoresEncontrados = Array.from(mapIds.values());
+                const servidoresEncontrados = Array.from(mapIds.values());
 
                 if (servidoresEncontrados.length === 0) {
                     alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
                     document.getElementById('resultadoContainer').classList.add('hidden');
-                    document.getElementById('seletorMatriculasContainer').classList.add('hidden');
                     return;
                 }
 
-                // Se houver mais de uma matrícula para o mesmo servidor/CPF
-                if (servidoresEncontrados.length > 1) {
-                    mostrarSeletorMatriculas(servidoresEncontrados);
-                    return;
-                }
-
-                // Se achou apenas 1, carrega direto
-                carregarDadosServidor(servidoresEncontrados[0]);
+                // Agrega dados e matrículas (caso o CPF tenha mais de um vínculo)
+                processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
 
             } catch (error) {
                 console.error("Erro detalhado do Firebase:", error);
@@ -231,43 +214,50 @@
             }
         };
 
-        function mostrarSeletorMatriculas(listaDocs) {
-            const container = document.getElementById('seletorMatriculasContainer');
-            const opcoesDiv = document.getElementById('listaMatriculasOpcoes');
-            opcoesDiv.innerHTML = '';
-            document.getElementById('resultadoContainer').classList.add('hidden');
+        async function processarServidoresUnificados(servidoresDocs, termoBusca) {
+            const primeiroData = servidoresDocs[0].data();
+            const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
+            const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
+            
+            // Coleta todas as matrículas e IDs associados
+            const matriculasSet = new Set();
+            const servidorIds = [];
+            let cpfsSet = new Set();
+            let menorAnoAdmissao = 2025;
 
-            listaDocs.forEach(docSnap => {
-                const data = docSnap.data();
-                const matricula = data.matricula || data.Matricula || docSnap.id;
-                const nome = data.nome || data.Nome || 'Nome não informado';
+            servidoresDocs.forEach(d => {
+                servidorIds.push(d.id);
+                const data = d.data();
+                const mat = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula;
+                if (mat) matriculasSet.add(mat.toString());
+                
+                const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
+                if (cpfDoc) cpfsSet.add(cpfDoc);
 
-                const btn = document.createElement('button');
-                btn.className = "bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition flex flex-col items-start";
-                btn.innerHTML = `<span><strong>Matrícula:</strong> ${matricula}</span> <span class="text-xs text-gray-600">${nome}</span>`;
-                btn.onclick = () => {
-                    container.classList.add('hidden');
-                    carregarDadosServidor(docSnap);
-                };
-                opcoesDiv.appendChild(btn);
+                const adm = data.data_admissao || data.dataAdmissao;
+                if (adm) {
+                    const admStr = adm.toString();
+                    let ano = 2020;
+                    if (admStr.includes('/')) {
+                        ano = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
+                    } else if (admStr.includes('-')) {
+                        ano = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
+                    }
+                    if (ano && ano < menorAnoAdmissao) menorAnoAdmissao = ano;
+                }
             });
 
-            container.classList.remove('hidden');
-        }
+            const listaMatriculas = Array.from(matriculasSet);
+            const matriculaExibicao = listaMatriculas.length > 0 ? listaMatriculas.join(' / ') : 'Não informada';
+            const cpfEfetivo = cpfsSet.size > 0 ? Array.from(cpfsSet)[0] : termoBusca;
 
-        async function carregarDadosServidor(servidorDoc) {
-            const servidor = servidorDoc.data();
-            const servidorId = servidorDoc.id;
-            const cpfEfetivo = (servidor.cpf || servidor.CPF || '').toString().replace(/\D/g, '');
-            const matriculaEfetiva = servidor.matricula || servidor.Matricula || servidorId;
+            // Preenche dados cadastrais na tela
+            document.getElementById('nomeServidor').innerText = nomeServidor;
+            document.getElementById('matriculaServidor').innerText = matriculaExibicao;
+            document.getElementById('admissaoServidor').innerText = formatarData(primeiroData.data_admissao || primeiroData.dataAdmissao) || 'Não informado';
+            document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
 
-            // Preenche dados cadastrais
-            document.getElementById('nomeServidor').innerText = servidor.nome || servidor.Nome || 'Não informado';
-            document.getElementById('matriculaServidor').innerText = matriculaEfetiva;
-            document.getElementById('admissaoServidor').innerText = formatarData(servidor.data_admissao || servidor.dataAdmissao) || 'Não informado';
-            document.getElementById('nascimentoServidor').innerText = formatarData(servidor.data_nascimento || servidor.dataNascimento) || 'Não informado';
-
-            // Busca histórico de férias e folgas
+            // Busca histórico de férias e folgas de TODAS as matrículas/IDs do servidor
             const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
             const registros = [];
 
@@ -277,33 +267,28 @@
                 const regMat = (regData.matricula || regData.Matricula || regData.servidor_matricula || '').toString();
                 const regServId = regData.servidorId || regData.servidor_id || '';
 
-                // Associa pelo ID, pela matrícula exata ou pelo CPF
-                if (regServId === servidorId || regMat === matriculaEfetiva.toString() || (cpfEfetivo && regCpf === cpfEfetivo)) {
+                const matchCpf = cpfEfetivo && regCpf === cpfEfetivo;
+                const matchId = servidorIds.includes(regServId);
+                const matchMat = listaMatriculas.includes(regMat);
+
+                if (matchCpf || matchId || matchMat) {
                     registros.push(regData);
                 }
             });
 
-            processarLinhaDoTempo(servidor, registros);
+            processarLinhaDoTempo({
+                anoAdmissao: menorAnoAdmissao,
+                dataNascimento: nascimentoServidor
+            }, registros);
+
             document.getElementById('resultadoContainer').classList.remove('hidden');
         }
 
-        function processarLinhaDoTempo(servidor, registros) {
+        function processarLinhaDoTempo(infoServidor, registros) {
             const timelineEl = document.getElementById('timelineHistorico');
             timelineEl.innerHTML = '';
 
-            const dataAdmissaoRaw = servidor.data_admissao || servidor.dataAdmissao;
-            if (!dataAdmissaoRaw) return;
-
-            let anoAdmissao = 2020;
-            const dataAdmissaoStr = dataAdmissaoRaw.toString();
-            if (dataAdmissaoStr.includes('/')) {
-                const partes = dataAdmissaoStr.split('/');
-                anoAdmissao = parseInt(partes[2] || partes[0]);
-            } else if (dataAdmissaoStr.includes('-')) {
-                const partes = dataAdmissaoStr.split('-');
-                anoAdmissao = parseInt(partes[0] || partes[2]);
-            }
-
+            const anoAdmissao = infoServidor.anoAdmissao || 2020;
             const anoAtual = new Date().getFullYear();
 
             let totalPeriodosDireito = 0;
@@ -341,7 +326,7 @@
                 alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
             }
 
-            // Status da Folga Aniversário do Ano Atual (validando 1 dia após o aniversário)
+            // Status da Folga Aniversário do Ano Atual
             const folgaAnoAtual = folgasAniversario.find(f => {
                 const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
                 const dataStr = (f.data || f.data_gozo || f.data_inicio || f.dataInicio || '').toString();
@@ -349,8 +334,7 @@
             });
 
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
-            const dataNascRaw = servidor.data_nascimento || servidor.dataNascimento;
-            const dataFolgaAniv = obterDataFolgaAniversario(dataNascRaw, anoAtual);
+            const dataFolgaAniv = obterDataFolgaAniversario(infoServidor.dataNascimento, anoAtual);
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
@@ -373,6 +357,7 @@
                 const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
                 const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim);
                 const dtGozo = formatarData(reg.data_gozo || reg.dataGozo || reg.data);
+                const matRegistro = reg.matricula || reg.Matricula || reg.servidor_matricula;
 
                 let textoDetalhe = '';
                 if (isFerias) {
@@ -391,6 +376,10 @@
                     } else {
                         textoDetalhe = reg.descricao || 'Folga aniversário registrada';
                     }
+                }
+
+                if (matRegistro) {
+                    textoDetalhe += ` <span class="text-xs font-semibold text-gray-500">(Matrícula: ${matRegistro})</span>`;
                 }
 
                 const itemDiv = document.createElement('div');
