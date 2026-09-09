@@ -129,7 +129,7 @@
                 document.getElementById('admissaoServidor').innerText = servidor.data_admissao || servidor.dataAdmissao || 'Não informado';
                 document.getElementById('nascimentoServidor').innerText = servidor.data_nascimento || servidor.dataNascimento || 'Não informado';
 
-                // 3. Busca inteligente e robusta na coleção 'registro_ferias_folgas' (evita falhas de nome de campo)
+                // 3. Busca inteligente e robusta na coleção 'registro_ferias_folgas'
                 const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
                 const registros = [];
 
@@ -159,7 +159,6 @@
             const dataAdmissaoStr = servidor.data_admissao || servidor.dataAdmissao;
             if (!dataAdmissaoStr) return;
 
-            // Extração segura do ano de admissão (independente de ser DD/MM/AAAA ou AAAA-MM-DD)
             let anoAdmissao = 2020;
             if (dataAdmissaoStr.includes('/')) {
                 const partes = dataAdmissaoStr.split('/');
@@ -171,13 +170,11 @@
 
             const anoAtual = new Date().getFullYear();
 
-            // Total de períodos adquiridos ano a ano desde a admissão
             let totalPeriodosDireito = 0;
             for (let ano = anoAdmissao; ano <= anoAtual; ano++) {
                 totalPeriodosDireito++;
             }
 
-            // Filtro flexível para Férias e Folga Aniversário
             const feriasTiradas = registros.filter(r => {
                 const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
                 return t.includes('ferias') || t.includes('férias');
@@ -188,13 +185,12 @@
                 return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
             });
 
-            // Desconto oficial das férias tiradas
             const periodosGozadosCount = feriasTiradas.length;
             const periodosPendentes = Math.max(0, totalPeriodosDireito - periodosGozadosCount);
 
             document.getElementById('feriasPendentesCount').innerText = periodosPendentes;
 
-            // Alerta de Limite (Regra dos 3 períodos)
+            // Alerta de Limite
             const alertaEl = document.getElementById('alertaLimite');
             alertaEl.className = 'p-4 rounded-lg border text-sm font-medium';
 
@@ -209,34 +205,57 @@
                 alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
             }
 
-            // Verificação da Folga Aniversário do Ano Atual
+            // Status da Folga Aniversário do Ano Atual
             const folgaAnoAtual = folgasAniversario.find(f => {
                 const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-                const dataStr = (f.data || f.data_gozo || f.data_inicio || '').toString();
+                const dataStr = (f.data || f.data_gozo || f.data_inicio || f.dataInicio || '').toString();
                 return anoRef == anoAtual || dataStr.includes(anoAtual);
             });
 
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             if (folgaAnoAtual) {
-                const dataUso = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || 'Registrada';
+                const dataUso = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
                 statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUso}</span>`;
             } else {
                 statusFolgaEl.innerHTML = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
             }
 
-            // Montagem da Linha do Tempo Cronológica
+            // Montagem da Linha do Tempo Cronológica com extração flexível de datas
             registros.forEach(reg => {
                 const tipoReg = (reg.tipo || reg.tipo_registro || 'Registro').toString();
                 const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
-                const dataInfo = reg.data_inicio && reg.data_termino ? `Período de ${reg.data_inicio} até ${reg.data_termino}` : `Utilizada em ${reg.data || reg.data_gozo || reg.data_inicio || 'Data não informada'}`;
+
+                // Varre qualquer variação possível de nome de campo de data no documento
+                const dtInicio = reg.data_inicio || reg.dataInicio || reg.inicio || reg.data;
+                const dtTermino = reg.data_termino || reg.dataTermino || reg.termino || reg.fim;
+                const dtGozo = reg.data_gozo || reg.dataGozo || reg.data;
+
+                let textoDetalhe = '';
+                if (isFerias) {
+                    if (dtInicio && dtTermino) {
+                        textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}`;
+                    } else if (dtInicio) {
+                        textoDetalhe = `Período gozado em ${dtInicio}`;
+                    } else {
+                        textoDetalhe = reg.descricao || 'Férias registradas';
+                    }
+                } else {
+                    if (dtGozo) {
+                        textoDetalhe = `Usufruída em ${dtGozo}`;
+                    } else if (dtInicio) {
+                        textoDetalhe = `Usufruída em ${dtInicio}`;
+                    } else {
+                        textoDetalhe = reg.descricao || 'Folga aniversário registrada';
+                    }
+                }
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = "relative pl-6";
                 itemDiv.innerHTML = `
                     <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full ${isFerias ? 'bg-blue-600' : 'bg-green-600'} border-2 border-white"></div>
                     <span class="text-xs text-gray-400 font-semibold uppercase">${tipoReg}</span>
-                    <p class="text-sm font-medium text-gray-800">${reg.descricao || dataInfo}</p>
-                    <span class="text-xs text-gray-500">Ano Referência: ${reg.ano_referencia || reg.ano || 'N/A'}</span>
+                    <p class="text-sm font-medium text-gray-800">${textoDetalhe}</p>
+                    <span class="text-xs text-gray-500">Ano Referência: ${reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A'}</span>
                 `;
                 timelineEl.appendChild(itemDiv);
             });
