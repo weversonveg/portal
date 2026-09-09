@@ -212,11 +212,11 @@
             const primeiroData = servidoresDocs[0].data();
             const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
             const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
+            const dataAdmissaoUnica = primeiroData.data_admissao || primeiroData.dataAdmissao || primeiroData.data_admissão;
             
             const matriculasSet = new Set();
-            const servidorIds = [];
             let cpfsSet = new Set();
-            let menorAnoAdmissao = 2025;
+            const servidorIds = [];
 
             servidoresDocs.forEach(d => {
                 servidorIds.push(d.id);
@@ -226,18 +226,6 @@
                 
                 const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
                 if (cpfDoc) cpfsSet.add(cpfDoc);
-
-                const adm = data.data_admissao || data.dataAdmissao;
-                if (adm) {
-                    const admStr = adm.toString();
-                    let ano = 2020;
-                    if (admStr.includes('/')) {
-                        ano = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
-                    } else if (admStr.includes('-')) {
-                        ano = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
-                    }
-                    if (ano && ano < menorAnoAdmissao) menorAnoAdmissao = ano;
-                }
             });
 
             const cpfEfetivo = cpfsSet.size > 0 ? Array.from(cpfsSet)[0] : termoBusca;
@@ -268,11 +256,11 @@
             // Preenche dados cadastrais na tela
             document.getElementById('nomeServidor').innerText = nomeServidor;
             document.getElementById('matriculaServidor').innerText = matriculaExibicao;
-            document.getElementById('admissaoServidor').innerText = formatarData(primeiroData.data_admissao || primeiroData.dataAdmissao) || 'Não informado';
+            document.getElementById('admissaoServidor').innerText = formatarData(dataAdmissaoUnica) || 'Não informado';
             document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
 
             processarLinhaDoTempo({
-                anoAdmissao: menorAnoAdmissao,
+                dataAdmissao: dataAdmissaoUnica,
                 dataNascimento: nascimentoServidor
             }, registros);
 
@@ -283,7 +271,17 @@
             const timelineEl = document.getElementById('timelineHistorico');
             timelineEl.innerHTML = '';
 
-            const anoAdmissao = infoServidor.anoAdmissao || 2020;
+            let anoAdmissao = 2020;
+            const admStr = (infoServidor.dataAdmissao || '').toString();
+            if (admStr) {
+                if (admStr.includes('/')) {
+                    anoAdmissao = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
+                } else if (admStr.includes('-')) {
+                    anoAdmissao = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
+                }
+            }
+            if (isNaN(anoAdmissao)) anoAdmissao = 2020;
+
             const anoAtual = new Date().getFullYear();
 
             let totalPeriodosDireito = 0;
