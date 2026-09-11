@@ -391,7 +391,7 @@ html, body {
             </div>
             <div class="user-badge">
                 <span class="material-symbols-outlined" style="font-size: 18px; color: var(--primary);">account_circle</span>
-                <span>Operador SEMED</span>
+                <span id="userEmailText">Carregando...</span>
             </div>
         </header>
 
@@ -466,6 +466,23 @@ html, body {
         const sidebar = document.getElementById("sidebarMenu");
         sidebar.classList.toggle("fechado");
     }
+</script>
+
+<script type="module">
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+// Monitora o estado de autenticação para preencher o e-mail no cabeçalho
+onAuthStateChanged(auth, (user) => {
+    const userEmailSpan = document.getElementById("userEmailText");
+    if (user) {
+        // Se estiver logado, coloca o e-mail no elemento
+        userEmailSpan.textContent = user.email;
+    } else {
+        // Se não estiver logado, redireciona para a página de login
+        window.location.href = "index.html"; // ou o nome da sua página de login
+    }
+});
 </script>
 
 </body>
