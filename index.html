@@ -152,7 +152,7 @@ html, body {
 }
 
 .form-header {
-    margin-bottom: 36px;
+    margin-bottom: 28px;
 }
 
 .form-header h3 {
@@ -166,6 +166,79 @@ html, body {
     color: var(--text-muted);
     font-size: 0.95rem;
     margin-top: 6px;
+}
+
+.input-group {
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+
+.input-group input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1.8px solid var(--border-color);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+button.btn-submit {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 12px rgba(92, 24, 146, 0.2);
+    margin-top: 4px;
+}
+
+button.btn-submit:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.divider::before {
+    margin-right: 12px;
+}
+
+.divider::after {
+    margin-left: 12px;
 }
 
 button.btn-google {
@@ -360,7 +433,7 @@ a:hover {
                 Portal Corporativo
             </div>
             <h2>Gestão simplificada de benefícios.</h2>
-            <p>Acesse o sistema oficial utilizando sua conta Google institucional ou autorizada.</p>
+            <p>Acesse o sistema oficial utilizando sua conta de e-mail ou com o Google.</p>
         </div>
 
         <div class="visual-footer">
@@ -372,9 +445,27 @@ a:hover {
         <div class="form-container">
             <div class="form-header">
                 <h3>Acessar Conta</h3>
-                <p>Clique abaixo para entrar com sua conta Google</p>
+                <p>Preencha seus dados ou entre com o Google</p>
             </div>
 
+            <!-- Formulário de E-mail e Senha -->
+            <form id="formLogin">
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required placeholder="seu.email@escola.mg.gov.br">
+                </div>
+                
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" required placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="btn-submit">Entrar</button>
+            </form>
+
+            <div class="divider">ou</div>
+
+            <!-- Botão de Login do Google -->
             <button type="button" class="btn-google" id="btnLoginGoogle">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
                 Entrar com o Google
@@ -398,7 +489,7 @@ a:hover {
         </div>
 
         <div class="conteudo-alerta">
-            <p>Se sua conta Google não estiver autorizada no sistema, entre em contato com o suporte técnico da SEMED.</p>
+            <p>Se sua conta não estiver autorizada no sistema, entre em contato com o suporte técnico da SEMED.</p>
 
             <div class="info-suporte">
                 <span class="material-symbols-outlined">call</span>
@@ -414,7 +505,7 @@ a:hover {
 
 <script type="module">
 import { auth } from "./firebase.js";
-import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 window.abrirAlerta = function() {
     document.getElementById("alerta").style.display = "flex";
@@ -424,6 +515,24 @@ window.fecharAlerta = function() {
     document.getElementById("alerta").style.display = "none";
 }
 
+// Login com E-mail e Senha digitados
+document.getElementById("formLogin").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
+    const msgErro = document.getElementById("mensagemErro");
+    msgErro.textContent = "";
+
+    try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        window.location.href = "inicial.html";
+    } catch (error) {
+        console.error("Erro no login com e-mail/senha:", error);
+        msgErro.textContent = "E-mail ou senha inválidos.";
+    }
+});
+
+// Login com o botão do Google
 document.getElementById("btnLoginGoogle").addEventListener("click", async function() {
     const provider = new GoogleAuthProvider();
     const msgErro = document.getElementById("mensagemErro");
