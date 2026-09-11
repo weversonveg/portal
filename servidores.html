@@ -165,31 +165,45 @@
                 const colRef = collection(db, 'servidores');
                 let mapIds = new Map();
 
-                // Busca otimizada usando 'or' para verificar CPF e Matrícula em uma única leitura/query
-                const q = query(
-                    colRef,
-                    or(
-                        where('cpf', '==', termoInput),
-                        where('cpf', '==', termoLimpo),
-                        where('CPF', '==', termoInput),
-                        where('CPF', '==', termoLimpo),
-                        where('matricula', '==', termoInput),
-                        where('Matricula', '==', termoInput),
-                        where('matricula_servidor', '==', termoInput),
-                        where('codigo', '==', termoInput)
-                    )
-                );
-
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach(d => mapIds.set(d.id, d));
-
-                // Verifica também caso o ID do documento seja o próprio CPF ou termo digitado
+                // 1. Busca direta por ID (muito eficiente, consome no máximo 2 leituras)
                 const docSnap1 = await getDoc(doc(db, 'servidores', termoInput));
                 if (docSnap1.exists()) mapIds.set(docSnap1.id, docSnap1);
 
                 if (termoLimpo && termoLimpo !== termoInput) {
                     const docSnap2 = await getDoc(doc(db, 'servidores', termoLimpo));
                     if (docSnap2.exists()) mapIds.set(docSnap2.id, docSnap2);
+                }
+
+                // 2. Se não achou pelo ID e o termo parece um CPF, busca isolada por CPF usando índices de campo único
+                if (mapIds.size === 0 && termoLimpo.length > 0) {
+                    const qCpf = query(
+                        colRef,
+                        or(
+                            where('cpf', '==', termoInput),
+                            where('cpf', '==', termoLimpo),
+                            where('CPF', '==', termoInput),
+                            where('CPF', '==', termoLimpo)
+                        )
+                    );
+                    const snapCpf = await getDocs(qCpf);
+                    snapCpf.forEach(d => mapIds.set(d.id, d));
+                }
+
+                // 3. Se ainda não encontrou, busca isolada por Matrícula
+                if (mapIds.size === 0) {
+                    const qMat = query(
+                        colRef,
+                        or(
+                            where('matricula', '==', termoInput),
+                            where('matricula', '==', termoLimpo),
+                            where('matricula', '==', termoLimpo ? Number(termoLimpo) : null),
+                            where('Matricula', '==', termoInput),
+                            where('matricula_servidor', '==', termoInput),
+                            where('codigo', '==', termoInput)
+                        )
+                    );
+                    const snapMat = await getDocs(qMat);
+                    snapMat.forEach(d => mapIds.set(d.id, d));
                 }
 
                 const servidoresEncontrados = Array.from(mapIds.values());
