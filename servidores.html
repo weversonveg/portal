@@ -1,438 +1,1152 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<!-- Estilo moderno do calendário (Flatpickr) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
+<title>Novo Servidor - Vale Transporte</title>
+<style>
+:root {
+  --primary: #5b2a86;
+  --primary-hover: #47206b;
+  --green: #2e7d32;
+  --green-hover: #1b5e20;
+  --green-light: #eaf6ec;
+  --green-border: #72b879;
+  --red: #c62828;
+  --red-hover: #a51f1f;
+  --text: #263238;
+  --text-secondary: #68737d;
+  --border: #d9dee3;
+  --background: #f4f6f8;
+  --white: #ffffff;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  width: 100%;
+  min-height: 100%;
+}
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+}
+.topbar {
+  width: calc(100% - 64px);
+  max-width: 1116px;
+  height: 68px;
+  margin: 16px auto 0;
+  background: var(--white);
+  border: 1px solid #e0e4e7;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+.topbar-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.system-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #3d2450;
+}
+.system-divider {
+  width: 1px;
+  height: 24px;
+  background: #dfe3e6;
+  margin: 0 2px;
+}
+.system-module {
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-grow: 1;
+}
+.status-conexao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f1f3f5;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+.signal-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.signal-bars .bar {
+  width: 3px;
+  background-color: #cbd5e1;
+  border-radius: 1px;
+  transition: background-color 0.3s ease;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online {
+  color: #2e7d32;
+  background: #edf7ee;
+  border-color: #c8e6c9;
+}
+.status-conexao.online .signal-bars .bar {
+  background-color: #2e7d32;
+}
+.status-conexao.instavel {
+  color: #b45309;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+.status-conexao.instavel .signal-bars .bar-1,
+.status-conexao.instavel .signal-bars .bar-2 {
+  background-color: #d97706;
+}
+.status-conexao.offline {
+  color: #c62828;
+  background: #fff0f0;
+  border-color: #efc5c5;
+}
+.status-conexao.offline .signal-bars .bar {
+  background-color: #ef4444;
+  animation: pulsar-sinal 1.2s infinite ease-in-out;
+}
+@keyframes pulsar-sinal {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.main {
+  width: calc(100% - 64px);
+  max-width: 1116px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+.page-header {
+  margin-bottom: 24px;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #7b858e;
+  margin-bottom: 10px;
+}
+.breadcrumb .material-symbols-outlined {
+  font-size: 17px;
+}
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #263238;
+  margin-bottom: 6px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.form-card {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid #e0e4e7;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  min-height: 68px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e5e8eb;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: #f1ebf6;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-icon .material-symbols-outlined {
+  font-size: 22px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #37474f;
+}
+.card-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.form {
+  width: 100%;
+}
+.form-body {
+  padding: 28px 24px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 24px;
+}
+.form-section-title {
+  grid-column: 1/-1;
+  font-size: 15px;
+  font-weight: 700;
+  color: #37474f;
+  margin-top: 12px;
+  margin-bottom: -6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e8eb;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+.form-group.full {
+  grid-column: 1/-1;
+}
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #455a64;
+  margin-bottom: 7px;
+}
+.form-group label span {
+  color: #c62828;
+}
+.bloco-segundo-vinculo {
+  display: none;
+}
+.bloco-segundo-vinculo.ativo {
+  display: contents;
+}
+.escola-extra {
+  display: none;
+  grid-column: 1/-1;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 24px;
+  background: #f1f5f9;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+.escola-extra.ativo {
+  display: grid;
+}
+.btn-link-adicionar {
+  grid-column: 1/-1;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 4px 0;
+  transition: opacity 0.2s;
+}
+.btn-link-adicionar:hover {
+  opacity: 0.8;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  color: #263238;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.form-group input:hover,
+.form-group select:hover {
+  border-color: #b7c0c7;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+.form-group input.preenchido,
+.form-group select.preenchido {
+  background: var(--green-light) !important;
+  border-color: var(--green-border) !important;
+  color: #263238 !important;
+}
+.form-group input.preenchido:focus,
+.form-group select.preenchido:focus {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(46,125,50,.12) !important;
+}
+.form-group input.erro-input {
+  background: #fff0f0 !important;
+  border-color: #c62828 !important;
+  color: #c62828 !important;
+}
+.form-group input.erro-input:focus {
+  border-color: #c62828 !important;
+  box-shadow: 0 0 0 3px rgba(198,40,40,.12) !important;
+}
+.form-group input::placeholder {
+  color: #9aa3aa;
+}
+.mensagem {
+  display: none;
+  margin: 0 24px 24px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mensagem.sucesso {
+  display: block;
+  background: #edf7ee;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+}
+.mensagem.erro {
+  display: block;
+  background: #fff0f0;
+  border: 1px solid #efc5c5;
+  color: #c62828;
+}
+.form-footer {
+  min-height: 76px;
+  padding: 14px 24px;
+  background: #fafbfc;
+  border-top: 1px solid #e5e8eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-info {
+  font-size: 12px;
+  color: #7a858d;
+}
+.footer-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+button {
+  height: 40px;
+  border-radius: 6px;
+  padding: 0 17px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+button:active {
+  transform: translateY(1px);
+}
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+button .material-symbols-outlined {
+  font-size: 19px;
+}
+.btn-cancelar {
+  background: var(--red);
+  color: #ffffff;
+  border: 1px solid var(--red);
+}
+.btn-cancelar:hover {
+  background: var(--red-hover);
+  border-color: var(--red-hover);
+}
+.btn-salvar {
+  background: var(--green);
+  color: #ffffff;
+  border: 1px solid var(--green);
+}
+.btn-salvar:hover {
+  background: var(--green-hover);
+  border-color: var(--green-hover);
+}
+.btn-importar {
+  background: var(--green);
+  color: #ffffff;
+  border: 1px solid var(--green);
+}
+.btn-importar:hover {
+  background: var(--green-hover);
+  border-color: var(--green-hover);
+}
+@media (max-width: 700px) {
+  .topbar {
+    width: calc(100% - 24px);
+    margin-top: 12px;
+    padding: 0 16px;
+  }
+  .system-divider,
+  .system-module {
+    display: none;
+  }
+  .main {
+    width: calc(100% - 24px);
+    padding: 20px 0;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .escola-extra {
+    grid-template-columns: 1fr;
+  }
+  .form-group.full {
+    grid-column: auto;
+  }
+  .form-body {
+    padding: 22px 18px;
+  }
+  .form-footer {
+    padding: 16px 18px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .footer-info {
+    text-align: center;
+  }
+  .footer-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .footer-buttons button {
+    width: 100%;
+  }
+}
+</style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen text-gray-800">
+<body>
 
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <!-- Cabeçalho Responsivo -->
-        <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4)</p>
-            </div>
-            <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
-        </div>
+<header class="topbar">
+  <div class="topbar-content">
+    <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+    <span class="system-name">Vale Transporte</span>
+    <div class="system-divider"></div>
+    <span class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</span>
+    
+    <div id="statusConexao" class="status-conexao online" title="Conexão estável">
+      <div class="signal-bars">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+        <span class="bar bar-4"></span>
+      </div>
+      <span id="statusTexto">Online</span>
+    </div>
+  </div>
+</header>
 
-        <!-- Formulário de Busca -->
-        <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 border border-gray-100">
-            <label for="termoBusca" class="block text-sm font-semibold text-gray-700 mb-2">Digite o CPF ou a Matrícula do Servidor</label>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="termoBusca" maxlength="20" placeholder="Ex: 000.000.000-00 ou Matrícula" class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <button onclick="buscarServidor()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-sm">Buscar</button>
-            </div>
-        </div>
+<main class="main">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span class="material-symbols-outlined">home</span>
+      <span>Servidores</span>
+      <span>/</span>
+      <span>Novo cadastro</span>
+    </div>
+    <h1>Novo Servidor</h1>
+    <p>Cadastre um novo servidor no sistema de Vale Transporte.</p>
+  </div>
 
-        <!-- Container de Resultados -->
-        <div id="resultadoContainer" class="hidden space-y-6">
-            
-            <!-- Card de Dados do Servidor -->
-            <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border border-gray-100">
-                <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dados Cadastrais</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Nome:</span> <strong id="nomeServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Matrícula(s):</span> <strong id="matriculaServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data(s) de Admissão:</span> <strong id="admissaoServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data de Nascimento:</span> <strong id="nascimentoServidor" class="text-gray-900 text-base">-</strong></div>
-                </div>
-            </div>
-
-            <!-- Alerta de Limite de Férias -->
-            <div id="alertaLimite" class="p-4 rounded-xl border text-sm font-medium"></div>
-
-            <!-- Resumo Rápido -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border-l-4 border-blue-500 border border-gray-100">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação de Férias</h3>
-                    <div class="mt-2 flex justify-between items-baseline">
-                        <span class="text-3xl font-extrabold text-gray-900" id="feriasPendentesCount">0</span>
-                        <span class="text-sm text-gray-600">Períodos a gozar</span>
-                    </div>
-                </div>
-                <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border-l-4 border-green-500 border border-gray-100">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Folga Aniversário (Ano Atual)</h3>
-                    <div class="mt-2 flex justify-between items-baseline">
-                        <span class="text-lg sm:text-xl font-bold text-gray-900" id="statusFolgaAniversario">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Linha do Tempo Visual -->
-            <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border border-gray-100">
-                <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-6 border-b pb-2">Histórico Cronológico</h2>
-                <div id="timelineHistorico" class="space-y-6 border-l-2 border-blue-200 pl-4 ml-2">
-                    <!-- Preenchido via JavaScript -->
-                </div>
-            </div>
-
-        </div>
+  <section class="form-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <span class="material-symbols-outlined">person_add</span>
+      </div>
+      <div>
+        <div class="card-title">Dados do servidor</div>
+        <div class="card-description">Informe os dados cadastrais abaixo.</div>
+      </div>
     </div>
 
-    <!-- Script Modular do Firebase v10 -->
-    <script type="module">
-        import { db } from "./firebase.js";
-        import { collection, getDocs, query, where, or, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <form class="form" id="formServidor" onsubmit="salvarServidor(event)">
+      <div class="form-body">
+        <div class="form-grid">
+          
+          <div class="form-section-title">Dados Pessoais e Contato</div>
+          
+          <!-- NOME -->
+          <div class="form-group full">
+            <label for="nome">Nome completo <span>*</span></label>
+            <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" autocomplete="name" required>
+          </div>
 
-        document.getElementById('termoBusca').addEventListener('input', function(e) {
-            let value = e.target.value;
-            if (/^[0-9.\-]*$/.test(value) && value.replace(/\D/g, '').length <= 11) {
-                let nums = value.replace(/\D/g, '');
-                if (nums.length > 11) nums = nums.slice(0, 11);
-                if (nums.length > 9) {
-                    value = nums.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
-                } else if (nums.length > 6) {
-                    value = nums.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, '$1.$2.$3');
-                } else if (nums.length > 3) {
-                    value = nums.replace(/^(\d{3})(\d{1,3}).*/, '$1.$2');
-                } else {
-                    value = nums;
-                }
-                e.target.value = value;
-            }
-        });
+          <!-- CPF -->
+          <div class="form-group">
+            <label for="cpf">CPF <span>*</span></label>
+            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" required oninput="formatarCPF(this)" onblur="verificarCpfDuplicado(this)">
+          </div>
 
-        function formatarData(dataStr) {
-            if (!dataStr) return '';
-            if (typeof dataStr.toDate === 'function') {
-                dataStr = dataStr.toDate().toISOString().split('T')[0];
-            }
-            dataStr = dataStr.toString().trim();
-            if (dataStr.includes('-') && dataStr.length >= 10) {
-                const partes = dataStr.substring(0, 10).split('-');
-                if (partes.length === 3) {
-                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-                }
-            }
-            return dataStr;
-        }
+          <!-- EMAIL -->
+          <div class="form-group">
+            <label for="email">E-mail <span>*</span></label>
+            <input type="email" id="email" name="email" placeholder="servidor@exemplo.com" autocomplete="email" required>
+          </div>
 
-        function formatarAnoReferencia(anoRef, tipoReg = '') {
-            if (!anoRef) return 'N/A';
-            let str = anoRef.toString().trim();
-            const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
-            if (isFerias && /^\d{4}$/.test(str)) {
-                let anoNum = parseInt(str);
-                return `${anoNum}/${anoNum + 1}`;
-            }
-            return str;
-        }
+          <!-- DATA NASCIMENTO -->
+          <div class="form-group">
+            <label for="dataNascimento">Data de nascimento <span>*</span></label>
+            <input type="date" id="dataNascimento" name="dataNascimento" required>
+          </div>
 
-        function obterDataFolgaAniversario(dataNascStr, ano) {
-            if (!dataNascStr) return null;
-            if (typeof dataNascStr.toDate === 'function') {
-                dataNascStr = dataNascStr.toDate().toISOString().split('T')[0];
-            }
-            dataNascStr = dataNascStr.toString().trim();
+          <!-- TELEFONE -->
+          <div class="form-group">
+            <label for="telefone">Telefone para contato <span>*</span></label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" autocomplete="tel" required oninput="formatarTelefone(this)">
+          </div>
+
+          <div class="form-section-title">Endereço Residencial</div>
+
+          <!-- CEP -->
+          <div class="form-group">
+            <label for="cep">CEP <span>*</span></label>
+            <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric" required oninput="formatarCEP(this)" onblur="buscarCEP(this)">
+          </div>
+
+          <!-- BAIRRO -->
+          <div class="form-group">
+            <label for="bairro">Bairro <span>*</span></label>
+            <input type="text" id="bairro" name="bairro" placeholder="Digite o bairro" required>
+          </div>
+
+          <!-- RUA/LOGRADOURO -->
+          <div class="form-group full">
+            <label for="logradouro">Logradouro (Rua, Av.) <span>*</span></label>
+            <input type="text" id="logradouro" name="logradouro" placeholder="Digite o logradouro" required>
+          </div>
+
+          <!-- NÚMERO -->
+          <div class="form-group">
+            <label for="numero">Número <span>*</span></label>
+            <input type="text" id="numero" name="numero" placeholder="Ex: 123, S/N" required>
+          </div>
+
+          <!-- COMPLEMENTO -->
+          <div class="form-group">
+            <label for="complemento">Complemento</label>
+            <input type="text" id="complemento" name="complemento" placeholder="Apto, Bloco, etc.">
+          </div>
+
+          <!-- CIDADE -->
+          <div class="form-group">
+            <label for="cidade">Cidade <span>*</span></label>
+            <input type="text" id="cidade" name="cidade" placeholder="Digite a cidade" required>
+          </div>
+
+          <!-- UF -->
+          <div class="form-group">
+            <label for="uf">UF <span>*</span></label>
+            <input type="text" id="uf" name="uf" placeholder="Ex: MG" maxlength="2" required>
+          </div>
+
+          <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
+
+          <!-- NÚMERO DA MATRÍCULA 1 -->
+          <div class="form-group">
+            <label for="numeroMatricula1">Nº da Matrícula 1 <span>*</span></label>
+            <input type="text" id="numeroMatricula1" name="numeroMatricula1" placeholder="Ex: 12345" required>
+          </div>
+
+          <!-- CARGO 1 -->
+          <div class="form-group">
+            <label for="cargo1">Cargo / Função (Matrícula 1) <span>*</span></label>
+            <input type="text" id="cargo1" name="cargo1" placeholder="Digite o cargo" required>
+          </div>
+
+          <!-- DATA DE ADMISSÃO (MATRÍCULA 1) -->
+          <div class="form-group full">
+            <label for="dataAdmissao1">Data de Admissão (Matrícula 1) <span>*</span></label>
+            <input type="date" id="dataAdmissao1" name="dataAdmissao1" required>
+          </div>
+
+          <!-- ESCOLA/LOTAÇÃO 1 (PRINCIPAL) -->
+          <div class="form-group full">
+            <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
+            <select id="escola1_m1" name="escola1_m1" required>
+              <option value="">Selecione a escola</option>
+              <option value="CEAE">CEAE</option>
+              <option value="CETEPE">CETEPE</option>
+              <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+              <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+              <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+            </select>
+          </div>
+
+          <!-- EMPRESA 1 (M1 - Escola 1) -->
+          <div class="form-group">
+            <label for="empresa1_m1">Concessionária (Linha de Ônibus) <span>*</span></label>
+            <select id="empresa1_m1" name="empresa1_m1" required>
+              <option value="">Selecione a empresa</option>
+              <option value="Trancid">Trancid</option>
+              <option value="Transpratur">Transpratur</option>
+              <option value="Exdil">Exdil</option>
+              <option value="Teixeira">Teixeira</option>
+            </select>
+          </div>
+
+          <!-- PASSES DIÁRIOS 1 (M1 - Escola 1) -->
+          <div class="form-group">
+            <label for="qtdPassagens1_m1">Passes Diários <span>*</span></label>
+            <input type="number" id="qtdPassagens1_m1" name="qtdPassagens1_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" required oninput="atualizarCorCampo(this)">
+          </div>
+
+          <!-- BOTÃO ADICIONAR SEGUNDA ESCOLA NA MATRÍCULA 1 -->
+          <button type="button" id="btnToggleEscola1" class="btn-link-adicionar" onclick="toggleEscolaExtra(1)">
+            <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+            Adicionar segunda escola / lotação para esta matrícula
+          </button>
+
+          <!-- ESCOLA EXTRA / 2ª LOTAÇÃO (M1) -->
+          <div id="escolaExtra1" class="escola-extra">
+            <div class="form-group full">
+              <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
+              <select id="escola2_m1" name="escola2_m1">
+                <option value="">Selecione a segunda escola</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="empresa_escola2_m1">Concessionária (Escola 2)</label>
+              <select id="empresa_escola2_m1" name="empresa_escola2_m1">
+                <option value="">Selecione a empresa</option>
+                <option value="Trancid">Trancid</option>
+                <option value="Transpratur">Transpratur</option>
+                <option value="Exdil">Exdil</option>
+                <option value="Teixeira">Teixeira</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qtdPassagens_escola2_m1">Passes Diários (Escola 2)</label>
+              <input type="number" id="qtdPassagens_escola2_m1" name="qtdPassagens_escola2_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+            </div>
+          </div>
+
+          <!-- SEGUNDO VÍNCULO (CHECKBOX) -->
+          <div class="form-group full" style="margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--primary);">
+              <input type="checkbox" id="possuiSegundoVinculo" onchange="toggleSegundoVinculo()" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+              <span>Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?</span>
+            </label>
+          </div>
+
+          <!-- MATRÍCULA 2 -->
+          <div id="blocoSegundoVinculo" class="bloco-segundo-vinculo">
+            <div class="form-section-title">Matrícula 2 (Segundo Vínculo)</div>
             
-            let dia = 0, mes = 0;
-            if (dataNascStr.includes('/')) {
-                const partes = dataNascStr.split('/');
-                dia = parseInt(partes[0]);
-                mes = parseInt(partes[1]);
-            } else if (dataNascStr.includes('-')) {
-                const partes = dataNascStr.split('-');
-                if (partes[0].length === 4) {
-                    mes = parseInt(partes[1]);
-                    dia = parseInt(partes[2]);
-                } else {
-                    dia = parseInt(partes[0]);
-                    mes = parseInt(partes[1]);
-                }
-            }
-            
-            if (!dia || !mes) return null;
-            
-            let dataFolga = new Date(ano, mes - 1, dia + 1);
-            dataFolga.setHours(0, 0, 0, 0);
-            return dataFolga;
+            <div class="form-group">
+              <label for="numeroMatricula2">Nº da Matrícula 2 <span>*</span></label>
+              <input type="text" id="numeroMatricula2" name="numeroMatricula2" placeholder="Ex: 67890">
+            </div>
+
+            <div class="form-group">
+              <label for="cargo2">Cargo / Função (Matrícula 2) <span>*</span></label>
+              <input type="text" id="cargo2" name="cargo2" placeholder="Digite o cargo">
+            </div>
+
+            <div class="form-group full">
+              <label for="dataAdmissao2">Data de Admissão (Matrícula 2) <span>*</span></label>
+              <input type="date" id="dataAdmissao2" name="dataAdmissao2">
+            </div>
+
+            <div class="form-group full">
+              <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
+              <select id="escola1_m2" name="escola1_m2">
+                <option value="">Selecione a escola</option>
+                <option value="CEAE">CEAE</option>
+                <option value="CETEPE">CETEPE</option>
+                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="empresa1_m2">Concessionária (Linha de Ônibus) <span>*</span></label>
+              <select id="empresa1_m2" name="empresa1_m2">
+                <option value="">Selecione a empresa</option>
+                <option value="Trancid">Trancid</option>
+                <option value="Transpratur">Transpratur</option>
+                <option value="Exdil">Exdil</option>
+                <option value="Teixeira">Teixeira</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="qtdPassagens1_m2">Passes Diários <span>*</span></label>
+              <input type="number" id="qtdPassagens1_m2" name="qtdPassagens1_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+            </div>
+
+            <button type="button" id="btnToggleEscola2" class="btn-link-adicionar" onclick="toggleEscolaExtra(2)">
+              <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
+              Adicionar segunda escola / lotação para esta matrícula
+            </button>
+
+            <div id="escolaExtra2" class="escola-extra">
+              <div class="form-group full">
+                <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
+                <select id="escola2_m2" name="escola2_m2">
+                  <option value="">Selecione a segunda escola</option>
+                  <option value="CEAE">CEAE</option>
+                  <option value="CETEPE">CETEPE</option>
+                  <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                  <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                  <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="empresa_escola2_m2">Concessionária (Escola 2)</label>
+                <select id="empresa_escola2_m2" name="empresa_escola2_m2">
+                  <option value="">Selecione a empresa</option>
+                  <option value="Trancid">Trancid</option>
+                  <option value="Transpratur">Transpratur</option>
+                  <option value="Exdil">Exdil</option>
+                  <option value="Teixeira">Teixeira</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="qtdPassagens_escola2_m2">Passes Diários (Escola 2)</label>
+                <input type="number" id="qtdPassagens_escola2_m2" name="qtdPassagens_escola2_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="mensagem" class="mensagem"></div>
+
+      <div class="form-footer">
+        <div class="footer-info"><span>*</span> Campos obrigatórios</div>
+        <div class="footer-buttons">
+          <button type="button" class="btn-importar" onclick="importarCSV()">
+            <span class="material-symbols-outlined">upload_file</span>
+            Importar CSV
+          </button>
+          <button type="submit" id="btnSalvar" class="btn-salvar">
+            <span class="material-symbols-outlined" id="iconeSalvar">save</span>
+            <span id="textoBotao">Salvar</span>
+          </button>
+          <button type="button" class="btn-cancelar" onclick="cancelar()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { collection, addDoc, doc, getDoc, updateDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const urlParams = new URLSearchParams(window.location.search);
+const servidorId = urlParams.get('id');
+
+function atualizarStatusConexao() {
+  const statusDiv = document.getElementById("statusConexao");
+  const statusTexto = document.getElementById("statusTexto");
+  if (!navigator.onLine) {
+    statusDiv.className = "status-conexao offline";
+    statusTexto.textContent = "Sem Conexão";
+    statusDiv.title = "Computador desconectado da internet";
+    return;
+  }
+  const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conexao) {
+    if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
+      statusDiv.className = "status-conexao instavel";
+      statusTexto.textContent = "Instável";
+      statusDiv.title = "Rede móvel ou conexão lenta detectada";
+    } else {
+      statusDiv.className = "status-conexao online";
+      statusTexto.textContent = "Online";
+      statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
+    }
+  } else {
+    statusDiv.className = "status-conexao online";
+    statusTexto.textContent = "Online";
+    statusDiv.title = "Sistema Conectado";
+  }
+}
+
+window.addEventListener('online', atualizarStatusConexao);
+window.addEventListener('offline', atualizarStatusConexao);
+
+document.addEventListener("DOMContentLoaded", async function() {
+  atualizarStatusConexao();
+  flatpickr("input[type='date']", {
+    locale: "pt",
+    dateFormat: "Y-m-d",
+    allowInput: false,
+    onChange: function(selectedDates, dateStr, instance) {
+      window.atualizarCorCampo(instance.element);
+      ocultarMensagem();
+    }
+  });
+
+  const campos = document.querySelectorAll("#formServidor input, #formServidor select");
+  campos.forEach(function(campo) {
+    campo.addEventListener("input", function() {
+      atualizarCorCampo(campo);
+      ocultarMensagem();
+    });
+    campo.addEventListener("change", function() {
+      atualizarCorCampo(campo);
+      ocultarMensagem();
+    });
+    atualizarCorCampo(campo);
+  });
+
+  if (servidorId) {
+    document.title = "Editar Servidor - Vale Transporte";
+    document.querySelector(".breadcrumb span:last-child").textContent = "Editar cadastro";
+    document.querySelector(".page-header h1").textContent = "Editar Servidor";
+    document.querySelector(".page-header p").textContent = "Atualize os dados cadastrais do servidor no sistema.";
+    document.querySelector(".card-title").textContent = "Editar dados do servidor";
+    document.getElementById("textoBotao").textContent = "Atualizar";
+    document.getElementById("iconeSalvar").textContent = "update";
+
+    await carregarDadosServidor(servidorId);
+  }
+});
+
+async function carregarDadosServidor(id) {
+  try {
+    const docRef = doc(db, "servidores", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const d = docSnap.data();
+
+      document.getElementById("nome").value = d.nome || "";
+      document.getElementById("cpf").value = d.cpf || "";
+      document.getElementById("email").value = d.email || "";
+      document.getElementById("dataNascimento").value = d.dataNascimento || "";
+      document.getElementById("telefone").value = d.telefone || "";
+
+      if (d.dataNascimento && document.getElementById("dataNascimento")._flatpickr) {
+        document.getElementById("dataNascimento")._flatpickr.setDate(d.dataNascimento);
+      }
+
+      document.getElementById("cep").value = d.cep || "";
+      document.getElementById("bairro").value = d.bairro || "";
+      document.getElementById("logradouro").value = d.logradouro || "";
+      document.getElementById("numero").value = d.numero || "";
+      document.getElementById("complemento").value = d.complemento || "";
+      document.getElementById("cidade").value = d.cidade || "";
+      document.getElementById("uf").value = d.uf || "";
+
+      if (d.matricula1) {
+        document.getElementById("numeroMatricula1").value = d.matricula1.numeroMatricula || "";
+        document.getElementById("cargo1").value = d.matricula1.cargo || "";
+        document.getElementById("dataAdmissao1").value = d.matricula1.dataAdmissao || "";
+        if (d.matricula1.dataAdmissao && document.getElementById("dataAdmissao1")._flatpickr) {
+          document.getElementById("dataAdmissao1")._flatpickr.setDate(d.matricula1.dataAdmissao);
         }
+        if (d.matricula1.escola1) {
+          document.getElementById("escola1_m1").value = d.matricula1.escola1.nomeEscola || "";
+          document.getElementById("empresa1_m1").value = d.matricula1.escola1.empresa || "";
+          document.getElementById("qtdPassagens1_m1").value = d.matricula1.escola1.qtdPassagensDiarias || "";
+        }
+        if (d.matricula1.escola2) {
+          toggleEscolaExtra(1);
+          document.getElementById("escola2_m1").value = d.matricula1.escola2.nomeEscola || "";
+          document.getElementById("empresa_escola2_m1").value = d.matricula1.escola2.empresa || "";
+          document.getElementById("qtdPassagens_escola2_m1").value = d.matricula1.escola2.qtdPassagensDiarias || "";
+        }
+      }
 
-        window.buscarServidor = async function() {
-            let termoInput = document.getElementById('termoBusca').value.trim();
-            if (!termoInput) {
-                alert('Por favor, digite um CPF ou Matrícula.');
-                return;
-            }
+      if (d.matricula2) {
+        document.getElementById("possuiSegundoVinculo").checked = true;
+        toggleSegundoVinculo();
+        document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
+        document.getElementById("cargo2").value = d.matricula2.cargo || "";
+        document.getElementById("dataAdmissao2").value = d.matricula2.dataAdmissao || "";
+        if (d.matricula2.dataAdmissao && document.getElementById("dataAdmissao2")._flatpickr) {
+          document.getElementById("dataAdmissao2")._flatpickr.setDate(d.matricula2.dataAdmissao);
+        }
+        if (d.matricula2.escola1) {
+          document.getElementById("escola1_m2").value = d.matricula2.escola1.nomeEscola || "";
+          document.getElementById("empresa1_m2").value = d.matricula2.escola1.empresa || "";
+          document.getElementById("qtdPassagens1_m2").value = d.matricula2.escola1.qtdPassagensDiarias || "";
+        }
+        if (d.matricula2.escola2) {
+          toggleEscolaExtra(2);
+          document.getElementById("escola2_m2").value = d.matricula2.escola2.nomeEscola || "";
+          document.getElementById("empresa_escola2_m2").value = d.matricula2.escola2.empresa || "";
+          document.getElementById("qtdPassagens_escola2_m2").value = d.matricula2.escola2.qtdPassagensDiarias || "";
+        }
+      }
 
-            const termoLimpo = termoInput.replace(/\D/g, '');
+      const camposPreenchidos = document.querySelectorAll("#formServidor input, #formServidor select");
+      camposPreenchidos.forEach(c => atualizarCorCampo(c));
 
-            try {
-                const colRef = collection(db, 'servidores');
-                let mapIds = new Map();
+    } else {
+      mostrarMensagem("Servidor não encontrado.", "erro");
+    }
+  } catch (erro) {
+    console.error("Erro ao carregar dados do servidor para edição:", erro);
+    mostrarMensagem("Erro ao carregar os dados.", "erro");
+  }
+}
 
-                // 1. Busca direta por ID (muito eficiente, consome no máximo 2 leituras)
-                const docSnap1 = await getDoc(doc(db, 'servidores', termoInput));
-                if (docSnap1.exists()) mapIds.set(docSnap1.id, docSnap1);
+window.atualizarCorCampo = function(campo) {
+  if (campo.value && campo.value.trim() !== "") {
+    if (!campo.classList.contains("erro-input")) {
+      campo.classList.add("preenchido");
+    }
+  } else {
+    campo.classList.remove("preenchido");
+    campo.classList.remove("erro-input");
+  }
+}
 
-                if (termoLimpo && termoLimpo !== termoInput) {
-                    const docSnap2 = await getDoc(doc(db, 'servidores', termoLimpo));
-                    if (docSnap2.exists()) mapIds.set(docSnap2.id, docSnap2);
-                }
+window.formatarCPF = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 11);
+  if (valor.length > 9) {
+    valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
+  } else if (valor.length > 6) {
+    valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
+  } else if (valor.length > 3) {
+    valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
+  }
+  input.value = valor;
+  atualizarCorCampo(input);
+}
 
-                // 2. Se não achou pelo ID e o termo parece um CPF, busca isolada por CPF usando índices de campo único
-                if (mapIds.size === 0 && termoLimpo.length > 0) {
-                    const qCpf = query(
-                        colRef,
-                        or(
-                            where('cpf', '==', termoInput),
-                            where('cpf', '==', termoLimpo),
-                            where('CPF', '==', termoInput),
-                            where('CPF', '==', termoLimpo)
-                        )
-                    );
-                    const snapCpf = await getDocs(qCpf);
-                    snapCpf.forEach(d => mapIds.set(d.id, d));
-                }
+window.formatarTelefone = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 11);
+  if (valor.length > 10) {
+    valor = valor.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+  } else if (valor.length > 6) {
+    valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+  } else if (valor.length > 2) {
+    valor = valor.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+  } else if (valor.length > 0) {
+    valor = valor.replace(/^(\d{0,2})/, "($1");
+  }
+  input.value = valor;
+  atualizarCorCampo(input);
+}
 
-                // 3. Se ainda não encontrou, busca isolada por Matrícula
-                if (mapIds.size === 0) {
-                    const qMat = query(
-                        colRef,
-                        or(
-                            where('matricula', '==', termoInput),
-                            where('matricula', '==', termoLimpo),
-                            where('matricula', '==', termoLimpo ? Number(termoLimpo) : null),
-                            where('Matricula', '==', termoInput),
-                            where('matricula_servidor', '==', termoInput),
-                            where('codigo', '==', termoInput)
-                        )
-                    );
-                    const snapMat = await getDocs(qMat);
-                    snapMat.forEach(d => mapIds.set(d.id, d));
-                }
+window.formatarCEP = function(input) {
+  let valor = input.value.replace(/\D/g, "");
+  valor = valor.substring(0, 8);
+  if (valor.length > 5) {
+    valor = valor.replace(/^(\d{5})(\d{0,3}).*/, "$1-$2");
+  }
+  input.value = valor;
+  atualizarCorCampo(input);
+}
 
-                const servidoresEncontrados = Array.from(mapIds.values());
+window.buscarCEP = async function(input) {
+  let cep = input.value.replace(/\D/g, "");
+  if (cep.length !== 8) return;
+  try {
+    const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const dados = await resposta.json();
+    if (!dados.erro) {
+      document.getElementById("bairro").value = dados.bairro || "";
+      document.getElementById("logradouro").value = dados.logradouro || "";
+      document.getElementById("cidade").value = dados.localidade || "";
+      document.getElementById("uf").value = dados.uf || "";
+      document.querySelectorAll("#bairro, #logradouro, #cidade, #uf").forEach(c => atualizarCorCampo(c));
+    }
+  } catch (e) {
+    console.error("Erro ao buscar CEP:", e);
+  }
+}
 
-                if (servidoresEncontrados.length === 0) {
-                    alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
-                    document.getElementById('resultadoContainer').classList.add('hidden');
-                    return;
-                }
+window.toggleEscolaExtra = function(numMatricula) {
+  const bloco = document.getElementById(`escolaExtra${numMatricula}`);
+  const btn = document.getElementById(`btnToggleEscola1`);
+  bloco.classList.toggle('ativo');
+  if (bloco.classList.contains('ativo')) {
+    document.getElementById(`escola2_m${numMatricula}`).setAttribute('required', 'required');
+    document.getElementById(`empresa_escola2_m${numMatricula}`).setAttribute('required', 'required');
+    document.getElementById(`qtdPassagens_escola2_m${numMatricula}`).setAttribute('required', 'required');
+  } else {
+    document.getElementById(`escola2_m${numMatricula}`).removeAttribute('required');
+    document.getElementById(`empresa_escola2_m${numMatricula}`).removeAttribute('required');
+    document.getElementById(`qtdPassagens_escola2_m${numMatricula}`).removeAttribute('required');
+  }
+}
 
-                await processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
+window.toggleSegundoVinculo = function() {
+  const bloco = document.getElementById("blocoSegundoVinculo");
+  const checkBox = document.getElementById("possuiSegundoVinculo");
+  const camposM2 = [
+    "numeroMatricula2", "cargo2", "dataAdmissao2", 
+    "escola1_m2", "empresa1_m2", "qtdPassagens1_m2"
+  ];
+  
+  if (checkBox.checked) {
+    bloco.classList.add("ativo");
+    camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
+  } else {
+    bloco.classList.remove("ativo");
+    camposM2.forEach(id => document.getElementById(id).removeAttribute("required"));
+  }
+}
 
-            } catch (error) {
-                console.error("Erro detalhado do Firebase:", error);
-                alert('Erro ao consultar o banco de dados. Verifique o console.');
-            }
+window.salvarServidor = async function(event) {
+  event.preventDefault();
+  const btnSalvar = document.getElementById("btnSalvar");
+  btnSalvar.disabled = true;
+
+  try {
+    const dadosServidor = {
+      nome: document.getElementById("nome").value.trim(),
+      cpf: document.getElementById("cpf").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      dataNascimento: document.getElementById("dataNascimento").value,
+      telefone: document.getElementById("telefone").value.trim(),
+      cep: document.getElementById("cep").value.trim(),
+      bairro: document.getElementById("bairro").value.trim(),
+      logradouro: document.getElementById("logradouro").value.trim(),
+      numero: document.getElementById("numero").value.trim(),
+      complemento: document.getElementById("complemento").value.trim(),
+      cidade: document.getElementById("cidade").value.trim(),
+      uf: document.getElementById("uf").value.trim(),
+      
+      matricula1: {
+        numeroMatricula: document.getElementById("numeroMatricula1").value.trim(),
+        cargo: document.getElementById("cargo1").value.trim(),
+        dataAdmissao: document.getElementById("dataAdmissao1").value,
+        escola1: {
+          nomeEscola: document.getElementById("escola1_m1").value,
+          empresa: document.getElementById("empresa1_m1").value,
+          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens1_m1").value)
+        }
+      }
+    };
+
+    const escolaExtra1Ativa = document.getElementById("escolaExtra1").classList.contains("ativo");
+    if (escolaExtra1Ativa) {
+      dadosServidor.matricula1.escola2 = {
+        nomeEscola: document.getElementById("escola2_m1").value,
+        empresa: document.getElementById("empresa_escola2_m1").value,
+        qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m1").value)
+      };
+    }
+
+    if (document.getElementById("possuiSegundoVinculo").checked) {
+      dadosServidor.matricula2 = {
+        numeroMatricula: document.getElementById("numeroMatricula2").value.trim(),
+        cargo: document.getElementById("cargo2").value.trim(),
+        dataAdmissao: document.getElementById("dataAdmissao2").value,
+        escola1: {
+          nomeEscola: document.getElementById("escola1_m2").value,
+          empresa: document.getElementById("empresa1_m2").value,
+          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens1_m2").value)
+        }
+      };
+
+      const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
+      if (escolaExtra2Ativa) {
+        dadosServidor.matricula2.escola2 = {
+          nomeEscola: document.getElementById("escola2_m2").value,
+          empresa: document.getElementById("empresa_escola2_m2").value,
+          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m2").value)
         };
+      }
+    }
 
-        async function processarServidoresUnificados(servidoresDocs, termoBusca) {
-            const primeiroData = servidoresDocs[0].data();
-            const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
-            const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
-            
-            const vinculosMap = new Map();
-            let cpfsSet = new Set();
-            const servidorIds = [];
+    if (servidorId) {
+      await updateDoc(doc(db, "servidores", servidorId), dadosServidor);
+      mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
+    } else {
+      await addDoc(collection(db, "servidores"), dadosServidor);
+      mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
+      document.getElementById("formServidor").reset();
+    }
+  } catch (erro) {
+    console.error("Erro ao salvar:", erro);
+    mostrarMensagem("Erro ao salvar os dados no banco.", "erro");
+  } finally {
+    btnSalvar.disabled = false;
+  }
+}
 
-            servidoresDocs.forEach(d => {
-                servidorIds.push(d.id);
-                const data = d.data();
-                const mat = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || data.cod_matricula || data.num_matricula;
-                const adm = data.data_admissao || data.dataAdmissao || data.data_admissão || data.admissao || data.data_ingresso || data.data_posse || data.ingresso || data.posse;
-                
-                const matStr = mat ? mat.toString() : (servidoresDocs.length === 1 ? 'Não informada' : `Doc_${d.id}`);
-                
-                let anoAdm = 2020;
-                if (adm) {
-                    const admStr = adm.toString();
-                    if (admStr.includes('/')) {
-                        anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
-                    } else if (admStr.includes('-')) {
-                        anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
-                    }
-                }
-                
-                vinculosMap.set(matStr, {
-                    matricula: matStr,
-                    dataAdmissao: adm || '',
-                    anoAdmissao: isNaN(anoAdm) ? 2020 : anoAdm
-                });
-                
-                const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                if (cpfDoc) cpfsSet.add(cpfDoc);
-            });
+window.cancelar = function() {
+  window.location.href = "index.html";
+}
 
-            const vinculos = Array.from(vinculosMap.values());
-            if (vinculos.length === 0) {
-                vinculos.push({
-                    matricula: 'Não informada',
-                    dataAdmissao: primeiroData.data_admissao || primeiroData.dataAdmissao || primeiroData.admissao || '',
-                    anoAdmissao: 2020
-                });
-            }
+window.importarCSV = function() {
+  alert("Função de importação de CSV.");
+}
 
-            const cpfEfetivo = cpfsSet.size > 0 ? Array.from(cpfsSet)[0] : termoBusca;
+function mostrarMensagem(texto, tipo) {
+  const msg = document.getElementById("mensagem");
+  msg.textContent = texto;
+  msg.className = `mensagem ${tipo}`;
+}
 
-            const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
-            const registros = [];
-
-            snapshotHistorico.forEach(docSnap => {
-                const regData = docSnap.data();
-                const regCpf = (regData.cpf || regData.CPF || regData.servidor_cpf || '').toString().replace(/\D/g, '');
-                const regMat = (regData.matricula || regData.Matricula || regData.servidor_matricula || '').toString();
-                const regServId = regData.servidorId || regData.servidor_id || '';
-
-                const matchCpf = cpfEfetivo && regCpf === cpfEfetivo;
-                const matchId = servidorIds.includes(regServId);
-                const matchMat = vinculos.some(v => v.matricula === regMat);
-
-                if (matchCpf || matchId || matchMat) {
-                    registros.push(regData);
-                    if (regMat && !vinculosMap.has(regMat)) {
-                        vinculosMap.set(regMat, {
-                            matricula: regMat,
-                            dataAdmissao: '',
-                            anoAdmissao: 2020
-                        });
-                    }
-                }
-            });
-
-            const listaMatriculasFinal = Array.from(vinculosMap.keys());
-            const matriculaExibicao = listaMatriculasFinal.length > 0 ? listaMatriculasFinal.join(' / ') : 'Não informada';
-            const admissaoExibicao = Array.from(vinculosMap.values()).map(v => `${v.matricula !== 'Não informada' ? 'Mat ' + v.matricula + ': ' : ''}${formatarData(v.dataAdmissao) || 'Não informada'}`).join(' | ');
-
-            document.getElementById('nomeServidor').innerText = nomeServidor;
-            document.getElementById('matriculaServidor').innerText = matriculaExibicao;
-            document.getElementById('admissaoServidor').innerText = admissaoExibicao;
-            document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
-
-            processarLinhaDoTempo(Array.from(vinculosMap.values()), nascimentoServidor, registros);
-
-            document.getElementById('resultadoContainer').classList.remove('hidden');
-        }
-
-        function processarLinhaDoTempo(vinculos, dataNascimento, registros) {
-            const timelineEl = document.getElementById('timelineHistorico');
-            timelineEl.innerHTML = '';
-
-            const anoAtual = new Date().getFullYear();
-
-            const feriasTiradas = registros.filter(r => {
-                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
-                return t.includes('ferias') || t.includes('férias');
-            });
-
-            const folgasAniversario = registros.filter(r => {
-                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
-                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
-            });
-
-            let totalPendentes = 0;
-
-            vinculos.forEach(v => {
-                let totalPeriodosDireitoVinc = 0;
-                for (let ano = v.anoAdmissao; ano <= anoAtual; ano++) {
-                    totalPeriodosDireitoVinc++;
-                }
-
-                const feriasVinc = feriasTiradas.filter(r => {
-                    const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString();
-                    if (regMat === v.matricula) return true;
-                    if (!regMat && vinculos.length === 1) return true;
-                    return false;
-                });
-
-                const gozadasVinc = feriasVinc.length;
-                const pendentesVinc = Math.max(0, totalPeriodosDireitoVinc - gozadasVinc);
-                totalPendentes += pendentesVinc;
-            });
-
-            document.getElementById('feriasPendentesCount').innerText = totalPendentes;
-
-            const alertaEl = document.getElementById('alertaLimite');
-            alertaEl.className = 'p-4 rounded-xl border text-sm font-medium';
-
-            if (totalPendentes >= 3) {
-                alertaEl.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
-                alertaEl.innerHTML = `<strong>⚠️ ALERTA CRÍTICO:</strong> O servidor atingiu ou ultrapassou o limite de 3 períodos de férias acumulados. Ação imediata necessária conforme a legislação.`;
-            } else if (totalPendentes === 2) {
-                alertaEl.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
-                alertaEl.innerHTML = `<strong>⚠️ ATENÇÃO:</strong> O servidor possui 2 períodos acumulados, correndo risco de atingir o limite legal.`;
-            } else {
-                alertaEl.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
-                alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
-            }
-
-            const folgaAnoAtual = folgasAniversario.find(f => {
-                const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-                const dataStr = (f.data || f.data_gozo || f.data_inicio || f.dataInicio || '').toString();
-                return anoRef == anoAtual || dataStr.includes(anoAtual);
-            });
-
-            const statusFolgaEl = document.getElementById('statusFolgaAniversario');
-            const dataFolgaAniv = obterDataFolgaAniversario(dataNascimento, anoAtual);
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-
-            if (folgaAnoAtual) {
-                const dataUsoRaw = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
-                const dataUsoFormatada = formatarData(dataUsoRaw);
-                statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUsoFormatada}</span>`;
-            } else if (dataFolgaAniv && hoje < dataFolgaAniv) {
-                const dataFormatada = dataFolgaAniv.toLocaleDateString('pt-BR');
-                statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataFormatada}</span>`;
-            } else {
-                statusFolgaEl.innerHTML = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
-            }
-
-            registros.forEach(reg => {
-                const tipoReg = (reg.tipo || reg.tipo_registro || 'Registro').toString();
-                const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
-
-                const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-                const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-                const dtGozo = formatarData(reg.data_gozo || reg.dataGozo || reg.data);
-                const matRegistro = reg.matricula || reg.Matricula || reg.servidor_matricula;
-
-                let textoDetalhe = '';
-                if (isFerias) {
-                    if (dtInicio && dtTermino) {
-                        textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}`;
-                    } else if (dtInicio) {
-                        textoDetalhe = `Período gozado em ${dtInicio}`;
-                    } else {
-                        textoDetalhe = reg.descricao || 'Férias registradas';
-                    }
-                } else {
-                    if (dtGozo) {
-                        textoDetalhe = `Usufruída em ${dtGozo}`;
-                    } else if (dtInicio) {
-                        textoDetalhe = `Usufruída em ${dtInicio}`;
-                    } else {
-                        textoDetalhe = reg.descricao || 'Folga aniversário registrada';
-                    }
-                }
-
-                if (matRegistro) {
-                    textoDetalhe += ` <span class="text-xs font-semibold text-gray-500">(Matrícula: ${matRegistro})</span>`;
-                }
-
-                const anoRefBruto = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
-                const anoRefFormatado = formatarAnoReferencia(anoRefBruto, tipoReg);
-
-                const itemDiv = document.createElement('div');
-                itemDiv.className = "relative pl-6";
-                itemDiv.innerHTML = `
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full ${isFerias ? 'bg-blue-600' : 'bg-green-600'} border-2 border-white shadow-sm"></div>
-                    <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">${tipoReg}</span>
-                    <p class="text-sm font-medium text-gray-800 mt-0.5">${textoDetalhe}</p>
-                    <span class="text-xs text-gray-500">Ano Referência: ${anoRefFormatado}</span>
-                `;
-                timelineEl.appendChild(itemDiv);
-            });
-
-            if (registros.length === 0) {
-                timelineEl.innerHTML = `<p class="text-sm text-gray-500 italic">Nenhum registro de férias ou folga encontrado para este servidor.</p>`;
-            }
-        }
-    </script>
+function ocultarMensagem() {
+  const msg = document.getElementById("mensagem");
+  msg.className = "mensagem";
+}
+</script>
 </body>
 </html>
