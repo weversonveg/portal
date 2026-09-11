@@ -14,26 +14,20 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 <title>Cálculo de Vales - Vale Transporte</title>
 
 <style>
-
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
-
     --green: #2e7d32;
     --green-hover: #1b5e20;
     --green-light: #eaf6ec;
     --green-border: #72b879;
-
     --red: #c62828;
     --red-hover: #a51f1f;
-
     --text: #263238;
     --text-secondary: #68737d;
-
     --border: #d9dee3;
     --background: #f4f6f8;
     --white: #ffffff;
-
     --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -57,7 +51,6 @@ body {
     color: var(--text);
 }
 
-/* BARRA SUPERIOR */
 .topbar {
     width: 100%;
     max-width: 1116px;
@@ -109,7 +102,6 @@ body {
     white-space: nowrap;
 }
 
-/* INDICADOR DE SINAL DE REDE */
 .status-conexao {
     display: flex;
     align-items: center;
@@ -146,7 +138,6 @@ body {
     border-color: #c8e6c9;
 }
 
-/* ÁREA PRINCIPAL */
 .main {
     width: 100%;
     max-width: 1116px;
@@ -184,7 +175,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* CARD DE FILTROS */
 .filter-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -250,7 +240,6 @@ body {
     background: var(--green-hover);
 }
 
-/* RESUMO E ESTATÍSTICAS (4 COLUNAS) */
 .summary-container {
     display: none;
     grid-template-columns: repeat(4, 1fr);
@@ -284,7 +273,6 @@ body {
     margin-top: 6px;
 }
 
-/* TABELA DE RESULTADOS */
 .table-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -362,7 +350,6 @@ tr:hover td {
     color: #2e7d32;
 }
 
-/* MEDIA QUERIES PARA RESPONSIVIDADE */
 @media (max-width: 950px) {
     .filter-card {
         flex-direction: column;
@@ -380,10 +367,7 @@ tr:hover td {
         padding: 0 12px;
         height: 60px;
     }
-    .system-module {
-        display: none;
-    }
-    .system-divider {
+    .system-module, .system-divider {
         display: none;
     }
     .main {
@@ -405,7 +389,6 @@ tr:hover td {
         grid-template-columns: 1fr;
     }
 }
-
 </style>
 </head>
 
@@ -441,7 +424,6 @@ tr:hover td {
         <p>Calcula a quantidade de vales considerando o calendário da escola, faltas e o somatório automático de férias e lançamentos manuais.</p>
     </div>
 
-    <!-- CARD DE FILTROS -->
     <section class="filter-card">
         <div class="filter-group">
             <label for="mesReferencia">Mês de Referência</label>
@@ -468,7 +450,6 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO CÁLCULO (4 CARDS) -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Dias Úteis Base</label>
@@ -488,7 +469,6 @@ tr:hover td {
         </div>
     </section>
 
-    <!-- TABELA DE RESULTADOS -->
     <section id="tableCard" class="table-card">
         <div class="table-responsive">
             <table>
@@ -524,6 +504,20 @@ tr:hover td {
         verificarDiasUteis();
     });
 
+    // Função auxiliar para calcular dias úteis (Segunda a Sexta) automaticamente como fallback
+    function calcularDiasUteisPadrao(ano, mes) {
+        let dias = 0;
+        const totalDias = new Date(ano, mes + 1, 0).getDate();
+        for (let d = 1; d <= totalDias; d++) {
+            const data = new Date(ano, mes, d);
+            const diaSemana = data.getDay();
+            if (diaSemana !== 0 && diaSemana !== 6) {
+                dias++;
+            }
+        }
+        return dias;
+    }
+
     window.verificarDiasUteis = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         if (!mesAno) return;
@@ -533,7 +527,7 @@ tr:hover td {
             const docSnap = await getDoc(docRef);
 
             if (!docSnap.exists()) {
-                mostrarMensagem(`Atenção: Não há dias úteis configurados para o mês ${mesAno}. Configure na tela de dias úteis antes de calcular.`, "erro");
+                mostrarMensagem(`Aviso: O mês ${mesAno} não possui dias úteis configurados. O sistema usará o cálculo padrão de dias úteis (Seg-Sex).`, "info");
             } else {
                 ocultarMensagem();
             }
@@ -542,7 +536,6 @@ tr:hover td {
         }
     }
 
-    // Função auxiliar robusta para converter datas do Firestore/Inputs em objetos Date sem fuso horário
     function parseDate(val) {
         if (!val) return null;
         if (typeof val.toDate === 'function') {
@@ -565,7 +558,6 @@ tr:hover td {
         return null;
     }
 
-    // MOTOR DE CÁLCULO INTEGRADO COM SEPARAÇÃO ESTRITA POR MATRÍCULA
     window.executarCalculo = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
         const escolaSelecionada = document.getElementById("filtroEscola").value;
@@ -580,16 +572,23 @@ tr:hover td {
         }
 
         try {
-            // 1. Pega os dias úteis configurados para o mês pela SEMED
-            const configRef = doc(db, "configuracoes", mesAno);
-            const configSnap = await getDoc(configRef);
+            const [anoStr, mesStr] = mesAno.split("-");
+            const anoNum = parseInt(anoStr);
+            const mesNum = parseInt(mesStr) - 1;
 
-            if (!configSnap.exists()) {
-                mostrarMensagem(`O mês ${mesAno} não possui dias úteis cadastrados! Defina os dias úteis na tela de configuração primeiro.`, "erro");
-                return;
+            // 1. Pega os dias úteis configurados ou calcula automaticamente como fallback
+            let diasUteisBase = 22;
+            try {
+                const configRef = doc(db, "configuracoes", mesAno);
+                const configSnap = await getDoc(configRef);
+                if (configSnap.exists()) {
+                    diasUteisBase = Number(configSnap.data().diasUteis) || calcularDiasUteisPadrao(anoNum, mesNum);
+                } else {
+                    diasUteisBase = calcularDiasUteisPadrao(anoNum, mesNum);
+                }
+            } catch (e) {
+                diasUteisBase = calcularDiasUteisPadrao(anoNum, mesNum);
             }
-
-            const diasUteisBase = Number(configSnap.data().diasUteis) || 0;
 
             // 2. Busca customizações de dias úteis feitas pelas escolas
             const diasEscolaMap = {};
@@ -606,7 +605,6 @@ tr:hover td {
                 console.log("Aviso: Configurações de dias por escola não encontradas.");
             }
 
-            // 3. ESTRUTURAS COM ISOLAMENTO EXCLUSIVO POR MATRÍCULA
             const feriasMap = {};
             const manualEscolaMap = {};
             const manualGeralMap = {};
@@ -614,9 +612,6 @@ tr:hover td {
             // 3.1. Carrega Férias e Folgas automáticas
             try {
                 const feriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
-                const [anoStr, mesStr] = mesAno.split("-");
-                const anoNum = parseInt(anoStr);
-                const mesNum = parseInt(mesStr) - 1;
                 const primeiroDiaMes = new Date(anoNum, mesNum, 1);
                 const ultimoDiaMes = new Date(anoNum, mesNum + 1, 0);
 
@@ -640,11 +635,9 @@ tr:hover td {
                                 const diasNoMes = Math.round((endOverlap - startOverlap) / (1000 * 60 * 60 * 24)) + 1;
                                 if (diasNoMes > 0) {
                                     if (matriculaRaw) {
-                                        // Armazenamento estrito por matrícula
                                         const chaveFeriasMat = `${cpfLimpo}_${String(matriculaRaw).trim()}`;
                                         feriasMap[chaveFeriasMat] = (feriasMap[chaveFeriasMat] || 0) + diasNoMes;
                                     } else {
-                                        // Legado sem matrícula
                                         feriasMap[cpfLimpo] = (feriasMap[cpfLimpo] || 0) + diasNoMes;
                                     }
                                 }
@@ -653,10 +646,10 @@ tr:hover td {
                     }
                 });
             } catch (e) {
-                console.log("Aviso: Erro ao calcular intersecção de férias e folgas:", e);
+                console.log("Aviso: Erro ao calcular férias e folgas:", e);
             }
 
-            // 3.2. Carrega Lançamentos Manuais feitos pelas Escolas
+            // 3.2. Carrega Lançamentos Manuais
             try {
                 const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
                 const lancSnap = await getDocs(lancQuery);
@@ -671,17 +664,13 @@ tr:hover td {
                         if (matriculaRaw) {
                             const matClean = String(matriculaRaw).trim();
                             if (escolaNome) {
-                                const chaveEscolaCpfMat = `${escolaNome}_${cpfLimpo}_${matClean}`;
-                                manualEscolaMap[chaveEscolaCpfMat] = (manualEscolaMap[chaveEscolaCpfMat] || 0) + dias;
+                                manualEscolaMap[`${escolaNome}_${cpfLimpo}_${matClean}`] = (manualEscolaMap[`${escolaNome}_${cpfLimpo}_${matClean}`] || 0) + dias;
                             } else {
-                                const chaveGeralMat = `${cpfLimpo}_${matClean}`;
-                                manualGeralMap[chaveGeralMat] = (manualGeralMap[chaveGeralMat] || 0) + dias;
+                                manualGeralMap[`${cpfLimpo}_${matClean}`] = (manualGeralMap[`${cpfLimpo}_${matClean}`] || 0) + dias;
                             }
                         } else {
-                            // Legado sem matrícula
                             if (escolaNome) {
-                                const chaveEscolaCpf = `${escolaNome}_${cpfLimpo}`;
-                                manualEscolaMap[chaveEscolaCpf] = (manualEscolaMap[chaveEscolaCpf] || 0) + dias;
+                                manualEscolaMap[`${escolaNome}_${cpfLimpo}`] = (manualEscolaMap[`${escolaNome}_${cpfLimpo}`] || 0) + dias;
                             } else {
                                 manualGeralMap[cpfLimpo] = (manualGeralMap[cpfLimpo] || 0) + dias;
                             }
@@ -692,18 +681,11 @@ tr:hover td {
                 console.log("Aviso: Lançamentos mensais não encontrados.");
             }
 
-            // 4. Busca os servidores no Firebase
-            let q;
-            if (escolaSelecionada !== "TODAS") {
-                q = query(collection(db, "servidores"), where("escolas", "array-contains", escolaSelecionada));
-            } else {
-                q = collection(db, "servidores");
-            }
-
-            const querySnapshot = await getDocs(q);
+            // 4. Busca todos os servidores (filtrando em memória para evitar erros de índice no Firestore)
+            const querySnapshot = await getDocs(collection(db, "servidores"));
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor encontrado para o critério selecionado.", "info");
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
@@ -713,12 +695,9 @@ tr:hover td {
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            // 5. Processa o cálculo com isolamento rigoroso por matrícula
             querySnapshot.forEach((doc) => {
                 const s = doc.data();
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-                
-                // Verifica se o servidor possui múltiplas matrículas
                 const temMultiplasMatriculas = Boolean(s.matricula1 && s.matricula2);
 
                 function processarEscola(matriculaNum, cargo, escolaObj) {
@@ -729,16 +708,14 @@ tr:hover td {
 
                     const matClean = matriculaNum ? String(matriculaNum).trim() : "";
 
-                    // --- BUSCA DE FÉRIAS (COM TRAVA DE MÚLTIPLAS MATRÍCULAS) ---
                     const chaveFeriasMat = `${cpfLimpo}_${matClean}`;
                     let diasFerias = 0;
                     if (matClean && feriasMap[chaveFeriasMat] !== undefined) {
                         diasFerias = feriasMap[chaveFeriasMat];
                     } else if (!temMultiplasMatriculas && feriasMap[cpfLimpo] !== undefined) {
-                        diasFerias = feriasMap[cpfLimpo]; // Apenas legado se tiver 1 matrícula
+                        diasFerias = feriasMap[cpfLimpo];
                     }
 
-                    // --- BUSCA DE LANÇAMENTOS MANUAIS (COM TRAVA DE MÚLTIPLAS MATRÍCULAS) ---
                     const chaveEscolaMat = `${nomeEscola}_${cpfLimpo}_${matClean}`;
                     const chaveGeralMat = `${cpfLimpo}_${matClean}`;
                     const chaveEscolaGeral = `${nomeEscola}_${cpfLimpo}`;
@@ -749,7 +726,6 @@ tr:hover td {
                     } else if (matClean && manualGeralMap[chaveGeralMat] !== undefined) {
                         diasManual = manualGeralMap[chaveGeralMat];
                     } else if (!temMultiplasMatriculas) {
-                        // Fallback apenas para servidores com 1 única matrícula (legado)
                         if (manualEscolaMap[chaveEscolaGeral] !== undefined) {
                             diasManual = manualEscolaMap[chaveEscolaGeral];
                         } else if (manualGeralMap[cpfLimpo] !== undefined) {
@@ -758,7 +734,6 @@ tr:hover td {
                     }
 
                     const diasAfastamento = diasFerias + diasManual;
-
                     const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasUteisBase;
                     const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
 
@@ -770,10 +745,10 @@ tr:hover td {
 
                     linhasTabela += `
                         <tr>
-                            <td><b>${s.nome}</b></td>
-                            <td>${s.cpf}<br><small style="color:var(--text-secondary)">Mat: ${matClean || 'N/A'}</small></td>
+                            <td><b>${s.nome || 'Sem Nome'}</b></td>
+                            <td>${s.cpf || 'N/A'}<br><small style="color:var(--text-secondary)">Mat: ${matClean || 'N/A'}</small></td>
                             <td>${nomeEscola}</td>
-                            <td>${escolaObj.empresa}</td>
+                            <td>${escolaObj.empresa || 'N/A'}</td>
                             <td>${passesDiarios}</td>
                             <td><b>${diasUteisUnidade} dias</b> ${diasUteisUnidade !== diasUteisBase ? '<small style="color:var(--primary); font-weight:600;">(Ajustado)</small>' : ''}</td>
                             <td><span style="color:${diasAfastamento > 0 ? 'var(--red)' : 'inherit'}; font-weight:${diasAfastamento > 0 ? '700' : 'normal'}">-${diasAfastamento} dias</span></td>
@@ -794,7 +769,7 @@ tr:hover td {
             });
 
             if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum vínculo correspondente encontrado para esta escola no mês selecionado.", "info");
+                mostrarMensagem("Nenhum vínculo correspondente encontrado para os critérios selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
                 return;
@@ -823,7 +798,7 @@ tr:hover td {
 
         } catch (erro) {
             console.error("Erro no cálculo:", erro);
-            mostrarMensagem("Erro ao processar o cálculo. Verifique sua conexão.", "erro");
+            mostrarMensagem("Erro ao processar o cálculo. Verifique sua conexão e o console.", "erro");
         }
     }
 
