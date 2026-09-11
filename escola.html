@@ -801,11 +801,11 @@ tr:hover td {
                 console.log("Aviso: Erro ao carregar férias automáticas:", e);
             }
 
-            const q = query(collection(db, "servidores"), where("escolas", "array-contains", escola));
-            const querySnapshot = await getDocs(q);
+            // BUSCA TODOS OS SERVIDORES E FILTRA ROBUSTAMENTE PELAS MATRÍCULAS (evitando dependência de array 'escolas' desatualizado)
+            const querySnapshot = await getDocs(collection(db, "servidores"));
 
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor cadastrado para esta escola.", "info");
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
                 return;
             }
 
@@ -818,71 +818,77 @@ tr:hover td {
                 const servidorId = servidorDoc.id;
                 const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
+                const getNomeEscola = (escolaVal) => {
+                    if (!escolaVal) return "";
+                    if (typeof escolaVal === 'string') return escolaVal.trim();
+                    return String(escolaVal.nomeEscola || escolaVal.escola || escolaVal.nome || "").trim();
+                };
+
                 async function avaliarVinculo(matriculaObj, tipoMatriculaStr) {
                     if (!matriculaObj) return;
                     const numeroMatricula = String(matriculaObj.numeroMatricula || "").trim();
                     const cargo = matriculaObj.cargo || "";
 
-                    const escolasDoVinculo = [matriculaObj.escola1, matriculaObj.escola2];
+                    const e1 = getNomeEscola(matriculaObj.escola1);
+                    const e2 = getNomeEscola(matriculaObj.escola2);
 
-                    for (const escolaObj of escolasDoVinculo) {
-                        if (escolaObj && escolaObj.nomeEscola === escola) {
-                            const matriculaInfo = `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${escolaObj.nomeEscola}`;
-                            
-                            const lancamentoIdNew = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
-                            const lancamentoIdOld = `${mesAno}_${escola}_${cpfLimpo}`;
-                            
-                            let lancRef = doc(db, "lancamentos_mensais", lancamentoIdNew);
-                            let lancSnap = await getDoc(lancRef);
-                            
-                            if (!lancSnap.exists()) {
-                                const lancRefOld = doc(db, "lancamentos_mensais", lancamentoIdOld);
-                                const lancSnapOld = await getDoc(lancRefOld);
-                                if (lancSnapOld.exists()) {
-                                    lancSnap = lancSnapOld;
-                                    lancRef = lancRefOld;
-                                }
+                    if (e1 === escola || e2 === escola) {
+                        const nomeEscolaVinculo = e1 === escola ? e1 : e2;
+                        const matriculaInfo = `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${nomeEscolaVinculo}`;
+                        
+                        const lancamentoIdNew = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
+                        const lancamentoIdOld = `${mesAno}_${escola}_${cpfLimpo}`;
+                        
+                        let lancRef = doc(db, "lancamentos_mensais", lancamentoIdNew);
+                        let lancSnap = await getDoc(lancRef);
+                        
+                        if (!lancSnap.exists()) {
+                            const lancRefOld = doc(db, "lancamentos_mensais", lancamentoIdOld);
+                            const lancSnapOld = await getDoc(lancRefOld);
+                            if (lancSnapOld.exists()) {
+                                lancSnap = lancSnapOld;
+                                lancRef = lancRefOld;
                             }
-                            
-                            const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
-                            
-                            const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
-                            const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
-                            
-                            const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
-
-                            if (diasTotalExibido > 0) {
-                                vinculosComFalta++;
-                                somaTotalDias += diasTotalExibido;
-                            }
-
-                            const badgeHtml = diasSalvosManual > 0 
-                                ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo</span>` 
-                                : (diasFeriasAuto > 0 ? `<span class="badge-salvo" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size: 14px;">event</span> Férias/Folga Auto</span>` : ``);
-
-                            const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
-
-                            const acaoHtml = mesBloqueado 
-                                ? `<span class="badge-bloqueado-tabela"><span class="material-symbols-outlined" style="font-size: 14px;">lock</span> Bloqueado</span>`
-                                : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
-                                   </button>`;
-
-                            linhasTabela += `
-                                <tr>
-                                    <td><b>${s.nome}</b></td>
-                                    <td>${s.cpf}</td>
-                                    <td>${matriculaInfo}</td>
-                                    <td>
-                                        <input type="number" id="${inputId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric" ${mesBloqueado ? 'disabled' : ''}>
-                                        ${badgeHtml}
-                                    </td>
-                                    <td>
-                                        ${acaoHtml}
-                                    </td>
-                                </tr>
-                            `;
                         }
+                        
+                        const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
+                        
+                        const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
+                        const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
+                        
+                        const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
+
+                        if (diasTotalExibido > 0) {
+                            vinculosComFalta++;
+                            somaTotalDias += diasTotalExibido;
+                        }
+
+                        const badgeHtml = diasSalvosManual > 0 
+                            ? `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span> Salvo</span>` 
+                            : (diasFeriasAuto > 0 ? `<span class="badge-salvo" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size: 14px;">event</span> Férias/Folga Auto</span>` : ``);
+
+                        const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
+
+                        const acaoHtml = mesBloqueado 
+                            ? `<span class="badge-bloqueado-tabela"><span class="material-symbols-outlined" style="font-size: 14px;">lock</span> Bloqueado</span>`
+                            : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escola}', '${s.cpf}', '${servidorId}', '${numeroMatricula}')">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">save</span> Salvar
+                               </button>`;
+
+                        linhasTabela += `
+                            <tr>
+                                <td><b>${s.nome}</b></td>
+                                <td>${s.cpf}</td>
+                                <td>${matriculaInfo}</td>
+                                <td>
+                                    <input type="number" id="${inputId}" class="input-afastamento" value="${diasTotalExibido}" min="0" max="31" inputmode="numeric" ${mesBloqueado ? 'disabled' : ''}>
+                                    ${badgeHtml}
+                                </td>
+                                <td>
+                                    ${acaoHtml}
+                                </td>
+                            </tr>
+                        `;
                     }
                 }
 
