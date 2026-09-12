@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.7</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.8</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,12 +14,12 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.7)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.8)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
 
-        <!-- Alerta de Erro Global (Caso ocorra falha no Firebase) -->
+        <!-- Alerta de Erro Global -->
         <div id="erroGlobalContainer" class="hidden mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
             <strong>Erro de Inicialização/Conexão:</strong> <span id="mensagemErroGlobal"></span>
         </div>
@@ -83,7 +83,6 @@
         import { db } from "./firebase.js";
         import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Validação e Máscara do Input de Busca
         const termoBuscaEl = document.getElementById('termoBusca');
         if (termoBuscaEl) {
             termoBuscaEl.addEventListener('input', function(e) {
@@ -291,28 +290,30 @@
 
         function adicionarVinculo(map, mat, adm) {
             if (!mat) return;
-            const matStr = mat.toString();
-            let anoAdm = new Date().getFullYear();
+            const matStr = mat.toString().trim();
+            let anoAdm = null;
             if (adm) {
                 const admStr = adm.toString();
                 if (admStr.includes('/')) {
                     anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
                 } else if (admStr.includes('-')) {
                     anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
+                } else if (/^\d{4}$/.test(admStr)) {
+                    anoAdm = parseInt(admStr);
                 }
             }
             if (map.has(matStr)) {
                 const existing = map.get(matStr);
                 if (!existing.dataAdmissao && adm) {
                     existing.dataAdmissao = adm;
-                    existing.anoAdmissao = isNaN(anoAdm) ? existing.anoAdmissao : anoAdm;
+                    existing.anoAdmissao = isNaN(anoAdm) || !anoAdm ? existing.anoAdmissao : anoAdm;
                 }
                 return;
             }
             map.set(matStr, {
                 matricula: matStr,
                 dataAdmissao: adm || '',
-                anoAdmissao: isNaN(anoAdm) ? new Date().getFullYear() : anoAdm
+                anoAdmissao: isNaN(anoAdm) || !anoAdm ? null : anoAdm
             });
         }
 
@@ -330,21 +331,17 @@
                 const data = d.data();
                 
                 const mat1 = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || (data.matricula1 && data.matricula1.numeroMatricula);
-                const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || (data.matricula1 && data.matricula1.dataAdmissao);
-                if (mat1) {
-                    adicionarVinculo(vinculosMap, mat1, adm1);
-                }
+                const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || data.admissao || (data.matricula1 && (data.matricula1.dataAdmissao || data.matricula1.data_admissao));
+                if (mat1) adicionarVinculo(vinculosMap, mat1, adm1);
 
-                const mat2 = data.matricula2 && data.matricula2.numeroMatricula;
-                const adm2 = data.matricula2 && data.matricula2.dataAdmissao;
-                if (mat2) {
-                    adicionarVinculo(vinculosMap, mat2, adm2);
-                }
+                const mat2 = data.matricula2 && (data.matricula2.numeroMatricula || data.matricula2.matricula);
+                const adm2 = data.matricula2 && (data.matricula2.dataAdmissao || data.matricula2.data_admissao);
+                if (mat2) adicionarVinculo(vinculosMap, mat2, adm2);
 
                 if (Array.isArray(data.matriculas)) {
                     data.matriculas.forEach(m => {
                         if (typeof m === 'object' && m !== null) {
-                            adicionarVinculo(vinculosMap, m.numeroMatricula || m.matricula, m.dataAdmissao || m.data_admissao);
+                            adicionarVinculo(vinculosMap, m.numeroMatricula || m.matricula || m.codigo, m.dataAdmissao || m.data_admissao || m.admissao);
                         } else if (m) {
                             adicionarVinculo(vinculosMap, m, '');
                         }
@@ -360,7 +357,7 @@
                 vinculos.push({
                     matricula: 'Não informada',
                     dataAdmissao: '',
-                    anoAdmissao: new Date().getFullYear()
+                    anoAdmissao: null
                 });
             }
 
@@ -377,7 +374,7 @@
 
                 const matchCpf = cpfEfetivo && regCpf === cpfEfetivo;
                 const matchId = servidorIds.includes(regServId);
-                const matchMat = vinculos.some(v => v.matricula === regMat);
+                const matchMat = vinculos.some(v => v.matricula === regMat || v.matricula === regMat.replace(/^0+/, ''));
 
                 if (matchCpf || matchId || matchMat) {
                     registros.push(regData);
@@ -389,7 +386,7 @@
 
             const listaMatriculasFinal = Array.from(vinculosMap.keys());
             const matriculaExibicao = listaMatriculasFinal.length > 0 ? listaMatriculasFinal.join(' / ') : 'Não informada';
-            const admissaoExibicao = Array.from(vinculosMap.values()).map(v => `Mat ${v.matricula}: ${formatarData(v.dataAdmissao) || 'Não informada'}`).join(' | ');
+            const admissaoExibicao = Array.from(vinculosMap.values()).map(v => `Mat ${v.matricula}: ${formatarData(v.dataAdmissao) || 'Não informada (Inferida)'}`).join(' | ');
 
             document.getElementById('nomeServidor').innerText = nomeServidor;
             document.getElementById('matriculaServidor').innerText = matriculaExibicao;
@@ -439,18 +436,41 @@
                         }
                     }
                 } else {
-                    if (v.anoAdmissao && v.anoAdmissao < anoAtual) {
-                        totalPeriodosDireitoVinc = anoAtual - v.anoAdmissao;
+                    // Fallback inteligente: se não tem data de admissão explícita, descobre pelo ano mais antigo nos registros
+                    let anoAdmissaoVinc = v.anoAdmissao;
+                    if (!anoAdmissaoVinc) {
+                        let anosReg = [];
+                        registros.forEach(r => {
+                            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim();
+                            const cleanRegMat = regMat.replace(/^0+/, '');
+                            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+                            if (regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat) || !regMat) {
+                                const anoRef = r.ano_referencia || r.ano || r.anoReferencia;
+                                if (anoRef) {
+                                    const matchYear = anoRef.toString().match(/\d{4}/);
+                                    if (matchYear) anosReg.push(parseInt(matchYear[0]));
+                                }
+                            }
+                        });
+                        if (anosReg.length > 0) {
+                            anoAdmissaoVinc = Math.min(...anosReg);
+                        }
+                    }
+
+                    if (anoAdmissaoVinc && anoAdmissaoVinc < anoAtual) {
+                        totalPeriodosDireitoVinc = anoAtual - anoAdmissaoVinc;
                     } else {
                         totalPeriodosDireitoVinc = 0;
                     }
                 }
 
+                // Filtro robusto que casa a matrícula mesmo se houver diferença de zeros à esquerda ou espaços
                 const feriasVinc = feriasTiradas.filter(r => {
-                    const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString();
-                    if (regMat === v.matricula) return true;
-                    if (!regMat && vinculos.length === 1) return true;
-                    return false;
+                    const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim();
+                    if (!regMat) return vinculos.length === 1;
+                    const cleanRegMat = regMat.replace(/^0+/, '');
+                    const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+                    return regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat);
                 });
 
                 let diasGozadosVinc = 0;
