@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.1</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.1)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -109,6 +109,30 @@
                 }
             }
             return dataStr;
+        }
+
+        function parseDataParaDate(dataStr) {
+            if (!dataStr) return null;
+            if (typeof dataStr.toDate === 'function') {
+                return dataStr.toDate();
+            }
+            dataStr = dataStr.toString().trim();
+            if (dataStr.includes('/')) {
+                const partes = dataStr.split('/');
+                if (partes.length === 3) {
+                    return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+                }
+            } else if (dataStr.includes('-')) {
+                const partes = dataStr.substring(0, 10).split('-');
+                if (partes.length === 3) {
+                    if (partes[0].length === 4) {
+                        return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+                    } else {
+                        return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+                    }
+                }
+            }
+            return null;
         }
 
         function formatarAnoReferencia(anoRef, tipoReg = '') {
@@ -252,14 +276,12 @@
                 servidorIds.push(d.id);
                 const data = d.data();
                 
-                // Matrícula 1 (raiz ou objeto matricula1)
                 const mat1 = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || (data.matricula1 && data.matricula1.numeroMatricula);
                 const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || (data.matricula1 && data.matricula1.dataAdmissao);
                 if (mat1) {
                     adicionarVinculo(vinculosMap, mat1, adm1);
                 }
 
-                // Matrícula 2 (objeto matricula2)
                 const mat2 = data.matricula2 && data.matricula2.numeroMatricula;
                 const adm2 = data.matricula2 && data.matricula2.dataAdmissao;
                 if (mat2) {
@@ -321,6 +343,8 @@
             timelineEl.innerHTML = '';
 
             const anoAtual = new Date().getFullYear();
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
 
             const feriasTiradas = registros.filter(r => {
                 const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
@@ -347,7 +371,17 @@
                     return false;
                 });
 
-                const gozadasVinc = feriasVinc.length;
+                // Conta como gozadas APENAS as férias cuja data final/inicial já passou
+                const feriasGozadasVinc = feriasVinc.filter(r => {
+                    const dtTerminoObj = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
+                    const dtInicioObj = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
+                    const dataComp = dtTerminoObj || dtInicioObj;
+                    if (!dataComp) return true; // Se não houver data, assume o comportamento antigo
+                    dataComp.setHours(0, 0, 0, 0);
+                    return dataComp <= hoje;
+                });
+
+                const gozadasVinc = feriasGozadasVinc.length;
                 const pendentesVinc = Math.max(0, totalPeriodosDireitoVinc - gozadasVinc);
                 totalPendentes += pendentesVinc;
             });
@@ -376,8 +410,6 @@
 
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             const dataFolgaAniv = obterDataFolgaAniversario(dataNascimento, anoAtual);
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
 
             if (folgaAnoAtual) {
                 const dataUsoRaw = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
@@ -401,12 +433,30 @@
 
                 let textoDetalhe = '';
                 if (isFerias) {
+                    const dtTerminoObj = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
+                    const dtInicioObj = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+                    const dataComp = dtTerminoObj || dtInicioObj;
+                    let jaPassou = true;
+                    if (dataComp) {
+                        const d = new Date(dataComp);
+                        d.setHours(0, 0, 0, 0);
+                        jaPassou = d <= hoje;
+                    }
+
                     if (dtInicio && dtTermino) {
-                        textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}`;
+                        if (jaPassou) {
+                            textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}`;
+                        } else {
+                            textoDetalhe = `Férias programadas (A gozar) de ${dtInicio} até ${dtTermino}`;
+                        }
                     } else if (dtInicio) {
-                        textoDetalhe = `Período gozado em ${dtInicio}`;
+                        if (jaPassou) {
+                            textoDetalhe = `Período gozado em ${dtInicio}`;
+                        } else {
+                            textoDetalhe = `Férias programadas (A gozar) para ${dtInicio}`;
+                        }
                     } else {
-                        textoDetalhe = reg.descricao || 'Férias registradas';
+                        textoDetalhe = reg.descricao || (jaPassou ? 'Férias gozadas' : 'Férias programadas');
                     }
                 } else {
                     if (dtGozo) {
