@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.1</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.1)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.2)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -360,8 +360,27 @@
 
             vinculos.forEach(v => {
                 let totalPeriodosDireitoVinc = 0;
-                for (let ano = v.anoAdmissao; ano <= anoAtual; ano++) {
-                    totalPeriodosDireitoVinc++;
+                const dtAdmissaoObj = parseDataParaDate(v.dataAdmissao);
+
+                // Só acumula período se completou ao menos 1 ano completo de exercício
+                if (dtAdmissaoObj) {
+                    let i = 1;
+                    while (true) {
+                        let dataFimAno = new Date(dtAdmissaoObj);
+                        dataFimAno.setFullYear(dataFimAno.getFullYear() + i);
+                        if (dataFimAno <= hoje) {
+                            totalPeriodosDireitoVinc++;
+                            i++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    if (v.anoAdmissao && v.anoAdmissao < anoAtual) {
+                        totalPeriodosDireitoVinc = anoAtual - v.anoAdmissao;
+                    } else {
+                        totalPeriodosDireitoVinc = 0;
+                    }
                 }
 
                 const feriasVinc = feriasTiradas.filter(r => {
@@ -371,12 +390,11 @@
                     return false;
                 });
 
-                // Conta como gozadas APENAS as férias cuja data final/inicial já passou
                 const feriasGozadasVinc = feriasVinc.filter(r => {
                     const dtTerminoObj = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
                     const dtInicioObj = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
                     const dataComp = dtTerminoObj || dtInicioObj;
-                    if (!dataComp) return true; // Se não houver data, assume o comportamento antigo
+                    if (!dataComp) return true;
                     dataComp.setHours(0, 0, 0, 0);
                     return dataComp <= hoje;
                 });
