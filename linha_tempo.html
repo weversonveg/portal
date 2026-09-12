@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.4</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.5</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.4)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.5)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -50,7 +50,7 @@
                 <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border-l-4 border-blue-500 border border-gray-100">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação de Férias</h3>
                     <div class="mt-2 flex justify-between items-baseline">
-                        <span class="text-3xl font-extrabold text-gray-900" id="feriasPendentesCount">0</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-gray-900" id="feriasPendentesCount">0</span>
                         <span class="text-sm text-gray-600">Períodos a gozar</span>
                     </div>
                 </div>
@@ -174,6 +174,22 @@
             let dataFolga = new Date(ano, mes - 1, dia);
             dataFolga.setHours(0, 0, 0, 0);
             return dataFolga;
+        }
+
+        function calcularDiasFerias(reg) {
+            let dias = parseInt(reg.dias || reg.quantidade_dias || reg.total_dias || reg.qtd_dias);
+            if (!isNaN(dias) && dias > 0) return dias;
+
+            const dtInicioObj = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+            const dtTerminoObj = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
+
+            if (dtInicioObj && dtTerminoObj) {
+                const diffTime = Math.abs(dtTerminoObj - dtInicioObj);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                if (diffDays > 0) return diffDays;
+            }
+
+            return 30; // Padrão se não informado
         }
 
         window.buscarServidor = async function() {
@@ -356,7 +372,7 @@
                 return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
             });
 
-            let totalPendentes = 0;
+            let totalDiasPendentesGeral = 0;
 
             vinculos.forEach(v => {
                 let totalPeriodosDireitoVinc = 0;
@@ -389,37 +405,49 @@
                     return false;
                 });
 
-                const feriasGozadasVinc = feriasVinc.filter(r => {
+                let diasGozadosVinc = 0;
+                feriasVinc.forEach(r => {
                     const dtTerminoObj = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
                     const dtInicioObj = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
                     const dataComp = dtTerminoObj || dtInicioObj;
-                    if (!dataComp) return true;
-                    dataComp.setHours(0, 0, 0, 0);
-                    return dataComp <= hoje;
+                    
+                    let jaPassou = true;
+                    if (dataComp) {
+                        const d = new Date(dataComp);
+                        d.setHours(0, 0, 0, 0);
+                        jaPassou = d <= hoje;
+                    }
+
+                    if (jaPassou) {
+                        diasGozadosVinc += calcularDiasFerias(r);
+                    }
                 });
 
-                const gozadasVinc = feriasGozadasVinc.length;
-                const pendentesVinc = Math.max(0, totalPeriodosDireitoVinc - gozadasVinc);
-                totalPendentes += pendentesVinc;
+                const diasDireitoVinc = totalPeriodosDireitoVinc * 30;
+                const diasPendentesVinc = Math.max(0, diasDireitoVinc - diasGozadosVinc);
+                totalDiasPendentesGeral += diasPendentesVinc;
             });
 
-            document.getElementById('feriasPendentesCount').innerText = totalPendentes;
+            const periodosPendentesDec = totalDiasPendentesGeral / 30;
+            const periodosPendentesFormatado = periodosPendentesDec % 1 === 0 ? periodosPendentesDec.toString() : periodosPendentesDec.toFixed(1).replace('.', ',');
+            
+            document.getElementById('feriasPendentesCount').innerHTML = `${periodosPendentesFormatado} <span class="text-xs text-gray-500 font-normal">(${totalDiasPendentesGeral} dias)</span>`;
 
             const alertaEl = document.getElementById('alertaLimite');
             alertaEl.className = 'p-4 rounded-xl border text-sm font-medium';
 
-            if (totalPendentes >= 3) {
+            if (totalDiasPendentesGeral >= 90) { // 3 períodos ou mais (>= 90 dias)
                 alertaEl.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
-                alertaEl.innerHTML = `<strong>⚠️ ALERTA CRÍTICO:</strong> O servidor atingiu ou ultrapassou o limite de 3 períodos de férias acumulados. Ação imediata necessária conforme a legislação.`;
-            } else if (totalPendentes === 2) {
+                alertaEl.innerHTML = `<strong>⚠️ ALERTA CRÍTICO:</strong> O servidor atingiu ou ultrapassou o limite de 3 períodos de férias acumulados (${totalDiasPendentesGeral} dias). Ação imediata necessária conforme a legislação.`;
+            } else if (totalDiasPendentesGeral >= 60) { // 2 períodos (>= 60 dias)
                 alertaEl.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
-                alertaEl.innerHTML = `<strong>⚠️ ATENÇÃO:</strong> O servidor possui 2 períodos acumulados, correndo risco de atingir o limite legal.`;
+                alertaEl.innerHTML = `<strong>⚠️ ATENÇÃO:</strong> O servidor possui 2 períodos acumulados (${totalDiasPendentesGeral} dias), correndo risco de atingir o limite legal.`;
             } else {
                 alertaEl.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
-                alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
+                alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais (${totalDiasPendentesGeral} dias pendentes).`;
             }
 
-            // Lógica de Folga Aniversário com Validação de Expiração e Não Acúmulo
+            // Lógica de Folga Aniversário
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             const dataAnivEsteAno = obterDataFolgaAniversario(dataNascimento, anoAtual);
 
@@ -457,12 +485,10 @@
                 statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Programada para ${dataUsoFormatada}</span>`;
             } else if (dataAnivEsteAno) {
                 if (hoje > dataAnivEsteAno) {
-                    // Passou da data de aniversário e não foi usada: EXPIRADA (Não acumula, passa para o próximo ano)
                     const dataAnivProximoAno = obterDataFolgaAniversario(dataNascimento, anoAtual + 1);
                     const dataProxStr = dataAnivProximoAno ? dataAnivProximoAno.toLocaleDateString('pt-BR') : '';
                     statusFolgaEl.innerHTML = `<span class="text-red-600 font-semibold">Expirada (Não gozada este ano)</span> <span class="text-xs text-gray-500 block mt-0.5">Próxima em ${dataProxStr}</span>`;
                 } else {
-                    // Aniversário ainda vai acontecer este ano
                     const dataFormatada = dataAnivEsteAno.toLocaleDateString('pt-BR');
                     statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataFormatada}</span>`;
                 }
@@ -490,20 +516,23 @@
                         jaPassou = d <= hoje;
                     }
 
+                    const qtdDiasReg = calcularDiasFerias(reg);
+                    const infoDias = ` (${qtdDiasReg} dias)`;
+
                     if (dtInicio && dtTermino) {
                         if (jaPassou) {
-                            textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}`;
+                            textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}${infoDias}`;
                         } else {
-                            textoDetalhe = `Férias programadas (A gozar) de ${dtInicio} até ${dtTermino}`;
+                            textoDetalhe = `Férias programadas (A gozar) de ${dtInicio} até ${dtTermino}${infoDias}`;
                         }
                     } else if (dtInicio) {
                         if (jaPassou) {
-                            textoDetalhe = `Período gozado em ${dtInicio}`;
+                            textoDetalhe = `Período gozado em ${dtInicio}${infoDias}`;
                         } else {
-                            textoDetalhe = `Férias programadas (A gozar) para ${dtInicio}`;
+                            textoDetalhe = `Férias programadas (A gozar) para ${dtInicio}${infoDias}`;
                         }
                     } else {
-                        textoDetalhe = reg.descricao || (jaPassou ? 'Férias gozadas' : 'Férias programadas');
+                        textoDetalhe = reg.descricao || (jaPassou ? `Férias gozadas${infoDias}` : `Férias programadas${infoDias}`);
                     }
                 } else {
                     const dtGozoRaw = reg.data_gozo || reg.dataGozo || reg.data || reg.data_inicio || reg.dataInicio;
