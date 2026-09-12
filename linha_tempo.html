@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.5</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.6</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.5)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.6)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -48,7 +48,7 @@
             <!-- Resumo Rápido -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border-l-4 border-blue-500 border border-gray-100">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação de Férias</h3>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Situação de Férias (Total Consolidado)</h3>
                     <div class="mt-2 flex justify-between items-baseline">
                         <span class="text-2xl sm:text-3xl font-extrabold text-gray-900" id="feriasPendentesCount">0</span>
                         <span class="text-sm text-gray-600">Períodos a gozar</span>
@@ -244,12 +244,31 @@
                     });
                 }
 
-                const servidoresEncontrados = Array.from(mapIds.values());
+                let servidoresEncontrados = Array.from(mapIds.values());
 
                 if (servidoresEncontrados.length === 0) {
                     alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
                     document.getElementById('resultadoContainer').classList.add('hidden');
                     return;
+                }
+
+                // GARANTIA: Recupera TODOS os documentos associados ao CPF encontrado (caso haja documentos separados por matrícula)
+                let cpfsEncontrados = new Set();
+                servidoresEncontrados.forEach(d => {
+                    const data = d.data();
+                    const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
+                    if (c) cpfsEncontrados.add(c);
+                });
+
+                if (cpfsEncontrados.size > 0) {
+                    for (const cpf of cpfsEncontrados) {
+                        const qCpf1 = getDocs(query(colRef, where('cpf', '==', cpf)));
+                        const qCpf2 = getDocs(query(colRef, where('CPF', '==', cpf)));
+                        const [snap1, snap2] = await Promise.all([qCpf1.catch(() => ({ empty: true })), qCpf2.catch(() => ({ empty: true }))]);
+                        snap1.forEach(d => mapIds.set(d.id, d));
+                        snap2.forEach(d => mapIds.set(d.id, d));
+                    }
+                    servidoresEncontrados = Array.from(mapIds.values());
                 }
 
                 await processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
@@ -272,6 +291,14 @@
                     anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
                 }
             }
+            if (map.has(matStr)) {
+                const existing = map.get(matStr);
+                if (!existing.dataAdmissao && adm) {
+                    existing.dataAdmissao = adm;
+                    existing.anoAdmissao = isNaN(anoAdm) ? existing.anoAdmissao : anoAdm;
+                }
+                return;
+            }
             map.set(matStr, {
                 matricula: matStr,
                 dataAdmissao: adm || '',
@@ -292,16 +319,29 @@
                 servidorIds.push(d.id);
                 const data = d.data();
                 
+                // Matrícula principal
                 const mat1 = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || (data.matricula1 && data.matricula1.numeroMatricula);
                 const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || (data.matricula1 && data.matricula1.dataAdmissao);
                 if (mat1) {
                     adicionarVinculo(vinculosMap, mat1, adm1);
                 }
 
+                // Segunda matrícula (objeto matricula2)
                 const mat2 = data.matricula2 && data.matricula2.numeroMatricula;
                 const adm2 = data.matricula2 && data.matricula2.dataAdmissao;
                 if (mat2) {
                     adicionarVinculo(vinculosMap, mat2, adm2);
+                }
+
+                // Caso esteja em formato de array de matrículas
+                if (Array.isArray(data.matriculas)) {
+                    data.matriculas.forEach(m => {
+                        if (typeof m === 'object' && m !== null) {
+                            adicionarVinculo(vinculosMap, m.numeroMatricula || m.matricula, m.dataAdmissao || m.data_admissao);
+                        } else if (m) {
+                            adicionarVinculo(vinculosMap, m, '');
+                        }
+                    });
                 }
                 
                 const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
@@ -436,10 +476,10 @@
             const alertaEl = document.getElementById('alertaLimite');
             alertaEl.className = 'p-4 rounded-xl border text-sm font-medium';
 
-            if (totalDiasPendentesGeral >= 90) { // 3 períodos ou mais (>= 90 dias)
+            if (totalDiasPendentesGeral >= 90) { 
                 alertaEl.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
                 alertaEl.innerHTML = `<strong>⚠️ ALERTA CRÍTICO:</strong> O servidor atingiu ou ultrapassou o limite de 3 períodos de férias acumulados (${totalDiasPendentesGeral} dias). Ação imediata necessária conforme a legislação.`;
-            } else if (totalDiasPendentesGeral >= 60) { // 2 períodos (>= 60 dias)
+            } else if (totalDiasPendentesGeral >= 60) { 
                 alertaEl.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
                 alertaEl.innerHTML = `<strong>⚠️ ATENÇÃO:</strong> O servidor possui 2 períodos acumulados (${totalDiasPendentesGeral} dias), correndo risco de atingir o limite legal.`;
             } else {
