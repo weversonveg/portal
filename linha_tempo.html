@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.3</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.4</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.3)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.4)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -55,7 +55,7 @@
                     </div>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border-l-4 border-green-500 border border-gray-100">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Folga Aniversário (Ano Atual)</h3>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Folga Aniversário (Ciclo Atual)</h3>
                     <div class="mt-2 flex justify-between items-baseline">
                         <span class="text-lg sm:text-xl font-bold text-gray-900" id="statusFolgaAniversario">-</span>
                     </div>
@@ -171,7 +171,7 @@
             
             if (!dia || !mes) return null;
             
-            let dataFolga = new Date(ano, mes - 1, dia + 1);
+            let dataFolga = new Date(ano, mes - 1, dia);
             dataFolga.setHours(0, 0, 0, 0);
             return dataFolga;
         }
@@ -419,58 +419,53 @@
                 alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
             }
 
-            const folgaAnoAtualRealizada = folgasAniversario.find(f => {
+            // Lógica de Folga Aniversário com Validação de Expiração e Não Acúmulo
+            const statusFolgaEl = document.getElementById('statusFolgaAniversario');
+            const dataAnivEsteAno = obterDataFolgaAniversario(dataNascimento, anoAtual);
+
+            const folgaEsteAnoRealizada = folgasAniversario.find(f => {
                 const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
                 const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
                 const dtObj = parseDataParaDate(dataUsoRaw);
-                
                 let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
-                if (!matchAno && dtObj) {
-                    matchAno = dtObj.getFullYear() === anoAtual;
-                }
-                if (!matchAno) return false;
-
-                if (dtObj) {
-                    const d = new Date(dtObj);
-                    d.setHours(0, 0, 0, 0);
-                    return d <= hoje;
-                }
-                return true;
+                if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
+                return matchAno;
             });
 
-            const folgaAnoAtualProgramada = folgasAniversario.find(f => {
+            const folgaEsteAnoProgramada = folgasAniversario.find(f => {
                 const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
                 const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
                 const dtObj = parseDataParaDate(dataUsoRaw);
-                
                 let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
-                if (!matchAno && dtObj) {
-                    matchAno = dtObj.getFullYear() === anoAtual;
-                }
+                if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
                 if (!matchAno) return false;
-
                 if (dtObj) {
-                    const d = new Date(dtObj);
+                    let d = new Date(dtObj);
                     d.setHours(0, 0, 0, 0);
                     return d > hoje;
                 }
                 return false;
             });
 
-            const statusFolgaEl = document.getElementById('statusFolgaAniversario');
-            const dataFolgaAniv = obterDataFolgaAniversario(dataNascimento, anoAtual);
-
-            if (folgaAnoAtualRealizada) {
-                const dataUsoRaw = folgaAnoAtualRealizada.data || folgaAnoAtualRealizada.data_gozo || folgaAnoAtualRealizada.data_inicio || folgaAnoAtualRealizada.dataInicio || 'Registrada';
+            if (folgaEsteAnoRealizada) {
+                const dataUsoRaw = folgaEsteAnoRealizada.data || folgaEsteAnoRealizada.data_gozo || folgaEsteAnoRealizada.data_inicio || folgaEsteAnoRealizada.dataInicio || 'Registrada';
                 const dataUsoFormatada = formatarData(dataUsoRaw);
                 statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUsoFormatada}</span>`;
-            } else if (folgaAnoAtualProgramada) {
-                const dataUsoRaw = folgaAnoAtualProgramada.data || folgaAnoAtualProgramada.data_gozo || folgaAnoAtualProgramada.data_inicio || folgaAnoAtualProgramada.dataInicio;
+            } else if (folgaEsteAnoProgramada) {
+                const dataUsoRaw = folgaEsteAnoProgramada.data || folgaEsteAnoProgramada.data_gozo || folgaEsteAnoProgramada.data_inicio || folgaEsteAnoProgramada.dataInicio;
                 const dataUsoFormatada = formatarData(dataUsoRaw);
                 statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Programada para ${dataUsoFormatada}</span>`;
-            } else if (dataFolgaAniv && hoje < dataFolgaAniv) {
-                const dataFormatada = dataFolgaAniv.toLocaleDateString('pt-BR');
-                statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataFormatada}</span>`;
+            } else if (dataAnivEsteAno) {
+                if (hoje > dataAnivEsteAno) {
+                    // Passou da data de aniversário e não foi usada: EXPIRADA (Não acumula, passa para o próximo ano)
+                    const dataAnivProximoAno = obterDataFolgaAniversario(dataNascimento, anoAtual + 1);
+                    const dataProxStr = dataAnivProximoAno ? dataAnivProximoAno.toLocaleDateString('pt-BR') : '';
+                    statusFolgaEl.innerHTML = `<span class="text-red-600 font-semibold">Expirada (Não gozada este ano)</span> <span class="text-xs text-gray-500 block mt-0.5">Próxima em ${dataProxStr}</span>`;
+                } else {
+                    // Aniversário ainda vai acontecer este ano
+                    const dataFormatada = dataAnivEsteAno.toLocaleDateString('pt-BR');
+                    statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataFormatada}</span>`;
+                }
             } else {
                 statusFolgaEl.innerHTML = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
             }
