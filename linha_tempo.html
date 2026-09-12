@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.2</title>
+    <title>Linha do Tempo do Servidor - SEMED v1.4.3</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.2)</p>
+                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.3)</p>
             </div>
             <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
         </div>
@@ -362,7 +362,6 @@
                 let totalPeriodosDireitoVinc = 0;
                 const dtAdmissaoObj = parseDataParaDate(v.dataAdmissao);
 
-                // Só acumula período se completou ao menos 1 ano completo de exercício
                 if (dtAdmissaoObj) {
                     let i = 1;
                     while (true) {
@@ -420,19 +419,55 @@
                 alertaEl.innerHTML = `<strong>✓ Regular:</strong> O saldo de férias está dentro dos conformes legais.`;
             }
 
-            const folgaAnoAtual = folgasAniversario.find(f => {
+            const folgaAnoAtualRealizada = folgasAniversario.find(f => {
                 const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-                const dataStr = (f.data || f.data_gozo || f.data_inicio || f.dataInicio || '').toString();
-                return anoRef == anoAtual || dataStr.includes(anoAtual);
+                const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
+                const dtObj = parseDataParaDate(dataUsoRaw);
+                
+                let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
+                if (!matchAno && dtObj) {
+                    matchAno = dtObj.getFullYear() === anoAtual;
+                }
+                if (!matchAno) return false;
+
+                if (dtObj) {
+                    const d = new Date(dtObj);
+                    d.setHours(0, 0, 0, 0);
+                    return d <= hoje;
+                }
+                return true;
+            });
+
+            const folgaAnoAtualProgramada = folgasAniversario.find(f => {
+                const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
+                const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
+                const dtObj = parseDataParaDate(dataUsoRaw);
+                
+                let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
+                if (!matchAno && dtObj) {
+                    matchAno = dtObj.getFullYear() === anoAtual;
+                }
+                if (!matchAno) return false;
+
+                if (dtObj) {
+                    const d = new Date(dtObj);
+                    d.setHours(0, 0, 0, 0);
+                    return d > hoje;
+                }
+                return false;
             });
 
             const statusFolgaEl = document.getElementById('statusFolgaAniversario');
             const dataFolgaAniv = obterDataFolgaAniversario(dataNascimento, anoAtual);
 
-            if (folgaAnoAtual) {
-                const dataUsoRaw = folgaAnoAtual.data || folgaAnoAtual.data_gozo || folgaAnoAtual.data_inicio || folgaAnoAtual.dataInicio || 'Registrada';
+            if (folgaAnoAtualRealizada) {
+                const dataUsoRaw = folgaAnoAtualRealizada.data || folgaAnoAtualRealizada.data_gozo || folgaAnoAtualRealizada.data_inicio || folgaAnoAtualRealizada.dataInicio || 'Registrada';
                 const dataUsoFormatada = formatarData(dataUsoRaw);
                 statusFolgaEl.innerHTML = `<span class="text-green-600 font-semibold">Usufruída em ${dataUsoFormatada}</span>`;
+            } else if (folgaAnoAtualProgramada) {
+                const dataUsoRaw = folgaAnoAtualProgramada.data || folgaAnoAtualProgramada.data_gozo || folgaAnoAtualProgramada.data_inicio || folgaAnoAtualProgramada.dataInicio;
+                const dataUsoFormatada = formatarData(dataUsoRaw);
+                statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Programada para ${dataUsoFormatada}</span>`;
             } else if (dataFolgaAniv && hoje < dataFolgaAniv) {
                 const dataFormatada = dataFolgaAniv.toLocaleDateString('pt-BR');
                 statusFolgaEl.innerHTML = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataFormatada}</span>`;
@@ -446,7 +481,6 @@
 
                 const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
                 const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-                const dtGozo = formatarData(reg.data_gozo || reg.dataGozo || reg.data);
                 const matRegistro = reg.matricula || reg.Matricula || reg.servidor_matricula;
 
                 let textoDetalhe = '';
@@ -477,10 +511,22 @@
                         textoDetalhe = reg.descricao || (jaPassou ? 'Férias gozadas' : 'Férias programadas');
                     }
                 } else {
+                    const dtGozoRaw = reg.data_gozo || reg.dataGozo || reg.data || reg.data_inicio || reg.dataInicio;
+                    const dtGozo = formatarData(dtGozoRaw);
+                    const dtObj = parseDataParaDate(dtGozoRaw);
+                    let jaPassou = true;
+                    if (dtObj) {
+                        const d = new Date(dtObj);
+                        d.setHours(0, 0, 0, 0);
+                        jaPassou = d <= hoje;
+                    }
+
                     if (dtGozo) {
-                        textoDetalhe = `Usufruída em ${dtGozo}`;
-                    } else if (dtInicio) {
-                        textoDetalhe = `Usufruída em ${dtInicio}`;
+                        if (jaPassou) {
+                            textoDetalhe = `Usufruída em ${dtGozo}`;
+                        } else {
+                            textoDetalhe = `Folga programada para ${dtGozo}`;
+                        }
                     } else {
                         textoDetalhe = reg.descricao || 'Folga aniversário registrada';
                     }
