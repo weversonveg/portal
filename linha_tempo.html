@@ -196,8 +196,9 @@
                     todosSnap.forEach(d => {
                         const data = d.data();
                         const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                        const m = (data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || '').toString().toLowerCase();
-                        if (c === termoLimpo || c === termoInput || m === termoInput.toLowerCase() || d.id === termoInput) {
+                        const m1 = (data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || (data.matricula1 && data.matricula1.numeroMatricula) || '').toString().toLowerCase();
+                        const m2 = (data.matricula2 && data.matricula2.numeroMatricula || '').toString().toLowerCase();
+                        if (c === termoLimpo || c === termoInput || m1 === termoInput.toLowerCase() || m2 === termoInput.toLowerCase() || d.id === termoInput) {
                             mapIds.set(d.id, d);
                         }
                     });
@@ -219,6 +220,25 @@
             }
         };
 
+        function adicionarVinculo(map, mat, adm) {
+            if (!mat) return;
+            const matStr = mat.toString();
+            let anoAdm = new Date().getFullYear();
+            if (adm) {
+                const admStr = adm.toString();
+                if (admStr.includes('/')) {
+                    anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
+                } else if (admStr.includes('-')) {
+                    anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
+                }
+            }
+            map.set(matStr, {
+                matricula: matStr,
+                dataAdmissao: adm || '',
+                anoAdmissao: isNaN(anoAdm) ? new Date().getFullYear() : anoAdm
+            });
+        }
+
         async function processarServidoresUnificados(servidoresDocs, termoBusca) {
             const primeiroData = servidoresDocs[0].data();
             const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
@@ -231,25 +251,19 @@
             servidoresDocs.forEach(d => {
                 servidorIds.push(d.id);
                 const data = d.data();
-                const mat = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo;
-                const adm = data.data_admissao || data.dataAdmissao || data.data_admissão;
                 
-                if (mat) {
-                    const matStr = mat.toString();
-                    let anoAdm = 2020;
-                    if (adm) {
-                        const admStr = adm.toString();
-                        if (admStr.includes('/')) {
-                            anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
-                        } else if (admStr.includes('-')) {
-                            anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
-                        }
-                    }
-                    vinculosMap.set(matStr, {
-                        matricula: matStr,
-                        dataAdmissao: adm || '',
-                        anoAdmissao: anoAdm
-                    });
+                // Matrícula 1 (raiz ou objeto matricula1)
+                const mat1 = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || (data.matricula1 && data.matricula1.numeroMatricula);
+                const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || (data.matricula1 && data.matricula1.dataAdmissao);
+                if (mat1) {
+                    adicionarVinculo(vinculosMap, mat1, adm1);
+                }
+
+                // Matrícula 2 (objeto matricula2)
+                const mat2 = data.matricula2 && data.matricula2.numeroMatricula;
+                const adm2 = data.matricula2 && data.matricula2.dataAdmissao;
+                if (mat2) {
+                    adicionarVinculo(vinculosMap, mat2, adm2);
                 }
                 
                 const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
@@ -260,8 +274,8 @@
             if (vinculos.length === 0) {
                 vinculos.push({
                     matricula: 'Não informada',
-                    dataAdmissao: primeiroData.data_admissao || primeiroData.dataAdmissao || '',
-                    anoAdmissao: 2020
+                    dataAdmissao: '',
+                    anoAdmissao: new Date().getFullYear()
                 });
             }
 
@@ -283,11 +297,7 @@
                 if (matchCpf || matchId || matchMat) {
                     registros.push(regData);
                     if (regMat && !vinculosMap.has(regMat)) {
-                        vinculosMap.set(regMat, {
-                            matricula: regMat,
-                            dataAdmissao: '',
-                            anoAdmissao: 2020
-                        });
+                        adicionarVinculo(vinculosMap, regMat, '');
                     }
                 }
             });
