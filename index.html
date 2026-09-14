@@ -581,11 +581,17 @@ a:hover {
 
         <div class="brand-wrapper">
 
-            <img src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+            <img
+                src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ"
+                alt="Logo"
+            >
 
             <div class="brand-text">
+
                 <h1>Vale Transporte</h1>
+
                 <span>SEMED Divinópolis</span>
+
             </div>
 
         </div>
@@ -788,10 +794,9 @@ a:hover {
 
             <p>
                 Esta conta já está cadastrada com e-mail e senha.
-                Para usar o Google com a mesma conta, confirme
-                sua senha.
+                Para utilizar o Google com a mesma conta, confirme
+                sua senha. A senha não será removida.
             </p>
-
 
             <div
                 id="emailVinculo"
@@ -852,7 +857,8 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithEmailAndPassword,
-    linkWithCredential
+    linkWithCredential,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
@@ -861,7 +867,6 @@ import {
 ========================================================== */
 
 let credencialGooglePendente = null;
-
 let emailGooglePendente = null;
 
 
@@ -935,6 +940,27 @@ document
 
 
 /* ==========================================================
+   VERIFICA OS PROVEDORES DA CONTA
+========================================================== */
+
+function verificarProvedoresUsuario(user) {
+
+    const provedores = user.providerData.map(function(provider) {
+        return provider.providerId;
+    });
+
+    console.log("UID:", user.uid);
+
+    console.log("E-mail:", user.email);
+
+    console.log("Provedores vinculados:", provedores);
+
+    return provedores;
+
+}
+
+
+/* ==========================================================
    LOGIN COM E-MAIL E SENHA
 ========================================================== */
 
@@ -966,11 +992,21 @@ document
 
         try {
 
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                senha
+            const resultado =
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    senha
+                );
+
+
+            console.log(
+                "Login realizado:",
+                resultado.user.uid
             );
+
+
+            verificarProvedoresUsuario(resultado.user);
 
 
             window.location.href = "inicial.html";
@@ -1019,25 +1055,66 @@ document
         btnGoogle.innerHTML = "Conectando ao Google...";
 
 
-        const provider = new GoogleAuthProvider();
+        const provider =
+            new GoogleAuthProvider();
 
 
         try {
 
             /*
-             * Tenta entrar normalmente com Google.
+             * Tenta entrar com Google.
              *
-             * Se a conta já estiver vinculada ao Google,
+             * Se o Google já estiver vinculado à conta,
              * o login será realizado normalmente.
+             *
+             * Se existir uma conta Password com o mesmo e-mail,
+             * o Firebase retornará account-exists-with-different-credential.
              */
 
-            await signInWithPopup(
-                auth,
-                provider
-            );
+            const resultado =
+                await signInWithPopup(
+                    auth,
+                    provider
+                );
 
 
-            window.location.href = "inicial.html";
+            /*
+             * Verifica os provedores antes de liberar o acesso.
+             */
+
+            const provedores =
+                verificarProvedoresUsuario(resultado.user);
+
+
+            /*
+             * Se o usuário estiver com Google, mas não tiver
+             * Password, não vamos simplesmente prosseguir.
+             */
+
+            if (
+                provedores.includes("google.com") &&
+                !provedores.includes("password")
+            ) {
+
+                console.error(
+                    "ATENÇÃO: conta Google sem provedor Password.",
+                    provedores
+                );
+
+
+                await signOut(auth);
+
+
+                msgErro.textContent =
+                    "A conta Google não está vinculada à conta com senha. O vínculo precisa ser realizado primeiro.";
+
+                return;
+
+            }
+
+
+            window.location.href =
+                "inicial.html";
 
 
         } catch (error) {
@@ -1049,10 +1126,7 @@ document
 
 
             /*
-             * Este é o caso importante:
-             *
-             * A conta já existe com PASSWORD,
-             * mas ainda não possui Google vinculado.
+             * Conta já existente com outro provedor.
              */
 
             if (
@@ -1090,8 +1164,9 @@ document
 
 
                 /*
-                 * Guarda a credencial Google e pede
-                 * a senha da conta Password.
+                 * Guarda a credencial Google.
+                 *
+                 * Ainda NÃO vinculamos nada.
                  */
 
                 abrirModalGoogle(
@@ -1100,41 +1175,33 @@ document
                 );
 
 
+            } else if (
+                error.code ===
+                "auth/popup-closed-by-user"
+            ) {
+
+                msgErro.textContent =
+                    "A janela do Google foi fechada.";
+
             } else {
 
-                /*
-                 * Outros erros do Google.
-                 */
-
-                if (
-                    error.code ===
-                    "auth/popup-closed-by-user"
-                ) {
-
-                    msgErro.textContent =
-                        "A janela do Google foi fechada.";
-
-                } else {
-
-                    msgErro.textContent =
-                        "Não foi possível entrar com o Google.";
-
-                }
+                msgErro.textContent =
+                    "Não foi possível entrar com o Google.";
 
             }
 
-
-            btnGoogle.disabled = false;
-
-            btnGoogle.innerHTML = `
-                <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google"
-                >
-                Entrar com o Google
-            `;
-
         }
+
+
+        btnGoogle.disabled = false;
+
+        btnGoogle.innerHTML = `
+            <img
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google"
+            >
+            Entrar com o Google
+        `;
 
     });
 
@@ -1185,14 +1252,17 @@ document
 
         btn.disabled = true;
 
-        btn.textContent = "Verificando...";
+        btn.textContent =
+            "Verificando...";
 
 
         try {
 
             /*
-             * Primeiro confirma a identidade do usuário
-             * através do e-mail e senha.
+             * Primeiro entra na conta Password.
+             *
+             * Isso garante que estamos autenticados
+             * como o usuário correto.
              */
 
             const resultado =
@@ -1203,24 +1273,95 @@ document
                 );
 
 
-            /*
-             * Agora vincula a credencial Google
-             * à MESMA conta Firebase.
-             */
+            const usuario =
+                resultado.user;
 
-            await linkWithCredential(
-                resultado.user,
-                credencialGooglePendente
+
+            console.log(
+                "Conta Password encontrada:",
+                usuario.uid
             );
 
 
             /*
-             * Sucesso.
+             * Verifica se o Password realmente está presente.
+             */
+
+            const provedoresAntes =
+                verificarProvedoresUsuario(usuario);
+
+
+            if (
+                !provedoresAntes.includes("password")
+            ) {
+
+                throw new Error(
+                    "A conta autenticada não possui o provedor Password."
+                );
+
+            }
+
+
+            /*
+             * AGORA acontece o vínculo.
              *
-             * A partir daqui, a conta terá:
+             * O Google será adicionado à MESMA conta.
              *
-             * Password
-             * Google
+             * O Password permanece.
+             */
+
+            const resultadoVinculo =
+                await linkWithCredential(
+                    usuario,
+                    credencialGooglePendente
+                );
+
+
+            /*
+             * Verifica novamente os provedores depois do vínculo.
+             */
+
+            const provedoresDepois =
+                verificarProvedoresUsuario(
+                    resultadoVinculo.user
+                );
+
+
+            console.log(
+                "Provedores após vínculo:",
+                provedoresDepois
+            );
+
+
+            /*
+             * Segurança:
+             * só libera o acesso se os dois provedores
+             * estiverem presentes.
+             */
+
+            if (
+                !provedoresDepois.includes("password") ||
+                !provedoresDepois.includes("google.com")
+            ) {
+
+                await signOut(auth);
+
+                throw new Error(
+                    "O vínculo não foi concluído corretamente."
+                );
+
+            }
+
+
+            /*
+             * Tudo certo.
+             *
+             * A conta agora possui:
+             *
+             * password
+             * google.com
+             *
+             * mesmo UID.
              */
 
             fecharModalGoogle();
@@ -1262,20 +1403,45 @@ document
             ) {
 
                 /*
-                 * Caso já esteja vinculado,
-                 * simplesmente entra no sistema.
+                 * Google já está vinculado.
                  */
 
-                fecharModalGoogle();
+                const usuarioAtual =
+                    auth.currentUser;
 
-                window.location.href =
-                    "inicial.html";
 
-                return;
+                if (usuarioAtual) {
+
+                    const provedores =
+                        verificarProvedoresUsuario(
+                            usuarioAtual
+                        );
+
+
+                    if (
+                        provedores.includes("password") &&
+                        provedores.includes("google.com")
+                    ) {
+
+                        fecharModalGoogle();
+
+                        window.location.href =
+                            "inicial.html";
+
+                        return;
+
+                    }
+
+                }
+
+
+                erro.textContent =
+                    "O Google já está vinculado, mas não foi possível confirmar os provedores.";
 
             } else {
 
                 erro.textContent =
+                    error.message ||
                     "Não foi possível vincular o Google. Tente novamente.";
 
             }
@@ -1327,7 +1493,6 @@ document
         }
 
     });
-
 
 </script>
 
