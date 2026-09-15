@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -94,7 +95,7 @@
                 </div>
 
 
-                <!-- USUÁRIO / E-MAIL -->
+                <!-- USUÁRIO -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Usuário
@@ -164,7 +165,7 @@
 
 
                 <!-- ESCOLA -->
-                <div id="campoEscola" class="md:col-span-2">
+                <div id="campoEscola" class="md:col-span-2 hidden">
 
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Escola
@@ -330,9 +331,12 @@
 
     <script type="module">
 
+        // =========================================================
+        // FIREBASE
+        // =========================================================
+
         import {
-            db,
-            
+            db
         } from "./firebase.js";
 
 
@@ -358,6 +362,13 @@
             initializeApp,
             deleteApp
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+
+        // =========================================================
+        // AUTENTICAÇÃO
+        // =========================================================
+
+        const auth = getAuth();
 
 
         // =========================================================
@@ -412,7 +423,7 @@
 
 
         // =========================================================
-        // PERFIL
+        // MOSTRAR / OCULTAR ESCOLA
         // =========================================================
 
         perfil.addEventListener("change", () => {
@@ -447,6 +458,7 @@
 
 
             mensagem.textContent = texto;
+
 
             mensagem.classList.remove(
                 "hidden",
@@ -488,8 +500,10 @@
             document.getElementById("modalMensagem").textContent =
                 mensagem;
 
+
             const modal =
                 document.getElementById("modal");
+
 
             modal.classList.remove("hidden");
 
@@ -503,6 +517,7 @@
             const modal =
                 document.getElementById("modal");
 
+
             modal.classList.add("hidden");
 
             modal.classList.remove("flex");
@@ -515,6 +530,12 @@
         // =========================================================
 
         onAuthStateChanged(auth, async (user) => {
+
+            console.log(
+                "Usuário autenticado:",
+                user
+            );
+
 
             if (!user) {
 
@@ -530,8 +551,18 @@
 
             try {
 
+                console.log(
+                    "Verificando cadastro do administrador..."
+                );
+
+
                 const referencia =
-                    doc(db, "usuarios", user.uid);
+                    doc(
+                        db,
+                        "usuarios",
+                        user.uid
+                    );
+
 
                 const resultado =
                     await getDoc(referencia);
@@ -539,16 +570,25 @@
 
                 if (!resultado.exists()) {
 
+                    console.error(
+                        "Documento do usuário não existe em usuarios/"
+                        + user.uid
+                    );
+
+
                     mostrarModal(
                         "Acesso negado",
                         "Seu usuário não possui um cadastro na coleção usuarios."
                     );
 
+
                     setTimeout(() => {
 
-                        window.location.href = "inicial.html";
+                        window.location.href =
+                            "inicial.html";
 
                     }, 2500);
+
 
                     return;
 
@@ -559,6 +599,12 @@
                     resultado.data();
 
 
+                console.log(
+                    "Dados do usuário:",
+                    dados
+                );
+
+
                 if (dados.perfil !== "admin") {
 
                     mostrarModal(
@@ -566,18 +612,27 @@
                         "Somente usuários administradores podem acessar esta página."
                     );
 
+
                     setTimeout(() => {
 
-                        window.location.href = "inicial.html";
+                        window.location.href =
+                            "inicial.html";
 
                     }, 2500);
+
 
                     return;
 
                 }
 
 
+                console.log(
+                    "Administrador confirmado."
+                );
+
+
                 await carregarUsuarios();
+
 
             } catch (erro) {
 
@@ -588,12 +643,24 @@
 
 
                 tabelaUsuarios.innerHTML = `
+
                     <tr>
+
                         <td colspan="5"
                             class="px-6 py-10 text-center text-red-600">
+
                             Erro ao verificar o usuário administrador.
+
+                            <br>
+
+                            <span class="text-xs text-gray-500">
+                                ${escaparHTML(erro?.message || "Erro desconhecido")}
+                            </span>
+
                         </td>
+
                     </tr>
+
                 `;
 
             }
@@ -623,17 +690,24 @@
 
 
             const nome =
-                document.getElementById("nome").value.trim();
+                document
+                    .getElementById("nome")
+                    .value
+                    .trim();
 
 
             const usuario =
-                document.getElementById("usuario").value
+                document
+                    .getElementById("usuario")
+                    .value
                     .trim()
                     .toLowerCase();
 
 
             const senha =
-                document.getElementById("senha").value;
+                document
+                    .getElementById("senha")
+                    .value;
 
 
             const perfilSelecionado =
@@ -644,10 +718,12 @@
                 escola.value;
 
 
-            if (!nome ||
+            if (
+                !nome ||
                 !usuario ||
                 !senha ||
-                !perfilSelecionado) {
+                !perfilSelecionado
+            ) {
 
                 mostrarMensagem(
                     "Preencha todos os campos obrigatórios.",
@@ -704,8 +780,13 @@
             try {
 
                 // =================================================
-                // CRIA UM APP FIREBASE SECUNDÁRIO
+                // APP SECUNDÁRIO
                 // =================================================
+
+                console.log(
+                    "Criando aplicativo Firebase secundário..."
+                );
+
 
                 const nomeApp =
                     "cadastroUsuario_" +
@@ -724,7 +805,7 @@
 
 
                 // =================================================
-                // CRIA CONTA NO FIREBASE AUTHENTICATION
+                // AUTHENTICATION
                 // =================================================
 
                 console.log(
@@ -751,7 +832,7 @@
 
 
                 // =================================================
-                // GRAVA NA COLEÇÃO USUARIOS
+                // FIRESTORE
                 // =================================================
 
                 const dadosUsuario = {
@@ -780,13 +861,16 @@
 
 
                 console.log(
-                    "Gravando documento usuarios/" + uid,
-                    dadosUsuario
+                    "Gravando usuarios/" + uid
                 );
 
 
                 await setDoc(
-                    doc(db, "usuarios", uid),
+                    doc(
+                        db,
+                        "usuarios",
+                        uid
+                    ),
                     dadosUsuario
                 );
 
@@ -797,17 +881,19 @@
 
 
                 // =================================================
-                // ENCERRA O APP SECUNDÁRIO ANTES DE RECARREGAR
+                // ENCERRAR APP SECUNDÁRIO
                 // =================================================
 
                 try {
 
-                    await signOut(authSecundario);
+                    await signOut(
+                        authSecundario
+                    );
 
                 } catch (erroSignOut) {
 
                     console.warn(
-                        "Não foi possível encerrar a sessão secundária:",
+                        "Erro ao encerrar sessão secundária:",
                         erroSignOut
                     );
 
@@ -816,12 +902,14 @@
 
                 try {
 
-                    await deleteApp(appSecundario);
+                    await deleteApp(
+                        appSecundario
+                    );
 
                 } catch (erroDeleteApp) {
 
                     console.warn(
-                        "Não foi possível excluir o app secundário:",
+                        "Erro ao excluir app secundário:",
                         erroDeleteApp
                     );
 
@@ -834,20 +922,18 @@
 
 
                 // =================================================
-                // LIMPA FORMULÁRIO
+                // LIMPAR FORMULÁRIO
                 // =================================================
 
                 formUsuario.reset();
 
-                campoEscola.classList.add("hidden");
+
+                campoEscola.classList.add(
+                    "hidden"
+                );
+
 
                 escola.required = false;
-
-
-                mostrarModal(
-                    "Usuário cadastrado",
-                    "O usuário foi criado com sucesso e também foi registrado na coleção usuarios do Firestore."
-                );
 
 
                 mostrarMensagem(
@@ -855,8 +941,14 @@
                 );
 
 
+                mostrarModal(
+                    "Usuário cadastrado",
+                    "O usuário foi criado no Firebase Authentication e registrado na coleção usuarios."
+                );
+
+
                 // =================================================
-                // RECARREGA A LISTA
+                // ATUALIZAR LISTA
                 // =================================================
 
                 await carregarUsuarios();
@@ -877,7 +969,7 @@
 
 
                 console.error(
-                    "Mensagem:",
+                    "Mensagem do erro:",
                     erro?.message
                 );
 
@@ -949,14 +1041,16 @@
 
 
                 // =================================================
-                // LIMPA APP SECUNDÁRIO MESMO EM CASO DE ERRO
+                // LIMPAR APP SECUNDÁRIO
                 // =================================================
 
                 if (authSecundario) {
 
                     try {
 
-                        await signOut(authSecundario);
+                        await signOut(
+                            authSecundario
+                        );
 
                     } catch (e) {
 
@@ -971,7 +1065,9 @@
 
                     try {
 
-                        await deleteApp(appSecundario);
+                        await deleteApp(
+                            appSecundario
+                        );
 
                     } catch (e) {
 
@@ -980,6 +1076,11 @@
                     }
 
                 }
+
+
+                appSecundario = null;
+
+                authSecundario = null;
 
             } finally {
 
@@ -1005,32 +1106,44 @@
 
 
             tabelaUsuarios.innerHTML = `
+
                 <tr>
+
                     <td colspan="5"
                         class="px-6 py-10 text-center text-gray-500">
+
                         Carregando usuários...
+
                     </td>
+
                 </tr>
+
             `;
 
 
             try {
-
-                const referencia =
-                    collection(db, "usuarios");
-
 
                 console.log(
                     "Executando getDocs em usuarios..."
                 );
 
 
+                const referencia =
+                    collection(
+                        db,
+                        "usuarios"
+                    );
+
+
                 const resultado =
-                    await getDocs(referencia);
+                    await getDocs(
+                        referencia
+                    );
 
 
                 console.log(
-                    "Usuários encontrados:",
+                    "Consulta concluída.",
+                    "Quantidade:",
                     resultado.size
                 );
 
@@ -1038,13 +1151,20 @@
                 if (resultado.empty) {
 
                     tabelaUsuarios.innerHTML = `
+
                         <tr>
+
                             <td colspan="5"
                                 class="px-6 py-10 text-center text-gray-500">
+
                                 Nenhum usuário cadastrado.
+
                             </td>
+
                         </tr>
+
                     `;
+
 
                     return;
 
@@ -1095,9 +1215,7 @@
                         <td class="px-6 py-4 text-center">
 
                             <button
-                                class="text-red-600 hover:text-red-800 font-medium text-sm"
-                                data-id="${documento.id}"
-                                data-nome="${escaparHTML(dados.nome || "")}">
+                                class="text-red-600 hover:text-red-800 font-medium text-sm">
 
                                 Excluir
 
@@ -1121,7 +1239,9 @@
                     );
 
 
-                    tabelaUsuarios.appendChild(tr);
+                    tabelaUsuarios.appendChild(
+                        tr
+                    );
 
                 });
 
@@ -1129,7 +1249,7 @@
             } catch (erro) {
 
                 console.error(
-                    "Erro ao carregar usuários:",
+                    "ERRO AO CARREGAR USUÁRIOS:",
                     erro
                 );
 
@@ -1147,18 +1267,24 @@
 
 
                 tabelaUsuarios.innerHTML = `
+
                     <tr>
+
                         <td colspan="5"
                             class="px-6 py-10 text-center text-red-600">
 
-                            Não foi possível carregar os usuários.<br>
+                            Não foi possível carregar os usuários.
+
+                            <br>
 
                             <span class="text-xs text-gray-500">
                                 ${escaparHTML(erro?.message || "Erro desconhecido")}
                             </span>
 
                         </td>
+
                     </tr>
+
                 `;
 
             }
@@ -1188,7 +1314,11 @@
             try {
 
                 await deleteDoc(
-                    doc(db, "usuarios", uid)
+                    doc(
+                        db,
+                        "usuarios",
+                        uid
+                    )
                 );
 
 
@@ -1219,17 +1349,37 @@
 
 
         // =========================================================
-        // PROTEÇÃO CONTRA HTML
+        // PROTEÇÃO HTML
         // =========================================================
 
         function escaparHTML(valor) {
 
             return String(valor)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
 
         }
 
@@ -1238,3 +1388,4 @@
 </body>
 
 </html>
+```
