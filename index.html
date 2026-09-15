@@ -769,9 +769,8 @@ import { auth } from "./firebase.js";
 
 import {
     GoogleAuthProvider,
-    signInWithEmailAndPassword,
-    linkWithPopup,
-    reload
+    signInWithPopup,
+    signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
@@ -842,166 +841,91 @@ document
 
 
 /* ==========================================================
-   ENTRAR / VINCULAR COM GOOGLE
+   LOGIN COM GOOGLE
 
-   IMPORTANTE:
-   O Google NÃƒO Ã© autenticado primeiro.
+   O Google funciona como um mÃ©todo de entrada independente.
+   NÃ£o Ã© necessÃ¡rio informar e-mail ou senha antes.
 
-   1. Primeiro autenticamos a conta existente com e-mail/senha.
-   2. Depois abrimos o Google para vincular o provedor.
-   3. O link acontece no MESMO usuÃ¡rio Firebase.
-
-   Isso evita usar signInWithPopup() como primeira operaÃ§Ã£o,
-   que estava causando o problema no fluxo anterior.
+   - O usuÃ¡rio clica em "Entrar com o Google".
+   - O Google abre diretamente.
+   - Se a conta Google jÃ¡ existir no Firebase, o usuÃ¡rio entra.
+   - Se ainda nÃ£o existir, o Firebase poderÃ¡ criar a conta Google.
+   - Se o e-mail jÃ¡ existir somente como Password, orientamos
+     o usuÃ¡rio a utilizar o login por e-mail e senha.
 ========================================================== */
 
 document
     .getElementById("btnLoginGoogle")
     .addEventListener("click", async function() {
 
-        const msgErro = document.getElementById("mensagemErro");
-        const btnGoogle = document.getElementById("btnLoginGoogle");
+        const msgErro =
+            document.getElementById("mensagemErro");
 
-        const email = document.getElementById("email").value.trim();
-        const senha = document.getElementById("senha").value;
+        const btnGoogle =
+            document.getElementById("btnLoginGoogle");
 
         msgErro.textContent = "";
 
-        if (!email || !senha) {
-            msgErro.textContent =
-                "Digite seu e-mail e sua senha antes de usar o Google.";
-            return;
-        }
-
         btnGoogle.disabled = true;
-        btnGoogle.innerHTML = "Verificando conta...";
+        btnGoogle.innerHTML = "Abrindo Google...";
+
+        const provider = new GoogleAuthProvider();
 
         try {
-            // 1. Primeiro autentica a conta existente por e-mail e senha.
-            const resultado = await signInWithEmailAndPassword(
-                auth,
-                email,
-                senha
-            );
 
-            const usuario = resultado.user;
+            await signInWithPopup(auth, provider);
 
-            // 2. Atualiza os provedores da conta.
-            await reload(usuario);
-
-            const usuarioAtual = auth.currentUser;
-
-            const possuiPassword = usuarioAtual?.providerData.some(function(info) {
-                return info.providerId === "password";
-            });
-
-            const possuiGoogle = usuarioAtual?.providerData.some(function(info) {
-                return info.providerId === "google.com";
-            });
-
-            if (!possuiPassword) {
-                msgErro.textContent =
-                    "Esta conta nÃ£o possui autenticaÃ§Ã£o por e-mail e senha.";
-                return;
-            }
-
-            // 3. Se o Google jÃ¡ estiver vinculado, NÃƒO tenta vincular novamente.
-            // Basta entrar. Isso corrige o erro que acontecia na segunda tentativa.
-            if (possuiGoogle) {
-                window.location.href = "inicial.html";
-                return;
-            }
-
-            // 4. SÃ³ na primeira vinculaÃ§Ã£o abre o Google.
-            btnGoogle.innerHTML = "Abrindo Google...";
-
-            const provider = new GoogleAuthProvider();
-
-            await linkWithPopup(usuarioAtual, provider);
-
-            // 5. Confirma que os dois provedores ficaram na mesma conta.
-            await reload(usuarioAtual);
-
-            const usuarioVerificado = auth.currentUser;
-
-            const passwordConfirmado = usuarioVerificado?.providerData.some(function(info) {
-                return info.providerId === "password";
-            });
-
-            const googleConfirmado = usuarioVerificado?.providerData.some(function(info) {
-                return info.providerId === "google.com";
-            });
-
-            if (passwordConfirmado && googleConfirmado) {
-                window.location.href = "inicial.html";
-                return;
-            }
-
-            msgErro.textContent =
-                "O Google nÃ£o foi vinculado corretamente. A conta nÃ£o foi alterada.";
+            window.location.href = "inicial.html";
 
         } catch (error) {
 
-            console.error("Erro no acesso/vÃ­nculo com Google:", error);
+            console.error("Erro no login com Google:", error);
             console.error("CÃ³digo do erro:", error.code);
             console.error("Mensagem do erro:", error.message);
 
             if (
-                error.code === "auth/wrong-password" ||
-                error.code === "auth/invalid-credential"
+                error.code ===
+                "auth/account-exists-with-different-credential"
             ) {
-                msgErro.textContent = "E-mail ou senha invÃ¡lidos.";
-
-            } else if (error.code === "auth/credential-already-in-use") {
-                msgErro.textContent =
-                    "Esta conta Google estÃ¡ vinculada a outro usuÃ¡rio. Nenhuma alteraÃ§Ã£o foi feita nesta conta.";
-
-            } else if (error.code === "auth/provider-already-linked") {
-                try {
-                    await reload(auth.currentUser);
-
-                    const usuarioVerificado = auth.currentUser;
-
-                    const passwordConfirmado = usuarioVerificado?.providerData.some(function(info) {
-                        return info.providerId === "password";
-                    });
-
-                    const googleConfirmado = usuarioVerificado?.providerData.some(function(info) {
-                        return info.providerId === "google.com";
-                    });
-
-                    if (passwordConfirmado && googleConfirmado) {
-                        window.location.href = "inicial.html";
-                        return;
-                    }
-                } catch (reloadError) {
-                    console.error("Erro ao verificar os provedores:", reloadError);
-                }
 
                 msgErro.textContent =
-                    "O Google jÃ¡ estÃ¡ vinculado, mas nÃ£o foi possÃ­vel confirmar a conta.";
+                    "Esta conta jÃ¡ possui acesso por e-mail e senha. Entre utilizando esse mÃ©todo.";
 
-            } else if (error.code === "auth/popup-closed-by-user") {
-                msgErro.textContent = "A janela do Google foi fechada.";
+            } else if (
+                error.code === "auth/popup-closed-by-user"
+            ) {
 
-            } else if (error.code === "auth/popup-blocked") {
+                msgErro.textContent =
+                    "A janela do Google foi fechada.";
+
+            } else if (
+                error.code === "auth/popup-blocked"
+            ) {
+
                 msgErro.textContent =
                     "O navegador bloqueou a janela do Google. Permita pop-ups para este site.";
 
-            } else if (error.code === "auth/unauthorized-domain") {
+            } else if (
+                error.code === "auth/unauthorized-domain"
+            ) {
+
                 msgErro.textContent =
                     "Este domÃ­nio nÃ£o estÃ¡ autorizado no Firebase Authentication.";
 
-            } else if (error.code === "auth/requires-recent-login") {
+            } else if (
+                error.code === "auth/cancelled-popup-request"
+            ) {
+
                 msgErro.textContent =
-                    "Por seguranÃ§a, faÃ§a login novamente e tente vincular o Google.";
+                    "A solicitaÃ§Ã£o de login com Google foi cancelada.";
 
             } else {
+
                 msgErro.textContent =
-                    "NÃ£o foi possÃ­vel entrar com o Google. Nenhuma alteraÃ§Ã£o foi feita nesta conta.";
+                    "NÃ£o foi possÃ­vel entrar com o Google. Tente novamente.";
+
             }
 
-        } finally {
             btnGoogle.disabled = false;
             btnGoogle.innerHTML = `
                 <img
