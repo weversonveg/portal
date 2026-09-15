@@ -12,8 +12,8 @@ import {
 
 const firebaseConfig = {
 
-    apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsORV5h3KFH9M",
-
+    apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsOrV5h3KFH9M",
+    
     authDomain: "portal-47793.firebaseapp.com",
 
     projectId: "portal-47793",
