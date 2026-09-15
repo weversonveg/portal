@@ -610,7 +610,7 @@ tr:hover td {
         </div>
 
         <div class="filter-group">
-            <label for="filtroEscola">Selecione a Escola</label>
+            <label for="filtroEscola">Escola</label>
             <select id="filtroEscola">
                 <option value="">Selecione a unidade</option>
                 <option value="CEAE">CEAE</option>
@@ -619,6 +619,10 @@ tr:hover td {
                 <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
                 <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
             </select>
+        </div>
+
+        <div id="infoUsuarioEscola" style="font-size: 12px; color: var(--text-secondary); padding-bottom: 12px; min-width: 220px;">
+            Verificando usuário...
         </div>
 
         <button type="button" class="btn-carregar" onclick="carregarDadosDaEscola()">
@@ -690,6 +694,84 @@ tr:hover td {
         document.getElementById("mesReferencia").value = `${ano}-${mes}`;
     });
 
+    // Identifica o usuário autenticado e a escola vinculada no Firestore.
+    onAuthStateChanged(auth, async (user) => {
+        const selectEscola = document.getElementById("filtroEscola");
+
+        if (!user) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        usuarioLogado = user;
+
+        try {
+            const usuarioRef = doc(db, "usuarios", user.uid);
+            const usuarioSnap = await getDoc(usuarioRef);
+
+            if (!usuarioSnap.exists()) {
+                mostrarMensagem("Seu usuário não possui uma escola ou perfil cadastrado no sistema.", "erro");
+                selectEscola.value = "";
+                selectEscola.disabled = true;
+                autenticacaoPronta = false;
+                return;
+            }
+
+            const dadosUsuario = usuarioSnap.data();
+            perfilUsuario = String(dadosUsuario.perfil || "").trim().toLowerCase();
+            escolaUsuario = String(dadosUsuario.escola || "").trim();
+
+            if (perfilUsuario !== "admin" && perfilUsuario !== "escola") {
+                mostrarMensagem("Seu perfil não possui permissão para acessar esta página.", "erro");
+                selectEscola.value = "";
+                selectEscola.disabled = true;
+                autenticacaoPronta = false;
+                return;
+            }
+
+            const infoUsuario = document.getElementById("infoUsuarioEscola");
+
+            if (perfilUsuario === "escola") {
+                if (!escolaUsuario) {
+                    mostrarMensagem("Seu usuário não possui uma escola vinculada. Procure o administrador do sistema.", "erro");
+                    selectEscola.value = "";
+                    selectEscola.disabled = true;
+                    autenticacaoPronta = false;
+                    return;
+                }
+
+                const opcao = Array.from(selectEscola.options).find(
+                    option => option.value.trim() === escolaUsuario
+                );
+
+                if (!opcao) {
+                    mostrarMensagem(`A escola "${escolaUsuario}" não está cadastrada nesta página.`, "erro");
+                    selectEscola.value = "";
+                    selectEscola.disabled = true;
+                    autenticacaoPronta = false;
+                    return;
+                }
+
+                selectEscola.value = opcao.value;
+                selectEscola.disabled = true;
+                selectEscola.title = "Escola vinculada ao usuário logado";
+                if (infoUsuario) infoUsuario.innerHTML = `<strong>Acesso:</strong> ${escolaUsuario}`;
+            } else {
+                selectEscola.disabled = false;
+                selectEscola.title = "Administradores podem selecionar a escola";
+                if (infoUsuario) infoUsuario.innerHTML = `<strong>Perfil:</strong> Administrador — acesso às escolas`;
+            }
+
+            autenticacaoPronta = true;
+
+        } catch (erro) {
+            console.error("Erro ao verificar usuário:", erro);
+            mostrarMensagem("Não foi possível verificar o usuário logado e sua escola.", "erro");
+            selectEscola.disabled = true;
+            autenticacaoPronta = false;
+        }
+    });
+
     // Função rigorosa sincronizada com o painel da SEMED (lê flag 'congelado' e variantes)
     function verificarMesBloqueado(data) {
         if (!data) return false;
@@ -706,7 +788,7 @@ tr:hover td {
 
     window.carregarDadosDaEscola = async function() {
         const mesAno = document.getElementById("mesReferencia").value;
-        const escola = document.getElementById("filtroEscola").value;
+        const escolaSelecionada = document.getElementById("filtroEscola").value;
         const msgDiv = document.getElementById("mensagem");
         const tableCard = document.getElementById("tableCard");
         const summaryContainer = document.getElementById("summaryContainer");
@@ -720,8 +802,26 @@ tr:hover td {
         schoolConfigCard.classList.remove("ativo");
         lockBanner.classList.remove("ativo");
 
+        if (!autenticacaoPronta) {
+            mostrarMensagem("Aguarde a identificação do usuário e da escola.", "erro");
+            return;
+        }
+
+        const escola = perfilUsuario === "escola" ? escolaUsuario : escolaSelecionada;
+
         if (!mesAno || !escola) {
-            mostrarMensagem("Selecione o mês de referência e a escola.", "erro");
+            mostrarMensagem(
+                perfilUsuario === "admin"
+                    ? "Selecione o mês de referência e a escola."
+                    : "Não foi possível identificar a escola vinculada ao usuário.",
+                "erro"
+            );
+            return;
+        }
+
+        // Usuário de escola nunca pode escolher outra escola pelo navegador.
+        if (perfilUsuario === "escola" && escola !== escolaUsuario) {
+            mostrarMensagem("Acesso negado: esta escola não está vinculada ao seu usuário.", "erro");
             return;
         }
 
