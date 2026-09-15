@@ -763,95 +763,14 @@ a:hover {
 </div>
 
 
-<!-- MODAL PARA VINCULAR GOOGLE -->
-
-<div id="modalGoogle" class="modal-google">
-
-    <div class="caixa-google">
-
-        <div class="cabecalho-google">
-
-            <div class="icone">
-
-                <span class="material-symbols-outlined">
-                    link
-                </span>
-
-            </div>
-
-            <h2>Vincular conta Google</h2>
-
-        </div>
-
-
-        <div class="conteudo-google">
-
-            <p>
-                Esta conta jÃ¡ estÃ¡ cadastrada com e-mail e senha.
-                Para usar o Google com a mesma conta, confirme
-                sua senha.
-            </p>
-
-
-            <div
-                id="emailVinculo"
-                class="email-vinculo"
-            ></div>
-
-
-            <div class="campo-senha-google">
-
-                <input
-                    type="password"
-                    id="senhaVinculo"
-                    placeholder="Digite sua senha"
-                    autocomplete="current-password"
-                >
-
-            </div>
-
-
-            <div
-                id="erroGoogle"
-                class="erro-google"
-            ></div>
-
-        </div>
-
-
-        <div class="rodape-google">
-
-            <button
-                type="button"
-                class="btn-cancelar-google"
-                id="btnCancelarGoogle"
-            >
-                Cancelar
-            </button>
-
-            <button
-                type="button"
-                class="btn-confirmar-google"
-                id="btnConfirmarGoogle"
-            >
-                Vincular Google
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
 <script type="module">
 
 import { auth } from "./firebase.js";
 
 import {
     GoogleAuthProvider,
-    signInWithPopup,
     signInWithEmailAndPassword,
+    linkWithPopup,
     reload
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -940,252 +859,150 @@ document
     .getElementById("btnLoginGoogle")
     .addEventListener("click", async function() {
 
-        const msgErro =
-            document.getElementById("mensagemErro");
+        const msgErro = document.getElementById("mensagemErro");
+        const btnGoogle = document.getElementById("btnLoginGoogle");
 
-        const btnGoogle =
-            document.getElementById("btnLoginGoogle");
-
-        const email =
-            document.getElementById("email").value.trim();
-
-        const senha =
-            document.getElementById("senha").value;
+        const email = document.getElementById("email").value.trim();
+        const senha = document.getElementById("senha").value;
 
         msgErro.textContent = "";
 
-        /* --------------------------------------------------
-           O vÃ­nculo precisa comeÃ§ar pela conta existente.
-        -------------------------------------------------- */
-
         if (!email || !senha) {
-
             msgErro.textContent =
                 "Digite seu e-mail e sua senha antes de usar o Google.";
-
             return;
         }
 
         btnGoogle.disabled = true;
-
-        btnGoogle.innerHTML =
-            "Verificando conta...";
+        btnGoogle.innerHTML = "Verificando conta...";
 
         try {
-
-            /* --------------------------------------------------
-               1. AUTENTICA A CONTA PASSWORD EXISTENTE
-            -------------------------------------------------- */
-
-            const resultado =
-                await signInWithEmailAndPassword(
-                    auth,
-                    email,
-                    senha
-                );
+            // 1. Primeiro autentica a conta existente por e-mail e senha.
+            const resultado = await signInWithEmailAndPassword(
+                auth,
+                email,
+                senha
+            );
 
             const usuario = resultado.user;
 
-            /* --------------------------------------------------
-               2. VERIFICA SE PASSWORD Ã‰ UM PROVEDOR DA CONTA
-            -------------------------------------------------- */
+            // 2. Atualiza os provedores da conta.
+            await reload(usuario);
 
-            const possuiPassword =
-                usuario.providerData.some(function(info) {
-                    return info.providerId === "password";
-                });
+            const usuarioAtual = auth.currentUser;
+
+            const possuiPassword = usuarioAtual?.providerData.some(function(info) {
+                return info.providerId === "password";
+            });
+
+            const possuiGoogle = usuarioAtual?.providerData.some(function(info) {
+                return info.providerId === "google.com";
+            });
 
             if (!possuiPassword) {
-
                 msgErro.textContent =
-                    "Esta conta nÃ£o possui autenticaÃ§Ã£o por e-mail e senha. O Google nÃ£o serÃ¡ vinculado.";
-
-                btnGoogle.disabled = false;
-                btnGoogle.innerHTML = `
-                    <img
-                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                        alt="Google"
-                    >
-                    Entrar com o Google
-                `;
-
+                    "Esta conta nÃ£o possui autenticaÃ§Ã£o por e-mail e senha.";
                 return;
             }
 
-            btnGoogle.innerHTML =
-                "Abrindo Google...";
+            // 3. Se o Google jÃ¡ estiver vinculado, NÃƒO tenta vincular novamente.
+            // Basta entrar. Isso corrige o erro que acontecia na segunda tentativa.
+            if (possuiGoogle) {
+                window.location.href = "inicial.html";
+                return;
+            }
 
-            /* --------------------------------------------------
-               3. ABRE O GOOGLE PARA VINCULAR AO USUÃRIO ATUAL
-
-               Aqui usamos signInWithPopup SOMENTE como parte
-               do vÃ­nculo? NÃƒO. O mÃ©todo correto Ã© linkWithPopup.
-
-               Para evitar qualquer possibilidade de login Google
-               substituir o fluxo existente, usamos o mÃ©todo
-               linkWithPopup diretamente no usuÃ¡rio autenticado.
-            -------------------------------------------------- */
+            // 4. SÃ³ na primeira vinculaÃ§Ã£o abre o Google.
+            btnGoogle.innerHTML = "Abrindo Google...";
 
             const provider = new GoogleAuthProvider();
 
-            const { linkWithPopup } = await import(
-                "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"
-            );
+            await linkWithPopup(usuarioAtual, provider);
 
-            await linkWithPopup(
-                usuario,
-                provider
-            );
+            // 5. Confirma que os dois provedores ficaram na mesma conta.
+            await reload(usuarioAtual);
 
-            /* --------------------------------------------------
-               4. RECARREGA E CONFIRMA OS DOIS PROVEDORES
-            -------------------------------------------------- */
+            const usuarioVerificado = auth.currentUser;
 
-            await reload(usuario);
+            const passwordConfirmado = usuarioVerificado?.providerData.some(function(info) {
+                return info.providerId === "password";
+            });
 
-            const usuarioAtualizado = auth.currentUser;
+            const googleConfirmado = usuarioVerificado?.providerData.some(function(info) {
+                return info.providerId === "google.com";
+            });
 
-            const possuiPasswordDepois =
-                usuarioAtualizado?.providerData.some(function(info) {
-                    return info.providerId === "password";
-                });
-
-            const possuiGoogleDepois =
-                usuarioAtualizado?.providerData.some(function(info) {
-                    return info.providerId === "google.com";
-                });
-
-            if (!possuiPasswordDepois || !possuiGoogleDepois) {
-
-                console.error(
-                    "Falha na verificaÃ§Ã£o dos provedores apÃ³s o vÃ­nculo.",
-                    usuarioAtualizado?.providerData
-                );
-
-                msgErro.textContent =
-                    "O Google nÃ£o foi vinculado corretamente. A conta nÃ£o serÃ¡ acessada.";
-
-                btnGoogle.disabled = false;
-                btnGoogle.innerHTML = `
-                    <img
-                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                        alt="Google"
-                    >
-                    Entrar com o Google
-                `;
-
+            if (passwordConfirmado && googleConfirmado) {
+                window.location.href = "inicial.html";
                 return;
             }
 
-            /* --------------------------------------------------
-               5. SOMENTE AGORA PERMITE O ACESSO
-            -------------------------------------------------- */
-
-            window.location.href = "inicial.html";
+            msgErro.textContent =
+                "O Google nÃ£o foi vinculado corretamente. A conta nÃ£o foi alterada.";
 
         } catch (error) {
 
-            console.error(
-                "Erro no vÃ­nculo com Google:",
-                error
-            );
-
-            console.error(
-                "CÃ³digo do erro:",
-                error.code
-            );
-
-            console.error(
-                "Mensagem do erro:",
-                error.message
-            );
+            console.error("Erro no acesso/vÃ­nculo com Google:", error);
+            console.error("CÃ³digo do erro:", error.code);
+            console.error("Mensagem do erro:", error.message);
 
             if (
                 error.code === "auth/wrong-password" ||
                 error.code === "auth/invalid-credential"
             ) {
+                msgErro.textContent = "E-mail ou senha invÃ¡lidos.";
 
+            } else if (error.code === "auth/credential-already-in-use") {
                 msgErro.textContent =
-                    "E-mail ou senha invÃ¡lidos.";
+                    "Esta conta Google estÃ¡ vinculada a outro usuÃ¡rio. Nenhuma alteraÃ§Ã£o foi feita nesta conta.";
 
-            } else if (
-                error.code === "auth/credential-already-in-use"
-            ) {
-
-                msgErro.textContent =
-                    "Esta conta Google jÃ¡ estÃ¡ vinculada a outro usuÃ¡rio. Nenhuma alteraÃ§Ã£o foi feita nesta conta.";
-
-            } else if (
-                error.code === "auth/provider-already-linked"
-            ) {
-
-                /*
-                 * O Google jÃ¡ estÃ¡ vinculado ao mesmo usuÃ¡rio.
-                 * NÃ£o Ã© necessÃ¡rio vincular novamente.
-                 */
-
-                const usuarioAtual = auth.currentUser;
-
+            } else if (error.code === "auth/provider-already-linked") {
                 try {
-                    await reload(usuarioAtual);
-                } catch (reloadError) {
-                    console.error("Erro ao atualizar usuÃ¡rio:", reloadError);
-                }
+                    await reload(auth.currentUser);
 
-                const possuiPassword =
-                    auth.currentUser?.providerData.some(function(info) {
+                    const usuarioVerificado = auth.currentUser;
+
+                    const passwordConfirmado = usuarioVerificado?.providerData.some(function(info) {
                         return info.providerId === "password";
                     });
 
-                const possuiGoogle =
-                    auth.currentUser?.providerData.some(function(info) {
+                    const googleConfirmado = usuarioVerificado?.providerData.some(function(info) {
                         return info.providerId === "google.com";
                     });
 
-                if (possuiPassword && possuiGoogle) {
-                    window.location.href = "inicial.html";
-                    return;
+                    if (passwordConfirmado && googleConfirmado) {
+                        window.location.href = "inicial.html";
+                        return;
+                    }
+                } catch (reloadError) {
+                    console.error("Erro ao verificar os provedores:", reloadError);
                 }
 
                 msgErro.textContent =
-                    "O Google jÃ¡ estÃ¡ vinculado, mas nÃ£o foi possÃ­vel confirmar os provedores da conta.";
+                    "O Google jÃ¡ estÃ¡ vinculado, mas nÃ£o foi possÃ­vel confirmar a conta.";
 
-            } else if (
-                error.code === "auth/popup-closed-by-user"
-            ) {
+            } else if (error.code === "auth/popup-closed-by-user") {
+                msgErro.textContent = "A janela do Google foi fechada.";
 
-                msgErro.textContent =
-                    "A janela do Google foi fechada.";
-
-            } else if (
-                error.code === "auth/popup-blocked"
-            ) {
-
+            } else if (error.code === "auth/popup-blocked") {
                 msgErro.textContent =
                     "O navegador bloqueou a janela do Google. Permita pop-ups para este site.";
 
-            } else if (
-                error.code === "auth/unauthorized-domain"
-            ) {
-
+            } else if (error.code === "auth/unauthorized-domain") {
                 msgErro.textContent =
                     "Este domÃ­nio nÃ£o estÃ¡ autorizado no Firebase Authentication.";
 
-            } else if (
-                error.code === "auth/requires-recent-login"
-            ) {
-
+            } else if (error.code === "auth/requires-recent-login") {
                 msgErro.textContent =
                     "Por seguranÃ§a, faÃ§a login novamente e tente vincular o Google.";
 
             } else {
-
                 msgErro.textContent =
-                    "NÃ£o foi possÃ­vel vincular o Google. Nenhuma alteraÃ§Ã£o foi autorizada pelo cÃ³digo.";
+                    "NÃ£o foi possÃ­vel entrar com o Google. Nenhuma alteraÃ§Ã£o foi feita nesta conta.";
             }
 
+        } finally {
             btnGoogle.disabled = false;
-
             btnGoogle.innerHTML = `
                 <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
