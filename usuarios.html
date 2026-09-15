@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cadastro de Usuários - Vale Transporte</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f3f7;
+        }
+
+        .material-symbols-outlined {
+            font-size: 22px;
+            vertical-align: middle;
+        }
+
+        .campo-preenchido {
+            background-color: #ecfdf5 !important;
+            border-color: #86efac !important;
+        }
+
+        .campo-erro {
+            border-color: #ef4444 !important;
+        }
+
+        .modal {
+            display: none;
+        }
+
+        .modal.ativo {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- CABEÇALHO -->
+    <header class="bg-[#4a235a] text-white shadow-lg">
+
+        <div class="max-w-7xl mx-auto px-6 py-5">
+
+            <div class="flex items-center justify-between">
+
+                <div>
+                    <h1 class="text-2xl font-bold">
+                        Cadastro de Usuários
+                    </h1>
+
+                    <p class="text-purple-200 text-sm mt-1">
+                        Controle de acesso - Vale Transporte SEMED
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="voltar()"
+                    class="flex items-center gap-2 text-white hover:text-purple-200 transition">
+
+                    <span class="material-symbols-outlined">
+                        arrow_back
+                    </span>
+
+                    Voltar
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTEÚDO -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- CARD CADASTRO -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+
+            <div class="flex items-center gap-3 mb-6">
+
+                <div class="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center">
+
+                    <span class="material-symbols-outlined text-[#4a235a]">
+                        person_add
+                    </span>
+
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">
+                        Novo usuário
+                    </h2>
+
+                    <p class="text-sm text-gray-500">
+                        Cadastre o usuário e defina a escola à qual ele terá acesso.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <form id="formUsuario" onsubmit="cadastrarUsuario(event)">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <!-- NOME -->
+                    <div>
+
+                        <label
+                            for="nome"
+                            class="block text-sm font-medium text-gray-700 mb-2">
+
+                            Nome do usuário
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nome"
+                            required
+                            autocomplete="off"
+                            placeholder="Digite o nome do usuário"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-300 focus:border-[#4a235a] transition">
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+                    <div>
+
+                        <label
+                            for="email"
+                            class="block text-sm font-medium text-gray-700 mb-2">
+
+                            Usuário do e-mail
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                type="text"
+                                id="email"
+                                required
+                                autocomplete="off"
+                                placeholder="Ex.: MA"
+                                class="w-full px-4 py-3 pr-44 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-300 focus:border-[#4a235a] transition">
+
+                            <span
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+
+                                @educacao.divinopolis.mg.gov.br
+
+                            </span>
+
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            Informe somente o usuário ou o e-mail completo.
+                        </p>
+
+                    </div>
+
+
+                    <!-- SENHA -->
+                    <div>
+
+                        <label
+                            for="senha"
+                            class="block text-sm font-medium text-gray-700 mb-2">
+
+                            Senha inicial
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+                                type="password"
+                                id="senha"
+                                required
+                                minlength="6"
+                                autocomplete="new-password"
+                                placeholder="Digite a senha inicial"
+                                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-300 focus:border-[#4a235a] transition">
+
+                            <button
+                                type="button"
+                                onclick="alternarSenha()"
+                                id="botaoSenha"
+                                title="Visualizar a senha"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#4a235a]">
+
+                                <span
+                                    id="iconeSenha"
+                                    class="material-symbols-outlined">
+
+                                    visibility
+
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            A senha deve possuir no mínimo 6 caracteres.
+                        </p>
+
+                    </div>
+
+
+                    <!-- PERFIL -->
+                    <div>
+
+                        <label
+                            for="perfil"
+                            class="block text-sm font-medium text-gray-700 mb-2">
+
+                            Perfil de acesso
+                        </label>
+
+                        <select
+                            id="perfil"
+                            required
+                            onchange="alterarPerfil()"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-purple-300 focus:border-[#4a235a] transition">
+
+                            <option value="">
+                                Selecione o perfil
+                            </option>
+
+                            <option value="escola">
+                                Escola
+                            </option>
+
+                            <option value="admin">
+                                Administrador
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ESCOLA -->
+                    <div id="campoEscola" class="md:col-span-2">
+
+                        <label
+                            for="escola"
+                            class="block text-sm font-medium text-gray-700 mb-2">
+
+                            Escola
+                        </label>
+
+                        <select
+                            id="escola"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-purple-300 focus:border-[#4a235a] transition">
+
+                            <option value="">
+                                Selecione a escola
+                            </option>
+
+                            <option value="CEAE">
+                                CEAE
+                            </option>
+
+                            <option value="CETEPE">
+                                CETEPE
+                            </option>
+
+                            <option value="E M SÃO JOSÉ">
+                                E M SÃO JOSÉ
+                            </option>
+
+                            <option value="E M SÃO GERALDO">
+                                E M SÃO GERALDO
+                            </option>
+
+                            <option value="CMEI ANÁLIA NOGUEIRA">
+                                CMEI ANÁLIA NOGUEIRA
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BOTÕES -->
+                <div class="flex flex-wrap justify-end gap-3 mt-7">
+
+                    <button
+                        type="button"
+                        onclick="limparFormulario()"
+                        class="px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
+
+                        <span class="material-symbols-outlined mr-1">
+                            close
+                        </span>
+
+                        Limpar
+
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        id="botaoCadastrar"
+                        class="px-6 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition flex items-center gap-2">
+
+                        <span class="material-symbols-outlined">
+                            person_add
+                        </span>
+
+                        Cadastrar usuário
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- USUÁRIOS CADASTRADOS -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+
+            <div class="px-6 py-5 border-b border-gray-200">
+
+                <div class="flex items-center gap-3">
+
+                    <span class="material-symbols-outlined text-[#4a235a]">
+                        group
+                    </span>
+
+                    <div>
+
+                        <h2 class="text-xl font-bold text-gray-800">
+                            Usuários cadastrados
+                        </h2>
+
+                        <p class="text-sm text-gray-500">
+                            Usuários com acesso ao sistema.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="overflow-x-auto">
+
+                <table class="w-full text-sm">
+
+                    <thead class="bg-gray-50">
+
+                        <tr>
+
+                            <th class="text-left px-6 py-4 font-semibold text-gray-700">
+                                Nome
+                            </th>
+
+                            <th class="text-left px-6 py-4 font-semibold text-gray-700">
+                                E-mail
+                            </th>
+
+                            <th class="text-left px-6 py-4 font-semibold text-gray-700">
+                                Escola
+                            </th>
+
+                            <th class="text-left px-6 py-4 font-semibold text-gray-700">
+                                Perfil
+                            </th>
+
+                            <th class="text-center px-6 py-4 font-semibold text-gray-700">
+                                Ação
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tabelaUsuarios">
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="px-6 py-8 text-center text-gray-500">
+
+                                Carregando usuários...
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MODAL -->
+    <div
+        id="modal"
+        class="modal fixed inset-0 bg-black/40 items-center justify-center z-50 px-4">
+
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+
+            <div class="flex items-start gap-4">
+
+                <div
+                    id="modalIcone"
+                    class="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+
+                    <span
+                        id="modalIconeTexto"
+                        class="material-symbols-outlined text-green-600">
+
+                        check_circle
+
+                    </span>
+
+                </div>
+
+                <div class="flex-1">
+
+                    <h3
+                        id="modalTitulo"
+                        class="text-lg font-bold text-gray-800">
+
+                        Sucesso
+
+                    </h3>
+
+                    <p
+                        id="modalMensagem"
+                        class="text-sm text-gray-600 mt-1">
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="flex justify-end mt-6">
+
+                <button
+                    type="button"
+                    onclick="fecharModal()"
+                    class="px-5 py-2.5 rounded-xl bg-[#4a235a] text-white hover:bg-[#381a44] transition">
+
+                    Fechar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script type="module">
+
+        import {
+            db,
+            auth,
+            firebaseApp
+        } from "./firebase.js";
+
+        import {
+            collection,
+            getDocs,
+            doc,
+            setDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        import {
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            getAuth
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+
+        const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
+
+        let usuarioAtual = null;
+
+
+        // --------------------------------------------------
+        // VERIFICA LOGIN DO ADMINISTRADOR
+        // --------------------------------------------------
+
+        onAuthStateChanged(auth, async (usuario) => {
+
+            if (!usuario) {
+
+                window.location.href = "index.html";
+
+                return;
+            }
+
+            usuarioAtual = usuario;
+
+            try {
+
+                const documento = await carregarUsuarioAtual(usuario.uid);
+
+                if (!documento) {
+
+                    mostrarModal(
+                        "Acesso negado",
+                        "Seu usuário não possui cadastro de acesso no sistema.",
+                        false
+                    );
+
+                    return;
+                }
+
+                if (documento.perfil !== "admin") {
+
+                    mostrarModal(
+                        "Acesso negado",
+                        "Somente administradores podem acessar o cadastro de usuários.",
+                        false
+                    );
+
+                    setTimeout(() => {
+
+                        voltar();
+
+                    }, 2500);
+
+                    return;
+                }
+
+                carregarUsuarios();
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                mostrarModal(
+                    "Erro",
+                    "Não foi possível verificar suas permissões.",
+                    false
+                );
+
+            }
+
+        });
+
+
+        // --------------------------------------------------
+        // CARREGA USUÁRIO ATUAL
+        // --------------------------------------------------
+
+        async function carregarUsuarioAtual(uid) {
+
+            const resposta = await fetch(
+                `https://firestore.googleapis.com/v1/projects/${firebaseApp.options.projectId}/databases/(default)/documents/usuarios/${uid}`
+            );
+
+            if (!resposta.ok) {
+
+                return null;
+
+            }
+
+            const dados = await resposta.json();
+
+            if (!dados.fields) {
+
+                return null;
+
+            }
+
+            return converterFirestore(dados.fields);
+
+        }
+
+
+        // --------------------------------------------------
+        // CONVERTE FIRESTORE
+        // --------------------------------------------------
+
+        function converterFirestore(fields) {
+
+            const resultado = {};
+
+            for (const chave in fields) {
+
+                const valor = fields[chave];
+
+                if (valor.stringValue !== undefined) {
+
+                    resultado[chave] = valor.stringValue;
+
+                } else if (valor.booleanValue !== undefined) {
+
+                    resultado[chave] = valor.booleanValue;
+
+                } else if (valor.integerValue !== undefined) {
+
+                    resultado[chave] = Number(valor.integerValue);
+
+                } else {
+
+                    resultado[chave] = "";
+
+                }
+
+            }
+
+            return resultado;
+
+        }
+
+
+        // --------------------------------------------------
+        // CADASTRAR USUÁRIO
+        // --------------------------------------------------
+
+        window.cadastrarUsuario = async function (event) {
+
+            event.preventDefault();
+
+            const nome = document.getElementById("nome").value.trim();
+
+            let email = document.getElementById("email").value.trim();
+
+            const senha = document.getElementById("senha").value;
+
+            const perfil = document.getElementById("perfil").value;
+
+            const escola = document.getElementById("escola").value;
+
+
+            if (!nome) {
+
+                mostrarModal(
+                    "Atenção",
+                    "Informe o nome do usuário.",
+                    false
+                );
+
+                return;
+            }
+
+
+            if (!email) {
+
+                mostrarModal(
+                    "Atenção",
+                    "Informe o usuário do e-mail.",
+                    false
+                );
+
+                return;
+            }
+
+
+            if (!email.includes("@")) {
+
+                email += DOMINIO_EMAIL;
+
+            }
+
+
+            if (senha.length < 6) {
+
+                mostrarModal(
+                    "Atenção",
+                    "A senha deve possuir no mínimo 6 caracteres.",
+                    false
+                );
+
+                return;
+            }
+
+
+            if (!perfil) {
+
+                mostrarModal(
+                    "Atenção",
+                    "Selecione o perfil de acesso.",
+                    false
+                );
+
+                return;
+            }
+
+
+            if (perfil === "escola" && !escola) {
+
+                mostrarModal(
+                    "Atenção",
+                    "Selecione a escola do usuário.",
+                    false
+                );
+
+                return;
+            }
+
+
+            const botao = document.getElementById("botaoCadastrar");
+
+            botao.disabled = true;
+
+            botao.innerHTML = `
+                <span class="material-symbols-outlined animate-spin">
+                    progress_activity
+                </span>
+                Cadastrando...
+            `;
+
+
+            try {
+
+                /*
+                 * IMPORTANTE:
+                 * Usamos uma segunda instância do Firebase.
+                 *
+                 * Dessa forma, ao criar o novo usuário,
+                 * o administrador atual não é desconectado.
+                 */
+
+                const config = firebaseApp.options;
+
+                const appSecundario = initializeApp(
+                    config,
+                    "cadastroUsuario_" + Date.now()
+                );
+
+                const authSecundario = getAuth(appSecundario);
+
+
+                const resultado =
+                    await createUserWithEmailAndPassword(
+                        authSecundario,
+                        email,
+                        senha
+                    );
+
+
+                const uid = resultado.user.uid;
+
+
+                // Cria o cadastro do usuário no Firestore
+                const dadosUsuario = {
+
+                    nome: nome,
+
+                    email: email,
+
+                    escola: perfil === "escola"
+                        ? escola
+                        : "",
+
+                    perfil: perfil,
+
+                    ativo: true,
+
+                    dataCadastro: new Date().toISOString(),
+
+                    cadastradoPor: usuarioAtual.uid
+
+                };
+
+
+                await setDoc(
+                    doc(db, "usuarios", uid),
+                    dadosUsuario
+                );
+
+
+                // Limpa o usuário criado na instância secundária
+                await authSecundario.signOut();
+
+
+                mostrarModal(
+                    "Usuário cadastrado",
+                    `O usuário ${email} foi cadastrado com sucesso.`,
+                    true
+                );
+
+
+                limparFormulario();
+
+                carregarUsuarios();
+
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                let mensagem = "Não foi possível cadastrar o usuário.";
+
+
+                if (erro.code === "auth/email-already-in-use") {
+
+                    mensagem =
+                        "Este e-mail já está cadastrado no Firebase Authentication.";
+
+                } else if (erro.code === "auth/invalid-email") {
+
+                    mensagem =
+                        "O e-mail informado não é válido.";
+
+                } else if (erro.code === "auth/weak-password") {
+
+                    mensagem =
+                        "A senha informada é muito fraca.";
+
+                } else if (erro.code === "permission-denied") {
+
+                    mensagem =
+                        "Você não possui permissão para cadastrar usuários.";
+
+                }
+
+
+                mostrarModal(
+                    "Erro",
+                    mensagem,
+                    false
+                );
+
+            } finally {
+
+                botao.disabled = false;
+
+                botao.innerHTML = `
+                    <span class="material-symbols-outlined">
+                        person_add
+                    </span>
+                    Cadastrar usuário
+                `;
+
+            }
+
+        };
+
+
+        // --------------------------------------------------
+        // CARREGAR USUÁRIOS
+        // --------------------------------------------------
+
+        async function carregarUsuarios() {
+
+            const tabela =
+                document.getElementById("tabelaUsuarios");
+
+
+            try {
+
+                const snapshot =
+                    await getDocs(
+                        collection(db, "usuarios")
+                    );
+
+
+                tabela.innerHTML = "";
+
+
+                if (snapshot.empty) {
+
+                    tabela.innerHTML = `
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="px-6 py-8 text-center text-gray-500">
+
+                                Nenhum usuário cadastrado.
+
+                            </td>
+                        </tr>
+                    `;
+
+                    return;
+
+                }
+
+
+                snapshot.forEach((documento) => {
+
+                    const usuario = documento.data();
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.className =
+                        "border-t border-gray-100 hover:bg-gray-50 transition";
+
+
+                    const perfilTexto =
+                        usuario.perfil === "admin"
+                            ? "Administrador"
+                            : "Escola";
+
+
+                    const escolaTexto =
+                        usuario.perfil === "admin"
+                            ? "Todas"
+                            : (usuario.escola || "-");
+
+
+                    tr.innerHTML = `
+
+                        <td class="px-6 py-4">
+
+                            <div class="font-medium text-gray-800">
+                                ${escaparHTML(usuario.nome || "-")}
+                            </div>
+
+                        </td>
+
+
+                        <td class="px-6 py-4 text-gray-600">
+
+                            ${escaparHTML(usuario.email || "-")}
+
+                        </td>
+
+
+                        <td class="px-6 py-4">
+
+                            <span class="inline-flex px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">
+
+                                ${escaparHTML(escolaTexto)}
+
+                            </span>
+
+                        </td>
+
+
+                        <td class="px-6 py-4">
+
+                            <span class="inline-flex px-3 py-1 rounded-full ${
+                                usuario.perfil === "admin"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-green-100 text-green-800"
+                            } text-xs font-semibold">
+
+                                ${perfilTexto}
+
+                            </span>
+
+                        </td>
+
+
+                        <td class="px-6 py-4 text-center">
+
+                            <button
+                                type="button"
+                                onclick="excluirUsuario('${documento.id}', '${escaparJS(usuario.nome || "")}')"
+                                class="text-gray-600 hover:text-red-600 transition"
+                                title="Excluir cadastro">
+
+                                <span class="material-symbols-outlined">
+                                    delete
+                                </span>
+
+                            </button>
+
+                        </td>
+
+                    `;
+
+
+                    tabela.appendChild(tr);
+
+                });
+
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                tabela.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="px-6 py-8 text-center text-red-600">
+
+                            Não foi possível carregar os usuários.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+        }
+
+
+        // --------------------------------------------------
+        // EXCLUIR USUÁRIO
+        // --------------------------------------------------
+
+        window.excluirUsuario = async function (uid, nome) {
+
+            const confirmar = confirm(
+                `Deseja excluir o cadastro de "${nome}"?\n\n` +
+                `O registro será removido do Firestore.`
+            );
+
+
+            if (!confirmar) {
+
+                return;
+
+            }
+
+
+            try {
+
+                await deleteDoc(
+                    doc(db, "usuarios", uid)
+                );
+
+
+                mostrarModal(
+                    "Cadastro excluído",
+                    "O vínculo do usuário foi removido do Firestore.",
+                    true
+                );
+
+
+                carregarUsuarios();
+
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                mostrarModal(
+                    "Erro",
+                    "Não foi possível excluir o cadastro.",
+                    false
+                );
+
+            }
+
+        };
+
+
+        // --------------------------------------------------
+        // ALTERAR PERFIL
+        // --------------------------------------------------
+
+        window.alterarPerfil = function () {
+
+            const perfil =
+                document.getElementById("perfil").value;
+
+            const campoEscola =
+                document.getElementById("campoEscola");
+
+            const escola =
+                document.getElementById("escola");
+
+
+            if (perfil === "admin") {
+
+                campoEscola.style.display = "none";
+
+                escola.value = "";
+
+            } else {
+
+                campoEscola.style.display = "block";
+
+            }
+
+        };
+
+
+        // --------------------------------------------------
+        // MOSTRAR / ESCONDER SENHA
+        // --------------------------------------------------
+
+        window.alternarSenha = function () {
+
+            const senha =
+                document.getElementById("senha");
+
+            const icone =
+                document.getElementById("iconeSenha");
+
+            const botao =
+                document.getElementById("botaoSenha");
+
+
+            if (senha.type === "password") {
+
+                senha.type = "text";
+
+                icone.textContent = "visibility_off";
+
+                botao.title = "Esconder a senha";
+
+            } else {
+
+                senha.type = "password";
+
+                icone.textContent = "visibility";
+
+                botao.title = "Visualizar a senha";
+
+            }
+
+        };
+
+
+        // --------------------------------------------------
+        // LIMPAR FORMULÁRIO
+        // --------------------------------------------------
+
+        window.limparFormulario = function () {
+
+            document.getElementById("formUsuario").reset();
+
+            document.getElementById("campoEscola").style.display =
+                "block";
+
+        };
+
+
+        // --------------------------------------------------
+        // MODAL
+        // --------------------------------------------------
+
+        function mostrarModal(titulo, mensagem, sucesso) {
+
+            document.getElementById("modalTitulo").textContent =
+                titulo;
+
+            document.getElementById("modalMensagem").textContent =
+                mensagem;
+
+
+            const icone =
+                document.getElementById("modalIcone");
+
+            const iconeTexto =
+                document.getElementById("modalIconeTexto");
+
+
+            if (sucesso) {
+
+                icone.className =
+                    "w-11 h-11 rounded-full bg-green-100 flex items-center justify-center shrink-0";
+
+                iconeTexto.className =
+                    "material-symbols-outlined text-green-600";
+
+                iconeTexto.textContent =
+                    "check_circle";
+
+            } else {
+
+                icone.className =
+                    "w-11 h-11 rounded-full bg-red-100 flex items-center justify-center shrink-0";
+
+                iconeTexto.className =
+                    "material-symbols-outlined text-red-600";
+
+                iconeTexto.textContent =
+                    "error";
+
+            }
+
+
+            document
+                .getElementById("modal")
+                .classList.add("ativo");
+
+        }
+
+
+        window.fecharModal = function () {
+
+            document
+                .getElementById("modal")
+                .classList.remove("ativo");
+
+        };
+
+
+        // --------------------------------------------------
+        // VOLTAR
+        // --------------------------------------------------
+
+        window.voltar = function () {
+
+            window.location.href = "inicial.html";
+
+        };
+
+
+        // --------------------------------------------------
+        // SEGURANÇA CONTRA HTML
+        // --------------------------------------------------
+
+        function escaparHTML(valor) {
+
+            return String(valor)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function escaparJS(valor) {
+
+            return String(valor)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')
+                .replace(/\n/g, "\\n")
+                .replace(/\r/g, "\\r");
+
+        }
+
+    </script>
+
+</body>
+
+</html>
