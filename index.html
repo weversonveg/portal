@@ -565,6 +565,48 @@ a:hover {
 
 }
 
+@media (max-width: 480px) {
+
+    .visual-side {
+        padding: 28px 18px;
+    }
+
+    .form-side {
+        padding: 28px 18px;
+    }
+
+    .brand-wrapper img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .brand-wrapper .brand-text h1 {
+        font-size: 1rem;
+    }
+
+    .brand-wrapper .brand-text span {
+        font-size: 0.75rem;
+    }
+
+    .hero-message h2 {
+        font-size: 1.6rem;
+    }
+
+    .form-header h3 {
+        font-size: 1.6rem;
+    }
+
+    .rodape-google {
+        flex-direction: column-reverse;
+    }
+
+    .btn-cancelar-google,
+    .btn-confirmar-google {
+        width: 100%;
+    }
+
+}
+
 </style>
 
 </head>
@@ -581,7 +623,10 @@ a:hover {
 
         <div class="brand-wrapper">
 
-            <img src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+            <img
+                src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ"
+                alt="Logo"
+            >
 
             <div class="brand-text">
                 <h1>Vale Transporte</h1>
@@ -787,9 +832,8 @@ a:hover {
         <div class="conteudo-google">
 
             <p>
-                Esta conta já está cadastrada com e-mail e senha.
-                Para usar o Google com a mesma conta, confirme
-                sua senha.
+                Esta conta foi cadastrada com e-mail e senha.
+                Digite sua senha para conectar o Google à mesma conta.
             </p>
 
 
@@ -834,7 +878,7 @@ a:hover {
                 class="btn-confirmar-google"
                 id="btnConfirmarGoogle"
             >
-                Vincular Google
+                Continuar com Google
             </button>
 
         </div>
@@ -852,7 +896,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithEmailAndPassword,
-    linkWithCredential
+    linkWithPopup
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
@@ -862,7 +906,6 @@ import {
 
 const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
 
-let credencialGooglePendente = null;
 let emailGooglePendente = null;
 
 
@@ -871,11 +914,16 @@ let emailGooglePendente = null;
    ========================================================== */
 
 window.abrirAlerta = function() {
+
     document.getElementById("alerta").style.display = "flex";
+
 };
 
+
 window.fecharAlerta = function() {
+
     document.getElementById("alerta").style.display = "none";
+
 };
 
 
@@ -883,18 +931,22 @@ window.fecharAlerta = function() {
    MODAL GOOGLE
    ========================================================== */
 
-function abrirModalGoogle(email, credencial) {
+function abrirModalGoogle(email) {
 
-    credencialGooglePendente = credencial;
     emailGooglePendente = email;
 
     document.getElementById("emailVinculo").textContent = email;
+
     document.getElementById("senhaVinculo").value = "";
+
     document.getElementById("erroGoogle").textContent = "";
+
     document.getElementById("modalGoogle").style.display = "flex";
 
     setTimeout(function() {
+
         document.getElementById("senhaVinculo").focus();
+
     }, 100);
 
 }
@@ -903,16 +955,19 @@ function abrirModalGoogle(email, credencial) {
 function fecharModalGoogle() {
 
     document.getElementById("modalGoogle").style.display = "none";
+
     document.getElementById("senhaVinculo").value = "";
+
     document.getElementById("erroGoogle").textContent = "";
 
-    credencialGooglePendente = null;
     emailGooglePendente = null;
 
-    const btn = document.getElementById("btnConfirmarGoogle");
+    const btn =
+        document.getElementById("btnConfirmarGoogle");
 
     btn.disabled = false;
-    btn.textContent = "Vincular Google";
+
+    btn.textContent = "Continuar com Google";
 
 }
 
@@ -920,7 +975,9 @@ function fecharModalGoogle() {
 document
     .getElementById("btnCancelarGoogle")
     .addEventListener("click", function() {
+
         fecharModalGoogle();
+
     });
 
 
@@ -951,7 +1008,9 @@ document
             document.getElementById("btnEntrar");
 
         msgErro.textContent = "";
+
         btnEntrar.disabled = true;
+
         btnEntrar.textContent = "Entrando...";
 
         try {
@@ -975,6 +1034,7 @@ document
                 "E-mail ou senha inválidos.";
 
             btnEntrar.disabled = false;
+
             btnEntrar.textContent = "Entrar";
 
         }
@@ -983,123 +1043,59 @@ document
 
 
 /* ==========================================================
-   LOGIN / VÍNCULO COM GOOGLE
+   BOTÃO GOOGLE
+   ==========================================================
 
-   Se o Google já estiver vinculado à conta, entra normalmente.
+   IMPORTANTE:
 
-   Se o e-mail já possuir uma conta de senha, o Firebase retorna
-   account-exists-with-different-credential. Nesse caso,
-   guardamos a credencial Google e pedimos a senha existente.
-   Depois vinculamos Google + Password ao MESMO UID.
+   Não usamos signInWithPopup() imediatamente.
+
+   Se a conta foi criada originalmente com password,
+   o Firebase pode permitir que o Google substitua esse
+   provedor em vez de preservar os dois.
+
+   Portanto:
+
+   1. O usuário informa o e-mail.
+   2. Pedimos a senha da conta existente.
+   3. Fazemos login com password.
+   4. Com a conta autenticada, usamos linkWithPopup().
+   5. O Google é adicionado à mesma UID.
+
+   Depois que Google estiver vinculado, o usuário poderá
+   entrar normalmente pelo botão Google.
    ========================================================== */
 
 document
     .getElementById("btnLoginGoogle")
-    .addEventListener("click", async function() {
+    .addEventListener("click", function() {
 
         const msgErro =
             document.getElementById("mensagemErro");
 
-        const btnGoogle =
-            document.getElementById("btnLoginGoogle");
+        const usuario =
+            document.getElementById("email").value.trim();
 
         msgErro.textContent = "";
-        btnGoogle.disabled = true;
 
-        const conteudoOriginal = btnGoogle.innerHTML;
+        if (!usuario) {
 
-        btnGoogle.innerHTML = `
-            <span
-                class="material-symbols-outlined"
-                style="font-size:20px;">
-                progress_activity
-            </span>
-            Abrindo Google...
-        `;
+            msgErro.textContent =
+                "Digite seu e-mail antes de continuar com o Google.";
 
-        const provider = new GoogleAuthProvider();
+            document
+                .getElementById("email")
+                .focus();
 
-        provider.setCustomParameters({
-            prompt: "select_account"
-        });
-
-        try {
-
-            await signInWithPopup(
-                auth,
-                provider
-            );
-
-            window.location.href = "inicial.html";
-
-        } catch (error) {
-
-            console.error(
-                "Erro no login com Google:",
-                error
-            );
-
-            if (
-                error.code ===
-                "auth/account-exists-with-different-credential"
-            ) {
-
-                const email =
-                    error.customData?.email;
-
-                const credencial =
-                    GoogleAuthProvider
-                        .credentialFromError(error);
-
-                if (!email || !credencial) {
-
-                    msgErro.textContent =
-                        "Não foi possível identificar a conta Google.";
-
-                } else {
-
-                    abrirModalGoogle(
-                        email,
-                        credencial
-                    );
-
-                }
-
-            } else if (
-                error.code ===
-                "auth/popup-closed-by-user"
-            ) {
-
-                msgErro.textContent =
-                    "A janela do Google foi fechada.";
-
-            } else if (
-                error.code ===
-                "auth/popup-blocked"
-            ) {
-
-                msgErro.textContent =
-                    "O navegador bloqueou a janela do Google. Permita pop-ups para este site e tente novamente.";
-
-            } else if (
-                error.code ===
-                "auth/cancelled-popup-request"
-            ) {
-
-                msgErro.textContent =
-                    "A solicitação de login Google foi cancelada.";
-
-            } else {
-
-                msgErro.textContent =
-                    "Não foi possível entrar com o Google.";
-
-            }
-
-            btnGoogle.disabled = false;
-            btnGoogle.innerHTML = conteudoOriginal;
+            return;
 
         }
+
+        const email = usuario.includes("@")
+            ? usuario
+            : usuario + DOMINIO_EMAIL;
+
+        abrirModalGoogle(email);
 
     });
 
@@ -1124,28 +1120,34 @@ document
         erro.textContent = "";
 
         if (!senha) {
-            erro.textContent = "Digite sua senha.";
+
+            erro.textContent =
+                "Digite sua senha.";
+
             return;
+
         }
 
-        if (
-            !credencialGooglePendente ||
-            !emailGooglePendente
-        ) {
+        if (!emailGooglePendente) {
+
             erro.textContent =
-                "A solicitação de vínculo expirou. Tente novamente.";
+                "A solicitação expirou. Tente novamente.";
+
             return;
+
         }
 
         btn.disabled = true;
+
         btn.textContent = "Verificando...";
+
 
         try {
 
-            /*
-             * Primeiro autentica pela conta existente.
-             * Isso coloca o usuário correto em auth.currentUser.
-             */
+            /* -----------------------------------------------
+               1. LOGIN NA CONTA PASSWORD EXISTENTE
+               ----------------------------------------------- */
+
             const resultado =
                 await signInWithEmailAndPassword(
                     auth,
@@ -1153,18 +1155,104 @@ document
                     senha
                 );
 
-            /*
-             * Vincula Google à MESMA conta.
-             * O UID não é substituído.
-             */
-            await linkWithCredential(
-                resultado.user,
-                credencialGooglePendente
+            const usuario =
+                resultado.user;
+
+
+            console.log(
+                "UID antes do vínculo:",
+                usuario.uid
             );
+
+
+            /* -----------------------------------------------
+               2. VERIFICA SE GOOGLE JÁ ESTÁ VINCULADO
+               ----------------------------------------------- */
+
+            const googleJaVinculado =
+                usuario.providerData.some(function(provider) {
+
+                    return provider.providerId === "google.com";
+
+                });
+
+
+            if (googleJaVinculado) {
+
+                console.log(
+                    "Google já está vinculado ao UID:",
+                    usuario.uid
+                );
+
+                fecharModalGoogle();
+
+                window.location.href =
+                    "inicial.html";
+
+                return;
+
+            }
+
+
+            /* -----------------------------------------------
+               3. CRIA O PROVIDER GOOGLE
+               ----------------------------------------------- */
+
+            const provider =
+                new GoogleAuthProvider();
+
+            provider.setCustomParameters({
+                prompt: "select_account"
+            });
+
+
+            /* -----------------------------------------------
+               4. VINCULA GOOGLE À CONTA EXISTENTE
+               ----------------------------------------------- */
+
+            btn.textContent =
+                "Conectando ao Google...";
+
+
+            const resultadoVinculo =
+                await linkWithPopup(
+                    usuario,
+                    provider
+                );
+
+
+            console.log(
+                "Google vinculado com sucesso.",
+                "UID:",
+                resultadoVinculo.user.uid
+            );
+
+
+            /* -----------------------------------------------
+               5. GARANTE QUE É O MESMO UID
+               ----------------------------------------------- */
+
+            if (
+                resultadoVinculo.user.uid !==
+                usuario.uid
+            ) {
+
+                throw new Error(
+                    "O UID da conta foi alterado durante o vínculo."
+                );
+
+            }
+
+
+            /* -----------------------------------------------
+               6. FINALIZA
+               ----------------------------------------------- */
 
             fecharModalGoogle();
 
-            window.location.href = "inicial.html";
+            window.location.href =
+                "inicial.html";
+
 
         } catch (error) {
 
@@ -1173,38 +1261,95 @@ document
                 error
             );
 
+
             if (
-                error.code === "auth/wrong-password" ||
-                error.code === "auth/invalid-credential"
+                error.code ===
+                "auth/wrong-password" ||
+                error.code ===
+                "auth/invalid-credential"
             ) {
 
                 erro.textContent =
                     "A senha informada está incorreta.";
 
-            } else if (
-                error.code === "auth/credential-already-in-use"
+            }
+
+            else if (
+                error.code ===
+                "auth/user-not-found"
             ) {
 
                 erro.textContent =
-                    "Esta conta Google já está vinculada a outro usuário.";
+                    "Não existe uma conta cadastrada com esse e-mail.";
 
-            } else if (
-                error.code === "auth/provider-already-linked"
+            }
+
+            else if (
+                error.code ===
+                "auth/too-many-requests"
+            ) {
+
+                erro.textContent =
+                    "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+
+            }
+
+            else if (
+                error.code ===
+                "auth/popup-closed-by-user"
+            ) {
+
+                erro.textContent =
+                    "A janela do Google foi fechada.";
+
+            }
+
+            else if (
+                error.code ===
+                "auth/popup-blocked"
+            ) {
+
+                erro.textContent =
+                    "O navegador bloqueou a janela do Google. Permita pop-ups para este site.";
+
+            }
+
+            else if (
+                error.code ===
+                "auth/credential-already-in-use"
+            ) {
+
+                erro.textContent =
+                    "Esta conta Google já está vinculada a outra conta.";
+
+            }
+
+            else if (
+                error.code ===
+                "auth/provider-already-linked"
             ) {
 
                 fecharModalGoogle();
-                window.location.href = "inicial.html";
+
+                window.location.href =
+                    "inicial.html";
+
                 return;
 
-            } else {
+            }
+
+            else {
 
                 erro.textContent =
                     "Não foi possível vincular o Google. Tente novamente.";
 
             }
 
+
             btn.disabled = false;
-            btn.textContent = "Vincular Google";
+
+            btn.textContent =
+                "Continuar com Google";
 
         }
 
@@ -1212,7 +1357,7 @@ document
 
 
 /* ==========================================================
-   ENTER NO MODAL DE SENHA
+   ENTER NO MODAL
    ========================================================== */
 
 document
@@ -1220,10 +1365,13 @@ document
     .addEventListener("keydown", function(e) {
 
         if (e.key === "Enter") {
+
             e.preventDefault();
+
             document
                 .getElementById("btnConfirmarGoogle")
                 .click();
+
         }
 
     });
@@ -1238,7 +1386,9 @@ document
     .addEventListener("click", function(e) {
 
         if (e.target === this) {
+
             fecharModalGoogle();
+
         }
 
     });
