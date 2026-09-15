@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -108,7 +107,7 @@ body {
     white-space: nowrap;
 }
 
-/* INDICADOR DE SINAL */
+/* INDICADOR DE SINAL DE REDE */
 .status-conexao {
     display: flex;
     align-items: center;
@@ -229,12 +228,13 @@ body {
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
 
-/* SELECT DESABILITADO */
+/* SELECT BLOQUEADO */
 .filter-group select:disabled {
     background: #f1f3f5;
     color: #455a64;
     cursor: not-allowed;
     opacity: 1;
+    border-color: #cbd5e1;
 }
 
 .btn-carregar {
@@ -527,8 +527,29 @@ tr:hover td {
     color: #334155;
 }
 
+/* INFORMAÇÃO DA ESCOLA DO USUÁRIO */
+.info-escola-usuario {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--primary);
+    padding-bottom: 12px;
+    min-width: 220px;
+    font-weight: 600;
+}
+
+.info-escola-usuario.ativo {
+    display: flex;
+}
+
+.info-escola-usuario .material-symbols-outlined {
+    font-size: 18px;
+}
+
 /* RESPONSIVIDADE */
 @media (max-width: 950px) {
+
     .filter-card {
         flex-direction: column;
         align-items: stretch;
@@ -541,6 +562,10 @@ tr:hover td {
 
     .summary-container {
         grid-template-columns: 1fr;
+    }
+
+    .info-escola-usuario {
+        padding-bottom: 0;
     }
 }
 
@@ -589,6 +614,10 @@ tr:hover td {
 
     .btn-salvar-dias {
         width: 100%;
+    }
+
+    .info-escola-usuario {
+        min-width: auto;
     }
 }
 </style>
@@ -680,7 +709,7 @@ tr:hover td {
         <div class="filter-group">
 
             <label for="filtroEscola">
-                Escola
+                Selecione a Escola
             </label>
 
             <select id="filtroEscola">
@@ -716,9 +745,15 @@ tr:hover td {
 
         <div
             id="infoUsuarioEscola"
-            style="font-size:12px;color:var(--text-secondary);padding-bottom:12px;min-width:220px;">
+            class="info-escola-usuario">
 
-            Verificando usuário...
+            <span class="material-symbols-outlined">
+                school
+            </span>
+
+            <span id="textoEscolaUsuario">
+                Verificando usuário...
+            </span>
 
         </div>
 
@@ -880,7 +915,8 @@ tr:hover td {
 
                 </thead>
 
-                <tbody id="tabelaCorpo"></tbody>
+                <tbody id="tabelaCorpo">
+                </tbody>
 
             </table>
 
@@ -933,5 +969,1656 @@ let autenticacaoPronta = false;
 
 /* =========================================================
    DATA ATUAL
-   =======
-```
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const hoje = new Date();
+
+    const ano = hoje.getFullYear();
+
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+
+    document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+
+});
+
+
+/* =========================================================
+   NORMALIZAÇÃO DE TEXTO
+   ========================================================= */
+
+function normalizarTexto(valor) {
+
+    if (valor === null || valor === undefined) {
+        return "";
+    }
+
+    return String(valor)
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .toUpperCase();
+
+}
+
+
+/* =========================================================
+   VERIFICA MÊS BLOQUEADO
+   ========================================================= */
+
+function verificarMesBloqueado(data) {
+
+    if (!data) {
+        return false;
+    }
+
+    return (
+        data.congelado === true ||
+        data.bloqueado === true ||
+        data.fechado === true ||
+        data.status === "fechado" ||
+        data.status === "bloqueado" ||
+        data.situacao === "fechado" ||
+        data.situacao === "bloqueado"
+    );
+
+}
+
+
+/* =========================================================
+   IDENTIFICAÇÃO DO USUÁRIO LOGADO
+   ========================================================= */
+
+onAuthStateChanged(auth, async function(user) {
+
+    const selectEscola = document.getElementById("filtroEscola");
+    const infoUsuarioEscola = document.getElementById("infoUsuarioEscola");
+    const textoEscolaUsuario = document.getElementById("textoEscolaUsuario");
+
+    autenticacaoPronta = false;
+
+    if (!user) {
+
+        usuarioLogado = null;
+        perfilUsuario = "";
+        escolaUsuario = "";
+
+        selectEscola.value = "";
+        selectEscola.disabled = true;
+
+        textoEscolaUsuario.textContent = "Usuário não autenticado.";
+
+        infoUsuarioEscola.classList.add("ativo");
+
+        mostrarMensagem(
+            "Sua sessão não está autenticada. Faça login novamente.",
+            "erro"
+        );
+
+        return;
+    }
+
+
+    usuarioLogado = user;
+
+
+    try {
+
+        /*
+         * Busca o cadastro do usuário:
+         *
+         * usuarios/{UID}
+         */
+
+        const usuarioRef = doc(
+            db,
+            "usuarios",
+            user.uid
+        );
+
+        const usuarioSnap = await getDoc(usuarioRef);
+
+
+        if (!usuarioSnap.exists()) {
+
+            perfilUsuario = "";
+            escolaUsuario = "";
+
+            selectEscola.value = "";
+            selectEscola.disabled = true;
+
+            textoEscolaUsuario.textContent =
+                "Usuário não possui cadastro no sistema.";
+
+            infoUsuarioEscola.classList.add("ativo");
+
+            mostrarMensagem(
+                "Seu usuário está autenticado, mas não possui cadastro na coleção 'usuarios'.",
+                "erro"
+            );
+
+            return;
+        }
+
+
+        const dadosUsuario = usuarioSnap.data();
+
+
+        perfilUsuario = normalizarTexto(
+            dadosUsuario.perfil || ""
+        );
+
+
+        escolaUsuario = String(
+            dadosUsuario.escola || ""
+        ).trim();
+
+
+        /*
+         * ADMIN
+         *
+         * Administradores podem escolher qualquer escola.
+         */
+
+        if (
+            perfilUsuario === "ADMIN" ||
+            perfilUsuario === "ADMINISTRADOR"
+        ) {
+
+            selectEscola.disabled = false;
+
+            textoEscolaUsuario.textContent =
+                "Usuário administrador — acesso às escolas.";
+
+            infoUsuarioEscola.classList.add("ativo");
+
+            autenticacaoPronta = true;
+
+            return;
+        }
+
+
+        /*
+         * USUÁRIO DE ESCOLA
+         */
+
+        if (!escolaUsuario) {
+
+            selectEscola.value = "";
+            selectEscola.disabled = true;
+
+            textoEscolaUsuario.textContent =
+                "Nenhuma escola vinculada ao seu usuário.";
+
+            infoUsuarioEscola.classList.add("ativo");
+
+            mostrarMensagem(
+                "Seu usuário não possui uma escola cadastrada. Entre em contato com o administrador.",
+                "erro"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Localiza a opção correspondente à escola.
+         *
+         * A comparação é feita sem considerar:
+         * - maiúsculas/minúsculas;
+         * - acentos;
+         * - espaços duplicados.
+         */
+
+        const escolaNormalizada =
+            normalizarTexto(escolaUsuario);
+
+
+        let opcaoEncontrada = null;
+
+
+        Array.from(selectEscola.options).forEach(function(opcao) {
+
+            if (
+                normalizarTexto(opcao.value) === escolaNormalizada ||
+                normalizarTexto(opcao.textContent) === escolaNormalizada
+            ) {
+
+                opcaoEncontrada = opcao;
+
+            }
+
+        });
+
+
+        if (!opcaoEncontrada) {
+
+            selectEscola.value = "";
+            selectEscola.disabled = true;
+
+            textoEscolaUsuario.textContent =
+                `Escola "${escolaUsuario}" não está disponível nesta tela.`;
+
+            infoUsuarioEscola.classList.add("ativo");
+
+            mostrarMensagem(
+                `A escola "${escolaUsuario}" está cadastrada no usuário, mas não está disponível na lista desta tela.`,
+                "erro"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Seleciona automaticamente a escola
+         * e bloqueia o usuário de trocar.
+         */
+
+        selectEscola.value = opcaoEncontrada.value;
+
+        selectEscola.disabled = true;
+
+
+        textoEscolaUsuario.textContent =
+            `Escola vinculada: ${opcaoEncontrada.textContent.trim()}`;
+
+
+        infoUsuarioEscola.classList.add("ativo");
+
+
+        autenticacaoPronta = true;
+
+
+        /*
+         * Carrega automaticamente os dados
+         * da escola do usuário.
+         */
+
+        await carregarDadosDaEscola();
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao identificar usuário:",
+            erro
+        );
+
+        selectEscola.disabled = true;
+
+        textoEscolaUsuario.textContent =
+            "Erro ao verificar a escola do usuário.";
+
+        infoUsuarioEscola.classList.add("ativo");
+
+        mostrarMensagem(
+            "Não foi possível verificar a escola vinculada ao usuário.",
+            "erro"
+        );
+
+    }
+
+});
+
+
+/* =========================================================
+   CARREGAR DADOS DA ESCOLA
+   ========================================================= */
+
+window.carregarDadosDaEscola = async function() {
+
+    /*
+     * Impede carregamento antes da identificação
+     * do usuário.
+     */
+
+    if (!autenticacaoPronta) {
+
+        mostrarMensagem(
+            "Aguarde a identificação do usuário.",
+            "info"
+        );
+
+        return;
+    }
+
+
+    const mesAno =
+        document.getElementById("mesReferencia").value;
+
+
+    const selectEscola =
+        document.getElementById("filtroEscola");
+
+
+    const escolaSelecionada =
+        selectEscola.value;
+
+
+    const msgDiv =
+        document.getElementById("mensagem");
+
+
+    const tableCard =
+        document.getElementById("tableCard");
+
+
+    const summaryContainer =
+        document.getElementById("summaryContainer");
+
+
+    const schoolConfigCard =
+        document.getElementById("schoolConfigCard");
+
+
+    const lockBanner =
+        document.getElementById("lockBanner");
+
+
+    msgDiv.className = "mensagem";
+
+    msgDiv.textContent = "";
+
+    tableCard.classList.remove("ativo");
+
+    summaryContainer.classList.remove("ativo");
+
+    schoolConfigCard.classList.remove("ativo");
+
+    lockBanner.classList.remove("ativo");
+
+
+    /*
+     * Para usuário comum, garante que ele não consiga
+     * manipular o valor da escola pelo navegador.
+     */
+
+    if (
+        perfilUsuario !== "ADMIN" &&
+        perfilUsuario !== "ADMINISTRADOR"
+    ) {
+
+        if (
+            !escolaUsuario ||
+            normalizarTexto(escolaSelecionada) !==
+            normalizarTexto(escolaUsuario)
+        ) {
+
+            mostrarMensagem(
+                "Acesso negado: a escola selecionada não corresponde à escola vinculada ao seu usuário.",
+                "erro"
+            );
+
+            return;
+        }
+
+    }
+
+
+    if (!mesAno || !escolaSelecionada) {
+
+        mostrarMensagem(
+            "Selecione o mês de referência e a escola.",
+            "erro"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        /* =====================================================
+           CONFIGURAÇÃO SEMED DO MÊS
+           ===================================================== */
+
+        const semedConfigRef =
+            doc(
+                db,
+                "configuracoes",
+                mesAno
+            );
+
+
+        const semedSnap =
+            await getDoc(semedConfigRef);
+
+
+        const semedData =
+            semedSnap.exists()
+                ? semedSnap.data()
+                : {};
+
+
+        const diasSemedDefault =
+            Number(semedData.diasUteis) || 22;
+
+
+        const mesBloqueado =
+            verificarMesBloqueado(semedData);
+
+
+        if (mesBloqueado) {
+
+            lockBanner.classList.add("ativo");
+
+        }
+
+
+        let textoInfo =
+            `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
+
+
+        if (mesBloqueado) {
+
+            textoInfo +=
+                " 🔒 [MÊS CONGELADO / FECHADO PELA SEMED]";
+
+        }
+
+
+        document.getElementById(
+            "infoSemedDefault"
+        ).textContent = textoInfo;
+
+
+        /* =====================================================
+           CONFIGURAÇÃO ESPECÍFICA DA ESCOLA
+           ===================================================== */
+
+        const configEscolaId =
+            `${mesAno}_${escolaSelecionada}`;
+
+
+        const configEscolaRef =
+            doc(
+                db,
+                "escola_configuracoes_mensais",
+                configEscolaId
+            );
+
+
+        const configEscolaSnap =
+            await getDoc(configEscolaRef);
+
+
+        const diasEfetivosEscola =
+            configEscolaSnap.exists()
+                ? Number(
+                    configEscolaSnap.data().diasUteisEscola
+                  )
+                : diasSemedDefault;
+
+
+        const inputDiasEscolaEl =
+            document.getElementById(
+                "inputDiasEscola"
+            );
+
+
+        inputDiasEscolaEl.value =
+            diasEfetivosEscola;
+
+
+        inputDiasEscolaEl.disabled =
+            mesBloqueado;
+
+
+        const btnSalvarDiasEl =
+            document.getElementById(
+                "btnSalvarDias"
+            );
+
+
+        if (btnSalvarDiasEl) {
+
+            btnSalvarDiasEl.style.display =
+                mesBloqueado
+                    ? "none"
+                    : "flex";
+
+        }
+
+
+        schoolConfigCard.classList.add(
+            "ativo"
+        );
+
+
+        /* =====================================================
+           BUSCA FÉRIAS / FOLGAS AUTOMÁTICAS
+           ===================================================== */
+
+        const feriasMap = {};
+
+
+        try {
+
+            const feriasSnap =
+                await getDocs(
+                    collection(
+                        db,
+                        "registro_ferias_folgas"
+                    )
+                );
+
+
+            const [
+                anoStr,
+                mesStr
+            ] = mesAno.split("-");
+
+
+            const anoNum =
+                parseInt(anoStr);
+
+
+            const mesNum =
+                parseInt(mesStr) - 1;
+
+
+            const primeiroDiaMes =
+                new Date(
+                    anoNum,
+                    mesNum,
+                    1
+                );
+
+
+            const ultimoDiaMes =
+                new Date(
+                    anoNum,
+                    mesNum + 1,
+                    0
+                );
+
+
+            feriasSnap.forEach(
+                function(docSnap) {
+
+                    const data =
+                        docSnap.data();
+
+
+                    const cpfRaw =
+                        data.cpf ||
+                        data.cpfServidor ||
+                        data.servidorCpf ||
+                        "";
+
+
+                    const matriculaRaw =
+                        String(
+                            data.matricula ||
+                            data.numeroMatricula ||
+                            ""
+                        ).trim();
+
+
+                    const inicioRaw =
+                        data.dataInicio ||
+                        data.inicio ||
+                        data.dataInicioFerias;
+
+
+                    const fimRaw =
+                        data.dataFim ||
+                        data.fim ||
+                        data.dataFimFerias;
+
+
+                    if (
+                        cpfRaw &&
+                        inicioRaw &&
+                        fimRaw
+                    ) {
+
+                        const cpfLimpo =
+                            String(cpfRaw)
+                                .replace(/\D/g, "");
+
+
+                        const inicio =
+                            new Date(
+                                inicioRaw +
+                                "T00:00:00"
+                            );
+
+
+                        const fim =
+                            new Date(
+                                fimRaw +
+                                "T00:00:00"
+                            );
+
+
+                        const startOverlap =
+                            new Date(
+                                Math.max(
+                                    inicio,
+                                    primeiroDiaMes
+                                )
+                            );
+
+
+                        const endOverlap =
+                            new Date(
+                                Math.min(
+                                    fim,
+                                    ultimoDiaMes
+                                )
+                            );
+
+
+                        if (
+                            startOverlap <=
+                            endOverlap
+                        ) {
+
+                            const diasNoMes =
+                                Math.round(
+                                    (
+                                        endOverlap -
+                                        startOverlap
+                                    ) /
+                                    (
+                                        1000 *
+                                        60 *
+                                        60 *
+                                        24
+                                    )
+                                ) + 1;
+
+
+                            if (
+                                diasNoMes > 0 &&
+                                matriculaRaw
+                            ) {
+
+                                const chaveFerias =
+                                    `${cpfLimpo}_${matriculaRaw}`;
+
+
+                                feriasMap[
+                                    chaveFerias
+                                ] =
+                                    (
+                                        feriasMap[
+                                            chaveFerias
+                                        ] || 0
+                                    ) +
+                                    diasNoMes;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+            );
+
+
+        } catch (e) {
+
+            console.log(
+                "Aviso: Erro ao carregar férias automáticas:",
+                e
+            );
+
+        }
+
+
+        /* =====================================================
+           BUSCA SERVIDORES
+           ===================================================== */
+
+        const querySnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "servidores"
+                )
+            );
+
+
+        if (querySnapshot.empty) {
+
+            mostrarMensagem(
+                "Nenhum servidor cadastrado no sistema.",
+                "info"
+            );
+
+            return;
+        }
+
+
+        let linhasTabela = "";
+
+        let vinculosComFalta = 0;
+
+        let somaTotalDias = 0;
+
+
+        /*
+         * Escola que realmente será utilizada
+         * para a filtragem.
+         */
+
+        const escolaFiltroNormalizada =
+            normalizarTexto(
+                escolaSelecionada
+            );
+
+
+        /* =====================================================
+           PERCORRE OS SERVIDORES
+           ===================================================== */
+
+        for (
+            const servidorDoc
+            of querySnapshot.docs
+        ) {
+
+            const s =
+                servidorDoc.data();
+
+
+            const servidorId =
+                servidorDoc.id;
+
+
+            const cpfLimpo =
+                s.cpf
+                    ? String(s.cpf)
+                        .replace(/\D/g, "")
+                    : "";
+
+
+            /*
+             * Converte o campo escola para texto,
+             * aceitando tanto string quanto objeto.
+             */
+
+            const getNomeEscola =
+                function(escolaVal) {
+
+                    if (!escolaVal) {
+                        return "";
+                    }
+
+
+                    if (
+                        typeof escolaVal ===
+                        "string"
+                    ) {
+
+                        return escolaVal.trim();
+
+                    }
+
+
+                    return String(
+                        escolaVal.nomeEscola ||
+                        escolaVal.escola ||
+                        escolaVal.nome ||
+                        ""
+                    ).trim();
+
+                };
+
+
+            /* =================================================
+               AVALIA CADA VÍNCULO
+               ================================================= */
+
+            async function avaliarVinculo(
+                matriculaObj,
+                tipoMatriculaStr
+            ) {
+
+                if (!matriculaObj) {
+                    return;
+                }
+
+
+                const numeroMatricula =
+                    String(
+                        matriculaObj.numeroMatricula ||
+                        ""
+                    ).trim();
+
+
+                const cargo =
+                    matriculaObj.cargo ||
+                    "";
+
+
+                const e1 =
+                    getNomeEscola(
+                        matriculaObj.escola1
+                    );
+
+
+                const e2 =
+                    getNomeEscola(
+                        matriculaObj.escola2
+                    );
+
+
+                /*
+                 * COMPARAÇÃO NORMALIZADA
+                 *
+                 * Isso permite encontrar, por exemplo:
+                 *
+                 * E M SÃO JOSÉ
+                 * E M SÃO JOSÉ
+                 *
+                 * mesmo havendo diferença de acentuação,
+                 * espaços ou maiúsculas/minúsculas.
+                 */
+
+                const escola1Normalizada =
+                    normalizarTexto(e1);
+
+
+                const escola2Normalizada =
+                    normalizarTexto(e2);
+
+
+                /*
+                 * Somente passa daqui se o vínculo
+                 * pertencer à escola selecionada.
+                 */
+
+                if (
+                    escola1Normalizada !==
+                        escolaFiltroNormalizada &&
+                    escola2Normalizada !==
+                        escolaFiltroNormalizada
+                ) {
+
+                    return;
+
+                }
+
+
+                const nomeEscolaVinculo =
+                    escola1Normalizada ===
+                        escolaFiltroNormalizada
+                        ? e1
+                        : e2;
+
+
+                const matriculaInfo =
+                    `${tipoMatriculaStr}: ${numeroMatricula} (${cargo}) — ${nomeEscolaVinculo}`;
+
+
+                const lancamentoIdNew =
+                    `${mesAno}_${escolaSelecionada}_${cpfLimpo}_${numeroMatricula}`;
+
+
+                const lancamentoIdOld =
+                    `${mesAno}_${escolaSelecionada}_${cpfLimpo}`;
+
+
+                let lancRef =
+                    doc(
+                        db,
+                        "lancamentos_mensais",
+                        lancamentoIdNew
+                    );
+
+
+                let lancSnap =
+                    await getDoc(
+                        lancRef
+                    );
+
+
+                /*
+                 * Compatibilidade com lançamento antigo
+                 * sem matrícula no ID.
+                 */
+
+                if (!lancSnap.exists()) {
+
+                    const lancRefOld =
+                        doc(
+                            db,
+                            "lancamentos_mensais",
+                            lancamentoIdOld
+                        );
+
+
+                    const lancSnapOld =
+                        await getDoc(
+                            lancRefOld
+                        );
+
+
+                    if (
+                        lancSnapOld.exists()
+                    ) {
+
+                        lancSnap =
+                            lancSnapOld;
+
+                        lancRef =
+                            lancRefOld;
+
+                    }
+
+                }
+
+
+                const diasSalvosManual =
+                    lancSnap.exists()
+                        ? (
+                            Number(
+                                lancSnap.data()
+                                    .diasAfastamento
+                            ) || 0
+                          )
+                        : 0;
+
+
+                const chaveBuscaFerias =
+                    `${cpfLimpo}_${numeroMatricula}`;
+
+
+                const diasFeriasAuto =
+                    feriasMap[
+                        chaveBuscaFerias
+                    ] || 0;
+
+
+                const diasTotalExibido =
+                    diasSalvosManual +
+                    diasFeriasAuto;
+
+
+                if (
+                    diasTotalExibido > 0
+                ) {
+
+                    vinculosComFalta++;
+
+                    somaTotalDias +=
+                        diasTotalExibido;
+
+                }
+
+
+                let badgeHtml = "";
+
+
+                if (
+                    diasSalvosManual > 0
+                ) {
+
+                    badgeHtml =
+                        `
+                        <span class="badge-salvo">
+
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-size:14px;">
+
+                                check_circle
+
+                            </span>
+
+                            Salvo
+
+                        </span>
+                        `;
+
+                } else if (
+                    diasFeriasAuto > 0
+                ) {
+
+                    badgeHtml =
+                        `
+                        <span
+                            class="badge-salvo"
+                            style="background:#fff3e0;color:#e65100;border-color:#ffe0b2;">
+
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-size:14px;">
+
+                                event
+
+                            </span>
+
+                            Férias/Folga Auto
+
+                        </span>
+                        `;
+
+                }
+
+
+                const inputId =
+                    `afastamento_${servidorId}_${numeroMatricula}`;
+
+
+                const acaoHtml =
+                    mesBloqueado
+
+                        ? `
+                            <span class="badge-bloqueado-tabela">
+
+                                <span
+                                    class="material-symbols-outlined"
+                                    style="font-size:14px;">
+
+                                    lock
+
+                                </span>
+
+                                Bloqueado
+
+                            </span>
+                          `
+
+                        : `
+                            <button
+                                type="button"
+                                class="btn-salvar-linha"
+                                onclick="salvarAfastamento(
+                                    '${mesAno}',
+                                    '${escolaSelecionada.replace(/'/g, "\\'")}',
+                                    '${String(s.cpf || "").replace(/'/g, "\\'")}',
+                                    '${servidorId.replace(/'/g, "\\'")}',
+                                    '${numeroMatricula.replace(/'/g, "\\'")}'
+                                )">
+
+                                <span
+                                    class="material-symbols-outlined"
+                                    style="font-size:16px;">
+
+                                    save
+
+                                </span>
+
+                                Salvar
+
+                            </button>
+                          `;
+
+
+                linhasTabela +=
+                    `
+                    <tr>
+
+                        <td>
+                            <b>${s.nome || ""}</b>
+                        </td>
+
+                        <td>
+                            ${s.cpf || ""}
+                        </td>
+
+                        <td>
+                            ${matriculaInfo}
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="number"
+                                id="${inputId}"
+                                class="input-afastamento"
+                                value="${diasTotalExibido}"
+                                min="0"
+                                max="31"
+                                inputmode="numeric"
+                                ${mesBloqueado ? "disabled" : ""}
+                            >
+
+                            ${badgeHtml}
+
+                        </td>
+
+                        <td>
+
+                            ${acaoHtml}
+
+                        </td>
+
+                    </tr>
+                    `;
+
+            }
+
+
+            /* =================================================
+               MATRÍCULA 1
+               ================================================= */
+
+            if (s.matricula1) {
+
+                await avaliarVinculo(
+                    s.matricula1,
+                    "Matrícula 1"
+                );
+
+            }
+
+
+            /* =================================================
+               MATRÍCULA 2
+               ================================================= */
+
+            if (s.matricula2) {
+
+                await avaliarVinculo(
+                    s.matricula2,
+                    "Matrícula 2"
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           ATUALIZA RESUMO
+           ================================================= */
+
+        document.getElementById(
+            "sumComAfastamento"
+        ).textContent =
+            vinculosComFalta +
+            " vínculos";
+
+
+        document.getElementById(
+            "sumTotalDias"
+        ).textContent =
+            somaTotalDias +
+            " dias";
+
+
+        /* =====================================================
+           MOSTRA TABELA
+           ================================================= */
+
+        document.getElementById(
+            "tabelaCorpo"
+        ).innerHTML =
+            linhasTabela;
+
+
+        /*
+         * Se nenhum servidor pertencer à escola,
+         * informa claramente ao usuário.
+         */
+
+        if (!linhasTabela) {
+
+            mostrarMensagem(
+                `Nenhum servidor encontrado para a escola "${escolaSelecionada}".`,
+                "info"
+            );
+
+        }
+
+
+        tableCard.classList.add(
+            "ativo"
+        );
+
+
+        summaryContainer.classList.add(
+            "ativo"
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao carregar dados:",
+            erro
+        );
+
+
+        mostrarMensagem(
+            "Erro ao carregar dados do banco.",
+            "erro"
+        );
+
+    }
+
+};
+
+
+/* =========================================================
+   SALVAR DIAS ÚTEIS DA ESCOLA
+   ========================================================= */
+
+window.salvarDiasUteisEscola =
+    async function() {
+
+        const mesAno =
+            document.getElementById(
+                "mesReferencia"
+            ).value;
+
+
+        const escola =
+            document.getElementById(
+                "filtroEscola"
+            ).value;
+
+
+        const diasEfetivos =
+            Number(
+                document.getElementById(
+                    "inputDiasEscola"
+                ).value
+            ) || 0;
+
+
+        if (
+            !mesAno ||
+            !escola
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * Impede usuário de escola de salvar
+         * configuração em outra escola.
+         */
+
+        if (
+            perfilUsuario !== "ADMIN" &&
+            perfilUsuario !== "ADMINISTRADOR" &&
+            normalizarTexto(escola) !==
+                normalizarTexto(escolaUsuario)
+        ) {
+
+            mostrarMensagem(
+                "Acesso negado para esta escola.",
+                "erro"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            const semedSnap =
+                await getDoc(
+                    doc(
+                        db,
+                        "configuracoes",
+                        mesAno
+                    )
+                );
+
+
+            if (
+                semedSnap.exists() &&
+                verificarMesBloqueado(
+                    semedSnap.data()
+                )
+            ) {
+
+                alert(
+                    "Atenção: Este mês está congelado/fechado pela SEMED. Não é possível alterar os dias úteis."
+                );
+
+                location.reload();
+
+                return;
+
+            }
+
+        } catch (e) {
+
+            console.error(
+                "Erro ao verificar bloqueio:",
+                e
+            );
+
+        }
+
+
+        const configEscolaId =
+            `${mesAno}_${escola}`;
+
+
+        try {
+
+            await setDoc(
+                doc(
+                    db,
+                    "escola_configuracoes_mensais",
+                    configEscolaId
+                ),
+                {
+                    mesReferencia: mesAno,
+                    escola: escola,
+                    diasUteisEscola: diasEfetivos,
+                    dataAtualizacao:
+                        new Date().toISOString()
+                }
+            );
+
+
+            alert(
+                `Dias úteis da escola ${escola} atualizados para ${diasEfetivos} dias neste mês!`
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao salvar dias úteis da escola:",
+                erro
+            );
+
+
+            alert(
+                "Erro ao salvar os dias úteis da escola. Verifique sua conexão."
+            );
+
+        }
+
+    };
+
+
+/* =========================================================
+   SALVAR AFASTAMENTO
+   ========================================================= */
+
+window.salvarAfastamento =
+    async function(
+        mesAno,
+        escola,
+        cpfServidor,
+        servidorId,
+        numeroMatricula
+    ) {
+
+        /*
+         * Segurança adicional:
+         * usuário de escola só pode salvar
+         * na própria escola.
+         */
+
+        if (
+            perfilUsuario !== "ADMIN" &&
+            perfilUsuario !== "ADMINISTRADOR" &&
+            normalizarTexto(escola) !==
+                normalizarTexto(escolaUsuario)
+        ) {
+
+            alert(
+                "Acesso negado: você não pode lançar afastamentos para esta escola."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            const semedSnap =
+                await getDoc(
+                    doc(
+                        db,
+                        "configuracoes",
+                        mesAno
+                    )
+                );
+
+
+            if (
+                semedSnap.exists() &&
+                verificarMesBloqueado(
+                    semedSnap.data()
+                )
+            ) {
+
+                alert(
+                    "Atenção: Este mês está congelado/fechado pela SEMED. As alterações foram desativadas."
+                );
+
+                location.reload();
+
+                return;
+
+            }
+
+        } catch (e) {
+
+            console.error(
+                "Erro ao verificar bloqueio:",
+                e
+            );
+
+        }
+
+
+        const inputDias =
+            document.getElementById(
+                `afastamento_${servidorId}_${numeroMatricula}`
+            );
+
+
+        if (!inputDias) {
+
+            alert(
+                "Não foi possível localizar o campo de afastamento."
+            );
+
+            return;
+        }
+
+
+        const diasAfastamento =
+            Number(
+                inputDias.value
+            ) || 0;
+
+
+        const cpfLimpo =
+            String(cpfServidor)
+                .replace(/\D/g, "");
+
+
+        const lancamentoId =
+            `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
+
+
+        const lancRef =
+            doc(
+                db,
+                "lancamentos_mensais",
+                lancamentoId
+            );
+
+
+        try {
+
+            const btnOriginal =
+                inputDias
+                    .parentElement
+                    .nextElementSibling
+                    .querySelector("button");
+
+
+            const textoOriginal =
+                btnOriginal
+                    ? btnOriginal.innerHTML
+                    : "";
+
+
+            if (
+                diasAfastamento <= 0
+            ) {
+
+                await deleteDoc(
+                    lancRef
+                );
+
+
+                if (btnOriginal) {
+
+                    btnOriginal.innerHTML =
+                        `
+                        <span
+                            class="material-symbols-outlined"
+                            style="font-size:16px;">
+
+                            delete
+
+                        </span>
+
+                        Removido!
+                        `;
+
+
+                    btnOriginal.style.background =
+                        "#c62828";
+
+                }
+
+
+            } else {
+
+                await setDoc(
+                    lancRef,
+                    {
+                        mesReferencia:
+                            mesAno,
+
+                        escola:
+                            escola,
+
+                        servidorId:
+                            servidorId,
+
+                        cpf:
+                            cpfServidor,
+
+                        numeroMatricula:
+                            numeroMatricula,
+
+                        diasAfastamento:
+                            diasAfastamento,
+
+                        dataAtualizacao:
+                            new Date().toISOString()
+
+                    },
+                    {
+                        merge: true
+                    }
+                );
+
+
+                if (btnOriginal) {
+
+                    btnOriginal.innerHTML =
+                        `
+                        <span
+                            class="material-symbols-outlined"
+                            style="font-size:16px;">
+
+                            check
+
+                        </span>
+
+                        Salvo!
+                        `;
+
+
+                    btnOriginal.style.background =
+                        "#1b5e20";
+
+                }
+
+            }
+
+
+            setTimeout(
+                function() {
+
+                    if (btnOriginal) {
+
+                        btnOriginal.innerHTML =
+                            textoOriginal;
+
+                        btnOriginal.style.background =
+                            "";
+
+                    }
+
+
+                    carregarDadosDaEscola();
+
+                },
+                1200
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao salvar/remover afastamento:",
+                erro
+            );
+
+
+            alert(
+                "Erro ao atualizar o afastamento. Verifique sua conexão."
+            );
+
+        }
+
+    };
+
+
+/* =========================================================
+   MENSAGENS
+   ========================================================= */
+
+function mostrarMensagem(
+    texto,
+    tipo
+) {
+
+    const msg =
+        document.getElementById(
+            "mensagem"
+        );
+
+
+    msg.textContent =
+        texto;
+
+
+    msg.className =
+        "mensagem " +
+        tipo;
+
+}
+
+</script>
+
+</body>
+
+</html>
