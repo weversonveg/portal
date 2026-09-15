@@ -565,6 +565,42 @@ a:hover {
 
 }
 
+
+.campo-senha {
+    position: relative;
+}
+
+.campo-senha input {
+    padding-right: 52px;
+}
+
+.btn-olho {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-olho:hover {
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.btn-olho .material-symbols-outlined {
+    font-size: 21px;
+}
+
 </style>
 
 </head>
@@ -654,12 +690,26 @@ a:hover {
 
                     <label for="senha">Senha</label>
 
-                    <input
-                        type="password"
-                        id="senha"
-                        required
-                        placeholder="••••••••"
-                    >
+                    <div class="campo-senha">
+                        <input
+                            type="password"
+                            id="senha"
+                            required
+                            placeholder="••••••••"
+                        >
+
+                        <button
+                            type="button"
+                            class="btn-olho"
+                            id="btnOlhoSenha"
+                            aria-label="Visualizar a senha"
+                            title="Visualizar a senha"
+                        >
+                            <span class="material-symbols-outlined">
+                                visibility
+                            </span>
+                        </button>
+                    </div>
 
                 </div>
 
@@ -794,6 +844,35 @@ window.fecharAlerta = function() {
 /* ==========================================================
    LOGIN COM E-MAIL E SENHA
 ========================================================== */
+
+
+
+/* ==========================================================
+   VISUALIZAR / ESCONDER SENHA
+========================================================== */
+
+document
+    .getElementById("btnOlhoSenha")
+    .addEventListener("click", function() {
+
+        const senha =
+            document.getElementById("senha");
+
+        const icone =
+            this.querySelector(".material-symbols-outlined");
+
+        if (senha.type === "password") {
+            senha.type = "text";
+            icone.textContent = "visibility_off";
+            this.setAttribute("aria-label", "Esconder a senha");
+            this.setAttribute("title", "Esconder a senha");
+        } else {
+            senha.type = "password";
+            icone.textContent = "visibility";
+            this.setAttribute("aria-label", "Visualizar a senha");
+            this.setAttribute("title", "Visualizar a senha");
+        }
+    });
 
 document
     .getElementById("formLogin")
