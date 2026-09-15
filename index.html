@@ -565,7 +565,6 @@ a:hover {
 
 }
 
-
 .campo-senha {
     position: relative;
 }
@@ -617,7 +616,10 @@ a:hover {
 
         <div class="brand-wrapper">
 
-            <img src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+            <img
+                src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ"
+                alt="Logo"
+            >
 
             <div class="brand-text">
                 <h1>Vale Transporte</h1>
@@ -691,11 +693,13 @@ a:hover {
                     <label for="senha">Senha</label>
 
                     <div class="campo-senha">
+
                         <input
                             type="password"
                             id="senha"
                             required
                             placeholder="••••••••"
+                            autocomplete="current-password"
                         >
 
                         <button
@@ -709,6 +713,7 @@ a:hover {
                                 visibility
                             </span>
                         </button>
+
                     </div>
 
                 </div>
@@ -824,6 +829,50 @@ import {
     signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+
+/* ==========================================================
+   DIAGNÓSTICO DO FIREBASE AUTH
+========================================================== */
+
+console.log("========================================");
+console.log("DIAGNÓSTICO FIREBASE AUTH");
+console.log("========================================");
+
+console.log("AUTH:", auth);
+
+if (auth && auth.app) {
+
+    console.log(
+        "AUTH APP:",
+        auth.app
+    );
+
+    console.log(
+        "AUTH PROJECT ID:",
+        auth.app.options.projectId
+    );
+
+    console.log(
+        "AUTH API KEY:",
+        auth.app.options.apiKey
+    );
+
+    console.log(
+        "AUTH DOMAIN:",
+        auth.app.options.authDomain
+    );
+
+} else {
+
+    console.error(
+        "ERRO: a instância AUTH não foi carregada corretamente."
+    );
+
+}
+
+console.log("========================================");
+
+
 const DOMINIO_EMAIL =
     "@educacao.divinopolis.mg.gov.br";
 
@@ -833,18 +882,21 @@ const DOMINIO_EMAIL =
 ========================================================== */
 
 window.abrirAlerta = function() {
-    document.getElementById("alerta").style.display = "flex";
+
+    document
+        .getElementById("alerta")
+        .style.display = "flex";
+
 };
+
 
 window.fecharAlerta = function() {
-    document.getElementById("alerta").style.display = "none";
+
+    document
+        .getElementById("alerta")
+        .style.display = "none";
+
 };
-
-
-/* ==========================================================
-   LOGIN COM E-MAIL E SENHA
-========================================================== */
-
 
 
 /* ==========================================================
@@ -859,20 +911,52 @@ document
             document.getElementById("senha");
 
         const icone =
-            this.querySelector(".material-symbols-outlined");
+            this.querySelector(
+                ".material-symbols-outlined"
+            );
 
         if (senha.type === "password") {
+
             senha.type = "text";
-            icone.textContent = "visibility_off";
-            this.setAttribute("aria-label", "Esconder a senha");
-            this.setAttribute("title", "Esconder a senha");
+
+            icone.textContent =
+                "visibility_off";
+
+            this.setAttribute(
+                "aria-label",
+                "Esconder a senha"
+            );
+
+            this.setAttribute(
+                "title",
+                "Esconder a senha"
+            );
+
         } else {
+
             senha.type = "password";
-            icone.textContent = "visibility";
-            this.setAttribute("aria-label", "Visualizar a senha");
-            this.setAttribute("title", "Visualizar a senha");
+
+            icone.textContent =
+                "visibility";
+
+            this.setAttribute(
+                "aria-label",
+                "Visualizar a senha"
+            );
+
+            this.setAttribute(
+                "title",
+                "Visualizar a senha"
+            );
+
         }
+
     });
+
+
+/* ==========================================================
+   LOGIN COM E-MAIL E SENHA
+========================================================== */
 
 document
     .getElementById("formLogin")
@@ -881,7 +965,10 @@ document
         e.preventDefault();
 
         const usuario =
-            document.getElementById("email").value.trim();
+            document
+                .getElementById("email")
+                .value
+                .trim();
 
         const email =
             usuario.includes("@")
@@ -889,18 +976,35 @@ document
                 : usuario + DOMINIO_EMAIL;
 
         const senha =
-            document.getElementById("senha").value;
+            document
+                .getElementById("senha")
+                .value;
 
         const msgErro =
-            document.getElementById("mensagemErro");
+            document
+                .getElementById("mensagemErro");
 
         const btnEntrar =
-            document.getElementById("btnEntrar");
+            document
+                .getElementById("btnEntrar");
 
         msgErro.textContent = "";
 
         btnEntrar.disabled = true;
         btnEntrar.textContent = "Entrando...";
+
+        console.log("----------------------------------------");
+        console.log("TENTATIVA DE LOGIN");
+        console.log("E-MAIL UTILIZADO:", email);
+        console.log(
+            "PROJETO FIREBASE:",
+            auth?.app?.options?.projectId
+        );
+        console.log(
+            "API KEY UTILIZADA:",
+            auth?.app?.options?.apiKey
+        );
+        console.log("----------------------------------------");
 
         try {
 
@@ -910,36 +1014,44 @@ document
                 senha
             );
 
-            window.location.href = "inicial.html";
+            console.log(
+                "LOGIN REALIZADO COM SUCESSO."
+            );
+
+            window.location.href =
+                "inicial.html";
 
         } catch (error) {
 
             console.error(
-                "Erro no login com e-mail/senha:",
+                "ERRO COMPLETO NO LOGIN:",
                 error
+            );
+
+            console.error(
+                "CÓDIGO DO ERRO:",
+                error.code
+            );
+
+            console.error(
+                "MENSAGEM DO ERRO:",
+                error.message
             );
 
             msgErro.textContent =
                 "E-mail ou senha inválidos.";
 
             btnEntrar.disabled = false;
-            btnEntrar.textContent = "Entrar";
+            btnEntrar.textContent =
+                "Entrar";
+
         }
+
     });
 
 
 /* ==========================================================
    LOGIN COM GOOGLE
-
-   O Google funciona como um método de entrada independente.
-   Não é necessário informar e-mail ou senha antes.
-
-   - O usuário clica em "Entrar com o Google".
-   - O Google abre diretamente.
-   - Se a conta Google já existir no Firebase, o usuário entra.
-   - Se ainda não existir, o Firebase poderá criar a conta Google.
-   - Se o e-mail já existir somente como Password, orientamos
-     o usuário a utilizar o login por e-mail e senha.
 ========================================================== */
 
 document
@@ -947,29 +1059,65 @@ document
     .addEventListener("click", async function() {
 
         const msgErro =
-            document.getElementById("mensagemErro");
+            document
+                .getElementById("mensagemErro");
 
         const btnGoogle =
-            document.getElementById("btnLoginGoogle");
+            document
+                .getElementById("btnLoginGoogle");
 
         msgErro.textContent = "";
 
         btnGoogle.disabled = true;
-        btnGoogle.innerHTML = "Abrindo Google...";
 
-        const provider = new GoogleAuthProvider();
+        btnGoogle.innerHTML =
+            "Abrindo Google...";
+
+        const provider =
+            new GoogleAuthProvider();
+
+        console.log("----------------------------------------");
+        console.log("TENTATIVA DE LOGIN COM GOOGLE");
+        console.log(
+            "PROJETO FIREBASE:",
+            auth?.app?.options?.projectId
+        );
+        console.log(
+            "API KEY UTILIZADA:",
+            auth?.app?.options?.apiKey
+        );
+        console.log("----------------------------------------");
 
         try {
 
-            await signInWithPopup(auth, provider);
+            await signInWithPopup(
+                auth,
+                provider
+            );
 
-            window.location.href = "inicial.html";
+            console.log(
+                "LOGIN GOOGLE REALIZADO COM SUCESSO."
+            );
+
+            window.location.href =
+                "inicial.html";
 
         } catch (error) {
 
-            console.error("Erro no login com Google:", error);
-            console.error("Código do erro:", error.code);
-            console.error("Mensagem do erro:", error.message);
+            console.error(
+                "ERRO NO LOGIN COM GOOGLE:",
+                error
+            );
+
+            console.error(
+                "CÓDIGO DO ERRO:",
+                error.code
+            );
+
+            console.error(
+                "MENSAGEM DO ERRO:",
+                error.message
+            );
 
             if (
                 error.code ===
@@ -980,28 +1128,32 @@ document
                     "Esta conta já possui acesso por e-mail e senha. Entre utilizando esse método.";
 
             } else if (
-                error.code === "auth/popup-closed-by-user"
+                error.code ===
+                "auth/popup-closed-by-user"
             ) {
 
                 msgErro.textContent =
                     "A janela do Google foi fechada.";
 
             } else if (
-                error.code === "auth/popup-blocked"
+                error.code ===
+                "auth/popup-blocked"
             ) {
 
                 msgErro.textContent =
                     "O navegador bloqueou a janela do Google. Permita pop-ups para este site.";
 
             } else if (
-                error.code === "auth/unauthorized-domain"
+                error.code ===
+                "auth/unauthorized-domain"
             ) {
 
                 msgErro.textContent =
                     "Este domínio não está autorizado no Firebase Authentication.";
 
             } else if (
-                error.code === "auth/cancelled-popup-request"
+                error.code ===
+                "auth/cancelled-popup-request"
             ) {
 
                 msgErro.textContent =
@@ -1015,6 +1167,7 @@ document
             }
 
             btnGoogle.disabled = false;
+
             btnGoogle.innerHTML = `
                 <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -1022,7 +1175,9 @@ document
                 >
                 Entrar com o Google
             `;
+
         }
+
     });
 
 </script>
