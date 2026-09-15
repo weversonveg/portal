@@ -993,19 +993,6 @@ document
         btnEntrar.disabled = true;
         btnEntrar.textContent = "Entrando...";
 
-        console.log("----------------------------------------");
-        console.log("TENTATIVA DE LOGIN");
-        console.log("E-MAIL UTILIZADO:", email);
-        console.log(
-            "PROJETO FIREBASE:",
-            auth?.app?.options?.projectId
-        );
-        console.log(
-            "API KEY UTILIZADA:",
-            auth?.app?.options?.apiKey
-        );
-        console.log("----------------------------------------");
-
         try {
 
             await signInWithEmailAndPassword(
@@ -1015,7 +1002,7 @@ document
             );
 
             console.log(
-                "LOGIN REALIZADO COM SUCESSO."
+                "LOGIN POR E-MAIL REALIZADO COM SUCESSO."
             );
 
             window.location.href =
@@ -1024,18 +1011,8 @@ document
         } catch (error) {
 
             console.error(
-                "ERRO COMPLETO NO LOGIN:",
+                "ERRO NO LOGIN POR E-MAIL:",
                 error
-            );
-
-            console.error(
-                "CÓDIGO DO ERRO:",
-                error.code
-            );
-
-            console.error(
-                "MENSAGEM DO ERRO:",
-                error.message
             );
 
             msgErro.textContent =
@@ -1056,7 +1033,15 @@ document
 
 document
     .getElementById("btnLoginGoogle")
-    .addEventListener("click", async function() {
+    .addEventListener("click", async function(e) {
+
+        /*
+         * IMPORTANTE:
+         * Impede qualquer comportamento relacionado ao formulário
+         * de e-mail/senha.
+         */
+        e.preventDefault();
+        e.stopPropagation();
 
         const msgErro =
             document
@@ -1066,39 +1051,66 @@ document
             document
                 .getElementById("btnLoginGoogle");
 
+        const btnEntrar =
+            document
+                .getElementById("btnEntrar");
+
+        /*
+         * Limpa somente a mensagem.
+         * Não mexe nos campos de e-mail ou senha.
+         */
         msgErro.textContent = "";
 
+        /*
+         * Desabilita somente o botão Google.
+         * O botão de e-mail continua separado.
+         */
         btnGoogle.disabled = true;
 
-        btnGoogle.innerHTML =
-            "Abrindo Google...";
+        const conteudoOriginal =
+            btnGoogle.innerHTML;
+
+        btnGoogle.innerHTML = `
+            <span class="material-symbols-outlined"
+                  style="font-size:20px;">
+                progress_activity
+            </span>
+            Abrindo Google...
+        `;
 
         const provider =
             new GoogleAuthProvider();
 
-        console.log("----------------------------------------");
-        console.log("TENTATIVA DE LOGIN COM GOOGLE");
-        console.log(
-            "PROJETO FIREBASE:",
-            auth?.app?.options?.projectId
-        );
-        console.log(
-            "API KEY UTILIZADA:",
-            auth?.app?.options?.apiKey
-        );
-        console.log("----------------------------------------");
+        /*
+         * Define explicitamente o provedor.
+         */
+        provider.setCustomParameters({
+            prompt: "select_account"
+        });
 
         try {
 
-            await signInWithPopup(
-                auth,
-                provider
-            );
+            /*
+             * O login Google utiliza exclusivamente
+             * signInWithPopup.
+             *
+             * Não utiliza o formulário de e-mail.
+             */
+            const resultado =
+                await signInWithPopup(
+                    auth,
+                    provider
+                );
 
             console.log(
-                "LOGIN GOOGLE REALIZADO COM SUCESSO."
+                "LOGIN GOOGLE REALIZADO:",
+                resultado.user.email
             );
 
+            /*
+             * Só redireciona depois que o Google
+             * realmente autenticou o usuário.
+             */
             window.location.href =
                 "inicial.html";
 
@@ -1110,14 +1122,11 @@ document
             );
 
             console.error(
-                "CÓDIGO DO ERRO:",
+                "CÓDIGO:",
                 error.code
             );
 
-            console.error(
-                "MENSAGEM DO ERRO:",
-                error.message
-            );
+            msgErro.textContent = "";
 
             if (
                 error.code ===
@@ -1166,15 +1175,11 @@ document
 
             }
 
+            /*
+             * Restaura SOMENTE o botão Google.
+             */
             btnGoogle.disabled = false;
-
-            btnGoogle.innerHTML = `
-                <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google"
-                >
-                Entrar com o Google
-            `;
+            btnGoogle.innerHTML = conteudoOriginal;
 
         }
 
