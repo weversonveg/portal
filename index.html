@@ -22,6 +22,7 @@
     --bg-light: #faf8fc;
     --border-color: #e4dfeb;
     --error-color: #d32f2f;
+    --success-color: #2e7d32;
 }
 
 * {
@@ -292,6 +293,12 @@ button.btn-google img {
     word-break: break-word;
 }
 
+.mensagem-erro a {
+    color: var(--primary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .esqueci-container {
     text-align: center;
     margin-top: 24px;
@@ -308,7 +315,7 @@ a:hover {
     text-decoration: underline;
 }
 
-/* ALERTA DE SUPORTE */
+/* MODAL DE RECUPERAÇÃO DE SENHA */
 
 .fundo-alerta {
     display: none;
@@ -359,137 +366,21 @@ a:hover {
     line-height: 1.5;
 }
 
-.info-suporte {
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: var(--primary-soft);
-    border-radius: 14px;
-    color: var(--primary);
-    font-weight: 700;
-}
-
-.rodape-alerta {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border-color);
-    text-align: right;
-}
-
-.rodape-alerta button {
-    width: 95px;
-    height: 42px;
-    border: none;
-    border-radius: 10px;
-    background: var(--primary);
-    color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-/* MODAL PARA VINCULAR GOOGLE */
-
-.modal-google {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-    background: rgba(30, 27, 38, 0.65);
-    backdrop-filter: blur(5px);
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-}
-
-.caixa-google {
-    width: 100%;
-    max-width: 420px;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    overflow: hidden;
-    animation: abrir 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.cabecalho-google {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 22px 24px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.cabecalho-google .icone {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    background: var(--primary-soft);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary);
-}
-
-.cabecalho-google h2 {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--text-dark);
-}
-
-.conteudo-google {
-    padding: 24px;
-}
-
-.conteudo-google p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-bottom: 18px;
-}
-
-.email-vinculo {
-    background: var(--primary-soft);
-    color: var(--primary);
-    padding: 12px 14px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 18px;
-    word-break: break-word;
-}
-
-.campo-senha-google {
-    position: relative;
-}
-
-.campo-senha-google input {
-    width: 100%;
-    height: 48px;
-    padding: 0 16px;
-    border: 1.8px solid var(--border-color);
-    border-radius: 14px;
-    font-size: 0.95rem;
-    color: var(--text-dark);
-    background: #ffffff;
-}
-
-.campo-senha-google input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-soft);
-}
-
-.erro-google {
+.erro-recuperar {
     color: var(--error-color);
     font-size: 0.8rem;
     font-weight: 600;
     margin-top: 10px;
-    min-height: 18px;
 }
 
-.rodape-google {
+.sucesso-recuperar {
+    color: var(--success-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.rodape-alerta {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -497,8 +388,8 @@ a:hover {
     border-top: 1px solid var(--border-color);
 }
 
-.btn-cancelar-google,
-.btn-confirmar-google {
+.btn-cancelar-alerta,
+.btn-confirmar-alerta {
     height: 42px;
     padding: 0 18px;
     border-radius: 10px;
@@ -507,13 +398,13 @@ a:hover {
     cursor: pointer;
 }
 
-.btn-cancelar-google {
+.btn-cancelar-alerta {
     border: 1px solid var(--border-color);
     background: #ffffff;
     color: var(--text-muted);
 }
 
-.btn-confirmar-google {
+.btn-confirmar-alerta {
     border: none;
     background: var(--primary);
     color: #ffffff;
@@ -576,13 +467,6 @@ a:hover {
     }
     .form-header h3 {
         font-size: 1.6rem;
-    }
-    .rodape-google {
-        flex-direction: column-reverse;
-    }
-    .btn-cancelar-google,
-    .btn-confirmar-google {
-        width: 100%;
     }
 }
 
@@ -663,7 +547,7 @@ a:hover {
 
             <p class="esqueci-container">
                 <a href="#" onclick="abrirAlerta(); return false;">
-                    Problemas com o acesso?
+                    Problemas com o acesso? / Esqueci a senha
                 </a>
             </p>
 
@@ -673,48 +557,25 @@ a:hover {
 
 </div>
 
-<!-- MODAL DE SUPORTE -->
+<!-- MODAL DE RECUPERAÇÃO DE SENHA -->
 <div id="alerta" class="fundo-alerta">
     <div class="caixa-alerta">
         <div class="cabecalho-alerta">
             <span class="material-symbols-outlined icone-alerta">lock_reset</span>
-            <h2>Suporte de Acesso</h2>
+            <h2>Recuperar Senha</h2>
         </div>
         <div class="conteudo-alerta">
-            <p>Se sua conta não estiver autorizada no sistema, entre em contato com o suporte técnico da SEMED.</p>
-            <div class="info-suporte">
-                <span class="material-symbols-outlined">call</span>
-                <span>(37) 3229-9729</span>
+            <p>Digite seu e-mail cadastrado. Enviaremos um link para você definir ou redefinir sua senha de acesso.</p>
+            <div class="input-group" style="margin-top: 16px; margin-bottom: 0;">
+                <label for="emailRecuperar">E-mail</label>
+                <input type="email" id="emailRecuperar" placeholder="seu.email@educacao.divinopolis.mg.gov.br">
             </div>
+            <div id="erroRecuperar" class="erro-recuperar"></div>
+            <div id="sucessoRecuperar" class="sucesso-recuperar"></div>
         </div>
         <div class="rodape-alerta">
-            <button onclick="fecharAlerta()">Fechar</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL PARA VINCULAR GOOGLE -->
-<div id="modalGoogle" class="modal-google">
-    <div class="caixa-google">
-        <div class="cabecalho-google">
-            <div class="icone">
-                <span class="material-symbols-outlined">link</span>
-            </div>
-            <h2>Vincular conta Google</h2>
-        </div>
-
-        <div class="conteudo-google">
-            <p>Esta conta foi cadastrada com e-mail e senha. Digite sua senha para conectar o Google à mesma conta.</p>
-            <div id="emailVinculo" class="email-vinculo"></div>
-            <div class="campo-senha-google">
-                <input type="password" id="senhaVinculo" placeholder="Digite sua senha" autocomplete="current-password">
-            </div>
-            <div id="erroGoogle" class="erro-google"></div>
-        </div>
-
-        <div class="rodape-google">
-            <button type="button" class="btn-cancelar-google" id="btnCancelarGoogle">Cancelar</button>
-            <button type="button" class="btn-confirmar-google" id="btnConfirmarGoogle">Vincular e Entrar</button>
+            <button type="button" class="btn-cancelar-alerta" onclick="fecharAlerta()">Cancelar</button>
+            <button type="button" class="btn-confirmar-alerta" id="btnEnviarRecuperar">Enviar Link</button>
         </div>
     </div>
 </div>
@@ -727,56 +588,67 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithEmailAndPassword,
-    linkWithCredential
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
 
-let credencialGooglePendente = null;
-let emailGooglePendente = null;
-
 /* ==========================================================
-   ALERTA DE SUPORTE
+   MODAL DE RECUPERAÇÃO DE SENHA
    ========================================================== */
-window.abrirAlerta = function() {
+window.abrirAlerta = function(emailSugestao = "") {
+    document.getElementById("erroRecuperar").textContent = "";
+    document.getElementById("sucessoRecuperar").textContent = "";
+    document.getElementById("emailRecuperar").value = emailSugestao;
     document.getElementById("alerta").style.display = "flex";
+    if(emailSugestao) {
+        document.getElementById("emailRecuperar").focus();
+    }
 };
 
 window.fecharAlerta = function() {
     document.getElementById("alerta").style.display = "none";
 };
 
-/* ==========================================================
-   MODAL GOOGLE (VÍNCULO)
-   ========================================================== */
-function abrirModalGoogle(email, credential) {
-    emailGooglePendente = email;
-    credencialGooglePendente = credential;
+// Disparar o envio do link de recuperação
+document.getElementById("btnEnviarRecuperar").addEventListener("click", async function() {
+    const emailInput = document.getElementById("emailRecuperar").value.trim();
+    const erroEl = document.getElementById("erroRecuperar");
+    const sucessoEl = document.getElementById("sucessoRecuperar");
+    const btn = document.getElementById("btnEnviarRecuperar");
 
-    document.getElementById("emailVinculo").textContent = email;
-    document.getElementById("senhaVinculo").value = "";
-    document.getElementById("erroGoogle").textContent = "";
-    document.getElementById("modalGoogle").style.display = "flex";
+    erroEl.textContent = "";
+    sucessoEl.textContent = "";
 
-    setTimeout(function() {
-        document.getElementById("senhaVinculo").focus();
-    }, 100);
-}
+    if (!emailInput) {
+        erroEl.textContent = "Por favor, digite seu e-mail.";
+        return;
+    }
 
-function fecharModalGoogle() {
-    document.getElementById("modalGoogle").style.display = "none";
-    document.getElementById("senhaVinculo").value = "";
-    document.getElementById("erroGoogle").textContent = "";
-    emailGooglePendente = null;
-    credencialGooglePendente = null;
+    const email = emailInput.includes("@") ? emailInput : emailInput + DOMINIO_EMAIL;
 
-    const btn = document.getElementById("btnConfirmarGoogle");
-    btn.disabled = false;
-    btn.textContent = "Vincular e Entrar";
-}
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
 
-document.getElementById("btnCancelarGoogle").addEventListener("click", function() {
-    fecharModalGoogle();
+    try {
+        await sendPasswordResetEmail(auth, email);
+        sucessoEl.textContent = "E-mail enviado com sucesso! Verifique sua caixa de entrada para criar sua senha.";
+        btn.textContent = "Enviado";
+        setTimeout(() => {
+            fecharAlerta();
+            btn.disabled = false;
+            btn.textContent = "Enviar Link";
+        }, 4000);
+    } catch (error) {
+        console.error("Erro ao enviar e-mail de recuperação:", error);
+        if (error.code === "auth/user-not-found") {
+            erroEl.textContent = "Não encontramos nenhuma conta com este e-mail.";
+        } else {
+            erroEl.textContent = "Erro ao enviar e-mail. Verifique o endereço digitado.";
+        }
+        btn.disabled = false;
+        btn.textContent = "Enviar Link";
+    }
 });
 
 /* ==========================================================
@@ -808,7 +680,7 @@ document.getElementById("formLogin").addEventListener("submit", async function(e
 });
 
 /* ==========================================================
-   BOTÃO GOOGLE (FLUXO DIRETO)
+   BOTÃO GOOGLE (LOGIN DIRETO)
    ========================================================== */
 document.getElementById("btnLoginGoogle").addEventListener("click", async function() {
     const msgErro = document.getElementById("mensagemErro");
@@ -818,23 +690,14 @@ document.getElementById("btnLoginGoogle").addEventListener("click", async functi
     provider.setCustomParameters({ prompt: "select_account" });
 
     try {
-        // Tenta o login direto com o Google
         await signInWithPopup(auth, provider);
         window.location.href = "inicial.html";
-
     } catch (error) {
         console.error("Erro no login Google:", error);
 
-        // SE O E-MAIL JÁ EXISTIR CADASTRADO COM SENHA:
         if (error.code === "auth/account-exists-with-different-credential") {
             const email = error.customData?.email || error.email;
-            const credential = GoogleAuthProvider.credentialFromError(error);
-
-            // Preenche o input de e-mail no formulário principal para facilitar caso queira usar senha
-            document.getElementById("email").value = email;
-
-            // Abre o modal pedindo a senha para unir as contas na mesma UID
-            abrirModalGoogle(email, credential);
+            msgErro.innerHTML = `Este e-mail já possui senha. <a href="#" onclick="abrirAlerta('${email}'); return false;">Clique aqui para redefinir sua senha</a>.`;
         } 
         else if (error.code === "auth/popup-closed-by-user") {
             msgErro.textContent = "A janela de login do Google foi fechada.";
@@ -849,72 +712,11 @@ document.getElementById("btnLoginGoogle").addEventListener("click", async functi
 });
 
 /* ==========================================================
-   CONFIRMAR VÍNCULO GOOGLE + SENHA
+   FECHAR MODAL CLICANDO FORA
    ========================================================== */
-document.getElementById("btnConfirmarGoogle").addEventListener("click", async function() {
-    const senha = document.getElementById("senhaVinculo").value;
-    const erro = document.getElementById("erroGoogle");
-    const btn = document.getElementById("btnConfirmarGoogle");
-
-    erro.textContent = "";
-
-    if (!senha) {
-        erro.textContent = "Digite sua senha.";
-        return;
-    }
-
-    if (!emailGooglePendente || !credencialGooglePendente) {
-        erro.textContent = "A sessão expirou. Tente novamente.";
-        return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Vinculando contas...";
-
-    try {
-        // 1. Faz login na conta de senha existente para obter o objeto do usuário
-        const resultadoLogin = await signInWithEmailAndPassword(
-            auth,
-            emailGooglePendente,
-            senha
-        );
-        const usuario = resultadoLogin.user;
-
-        // 2. Vincula a credencial pendente do Google a essa mesma conta existente
-        await linkWithCredential(usuario, credencialGooglePendente);
-
-        console.log("Contas vinculadas com sucesso na UID:", usuario.uid);
-
-        fecharModalGoogle();
-        window.location.href = "inicial.html";
-
-    } catch (error) {
-        console.error("Erro ao vincular:", error);
-
-        if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-            erro.textContent = "A senha informada está incorreta.";
-        } else {
-            erro.textContent = "Erro ao vincular o Google. Verifique sua senha.";
-        }
-
-        btn.disabled = false;
-        btn.textContent = "Vincular e Entrar";
-    }
-});
-
-/* ==========================================================
-   ENTER NO MODAL & FECHAR CLICANDO FORA
-   ========================================================== */
-document.getElementById("senhaVinculo").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("btnConfirmarGoogle").click();
-    }
-});
-
-document.getElementById("modalGoogle").addEventListener("click", function(e) {
+document.getElementById("alerta").addEventListener("click", function(e) {
     if (e.target === this) {
-        fecharModalGoogle();
+        fecharAlerta();
     }
 });
 
