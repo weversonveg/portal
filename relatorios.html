@@ -27,6 +27,8 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
     --blue: #0277bd;
     --blue-hover: #01579b;
 
+    --red: #c62828;
+
     --text: #263238;
     --text-secondary: #68737d;
 
@@ -668,6 +670,9 @@ tr:hover td {
     import { db } from "./firebase.js";
     import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // 👇 Variável global para armazenar os dados do relatório (usada pelo XLSX/CSV)
+    let dadosRelatorioGlobal = [];
+
     document.addEventListener("DOMContentLoaded", function() {
         const hoje = new Date();
         const ano = hoje.getFullYear();
@@ -676,7 +681,6 @@ tr:hover td {
         document.getElementById("anoReferencia").value = ano;
         atualizarTextoDropdown();
 
-        // Fecha o dropdown se clicar fora dele
         document.addEventListener("click", function(e) {
             const container = document.getElementById("dropdownEscolasContainer");
             const panel = document.getElementById("dropdownPanel");
@@ -697,20 +701,13 @@ tr:hover td {
         }
     }
 
-    // Abre/fecha o menu suspenso das escolas
     window.toggleDropdownEscolas = function() {
-        const panel = document.getElementById("dropdownPanel");
-        panel.classList.toggle("ativo");
+        document.getElementById("dropdownPanel").classList.toggle("ativo");
     }
 
-    // Controle do Master Checkbox "Todas as Escolas"
     window.toggleTodasEscolas = function(master) {
         const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
-        checkboxes.forEach(cb => {
-            if (cb !== master) {
-                cb.checked = master.checked;
-            }
-        });
+        checkboxes.forEach(cb => { if (cb !== master) cb.checked = master.checked; });
         atualizarTextoDropdown();
     }
 
@@ -720,18 +717,10 @@ tr:hover td {
         const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
         const spanTexto = document.getElementById("dropdownTextoSelecionado");
 
-        if (master && master.checked) {
-            spanTexto.textContent = "Todas as Escolas Selecionadas";
-        } else if (marcadas.length === 0) {
-            spanTexto.textContent = "Nenhuma escola selecionada";
-            if(master) master.checked = false;
-        } else if (marcadas.length === checkboxes.length) {
-            spanTexto.textContent = "Todas as Escolas Selecionadas";
-            if(master) master.checked = true;
-        } else {
-            spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`;
-            if(master) master.checked = false;
-        }
+        if (master && master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
+        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; if(master) master.checked = false; }
+        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; if(master) master.checked = true; }
+        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
     }
 
     window.gerarRelatorio = async function() {
@@ -750,11 +739,8 @@ tr:hover td {
         const btnCsv = document.getElementById("btnCsv");
         const btnXls = document.getElementById("btnXls");
 
-        msgDiv.className = "mensagem";
-        msgDiv.textContent = "";
-        btnPdf.disabled = true;
-        btnCsv.disabled = true;
-        btnXls.disabled = true;
+        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
 
         if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
             mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
@@ -763,41 +749,30 @@ tr:hover td {
 
         try {
             let mesesParaProcessar = [];
-
             if (tipoPeriodo === "mensal") {
                 const mesAno = document.getElementById("mesReferencia").value;
-                if (!mesAno) {
-                    mostrarMensagem("Selecione o mês de referência.", "erro");
-                    return;
-                }
+                if (!mesAno) { mostrarMensagem("Selecione o mês de referência.", "erro"); return; }
                 mesesParaProcessar.push(mesAno);
             } else {
                 const anoSelecionado = document.getElementById("anoReferencia").value;
                 for (let m = 1; m <= 12; m++) {
-                    const mesStr = String(m).padStart(2, '0');
-                    mesesParaProcessar.push(`${anoSelecionado}-${mesStr}`);
+                    mesesParaProcessar.push(`${anoSelecionado}-${String(m).padStart(2, '0')}`);
                 }
             }
 
             const servidoresSnap = await getDocs(collection(db, "servidores"));
-            if (servidoresSnap.empty) {
-                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
-                return;
-            }
+            if (servidoresSnap.empty) { mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info"); return; }
 
             let resultadosConsolidados = {};
 
             for (const mesAno of mesesParaProcessar) {
-                const configRef = doc(db, "configuracoes", mesAno);
-                const configSnap = await getDoc(configRef);
+                const configSnap = await getDoc(doc(db, "configuracoes", mesAno));
                 if (!configSnap.exists()) continue;
-
                 const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
 
                 const diasEscolaMap = {};
                 try {
-                    const escolaConfigsQuery = query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno));
-                    const escolaConfigsSnap = await getDocs(escolaConfigsQuery);
+                    const escolaConfigsSnap = await getDocs(query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno)));
                     escolaConfigsSnap.forEach(d => {
                         const data = d.data();
                         if (data.escola) diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
@@ -806,8 +781,7 @@ tr:hover td {
 
                 const afastamentosMap = {};
                 try {
-                    const lancQuery = query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno));
-                    const lancSnap = await getDocs(lancQuery);
+                    const lancSnap = await getDocs(query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno)));
                     lancSnap.forEach(d => {
                         const data = d.data();
                         const dias = Number(data.diasAfastamento) || 0;
@@ -824,10 +798,8 @@ tr:hover td {
                     const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
                     function processarVinculo(matriculaNum, cargo, escolaObj) {
-                        if (!escolaObj) return;
+                        if (!escolaObj || !escolaObj.nomeEscola) return;
                         const nomeEscola = escolaObj.nomeEscola;
-                        if (!nomeEscola) return;
-
                         if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
                         if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
                         const empresa = escolaObj.empresa || "";
@@ -835,7 +807,6 @@ tr:hover td {
 
                         const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
                         const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
-
                         const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
                         const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
                         const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
@@ -844,19 +815,12 @@ tr:hover td {
                         const chaveUnica = `${cpfLimpo}_${nomeEscola}_${matriculaNum}`;
                         if (!resultadosConsolidados[chaveUnica]) {
                             resultadosConsolidados[chaveUnica] = {
-                                nome: s.nome,
-                                cpf: s.cpf,
-                                matricula: matriculaNum,
-                                cargo: cargo || '-',
-                                escola: nomeEscola,
-                                empresa: empresa || '-',
-                                passesDiarios: passesDiarios,
-                                diasEfetivosTotal: 0,
-                                afastamentosTotal: 0,
-                                passesTotal: 0
+                                nome: s.nome, cpf: s.cpf, matricula: matriculaNum,
+                                cargo: cargo || '-', escola: nomeEscola, empresa: empresa || '-',
+                                passesDiarios: passesDiarios, diasEfetivosTotal: 0,
+                                afastamentosTotal: 0, passesTotal: 0
                             };
                         }
-
                         resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
                         resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
                         resultadosConsolidados[chaveUnica].passesTotal += totalMes;
@@ -873,16 +837,16 @@ tr:hover td {
                 });
             }
 
+            // 👇 Filtra e salva globalmente (para XLSX e CSV)
+            const listaFinal = Object.values(resultadosConsolidados).filter(item => !(apenasFalta && item.afastamentosTotal <= 0));
+
             let linhasTabela = "";
             let totalVinculos = 0;
             let totalGeralPasses = 0;
 
-            Object.values(resultadosConsolidados).forEach(item => {
-                if (apenasFalta && item.afastamentosTotal <= 0) return;
-
+            listaFinal.forEach(item => {
                 totalVinculos++;
                 totalGeralPasses += item.passesTotal;
-
                 linhasTabela += `
                     <tr>
                         <td><b>${item.nome}</b></td>
@@ -892,18 +856,20 @@ tr:hover td {
                         <td>${item.empresa}</td>
                         <td>${item.passesDiarios}</td>
                         <td><b>${item.diasEfetivosTotal} dias</b></td>
-                        <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                        <td><span style="color:${item.afastamentosTotal > 0 ? '#c62828' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
                         <td><b>${item.passesTotal}</b></td>
-                    </tr>
-                `;
+                    </tr>`;
             });
 
             if (totalVinculos === 0) {
                 mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
+                dadosRelatorioGlobal = [];
                 return;
             }
+
+            dadosRelatorioGlobal = listaFinal; // 👈 salva os dados para exportação
 
             const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${document.getElementById("mesReferencia").value}` : `Ano: ${document.getElementById("anoReferencia").value}`;
             const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
@@ -916,9 +882,7 @@ tr:hover td {
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
 
-            btnPdf.disabled = false;
-            btnCsv.disabled = false;
-            btnXls.disabled = false;
+            btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
             mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
 
         } catch (erro) {
@@ -927,52 +891,86 @@ tr:hover td {
         }
     }
 
-    window.exportarPDF = function() {
-        window.print();
-    }
+    window.exportarPDF = function() { window.print(); }
 
+    // 👇 CSV agora usa os dados globais (muito mais confiável que parsear o DOM)
     window.exportarCSV = function() {
-        let csv = [];
-        let rows = document.querySelectorAll("#tabelaCorpo tr");
-        let header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
-        csv.push(header.join(";"));
+        if (dadosRelatorioGlobal.length === 0) {
+            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
+            return;
+        }
+        const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
+        const linhas = [header.join(";")];
 
-        rows.forEach(row => {
-            let cols = row.querySelectorAll("td");
-            if (cols.length > 0) {
-                let nome = cols[0].innerText.trim();
-                let cpfMat = cols[1].innerText.split("\n");
-                let cpf = cpfMat[0] || "";
-                let mat = cpfMat[1] ? cpfMat[1].replace("Mat: ", "") : "";
-                let cargo = cols[2].innerText.trim();
-                let escola = cols[3].innerText.trim();
-                let empresa = cols[4].innerText.trim();
-                let passesDia = cols[5].innerText.trim();
-                let diasEfetivos = cols[6].innerText.trim();
-                let afastamentos = cols[7].innerText.trim();
-                let totalPasses = cols[8].innerText.trim();
-
-                let linha = [
-                    `"${nome}"`, `"${cpf}"`, `"${mat}"`, `"${cargo}"`, `"${escola}"`, `"${empresa}"`, passesDia, `"${diasEfetivos}"`, afastamentos, totalPasses
-                ];
-                csv.push(linha.join(";"));
-            }
+        dadosRelatorioGlobal.forEach(item => {
+            linhas.push([
+                `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
+                `"${item.cargo}"`, `"${item.escola}"`, `"${item.empresa}"`,
+                item.passesDiarios, item.diasEfetivosTotal,
+                item.afastamentosTotal, item.passesTotal
+            ].join(";"));
         });
 
-        let blob = new Blob(["\ufeff" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
-        let link = document.createElement("a");
+        const blob = new Blob(["\ufeff" + linhas.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const tipo = document.getElementById("tipoPeriodo").value;
         link.href = URL.createObjectURL(blob);
-        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo").value}.csv`;
+        link.download = `relatorio_vales_${tipo}.csv`;
         link.click();
     }
 
-    window.exportarXLS = function() {
-        let htmlTable = document.getElementById("tableCard").querySelector("table").outerHTML;
-        let blob = new Blob(['\ufeff' + htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        let link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `relatorio_vales_${document.getElementById("tipoPeriodo.value" || "tipoPeriodo").value || 'periodo'}.xls`;
-        link.click();
+    // 👇 NOVO XLSX: gera um arquivo Excel REAL usando SheetJS (CDN)
+    window.exportarXLS = async function() {
+        if (dadosRelatorioGlobal.length === 0) {
+            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
+            return;
+        }
+
+        // Carrega SheetJS sob demanda
+        if (typeof XLSX === 'undefined') {
+            mostrarMensagem("Preparando arquivo Excel...", "info");
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("Falha ao carregar biblioteca de Excel"));
+                document.head.appendChild(script);
+            });
+        }
+
+        try {
+            const dados = dadosRelatorioGlobal.map(item => ({
+                "Servidor": item.nome,
+                "CPF": item.cpf,
+                "Matrícula": item.matricula,
+                "Cargo": item.cargo,
+                "Escola / Lotação": item.escola,
+                "Concessionária": item.empresa,
+                "Passes/Dia": item.passesDiarios,
+                "Dias Efetivos": item.diasEfetivosTotal,
+                "Afastamentos": item.afastamentosTotal,
+                "Total Passes": item.passesTotal
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dados);
+
+            // Define larguras de coluna
+            ws['!cols'] = [
+                { wch: 30 }, { wch: 16 }, { wch: 14 }, { wch: 22 },
+                { wch: 25 }, { wch: 22 }, { wch: 12 }, { wch: 14 },
+                { wch: 14 }, { wch: 14 }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+
+            const tipo = document.getElementById("tipoPeriodo").value;
+            XLSX.writeFile(wb, `relatorio_vales_${tipo}.xlsx`);
+            mostrarMensagem("Arquivo Excel exportado com sucesso!", "sucesso");
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem("Erro ao gerar o arquivo Excel.", "erro");
+        }
     }
 
     function mostrarMensagem(texto, tipo) {
