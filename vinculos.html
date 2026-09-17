@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -215,7 +214,10 @@
             color: #374151;
         }
 
-        input,
+        /* ============================================
+           ESTILO PADRÃO DOS INPUTS (mantido da original)
+        ============================================ */
+        input:not([type="date"]),
         select {
             width: 100%;
             height: 43px;
@@ -230,7 +232,33 @@
             transition: 0.15s ease;
         }
 
-        input:focus,
+        /* ============================================
+           ESTILO DOS CAMPOS DE DATA (estilo relatórios)
+           - Altura 42px
+           - Border-radius 6px
+           - Foco roxo com box-shadow
+        ============================================ */
+        input[type="date"] {
+            width: 100%;
+            height: 42px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0 12px;
+            background: #ffffff;
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: 0.15s ease;
+            cursor: pointer;
+        }
+
+        input[type="date"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(91, 42, 134, 0.10);
+        }
+
+        input:not([type="date"]):focus,
         select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(91, 42, 134, 0.10);
@@ -733,10 +761,11 @@
                             Data de Admissão
                         </label>
 
+                        <!-- 👇 CAMPO ATUALIZADO: type="date" com estilo dos relatórios -->
                         <input
-                            type="text"
+                            type="date"
                             id="dataAdmissao1"
-                            placeholder="Selecione a data">
+                            lang="pt-BR">
 
                     </div>
 
@@ -1050,10 +1079,11 @@
                                     Data de Admissão
                                 </label>
 
+                                <!-- 👇 CAMPO ATUALIZADO: type="date" com estilo dos relatórios -->
                                 <input
-                                    type="text"
+                                    type="date"
                                     id="dataAdmissao2"
-                                    placeholder="Selecione a data">
+                                    lang="pt-BR">
 
                             </div>
 
@@ -1369,6 +1399,40 @@
 
 
         /* ==========================================
+           FUNÇÕES DE CONVERSÃO DE DATA
+           (entre DD/MM/AAAA e YYYY-MM-DD)
+        ========================================== */
+
+        // Converte "DD/MM/AAAA" ou "YYYY-MM-DD" → "YYYY-MM-DD" (formato do input date)
+        function dataParaInput(valor) {
+            if (!valor) return "";
+
+            // Já está no formato ISO (YYYY-MM-DD)?
+            if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+                return valor;
+            }
+
+            // Está no formato brasileiro DD/MM/AAAA?
+            const matchBR = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (matchBR) {
+                return `${matchBR[3]}-${matchBR[2]}-${matchBR[1]}`;
+            }
+
+            return valor;
+        }
+
+        // Converte "YYYY-MM-DD" → "DD/MM/AAAA" (para exibir ao usuário se necessário)
+        function dataParaBR(valor) {
+            if (!valor) return "";
+            const matchISO = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (matchISO) {
+                return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
+            }
+            return valor;
+        }
+
+
+        /* ==========================================
            CPF
         ========================================== */
 
@@ -1493,10 +1557,6 @@
 
 
                 try {
-
-                    /*
-                     * UMA CONSULTA FILTRADA PELO CPF.
-                     */
 
                     const consulta =
                         query(
@@ -1625,10 +1685,11 @@
                 m1.cargo || "";
 
 
+            // 👇 DATA CONVERTIDA PARA O FORMATO DO INPUT (YYYY-MM-DD)
             document.getElementById(
                 "dataAdmissao1"
             ).value =
-                m1.dataAdmissao || "";
+                dataParaInput(m1.dataAdmissao);
 
 
             const e11 =
@@ -1731,10 +1792,11 @@
                     m2.cargo || "";
 
 
+                // 👇 DATA CONVERTIDA PARA O FORMATO DO INPUT (YYYY-MM-DD)
                 document.getElementById(
                     "dataAdmissao2"
                 ).value =
-                    m2.dataAdmissao || "";
+                    dataParaInput(m2.dataAdmissao);
 
 
                 const e21 =
@@ -1985,6 +2047,7 @@
 
                     /*
                      * MONTA MATRÍCULA 1
+                     * (data salva no formato ISO YYYY-MM-DD)
                      */
 
                     const matricula1 = {
@@ -2026,11 +2089,6 @@
                     };
 
 
-                    /*
-                     * SÓ ADICIONA ESCOLA 2
-                     * SE ESTIVER MARCADA.
-                     */
-
                     if (
                         document.getElementById(
                             "possuiEscola2_1"
@@ -2058,10 +2116,6 @@
 
                     }
 
-
-                    /*
-                     * OBJETO PRINCIPAL DE ATUALIZAÇÃO
-                     */
 
                     const dadosAtualizar = {
 
@@ -2154,32 +2208,11 @@
 
                     } else {
 
-                        /*
-                         * DELETE FICA SOMENTE
-                         * NO CAMPO DIRETO.
-                         */
-
                         dadosAtualizar.matricula2 =
                             deleteField();
 
                     }
 
-
-                    console.log(
-                        "ID DO SERVIDOR:",
-                        servidorEncontradoId
-                    );
-
-
-                    console.log(
-                        "DADOS QUE SERÃO SALVOS:",
-                        dadosAtualizar
-                    );
-
-
-                    /*
-                     * ATUALIZA O MESMO DOCUMENTO.
-                     */
 
                     await updateDoc(
 
@@ -2222,8 +2255,8 @@
 
                     btn.innerHTML = `
                         <span class="material-symbols-outlined">
-                            save
-                        </span>
+                        save
+                    </span>
                         Salvar alterações
                     `;
 
@@ -2486,6 +2519,7 @@
 
         /* ==========================================
            CORES
+           (agora inclui input[type="date"])
         ========================================== */
 
         function atualizarCoresCampos() {
@@ -2562,4 +2596,3 @@
 </body>
 
 </html>
-```
