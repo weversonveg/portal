@@ -770,10 +770,6 @@
         let servidorEncontradoId = null;
         let servidorTemMatricula2 = false;
 
-        /* ==========================================
-           FUNÇÕES DE CONVERSÃO DE DATA
-        ========================================== */
-
         function dataParaInput(valor) {
             if (!valor) return "";
             if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) return valor;
@@ -891,7 +887,6 @@
                 document.getElementById("boxEscola2_1").style.display = "none";
             }
 
-            /* MATRÍCULA 2 */
             const m2 = dados.matricula2;
             const checkboxSegundoVinculo = document.getElementById("possuiSegundoVinculo");
             const hint = document.getElementById("hintSegundoVinculo");
@@ -944,14 +939,11 @@
 
         /* ==========================================
            EVENTOS DE CHECKBOX
-           (não limpa mais os valores ao desmarcar)
         ========================================== */
 
         document.getElementById("possuiEscola2_1").addEventListener("change", function () {
             const box = document.getElementById("boxEscola2_1");
             box.style.display = this.checked ? "block" : "none";
-            // 👇 NÃO limpa mais os campos quando desmarca
-            // Os valores permanecem preenchidos se o usuário remarcar
         });
 
         document.getElementById("possuiSegundoVinculo").addEventListener("change", function () {
@@ -962,12 +954,11 @@
         document.getElementById("possuiEscola2_2").addEventListener("change", function () {
             const box = document.getElementById("boxEscola2_2");
             box.style.display = this.checked ? "block" : "none";
-            // 👇 NÃO limpa mais os campos quando desmarca
         });
 
         /* ==========================================
            SALVAR VÍNCULOS
-           (LÓGICA DE SEGURANÇA FINAL)
+           (USANDO DOT NOTATION - CORRIGE O ERRO)
         ========================================== */
 
         window.salvarVinculos = async function () {
@@ -981,80 +972,75 @@
             btn.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Salvando...';
 
             try {
+                const dadosAtualizar = {};
+
                 /*
                  * MATRÍCULA 1
+                 * Campos readonly sempre preservados
                  */
-                const matricula1 = {
-                    numeroMatricula: document.getElementById("matricula1").value.trim(),
-                    cargo: document.getElementById("cargo1").value.trim(),
-                    dataAdmissao: document.getElementById("dataAdmissao1").value.trim(),
-                    escola1: {
-                        nomeEscola: document.getElementById("escola1_1").value,
-                        empresa: document.getElementById("empresa1_1").value,
-                        qtdPassagensDiarias: obterPasses("passes1_1")
-                    }
+                dadosAtualizar["matricula1.numeroMatricula"] = document.getElementById("matricula1").value.trim();
+                dadosAtualizar["matricula1.cargo"] = document.getElementById("cargo1").value.trim();
+                dadosAtualizar["matricula1.dataAdmissao"] = document.getElementById("dataAdmissao1").value.trim();
+
+                dadosAtualizar["matricula1.escola1"] = {
+                    nomeEscola: document.getElementById("escola1_1").value,
+                    empresa: document.getElementById("empresa1_1").value,
+                    qtdPassagensDiarias: obterPasses("passes1_1")
                 };
 
                 /*
                  * ESCOLA 2 DA MATRÍCULA 1
-                 * - Se checkbox desmarcada: NÃO envia (preserva banco)
-                 * - Se checkbox marcada com escola preenchida: salva
-                 * - Se checkbox marcada com escola vazia: remove (deleteField)
+                 * - Checkbox desmarcada → não envia (preserva banco)
+                 * - Checkbox marcada + escola preenchida → salva
+                 * - Checkbox marcada + escola vazia → remove com deleteField()
                  */
                 if (document.getElementById("possuiEscola2_1").checked) {
                     const nomeEscola2_1 = document.getElementById("escola2_1").value;
 
                     if (nomeEscola2_1 && nomeEscola2_1.trim() !== "") {
-                        // Usuário preencheu a escola2 → salva
-                        matricula1.escola2 = {
+                        dadosAtualizar["matricula1.escola2"] = {
                             nomeEscola: nomeEscola2_1,
                             empresa: document.getElementById("empresa2_1").value,
                             qtdPassagensDiarias: obterPasses("passes2_1")
                         };
                     } else {
-                        // Usuário deixou escola vazia → remove explicitamente
-                        matricula1.escola2 = deleteField();
+                        dadosAtualizar["matricula1.escola2"] = deleteField();
                     }
                 }
-                // Se checkbox desmarcada → não envia escola2 (preserva o que está no banco)
-
-                const dadosAtualizar = { matricula1: matricula1 };
+                // Se desmarcada → não envia nada (preserva)
 
                 /*
                  * MATRÍCULA 2
+                 * Só atualiza se o servidor já tem matrícula2
                  */
                 if (servidorTemMatricula2) {
-                    const matricula2 = {
-                        numeroMatricula: document.getElementById("matricula2").value.trim(),
-                        cargo: document.getElementById("cargo2").value.trim(),
-                        dataAdmissao: document.getElementById("dataAdmissao2").value.trim(),
-                        escola1: {
-                            nomeEscola: document.getElementById("escola1_2").value,
-                            empresa: document.getElementById("empresa1_2").value,
-                            qtdPassagensDiarias: obterPasses("passes1_2")
-                        }
+                    dadosAtualizar["matricula2.numeroMatricula"] = document.getElementById("matricula2").value.trim();
+                    dadosAtualizar["matricula2.cargo"] = document.getElementById("cargo2").value.trim();
+                    dadosAtualizar["matricula2.dataAdmissao"] = document.getElementById("dataAdmissao2").value.trim();
+
+                    dadosAtualizar["matricula2.escola1"] = {
+                        nomeEscola: document.getElementById("escola1_2").value,
+                        empresa: document.getElementById("empresa1_2").value,
+                        qtdPassagensDiarias: obterPasses("passes1_2")
                     };
 
                     /*
                      * ESCOLA 2 DA MATRÍCULA 2
-                     * Mesma lógica da escola2 da matrícula1
                      */
                     if (document.getElementById("possuiEscola2_2").checked) {
                         const nomeEscola2_2 = document.getElementById("escola2_2").value;
 
                         if (nomeEscola2_2 && nomeEscola2_2.trim() !== "") {
-                            matricula2.escola2 = {
+                            dadosAtualizar["matricula2.escola2"] = {
                                 nomeEscola: nomeEscola2_2,
                                 empresa: document.getElementById("empresa2_2").value,
                                 qtdPassagensDiarias: obterPasses("passes2_2")
                             };
                         } else {
-                            matricula2.escola2 = deleteField();
+                            dadosAtualizar["matricula2.escola2"] = deleteField();
                         }
                     }
-                    // Se checkbox desmarcada → não envia escola2 (preserva banco)
-
-                    dadosAtualizar.matricula2 = matricula2;
+                    // Se desmarcada → não envia nada (preserva)
                 }
 
                 await updateDoc(doc(db, "servidores", servidorEncontradoId), dadosAtualizar);
@@ -1082,7 +1068,6 @@
         window.limparFormulario = function () {
             if (!servidorEncontradoId) return;
 
-            // Limpa apenas campos editáveis
             document.getElementById("escola1_1").value = "";
             document.getElementById("empresa1_1").value = "";
             document.getElementById("passes1_1").value = "";
