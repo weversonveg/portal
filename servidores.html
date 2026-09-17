@@ -10,9 +10,18 @@
 :root {
   --primary: #5b2a86;
   --primary-hover: #47206b;
+  --primary-light: #f1ebf6;
   --green: #2e7d32;
+  --green-hover: #1b5e20;
+  --green-light: #eaf6ec;
+  --green-border: #72b879;
   --red: #c62828;
+  --red-hover: #a51f1f;
   --blue: #0277bd;
+  --blue-hover: #01579b;
+  --orange: #e65100;
+  --orange-light: #fff3e0;
+  --orange-border: #ffb74d;
   --text: #263238;
   --text-secondary: #68737d;
   --border: #d9dee3;
@@ -25,12 +34,15 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 body {
   min-height: 100vh;
   background: var(--background);
   color: var(--text);
 }
+
+/* TOPBAR - PADRÃO DO SISTEMA */
 .topbar {
   width: calc(100% - 64px);
   max-width: 1116px;
@@ -55,12 +67,64 @@ body {
 .system-divider { width: 1px; height: 24px; background: #dfe3e6; margin: 0 2px; }
 .system-module { font-size: 14px; color: var(--text-secondary); flex-grow: 1; }
 
+.status-conexao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f1f3f5;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+.signal-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+.signal-bars .bar {
+  width: 3px;
+  background-color: #cbd5e1;
+  border-radius: 1px;
+  transition: background-color 0.3s ease;
+}
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 9px; }
+.signal-bars .bar-4 { height: 12px; }
+
+.status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
+.status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
+.status-conexao.instavel { color: #b45309; background: #fef3c7; border-color: #fde68a; }
+.status-conexao.instavel .signal-bars .bar-1,
+.status-conexao.instavel .signal-bars .bar-2 { background-color: #d97706; }
+.status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
+.status-conexao.offline .signal-bars .bar {
+  background-color: #ef4444;
+  animation: pulsar-sinal 1.2s infinite ease-in-out;
+}
+@keyframes pulsar-sinal {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
 .main {
   width: calc(100% - 64px);
   max-width: 1116px;
   margin: 0 auto;
   padding: 32px 0;
 }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #7b858e;
+  margin-bottom: 10px;
+}
+.breadcrumb .material-symbols-outlined { font-size: 17px; }
+.breadcrumb a { text-decoration: none; color: inherit; }
+.breadcrumb a:hover { color: var(--primary); }
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -75,15 +139,10 @@ body {
   color: #263238;
   margin-bottom: 4px;
 }
-.page-header p {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-.header-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+.page-header p { font-size: 14px; color: var(--text-secondary); }
+
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
 .btn-novo, .btn-vinculos {
   color: #fff;
   padding: 0 16px;
@@ -102,7 +161,54 @@ body {
 .btn-novo { background: var(--primary); }
 .btn-novo:hover { background: var(--primary-hover); }
 .btn-vinculos { background: var(--blue); }
-.btn-vinculos:hover { background: #01579b; }
+.btn-vinculos:hover { background: var(--blue-hover); }
+
+/* CARDS DE ESTATÍSTICAS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--white);
+  border: 1px solid #e0e4e7;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-icon .material-symbols-outlined { font-size: 22px; color: #fff; }
+.stat-icon.total { background: var(--primary); }
+.stat-icon.ativos { background: var(--green); }
+.stat-icon.dois-vinculos { background: var(--blue); }
+.stat-icon.pendencias { background: var(--orange); }
+
+.stat-info { flex-grow: 1; min-width: 0; }
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 2px;
+}
 
 .card {
   background: var(--white);
@@ -116,40 +222,104 @@ body {
   border-bottom: 1px solid #e5e8eb;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 .search-input {
   flex-grow: 1;
+  min-width: 200px;
   height: 38px;
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
   outline: none;
+  transition: all 0.15s;
 }
 .search-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(91,42,134,0.1);
 }
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
+
+.filter-select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+  min-width: 180px;
+  transition: all 0.15s;
 }
+.filter-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(91,42,134,0.1);
+}
+
+.counter-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  background: #f1f3f5;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.table-responsive { width: 100%; overflow-x: auto; }
 table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
 }
-th, td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e8eb;
-}
+th, td { padding: 12px 16px; border-bottom: 1px solid #e5e8eb; }
 th {
   background: #fafbfc;
   font-weight: 600;
   color: #455a64;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 tr:hover td { background: #f8fafc; }
+
+.nome-cell { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.nome-info strong { display: block; color: var(--text); font-weight: 600; }
+.nome-info small { color: var(--text-secondary); font-size: 11px; }
+
+.badges-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge .material-symbols-outlined { font-size: 13px; }
+.badge.vinculo2 { background: #e3f2fd; color: #0277bd; }
+.badge.pendencia { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange-border); }
+.badge.completo { background: var(--green-light); color: var(--green); }
+
 .acoes { display: flex; gap: 8px; }
 .btn-acao {
   width: 32px;
@@ -166,27 +336,159 @@ tr:hover td { background: #f8fafc; }
   transition: all 0.15s;
 }
 .btn-acao:hover { background: #f1f3f5; }
-.btn-acao.editar:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-.btn-acao.vinculos:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-}
-.btn-acao.excluir:hover {
-  border-color: var(--red);
-  color: var(--red);
-}
+.btn-acao.editar:hover { border-color: var(--primary); color: var(--primary); background: #f1ebf6; }
+.btn-acao.vinculos:hover { border-color: var(--blue); color: var(--blue); background: #e3f2fd; }
+.btn-acao.excluir:hover { border-color: var(--red); color: var(--red); background: #fff0f0; }
+
 .empty-state {
-  padding: 40px;
+  padding: 60px 40px;
   text-align: center;
   color: var(--text-secondary);
   font-size: 14px;
 }
-@media (max-width: 700px) {
+.empty-state .material-symbols-outlined {
+  font-size: 48px;
+  color: #cbd5e1;
+  display: block;
+  margin: 0 auto 12px;
+}
+.empty-state strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s;
+}
+.modal-overlay.ativo { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--white);
+  border-radius: 10px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  overflow: hidden;
+  animation: slideUp 0.25s;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e8eb;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff0f0;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-icon .material-symbols-outlined { font-size: 22px; }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.modal-body { padding: 20px 24px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.modal-body strong { color: var(--text); }
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid #e5e8eb;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  background: #fafbfc;
+}
+.modal-btn {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.modal-btn.cancelar { background: #eef0f2; color: #454b52; border: 1px solid #e2e5e8; }
+.modal-btn.cancelar:hover { background: #e2e5e8; }
+.modal-btn.confirmar { background: var(--red); color: #fff; border: 1px solid var(--red); }
+.modal-btn.confirmar:hover { background: var(--red-hover); }
+.modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 400px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: slideIn 0.3s;
+  border-left: 4px solid var(--green);
+}
+.toast.erro { border-left-color: var(--red); }
+.toast .material-symbols-outlined { font-size: 20px; }
+.toast.sucesso .material-symbols-outlined { color: var(--green); }
+.toast.erro .material-symbols-outlined { color: var(--red); }
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 800px) {
   .topbar, .main { width: calc(100% - 24px); }
+  .system-divider, .system-module { display: none; }
   .page-header { flex-direction: column; align-items: flex-start; }
+  .header-actions { width: 100%; }
+  .btn-novo, .btn-vinculos { flex: 1; justify-content: center; }
+  .card-toolbar { flex-direction: column; align-items: stretch; }
+  .filter-select { width: 100%; }
+}
+@media (max-width: 500px) {
+  .page-header h1 { font-size: 20px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px; gap: 10px; }
+  .stat-icon { width: 38px; height: 38px; }
+  .stat-value { font-size: 18px; }
 }
 </style>
 </head>
@@ -198,113 +500,422 @@ tr:hover td { background: #f8fafc; }
     <span class="system-name">Vale Transporte</span>
     <div class="system-divider"></div>
     <span class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</span>
+
+    <div id="statusConexao" class="status-conexao online" title="Conexão estável">
+      <div class="signal-bars">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+        <span class="bar bar-4"></span>
+      </div>
+      <span id="statusTexto">Online</span>
+    </div>
   </div>
 </header>
 
 <main class="main">
+
+  <div class="breadcrumb">
+    <span class="material-symbols-outlined">home</span>
+    <a href="index.html">Início</a>
+    <span>/</span>
+    <span>Servidores</span>
+  </div>
+
   <div class="page-header">
     <div>
       <h1>Servidores Cadastrados</h1>
-      <p>Gerencie os servidores e acesse o cadastro para edição.</p>
+      <p>Gerencie os servidores, edite cadastros e acesse a gestão de vínculos.</p>
     </div>
     <div class="header-actions">
-      <a href="vinculos.html" class="btn-vinculos">
+      <a href="vinculos.html" class="btn-vinculos" title="Gerenciar vínculos e escolas">
         <span class="material-symbols-outlined">swap_horiz</span>
         Gerenciar Vínculos
       </a>
-      <a href="servidores.html" class="btn-novo">
+      <a href="cadastro.html" class="btn-novo">
         <span class="material-symbols-outlined">person_add</span>
         Novo Servidor
       </a>
     </div>
   </div>
 
+  <!-- CARDS DE ESTATÍSTICAS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon total">
+        <span class="material-symbols-outlined">group</span>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Total Cadastrados</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon ativos">
+        <span class="material-symbols-outlined">verified_user</span>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Cadastros Completos</div>
+        <div class="stat-value" id="statCompletos">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon dois-vinculos">
+        <span class="material-symbols-outlined">work_history</span>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Com 2º Vínculo</div>
+        <div class="stat-value" id="statDoisVinculos">0</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon pendencias">
+        <span class="material-symbols-outlined">warning</span>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Com Pendências</div>
+        <div class="stat-value" id="statPendencias">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
   <div class="card">
     <div class="card-toolbar">
-      <input type="text" id="filtroBusca" class="search-input" placeholder="Pesquisar por nome ou CPF..." oninput="filtrarServidores()">
+      <!-- 👇 CAMPO DE BUSCA COM MÁSCARA CPF -->
+      <input type="text" id="filtroBusca" class="search-input" placeholder="Pesquisar por nome ou CPF (000.000.000-00)..." oninput="aplicarFiltros()" maxlength="14">
+      <select id="filtroEscola" class="filter-select" onchange="aplicarFiltros()">
+        <option value="">Todas as escolas</option>
+        <option value="CEAE">CEAE</option>
+        <option value="CETEPE">CETEPE</option>
+        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+      </select>
+      <select id="filtroStatus" class="filter-select" onchange="aplicarFiltros()">
+        <option value="">Todos os status</option>
+        <option value="completo">Completos</option>
+        <option value="pendencia">Com pendências</option>
+        <option value="dois_vinculos">Com 2º vínculo</option>
+      </select>
+      <span class="counter-badge" id="contadorResultados">0 resultados</span>
     </div>
+
     <div class="table-responsive">
       <table>
         <thead>
           <tr>
-            <th>Nome Completo</th>
+            <th>Servidor</th>
             <th>CPF</th>
-            <th>Matrícula 1</th>
+            <th>Matrícula</th>
+            <th>Escola</th>
             <th>Telefone</th>
-            <th>Ações</th>
+            <th>Status</th>
+            <th style="text-align:right;">Ações</th>
           </tr>
         </thead>
         <tbody id="tabelaServidores">
           <tr>
-            <td colspan="5" class="empty-state">Carregando servidores...</td>
+            <td colspan="7" class="empty-state">
+              <span class="spinner"></span>
+              <div style="margin-top:12px;">Carregando servidores...</div>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
 </main>
+
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div class="modal-overlay" id="modalExcluir">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">
+        <span class="material-symbols-outlined">delete_forever</span>
+      </div>
+      <div class="modal-title">Confirmar exclusão</div>
+    </div>
+    <div class="modal-body">
+      Tem certeza que deseja excluir o servidor <strong id="nomeServidorExcluir"></strong>?
+      <br><br>
+      <span style="color: var(--red); font-weight: 600;">⚠ Esta ação não pode ser desfeita.</span>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="modal-btn cancelar" onclick="fecharModal()">Cancelar</button>
+      <button type="button" class="modal-btn confirmar" id="btnConfirmarExcluir" onclick="confirmarExclusao()">
+        <span class="material-symbols-outlined">delete</span>
+        Excluir
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
 import { db } from "./firebase.js";
 import { collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let listaServidores = [];
+let servidorParaExcluir = null;
 
-console.log("Iniciando página de servidores...");
+/* ==========================================
+   STATUS DA CONEXÃO
+========================================== */
+function atualizarStatusConexao() {
+  const statusDiv = document.getElementById("statusConexao");
+  const statusTexto = document.getElementById("statusTexto");
 
+  if (!navigator.onLine) {
+    statusDiv.className = "status-conexao offline";
+    statusTexto.textContent = "Sem Conexão";
+    statusDiv.title = "Computador desconectado da internet";
+    return;
+  }
+
+  const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conexao) {
+    if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
+      statusDiv.className = "status-conexao instavel";
+      statusTexto.textContent = "Instável";
+      statusDiv.title = "Rede móvel ou conexão lenta detectada";
+    } else {
+      statusDiv.className = "status-conexao online";
+      statusTexto.textContent = "Online";
+      statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
+    }
+  } else {
+    statusDiv.className = "status-conexao online";
+    statusTexto.textContent = "Online";
+    statusDiv.title = "Sistema Conectado";
+  }
+}
+
+window.addEventListener('online', atualizarStatusConexao);
+window.addEventListener('offline', atualizarStatusConexao);
+
+/* ==========================================
+   MÁSCARA CPF NO CAMPO DE BUSCA
+========================================== */
+const filtroBusca = document.getElementById("filtroBusca");
+
+filtroBusca.addEventListener("input", function () {
+  let valor = this.value.replace(/\D/g, "");
+  
+  // Se não for só números ou for vazio, permite texto livre (para busca por nome)
+  const temLetras = /[a-zA-Z]/.test(this.value);
+  if (temLetras) {
+    // Remove a máscara se começar a digitar letras (busca por nome)
+    this.value = this.value.replace(/\D/g, '').substring(0, 11) || this.value;
+    return;
+  }
+  
+  if (valor.length > 11) valor = valor.substring(0, 11);
+
+  if (valor.length <= 3) {
+    this.value = valor;
+  } else if (valor.length <= 6) {
+    this.value = valor.substring(0, 3) + "." + valor.substring(3);
+  } else if (valor.length <= 9) {
+    this.value = valor.substring(0, 3) + "." + valor.substring(3, 6) + "." + valor.substring(6);
+  } else {
+    this.value = valor.substring(0, 3) + "." + valor.substring(3, 6) + "." + valor.substring(6, 9) + "-" + valor.substring(9, 11);
+  }
+});
+
+/* ==========================================
+   INICIALIZAÇÃO
+========================================== */
 document.addEventListener("DOMContentLoaded", async function() {
-  console.log("DOM carregado, buscando servidores...");
+  atualizarStatusConexao();
   await carregarServidores();
 });
 
+/* ==========================================
+   CARREGAR SERVIDORES
+========================================== */
 async function carregarServidores() {
   try {
-    console.log("Buscando servidores no Firebase...");
     const querySnapshot = await getDocs(collection(db, "servidores"));
     listaServidores = [];
     querySnapshot.forEach((docSnap) => {
       listaServidores.push({ id: docSnap.id, ...docSnap.data() });
     });
-    console.log("Servidores carregados:", listaServidores.length);
-    renderizarTabela(listaServidores);
+    atualizarEstatisticas();
+    aplicarFiltros();
   } catch (erro) {
     console.error("Erro ao carregar servidores:", erro);
     document.getElementById("tabelaServidores").innerHTML = `
       <tr>
-        <td colspan="5" class="empty-state" style="color: var(--red);">
-          Erro ao carregar dados do Firebase.<br>
-          <small>${erro.message}</small>
+        <td colspan="7" class="empty-state">
+          <span class="material-symbols-outlined">error</span>
+          <strong>Erro ao carregar dados</strong>
+          <div>Verifique sua conexão com o Firebase.</div>
         </td>
       </tr>`;
+    mostrarToast("Erro ao carregar servidores.", "erro");
   }
 }
 
+/* ==========================================
+   ESTATÍSTICAS
+========================================== */
+function atualizarEstatisticas() {
+  const total = listaServidores.length;
+  let completos = 0;
+  let doisVinculos = 0;
+  let pendencias = 0;
+
+  listaServidores.forEach(s => {
+    const status = obterStatusServidor(s);
+    if (status.completo) completos++;
+    if (status.pendencia) pendencias++;
+    if (status.doisVinculos) doisVinculos++;
+  });
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statCompletos").textContent = completos;
+  document.getElementById("statDoisVinculos").textContent = doisVinculos;
+  document.getElementById("statPendencias").textContent = pendencias;
+}
+
+function obterStatusServidor(s) {
+  const m1 = s.matricula1 || {};
+  const e1 = m1.escola1 || {};
+
+  const temEscola = e1.nomeEscola && e1.nomeEscola.trim() !== "";
+  const temEmpresa = e1.empresa && e1.empresa.trim() !== "";
+  const temPasses = e1.qtdPassagensDiarias > 0;
+  const completo = temEscola && temEmpresa && temPasses;
+  const pendencia = !completo;
+  const doisVinculos = !!(s.matricula2 && s.matricula2.numeroMatricula);
+
+  return { completo, pendencia, doisVinculos };
+}
+
+/* ==========================================
+   FILTROS
+========================================== */
+window.aplicarFiltros = function() {
+  const termo = document.getElementById("filtroBusca").value.toLowerCase().trim();
+  const escolaFiltro = document.getElementById("filtroEscola").value;
+  const statusFiltro = document.getElementById("filtroStatus").value;
+
+  const filtrados = listaServidores.filter(s => {
+    // Busca textual (compara CPF limpo com termo limpo)
+    if (termo) {
+      const nome = (s.nome || "").toLowerCase();
+      const cpf = (s.cpf || "").replace(/\D/g, "");
+      const termoLimpo = termo.replace(/\D/g, "");
+      const mat1 = (s.matricula1 && s.matricula1.numeroMatricula || "").toLowerCase();
+      const mat2 = (s.matricula2 && s.matricula2.numeroMatricula || "").toLowerCase();
+      
+      // Se o termo for só números, busca no CPF
+      if (/^\d+$/.test(termoLimpo)) {
+        if (!cpf.includes(termoLimpo)) return false;
+      } else {
+        const encontrou = nome.includes(termo) || mat1.includes(termo) || mat2.includes(termo);
+        if (!encontrou) return false;
+      }
+    }
+
+    // Filtro por escola
+    if (escolaFiltro) {
+      const m1 = s.matricula1 || {};
+      const m2 = s.matricula2 || {};
+      const e1_1 = (m1.escola1 && m1.escola1.nomeEscola) || "";
+      const e1_2 = (m1.escola2 && m1.escola2.nomeEscola) || "";
+      const e2_1 = (m2.escola1 && m2.escola1.nomeEscola) || "";
+      const e2_2 = (m2.escola2 && m2.escola2.nomeEscola) || "";
+      const temEscola = [e1_1, e1_2, e2_1, e2_2].includes(escolaFiltro);
+      if (!temEscola) return false;
+    }
+
+    // Filtro por status
+    if (statusFiltro) {
+      const status = obterStatusServidor(s);
+      if (statusFiltro === "completo" && !status.completo) return false;
+      if (statusFiltro === "pendencia" && !status.pendencia) return false;
+      if (statusFiltro === "dois_vinculos" && !status.doisVinculos) return false;
+    }
+
+    return true;
+  });
+
+  renderizarTabela(filtrados);
+  document.getElementById("contadorResultados").textContent = `${filtrados.length} resultado${filtrados.length !== 1 ? 's' : ''}`;
+}
+
+/* ==========================================
+   RENDERIZAR TABELA
+========================================== */
 function renderizarTabela(dados) {
   const tbody = document.getElementById("tabelaServidores");
-  
+
   if (dados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhum servidor cadastrado.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <span class="material-symbols-outlined">search_off</span>
+          <strong>Nenhum servidor encontrado</strong>
+          <div>Tente alterar os filtros ou cadastre um novo servidor.</div>
+        </td>
+      </tr>`;
     return;
   }
 
   let html = "";
   dados.forEach(s => {
-    const mat1 = s.matricula1 ? s.matricula1.numeroMatricula : "-";
+    const m1 = s.matricula1 || {};
+    const m2 = s.matricula2 || {};
+    const mat1 = m1.numeroMatricula || "-";
+    const escola1 = (m1.escola1 && m1.escola1.nomeEscola) || "-";
+    const cargo1 = m1.cargo || "";
+    const status = obterStatusServidor(s);
+    const iniciais = (s.nome || "?").split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
+
+    let badgesHtml = "";
+    if (status.doisVinculos) {
+      badgesHtml += `<span class="badge vinculo2"><span class="material-symbols-outlined">work_history</span> 2 vínculos</span>`;
+    }
+    if (status.completo) {
+      badgesHtml += `<span class="badge completo"><span class="material-symbols-outlined">check_circle</span> Completo</span>`;
+    } else {
+      badgesHtml += `<span class="badge pendencia"><span class="material-symbols-outlined">warning</span> Pendência</span>`;
+    }
+
     html += `
       <tr>
-        <td><strong>${s.nome || ""}</strong></td>
-        <td>${s.cpf || ""}</td>
-        <td>${mat1}</td>
-        <td>${s.telefone || ""}</td>
         <td>
-          <div class="acoes">
+          <div class="nome-cell">
+            <div class="avatar">${iniciais}</div>
+            <div class="nome-info">
+              <strong>${s.nome || "-"}</strong>
+              <small>${cargo1}</small>
+            </div>
+          </div>
+        </td>
+        <td>${s.cpf || "-"}</td>
+        <td>${mat1}${m2.numeroMatricula ? '<br><small style="color:#68737d;">e ' + m2.numeroMatricula + '</small>' : ''}</td>
+        <td>${escola1}</td>
+        <td>${s.telefone || "-"}</td>
+        <td><div class="badges-cell">${badgesHtml}</div></td>
+        <td>
+          <div class="acoes" style="justify-content:flex-end;">
             <a href="vinculos.html?cpf=${encodeURIComponent(s.cpf || '')}" class="btn-acao vinculos" title="Gerenciar Vínculos">
               <span class="material-symbols-outlined" style="font-size: 18px;">swap_horiz</span>
             </a>
-            <a href="servidores.html?id=${s.id}" class="btn-acao editar" title="Editar Servidor">
+            <!-- 👇 CORRIGIDO: agora aponta para cadastro.html -->
+            <a href="cadastro.html?id=${s.id}" class="btn-acao editar" title="Editar Cadastro">
               <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
             </a>
-            <button type="button" class="btn-acao excluir" title="Excluir Servidor" onclick="excluirServidor('${s.id}')">
+            <button type="button" class="btn-acao excluir" title="Excluir Servidor" onclick="abrirModalExcluir('${s.id}', '${(s.nome || '').replace(/'/g, "\\'")}')">
               <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
             </button>
           </div>
@@ -312,34 +923,73 @@ function renderizarTabela(dados) {
       </tr>
     `;
   });
+
   tbody.innerHTML = html;
 }
 
-window.filtrarServidores = function() {
-  const termo = document.getElementById("filtroBusca").value.toLowerCase();
-  const filtrados = listaServidores.filter(s => {
-    const nome = (s.nome || "").toLowerCase();
-    const cpf = (s.cpf || "").toLowerCase();
-    return nome.includes(termo) || cpf.includes(termo);
-  });
-  renderizarTabela(filtrados);
+/* ==========================================
+   MODAL DE EXCLUSÃO
+========================================== */
+window.abrirModalExcluir = function(id, nome) {
+  servidorParaExcluir = id;
+  document.getElementById("nomeServidorExcluir").textContent = nome;
+  document.getElementById("modalExcluir").classList.add("ativo");
 }
 
-window.excluirServidor = async function(id) {
-  if (confirm("Tem certeza que deseja excluir este servidor?")) {
-    try {
-      await deleteDoc(doc(db, "servidores", id));
-      listaServidores = listaServidores.filter(s => s.id !== id);
-      renderizarTabela(listaServidores);
-      alert("Servidor excluído com sucesso!");
-    } catch (erro) {
-      console.error("Erro ao excluir servidor:", erro);
-      alert("Erro ao excluir o registro.");
-    }
+window.fecharModal = function() {
+  document.getElementById("modalExcluir").classList.remove("ativo");
+  servidorParaExcluir = null;
+}
+
+window.confirmarExclusao = async function() {
+  if (!servidorParaExcluir) return;
+
+  const btn = document.getElementById("btnConfirmarExcluir");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;"></span> Excluindo...';
+
+  try {
+    await deleteDoc(doc(db, "servidores", servidorParaExcluir));
+    listaServidores = listaServidores.filter(s => s.id !== servidorParaExcluir);
+    atualizarEstatisticas();
+    aplicarFiltros();
+    fecharModal();
+    mostrarToast("Servidor excluído com sucesso!", "sucesso");
+  } catch (erro) {
+    console.error("Erro ao excluir servidor:", erro);
+    mostrarToast("Erro ao excluir o registro.", "erro");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">delete</span> Excluir';
   }
 }
 
-console.log("Script carregado com sucesso!");
+document.getElementById("modalExcluir").addEventListener("click", function(e) {
+  if (e.target === this) fecharModal();
+});
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape" && document.getElementById("modalExcluir").classList.contains("ativo")) {
+    fecharModal();
+  }
+});
+
+/* ==========================================
+   TOAST
+========================================== */
+function mostrarToast(texto, tipo = "sucesso") {
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = `toast ${tipo}`;
+  const icone = tipo === "sucesso" ? "check_circle" : "error";
+  toast.innerHTML = `<span class="material-symbols-outlined">${icone}</span><span>${texto}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = "slideIn 0.3s reverse";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
 </script>
 
 </body>
