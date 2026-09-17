@@ -769,6 +769,7 @@
 
         let servidorEncontradoId = null;
         let servidorTemMatricula2 = false;
+        let timeoutMensagem = null; // 👈 controle do timeout da mensagem
 
         function dataParaInput(valor) {
             if (!valor) return "";
@@ -958,7 +959,6 @@
 
         /* ==========================================
            SALVAR VÍNCULOS
-           (USANDO DOT NOTATION - CORRIGE O ERRO)
         ========================================== */
 
         window.salvarVinculos = async function () {
@@ -974,10 +974,6 @@
             try {
                 const dadosAtualizar = {};
 
-                /*
-                 * MATRÍCULA 1
-                 * Campos readonly sempre preservados
-                 */
                 dadosAtualizar["matricula1.numeroMatricula"] = document.getElementById("matricula1").value.trim();
                 dadosAtualizar["matricula1.cargo"] = document.getElementById("cargo1").value.trim();
                 dadosAtualizar["matricula1.dataAdmissao"] = document.getElementById("dataAdmissao1").value.trim();
@@ -988,12 +984,6 @@
                     qtdPassagensDiarias: obterPasses("passes1_1")
                 };
 
-                /*
-                 * ESCOLA 2 DA MATRÍCULA 1
-                 * - Checkbox desmarcada → não envia (preserva banco)
-                 * - Checkbox marcada + escola preenchida → salva
-                 * - Checkbox marcada + escola vazia → remove com deleteField()
-                 */
                 if (document.getElementById("possuiEscola2_1").checked) {
                     const nomeEscola2_1 = document.getElementById("escola2_1").value;
 
@@ -1007,12 +997,7 @@
                         dadosAtualizar["matricula1.escola2"] = deleteField();
                     }
                 }
-                // Se desmarcada → não envia nada (preserva)
 
-                /*
-                 * MATRÍCULA 2
-                 * Só atualiza se o servidor já tem matrícula2
-                 */
                 if (servidorTemMatricula2) {
                     dadosAtualizar["matricula2.numeroMatricula"] = document.getElementById("matricula2").value.trim();
                     dadosAtualizar["matricula2.cargo"] = document.getElementById("cargo2").value.trim();
@@ -1024,9 +1009,6 @@
                         qtdPassagensDiarias: obterPasses("passes1_2")
                     };
 
-                    /*
-                     * ESCOLA 2 DA MATRÍCULA 2
-                     */
                     if (document.getElementById("possuiEscola2_2").checked) {
                         const nomeEscola2_2 = document.getElementById("escola2_2").value;
 
@@ -1040,7 +1022,6 @@
                             dadosAtualizar["matricula2.escola2"] = deleteField();
                         }
                     }
-                    // Se desmarcada → não envia nada (preserva)
                 }
 
                 await updateDoc(doc(db, "servidores", servidorEncontradoId), dadosAtualizar);
@@ -1107,16 +1088,47 @@
             elemento.className = "mensagem " + tipo;
         }
 
+        /* ==========================================
+           MENSAGEM DE SALVAR
+           - Some sozinha após 5s se for sucesso
+           - Pode ser ocultada manualmente
+        ========================================== */
+
         function mostrarMensagemSalvar(texto, tipo) {
             const elemento = document.getElementById("mensagemSalvar");
             elemento.textContent = texto;
             elemento.className = "mensagem " + tipo;
+
+            // 👇 Limpa timeout anterior para não conflitar
+            if (timeoutMensagem) {
+                clearTimeout(timeoutMensagem);
+                timeoutMensagem = null;
+            }
+
+            // 👇 Mensagem de sucesso some sozinha após 5 segundos
+            if (tipo === "sucesso") {
+                timeoutMensagem = setTimeout(function () {
+                    ocultarMensagemSalvar();
+                }, 5000);
+            }
+        }
+
+        function ocultarMensagemSalvar() {
+            const elemento = document.getElementById("mensagemSalvar");
+            elemento.className = "mensagem";
+            elemento.textContent = "";
+
+            if (timeoutMensagem) {
+                clearTimeout(timeoutMensagem);
+                timeoutMensagem = null;
+            }
         }
 
         function ocultarAreaVinculos() {
             document.getElementById("areaVinculos").style.display = "none";
             servidorEncontradoId = null;
             servidorTemMatricula2 = false;
+            ocultarMensagemSalvar(); // 👈 limpa mensagem ao ocultar área
         }
 
         function atualizarCoresCampos() {
@@ -1133,15 +1145,30 @@
             });
         }
 
-        document.addEventListener("input", function (event) {
-            if (event.target.matches("#areaVinculos input, #areaVinculos select")) {
-                atualizarCoresCampos();
+        /* ==========================================
+           ESCONDER MENSAGEM AO COMEÇAR NOVA EDIÇÃO
+        ========================================== */
+
+        // 👇 Quando o usuário FOCAR em qualquer campo editável, a mensagem some
+        document.addEventListener("focusin", function (event) {
+            if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
+                ocultarMensagemSalvar();
             }
         });
 
-        document.addEventListener("change", function (event) {
-            if (event.target.matches("#areaVinculos input, #areaVinculos select")) {
+        // 👇 Quando o usuário DIGITAR em qualquer campo, a mensagem também some
+        document.addEventListener("input", function (event) {
+            if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
                 atualizarCoresCampos();
+                ocultarMensagemSalvar();
+            }
+        });
+
+        // 👇 Quando o usuário mudar um select ou checkbox, a mensagem também some
+        document.addEventListener("change", function (event) {
+            if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
+                atualizarCoresCampos();
+                ocultarMensagemSalvar();
             }
         });
 
