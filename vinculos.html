@@ -27,112 +27,191 @@
             --white: #ffffff;
             --border: #d9dee5;
             --text: #263238;
+            --text-secondary: #68737d;
             --muted: #6b7280;
             --danger: #c62828;
             --danger-light: #ffebee;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        * { box-sizing: border-box; }
-
-        html, body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
             min-height: 100%;
-            font-family: "Inter", sans-serif;
             background: var(--background);
             color: var(--text);
         }
 
         body { min-height: 100vh; }
 
+        /* ============================================
+           CABEÇALHO - MESMO ESTILO DA PÁGINA NOVO SERVIDOR
+        ============================================ */
         .topbar {
-            width: 100%;
+            width: calc(100% - 64px);
+            max-width: 1116px;
+            height: 68px;
+            margin: 16px auto 0;
             background: var(--white);
-            border-bottom: 1px solid #e3e7eb;
-            padding: 12px 22px;
+            border: 1px solid #e0e4e7;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 0 24px;
         }
 
-        .topbar-left {
+        .topbar-content {
+            width: 100%;
             display: flex;
             align-items: center;
             gap: 14px;
-            min-width: 0;
         }
 
         .logo {
-            width: 62px;
-            height: 62px;
+            width: 38px;
+            height: 38px;
             object-fit: contain;
             flex-shrink: 0;
         }
 
-        .system-info { min-width: 0; }
-
-        .system-title {
-            font-size: 18px;
+        .system-name {
+            font-size: 17px;
             font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 3px;
+            color: #3d2450;
+        }
+
+        .system-divider {
+            width: 1px;
+            height: 24px;
+            background: #dfe3e6;
+            margin: 0 2px;
         }
 
         .system-module {
-            font-size: 12px;
-            color: var(--muted);
-            line-height: 1.4;
+            font-size: 14px;
+            color: var(--text-secondary);
+            flex-grow: 1;
         }
 
-        .connection {
+        .status-conexao {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #f1f3f5;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+        }
+
+        .signal-bars .bar {
+            width: 3px;
+            background-color: #cbd5e1;
+            border-radius: 1px;
+            transition: background-color 0.3s ease;
+        }
+
+        .signal-bars .bar-1 { height: 3px; }
+        .signal-bars .bar-2 { height: 6px; }
+        .signal-bars .bar-3 { height: 9px; }
+        .signal-bars .bar-4 { height: 12px; }
+
+        .status-conexao.online {
+            color: #2e7d32;
+            background: #edf7ee;
+            border-color: #c8e6c9;
+        }
+
+        .status-conexao.online .signal-bars .bar {
+            background-color: #2e7d32;
+        }
+
+        .status-conexao.instavel {
+            color: #b45309;
+            background: #fef3c7;
+            border-color: #fde68a;
+        }
+
+        .status-conexao.instavel .signal-bars .bar-1,
+        .status-conexao.instavel .signal-bars .bar-2 {
+            background-color: #d97706;
+        }
+
+        .status-conexao.offline {
+            color: #c62828;
+            background: #fff0f0;
+            border-color: #efc5c5;
+        }
+
+        .status-conexao.offline .signal-bars .bar {
+            background-color: #ef4444;
+            animation: pulsar-sinal 1.2s infinite ease-in-out;
+        }
+
+        @keyframes pulsar-sinal {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* ============================================
+           CONTEÚDO PRINCIPAL
+        ============================================ */
+        .container {
+            width: calc(100% - 64px);
+            max-width: 1116px;
+            margin: 0 auto;
+            padding: 32px 0 50px;
+        }
+
+        .page-header { margin-bottom: 24px; }
+
+        .breadcrumb {
             display: flex;
             align-items: center;
             gap: 7px;
-            font-size: 12px;
-            color: var(--muted);
-            white-space: nowrap;
-        }
-
-        .connection-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: var(--green);
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 28px 20px 50px;
-        }
-
-        .page-header { margin-bottom: 22px; }
-
-        .page-title {
-            margin: 0;
-            color: var(--primary);
-            font-size: 25px;
-            font-weight: 700;
-        }
-
-        .page-subtitle {
-            margin: 7px 0 0;
-            color: var(--muted);
             font-size: 13px;
+            color: #7b858e;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb .material-symbols-outlined { font-size: 17px; }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #263238;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
         .card {
             background: var(--white);
-            border: 1px solid #e1e5e9;
-            border-radius: 12px;
+            border: 1px solid #e0e4e7;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
             padding: 22px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         .section-title {
@@ -184,37 +263,41 @@
         label {
             display: block;
             margin-bottom: 7px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: #455a64;
         }
 
         input:not([type="date"]), select {
             width: 100%;
-            height: 43px;
+            height: 44px;
             border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 0 12px;
+            border-radius: 6px;
+            padding: 0 13px;
             background: #fff;
             color: var(--text);
-            font-family: "Inter", sans-serif;
-            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
             outline: none;
-            transition: 0.15s ease;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         input[type="date"] {
             width: 100%;
-            height: 42px;
+            height: 44px;
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 0 12px;
+            padding: 0 13px;
             background: #ffffff;
             color: var(--text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 14px;
             outline: none;
             transition: 0.15s ease;
+        }
+
+        input:not([type="date"]):hover, select:hover {
+            border-color: #b7c0c7;
         }
 
         input:not([type="date"]):focus, select:focus {
@@ -240,12 +323,12 @@
 
         .campo-preenchido {
             background: var(--green-light) !important;
-            border-color: #a8d5ad !important;
+            border-color: #72b879 !important;
         }
 
         .vinculo-card {
-            border: 1px solid #e1e5e9;
-            border-radius: 10px;
+            border: 1px solid #e0e4e7;
+            border-radius: 8px;
             padding: 20px;
             margin-top: 18px;
             background: #fff;
@@ -270,7 +353,7 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: #f1eafb;
+            background: #f1ebf6;
             color: var(--primary);
             border-radius: 20px;
             padding: 5px 10px;
@@ -281,8 +364,8 @@
         .escola-box {
             margin-top: 18px;
             padding: 17px;
-            border: 1px solid #e0e4e8;
-            border-radius: 9px;
+            border: 1px solid #e0e4e7;
+            border-radius: 8px;
             background: #fafbfc;
         }
 
@@ -298,7 +381,7 @@
             margin: 0;
             font-size: 14px;
             font-weight: 700;
-            color: #374151;
+            color: #37474f;
         }
 
         .checkbox-wrapper {
@@ -309,7 +392,7 @@
             padding: 14px;
             border-radius: 8px;
             background: #fafafa;
-            border: 1px solid #e4e7ea;
+            border: 1px solid #e2e8f0;
         }
 
         .checkbox-wrapper input {
@@ -352,11 +435,11 @@
         }
 
         button {
+            height: 40px;
             border: none;
-            border-radius: 7px;
-            min-height: 42px;
-            padding: 0 18px;
-            font-family: "Inter", sans-serif;
+            border-radius: 6px;
+            padding: 0 17px;
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -364,44 +447,64 @@
             align-items: center;
             justify-content: center;
             gap: 7px;
-            transition: 0.15s ease;
+            transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
         }
 
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        button:active { transform: translateY(1px); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; transform: none !important; }
 
-        .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+        button .material-symbols-outlined { font-size: 19px; }
 
-        .btn-green { background: var(--green); color: #fff; }
-        .btn-green:hover:not(:disabled) { background: var(--green-dark); }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: 1px solid var(--primary);
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); border-color: var(--primary-dark); }
 
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-danger:hover:not(:disabled) { background: #a82020; }
+        .btn-green {
+            background: var(--green);
+            color: #fff;
+            border: 1px solid var(--green);
+        }
+        .btn-green:hover:not(:disabled) { background: var(--green-dark); border-color: var(--green-dark); }
 
-        .btn-secondary { background: #eef0f2; color: #454b52; }
-        .btn-secondary:hover:not(:disabled) { background: #e2e5e8; }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+            border: 1px solid var(--danger);
+        }
+        .btn-danger:hover:not(:disabled) { background: #a82020; border-color: #a82020; }
+
+        .btn-secondary {
+            background: #eef0f2;
+            color: #454b52;
+            border: 1px solid #e2e5e8;
+        }
+        .btn-secondary:hover:not(:disabled) { background: #e2e5e8; border-color: #d0d4d8; }
 
         .mensagem {
             display: none;
             margin-top: 14px;
             padding: 12px 14px;
-            border-radius: 7px;
-            font-size: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
             line-height: 1.5;
         }
 
         .mensagem.sucesso {
             display: block;
-            background: var(--green-light);
-            color: #256029;
-            border: 1px solid #b7dcb9;
+            background: #edf7ee;
+            border: 1px solid #c8e6c9;
+            color: #2e7d32;
         }
 
         .mensagem.erro {
             display: block;
-            background: var(--danger-light);
-            color: #a61b1b;
-            border: 1px solid #efb6b6;
+            background: #fff0f0;
+            border: 1px solid #efc5c5;
+            color: #c62828;
         }
 
         .mensagem.info {
@@ -413,10 +516,24 @@
 
         #areaVinculos { display: none; }
 
+        /* ============================================
+           RESPONSIVIDADE
+        ============================================ */
         @media (max-width: 800px) {
-            .topbar { padding: 10px 15px; }
-            .connection { display: none; }
-            .container { padding: 22px 14px 40px; }
+            .topbar {
+                width: calc(100% - 24px);
+                margin-top: 12px;
+                padding: 0 16px;
+            }
+
+            .system-divider,
+            .system-module { display: none; }
+
+            .container {
+                width: calc(100% - 24px);
+                padding: 20px 0 40px;
+            }
+
             .field-6, .field-4, .field-3 { grid-column: span 12; }
             .card { padding: 17px; }
             .vinculo-card { padding: 16px; }
@@ -425,10 +542,9 @@
         }
 
         @media (max-width: 500px) {
-            .logo { width: 50px; height: 50px; }
-            .system-title { font-size: 15px; }
-            .system-module { font-size: 10px; }
-            .page-title { font-size: 21px; }
+            .logo { width: 38px; height: 38px; }
+            .system-name { font-size: 15px; }
+            .page-header h1 { font-size: 20px; }
             .buttons { flex-direction: column; }
             .buttons button { width: 100%; }
             .vinculo-header, .escola-header { align-items: flex-start; flex-direction: column; }
@@ -438,27 +554,37 @@
 
 <body>
 
+    <!-- CABEÇALHO ATUALIZADO - MESMO ESTILO DA PÁGINA NOVO SERVIDOR -->
     <header class="topbar">
-        <div class="topbar-left">
+        <div class="topbar-content">
             <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
-            <div class="system-info">
-                <div class="system-title">Vale Transporte</div>
-                <div class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</div>
+            <span class="system-name">Vale Transporte</span>
+            <div class="system-divider"></div>
+            <span class="system-module">Semed-Recursos Humanos-Gestão de Benefícios</span>
+
+            <div id="statusConexao" class="status-conexao online" title="Conexão estável">
+                <div class="signal-bars">
+                    <span class="bar bar-1"></span>
+                    <span class="bar bar-2"></span>
+                    <span class="bar bar-3"></span>
+                    <span class="bar bar-4"></span>
+                </div>
+                <span id="statusTexto">Online</span>
             </div>
-        </div>
-        <div class="connection">
-            <span class="connection-dot"></span>
-            <span>Conectado</span>
         </div>
     </header>
 
     <main class="container">
 
         <div class="page-header">
-            <h1 class="page-title">Vínculos</h1>
-            <p class="page-subtitle">
-                Localize o servidor pelo CPF para consultar e editar seus vínculos e dados de vale-transporte.
-            </p>
+            <div class="breadcrumb">
+                <span class="material-symbols-outlined">home</span>
+                <span>Servidores</span>
+                <span>/</span>
+                <span>Vínculos</span>
+            </div>
+            <h1>Vínculos</h1>
+            <p>Localize o servidor pelo CPF para consultar e editar seus vínculos e dados de vale-transporte.</p>
         </div>
 
         <!-- BUSCA CPF -->
@@ -769,7 +895,7 @@
 
         let servidorEncontradoId = null;
         let servidorTemMatricula2 = false;
-        let timeoutMensagem = null; // 👈 controle do timeout da mensagem
+        let timeoutMensagem = null;
 
         function dataParaInput(valor) {
             if (!valor) return "";
@@ -778,6 +904,47 @@
             if (matchBR) return `${matchBR[3]}-${matchBR[2]}-${matchBR[1]}`;
             return valor;
         }
+
+        /* ==========================================
+           STATUS DA CONEXÃO (MESMO DA PÁGINA NOVO SERVIDOR)
+        ========================================== */
+
+        function atualizarStatusConexao() {
+            const statusDiv = document.getElementById("statusConexao");
+            const statusTexto = document.getElementById("statusTexto");
+
+            if (!navigator.onLine) {
+                statusDiv.className = "status-conexao offline";
+                statusTexto.textContent = "Sem Conexão";
+                statusDiv.title = "Computador desconectado da internet";
+                return;
+            }
+
+            const conexao = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+            if (conexao) {
+                if (conexao.effectiveType === 'slow-2g' || conexao.effectiveType === '2g' || conexao.effectiveType === '3g') {
+                    statusDiv.className = "status-conexao instavel";
+                    statusTexto.textContent = "Instável";
+                    statusDiv.title = "Rede móvel ou conexão lenta detectada";
+                } else {
+                    statusDiv.className = "status-conexao online";
+                    statusTexto.textContent = "Online";
+                    statusDiv.title = "Conexão de alta velocidade (4G/Wi-Fi)";
+                }
+            } else {
+                statusDiv.className = "status-conexao online";
+                statusTexto.textContent = "Online";
+                statusDiv.title = "Sistema Conectado";
+            }
+        }
+
+        window.addEventListener('online', atualizarStatusConexao);
+        window.addEventListener('offline', atualizarStatusConexao);
+
+        document.addEventListener("DOMContentLoaded", function() {
+            atualizarStatusConexao();
+        });
 
         /* ==========================================
            MÁSCARA CPF
@@ -1088,24 +1255,16 @@
             elemento.className = "mensagem " + tipo;
         }
 
-        /* ==========================================
-           MENSAGEM DE SALVAR
-           - Some sozinha após 5s se for sucesso
-           - Pode ser ocultada manualmente
-        ========================================== */
-
         function mostrarMensagemSalvar(texto, tipo) {
             const elemento = document.getElementById("mensagemSalvar");
             elemento.textContent = texto;
             elemento.className = "mensagem " + tipo;
 
-            // 👇 Limpa timeout anterior para não conflitar
             if (timeoutMensagem) {
                 clearTimeout(timeoutMensagem);
                 timeoutMensagem = null;
             }
 
-            // 👇 Mensagem de sucesso some sozinha após 5 segundos
             if (tipo === "sucesso") {
                 timeoutMensagem = setTimeout(function () {
                     ocultarMensagemSalvar();
@@ -1128,7 +1287,7 @@
             document.getElementById("areaVinculos").style.display = "none";
             servidorEncontradoId = null;
             servidorTemMatricula2 = false;
-            ocultarMensagemSalvar(); // 👈 limpa mensagem ao ocultar área
+            ocultarMensagemSalvar();
         }
 
         function atualizarCoresCampos() {
@@ -1145,18 +1304,12 @@
             });
         }
 
-        /* ==========================================
-           ESCONDER MENSAGEM AO COMEÇAR NOVA EDIÇÃO
-        ========================================== */
-
-        // 👇 Quando o usuário FOCAR em qualquer campo editável, a mensagem some
         document.addEventListener("focusin", function (event) {
             if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
                 ocultarMensagemSalvar();
             }
         });
 
-        // 👇 Quando o usuário DIGITAR em qualquer campo, a mensagem também some
         document.addEventListener("input", function (event) {
             if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
                 atualizarCoresCampos();
@@ -1164,7 +1317,6 @@
             }
         });
 
-        // 👇 Quando o usuário mudar um select ou checkbox, a mensagem também some
         document.addEventListener("change", function (event) {
             if (event.target.matches("#areaVinculos input:not([readonly]), #areaVinculos select")) {
                 atualizarCoresCampos();
