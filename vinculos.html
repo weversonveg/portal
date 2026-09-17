@@ -320,10 +320,27 @@
             cursor: pointer;
         }
 
+        .checkbox-wrapper input:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
         .checkbox-wrapper label {
             margin: 0;
             font-size: 13px;
             cursor: pointer;
+        }
+
+        .checkbox-wrapper label.disabled-label {
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .checkbox-hint {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+            display: block;
         }
 
         .buttons {
@@ -601,10 +618,15 @@
 
             <!-- SEGUNDO VÍNCULO -->
             <section class="card">
-                <div class="checkbox-wrapper">
+                <div class="checkbox-wrapper" id="wrapperSegundoVinculo">
                     <input type="checkbox" id="possuiSegundoVinculo">
-                    <label for="possuiSegundoVinculo">Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?</label>
+                    <label for="possuiSegundoVinculo" id="labelSegundoVinculo">
+                        Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?
+                    </label>
                 </div>
+                <span class="checkbox-hint" id="hintSegundoVinculo" style="display:none;">
+                    O segundo vínculo já está cadastrado. Para alterações de matrícula, cargo ou admissão, procure o cadastro do servidor.
+                </span>
 
                 <div id="areaMatricula2" style="display:none;">
                     <div class="vinculo-card">
@@ -746,6 +768,7 @@
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         let servidorEncontradoId = null;
+        let servidorTemMatricula2 = false; // 👈 flag para saber se o servidor já tem matrícula2
 
         /* ==========================================
            FUNÇÕES DE CONVERSÃO DE DATA
@@ -868,9 +891,21 @@
                 document.getElementById("boxEscola2_1").style.display = "none";
             }
 
+            /* MATRÍCULA 2 */
             const m2 = dados.matricula2;
-            if (m2) {
-                document.getElementById("possuiSegundoVinculo").checked = true;
+            const checkboxSegundoVinculo = document.getElementById("possuiSegundoVinculo");
+            const hint = document.getElementById("hintSegundoVinculo");
+            const labelSegundo = document.getElementById("labelSegundoVinculo");
+
+            if (m2 && m2.numeroMatricula) {
+                // Servidor TEM matrícula2
+                servidorTemMatricula2 = true;
+
+                checkboxSegundoVinculo.checked = true;
+                checkboxSegundoVinculo.disabled = false;
+                hint.style.display = "block";
+                labelSegundo.classList.remove("disabled-label");
+
                 document.getElementById("areaMatricula2").style.display = "block";
                 document.getElementById("matricula2").value = m2.numeroMatricula || "";
                 document.getElementById("cargo2").value = m2.cargo || "";
@@ -893,7 +928,15 @@
                     document.getElementById("boxEscola2_2").style.display = "none";
                 }
             } else {
-                document.getElementById("possuiSegundoVinculo").checked = false;
+                // Servidor NÃO tem matrícula2
+                servidorTemMatricula2 = false;
+
+                checkboxSegundoVinculo.checked = false;
+                checkboxSegundoVinculo.disabled = true; // 👈 desabilita para evitar criação acidental
+                hint.style.display = "block";
+                hint.textContent = "Este servidor não possui segundo vínculo cadastrado. O cadastro de vínculos é feito na tela de servidores.";
+                labelSegundo.classList.add("disabled-label");
+
                 document.getElementById("areaMatricula2").style.display = "none";
             }
 
@@ -917,7 +960,8 @@
         document.getElementById("possuiSegundoVinculo").addEventListener("change", function () {
             const area = document.getElementById("areaMatricula2");
             area.style.display = this.checked ? "block" : "none";
-            if (!this.checked) limparMatricula2();
+            // 👇 NÃO limpa mais os dados quando desmarcado
+            // A matrícula2 é preservada no banco independentemente do estado visual
         });
 
         document.getElementById("possuiEscola2_2").addEventListener("change", function () {
@@ -932,6 +976,7 @@
 
         /* ==========================================
            SALVAR VÍNCULOS
+           (LÓGICA DE SEGURANÇA CORRIGIDA)
         ========================================== */
 
         window.salvarVinculos = async function () {
@@ -945,6 +990,11 @@
             btn.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Salvando...';
 
             try {
+                /*
+                 * MATRÍCULA 1
+                 * Sempre preserva matrícula, cargo e data (readonly)
+                 * Permite editar apenas escola1, escola2, empresa e passes
+                 */
                 const matricula1 = {
                     numeroMatricula: document.getElementById("matricula1").value.trim(),
                     cargo: document.getElementById("cargo1").value.trim(),
@@ -956,17 +1006,25 @@
                     }
                 };
 
+                // Escola2 da matrícula1: se desmarcada, remove APENAS a escola2
                 if (document.getElementById("possuiEscola2_1").checked) {
                     matricula1.escola2 = {
                         nomeEscola: document.getElementById("escola2_1").value,
                         empresa: document.getElementById("empresa2_1").value,
                         qtdPassagensDiarias: obterPasses("passes2_1")
                     };
+                } else {
+                    matricula1.escola2 = deleteField(); // Remove apenas escola2 (dado editável)
                 }
 
                 const dadosAtualizar = { matricula1: matricula1 };
 
-                if (document.getElementById("possuiSegundoVinculo").checked) {
+                /*
+                 * MATRÍCULA 2
+                 * SÓ atualiza se o servidor JÁ TEM matrícula2 cadastrada
+                 * Nunca apaga a matrícula2 completa
+                 */
+                if (servidorTemMatricula2) {
                     const matricula2 = {
                         numeroMatricula: document.getElementById("matricula2").value.trim(),
                         cargo: document.getElementById("cargo2").value.trim(),
@@ -978,18 +1036,20 @@
                         }
                     };
 
+                    // Escola2 da matrícula2: se desmarcada, remove APENAS a escola2
                     if (document.getElementById("possuiEscola2_2").checked) {
                         matricula2.escola2 = {
                             nomeEscola: document.getElementById("escola2_2").value,
                             empresa: document.getElementById("empresa2_2").value,
                             qtdPassagensDiarias: obterPasses("passes2_2")
                         };
+                    } else {
+                        matricula2.escola2 = deleteField(); // Remove apenas escola2
                     }
 
                     dadosAtualizar.matricula2 = matricula2;
-                } else {
-                    dadosAtualizar.matricula2 = deleteField();
                 }
+                // Se servidor NÃO tem matrícula2, não envia nada (não cria nem apaga)
 
                 await updateDoc(doc(db, "servidores", servidorEncontradoId), dadosAtualizar);
                 mostrarMensagemSalvar("Vínculos atualizados com sucesso!", "sucesso");
@@ -1013,37 +1073,36 @@
             return Number(valor);
         }
 
-        function limparMatricula2() {
-            document.getElementById("escola1_2").value = "";
-            document.getElementById("empresa1_2").value = "";
-            document.getElementById("passes1_2").value = "";
-            document.getElementById("possuiEscola2_2").checked = false;
-            document.getElementById("boxEscola2_2").style.display = "none";
-            document.getElementById("escola2_2").value = "";
-            document.getElementById("empresa2_2").value = "";
-            document.getElementById("passes2_2").value = "";
-        }
-
         window.limparFormulario = function () {
             if (!servidorEncontradoId) return;
 
-            // Campos readonly preservados (matricula, cargo, dataAdmissao)
+            // Limpa apenas campos editáveis (escola, empresa, passes)
             document.getElementById("escola1_1").value = "";
             document.getElementById("empresa1_1").value = "";
             document.getElementById("passes1_1").value = "";
+
             document.getElementById("possuiEscola2_1").checked = false;
             document.getElementById("boxEscola2_1").style.display = "none";
             document.getElementById("escola2_1").value = "";
             document.getElementById("empresa2_1").value = "";
             document.getElementById("passes2_1").value = "";
-            document.getElementById("possuiSegundoVinculo").checked = false;
-            document.getElementById("areaMatricula2").style.display = "none";
 
-            limparMatricula2();
+            // Para matrícula2, limpa apenas escolas (se existir)
+            if (servidorTemMatricula2) {
+                document.getElementById("escola1_2").value = "";
+                document.getElementById("empresa1_2").value = "";
+                document.getElementById("passes1_2").value = "";
+                document.getElementById("possuiEscola2_2").checked = false;
+                document.getElementById("boxEscola2_2").style.display = "none";
+                document.getElementById("escola2_2").value = "";
+                document.getElementById("empresa2_2").value = "";
+                document.getElementById("passes2_2").value = "";
+            }
+
             atualizarCoresCampos();
 
             mostrarMensagemSalvar(
-                "Campos editáveis limpos. Os dados de matrícula, cargo e admissão foram preservados.",
+                "Campos de escola, concessionária e passes foram limpos. Os demais dados foram preservados.",
                 "info"
             );
         };
@@ -1067,6 +1126,7 @@
         function ocultarAreaVinculos() {
             document.getElementById("areaVinculos").style.display = "none";
             servidorEncontradoId = null;
+            servidorTemMatricula2 = false;
         }
 
         function atualizarCoresCampos() {
