@@ -40,7 +40,6 @@ body {
   color: var(--text);
 }
 
-/* TOPBAR */
 .topbar {
   width: calc(100% - 64px);
   max-width: 1116px;
@@ -76,6 +75,7 @@ body {
   background: #f1f3f5;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 .signal-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
 .signal-bars .bar {
@@ -425,14 +425,6 @@ tr:hover td { background: #f8fafc; }
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* ==========================================
-   RESPONSIVIDADE COMPLETA
-========================================== */
-@media (max-width: 900px) {
-  .filter-select { min-width: 150px; }
-  .status-conexao span:last-child { display: none; }
-}
-
 @media (max-width: 800px) {
   .topbar, .main { width: calc(100% - 24px); }
   .system-divider, .system-module { display: none; }
@@ -443,7 +435,6 @@ tr:hover td { background: #f8fafc; }
   .filter-select { width: 100%; }
   .search-input { width: 100%; }
   
-  /* Esconde colunas menos importantes */
   th:nth-child(4), td:nth-child(4),
   th:nth-child(5), td:nth-child(5),
   th:nth-child(6), td:nth-child(6) {
@@ -454,7 +445,6 @@ tr:hover td { background: #f8fafc; }
 @media (max-width: 600px) {
   .page-header h1 { font-size: 20px; }
   
-  /* Transforma tabela em cards */
   table { border: 0; }
   table thead { display: none; }
   table tbody { display: block; }
@@ -548,7 +538,6 @@ tr:hover td { background: #f8fafc; }
     </div>
   </div>
 
-  <!-- TABELA -->
   <div class="card">
     <div class="card-toolbar">
       <input type="text" id="filtroBusca" class="search-input" placeholder="Pesquisar por nome ou CPF (000.000.000-00)..." oninput="aplicarFiltros()" maxlength="14">
@@ -560,12 +549,7 @@ tr:hover td { background: #f8fafc; }
         <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
         <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
       </select>
-      <select id="filtroStatus" class="filter-select" onchange="aplicarFiltros()">
-        <option value="">Todos os status</option>
-        <option value="completo">Completos</option>
-        <option value="pendencia">Com pendências</option>
-        <option value="dois_vinculos">Com 2º vínculo</option>
-      </select>
+      <!-- 👇 SELECT DE STATUS REMOVIDO -->
       <span class="counter-badge" id="contadorResultados">0 resultados</span>
     </div>
 
@@ -596,7 +580,6 @@ tr:hover td { background: #f8fafc; }
 
 </main>
 
-<!-- MODAL DE CONFIRMAÇÃO -->
 <div class="modal-overlay" id="modalExcluir">
   <div class="modal">
     <div class="modal-header">
@@ -620,7 +603,6 @@ tr:hover td { background: #f8fafc; }
   </div>
 </div>
 
-<!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
@@ -630,9 +612,6 @@ import { collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/fir
 let listaServidores = [];
 let servidorParaExcluir = null;
 
-/* ==========================================
-   STATUS DA CONEXÃO
-========================================== */
 function atualizarStatusConexao() {
   const statusDiv = document.getElementById("statusConexao");
   const statusTexto = document.getElementById("statusTexto");
@@ -665,9 +644,6 @@ function atualizarStatusConexao() {
 window.addEventListener('online', atualizarStatusConexao);
 window.addEventListener('offline', atualizarStatusConexao);
 
-/* ==========================================
-   MÁSCARA CPF NO CAMPO DE BUSCA
-========================================== */
 const filtroBusca = document.getElementById("filtroBusca");
 
 filtroBusca.addEventListener("input", function () {
@@ -692,17 +668,11 @@ filtroBusca.addEventListener("input", function () {
   }
 });
 
-/* ==========================================
-   INICIALIZAÇÃO
-========================================== */
 document.addEventListener("DOMContentLoaded", async function() {
   atualizarStatusConexao();
   await carregarServidores();
 });
 
-/* ==========================================
-   CARREGAR SERVIDORES
-========================================== */
 async function carregarServidores() {
   try {
     const querySnapshot = await getDocs(collection(db, "servidores"));
@@ -725,9 +695,6 @@ async function carregarServidores() {
   }
 }
 
-/* ==========================================
-   STATUS DO SERVIDOR
-========================================== */
 function obterStatusServidor(s) {
   const m1 = s.matricula1 || {};
   const e1 = m1.escola1 || {};
@@ -742,13 +709,9 @@ function obterStatusServidor(s) {
   return { completo, pendencia, doisVinculos };
 }
 
-/* ==========================================
-   FILTROS
-========================================== */
 window.aplicarFiltros = function() {
   const termo = document.getElementById("filtroBusca").value.toLowerCase().trim();
   const escolaFiltro = document.getElementById("filtroEscola").value;
-  const statusFiltro = document.getElementById("filtroStatus").value;
 
   const filtrados = listaServidores.filter(s => {
     if (termo) {
@@ -777,13 +740,6 @@ window.aplicarFiltros = function() {
       if (!temEscola) return false;
     }
 
-    if (statusFiltro) {
-      const status = obterStatusServidor(s);
-      if (statusFiltro === "completo" && !status.completo) return false;
-      if (statusFiltro === "pendencia" && !status.pendencia) return false;
-      if (statusFiltro === "dois_vinculos" && !status.doisVinculos) return false;
-    }
-
     return true;
   });
 
@@ -791,9 +747,6 @@ window.aplicarFiltros = function() {
   document.getElementById("contadorResultados").textContent = `${filtrados.length} resultado${filtrados.length !== 1 ? 's' : ''}`;
 }
 
-/* ==========================================
-   RENDERIZAR TABELA
-========================================== */
 function renderizarTabela(dados) {
   const tbody = document.getElementById("tabelaServidores");
 
@@ -847,7 +800,6 @@ function renderizarTabela(dados) {
         <td data-label="Status"><div class="badges-cell">${badgesHtml}</div></td>
         <td data-label="Ações">
           <div class="acoes" style="justify-content:flex-end;">
-            <!-- 👇 CORRIGIDO: agora passa o ID do servidor -->
             <a href="vinculos.html?id=${s.id}" class="btn-acao vinculos" title="Gerenciar Vínculos deste Servidor">
               <span class="material-symbols-outlined" style="font-size: 18px;">swap_horiz</span>
             </a>
@@ -866,9 +818,6 @@ function renderizarTabela(dados) {
   tbody.innerHTML = html;
 }
 
-/* ==========================================
-   MODAL DE EXCLUSÃO
-========================================== */
 window.abrirModalExcluir = function(id, nome) {
   servidorParaExcluir = id;
   document.getElementById("nomeServidorExcluir").textContent = nome;
@@ -912,9 +861,6 @@ document.addEventListener("keydown", function(e) {
   }
 });
 
-/* ==========================================
-   TOAST
-========================================== */
 function mostrarToast(texto, tipo = "sucesso") {
   const container = document.getElementById("toastContainer");
   const toast = document.createElement("div");
