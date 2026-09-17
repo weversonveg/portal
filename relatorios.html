@@ -553,7 +553,7 @@ tr:hover td {
             <!-- Campo Mês -->
             <div class="filter-group" id="grupoMes">
                 <label for="mesReferencia">Mês de Referência <span>*</span></label>
-                <input type="month" id="mesReferencia">
+                <input type="month" id="mesReferencia" lang="pt-BR">
             </div>
 
             <!-- Campo Ano -->
@@ -673,6 +673,16 @@ tr:hover td {
 
     // 👇 Variável global para armazenar os dados do relatório (usada pelo XLSX/CSV)
     let dadosRelatorioGlobal = [];
+
+    // 👇 Função para converter "2026-09" para "09/2026"
+    function formatarMesAnoPTBR(valor) {
+        if (!valor) return "";
+        const partes = valor.split("-");
+        if (partes.length !== 2) return valor;
+        const ano = partes[0];
+        const mes = partes[1];
+        return `${mes}/${ano}`;
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         const hoje = new Date();
@@ -872,10 +882,19 @@ tr:hover td {
 
             dadosRelatorioGlobal = listaFinal; // 👈 salva os dados para exportação
 
-            const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${document.getElementById("mesReferencia").value}` : `Ano: ${document.getElementById("anoReferencia").value}`;
+            // 👇 Agora usando padrão brasileiro MM/AAAA
+            const mesAnoFormatado = formatarMesAnoPTBR(document.getElementById("mesReferencia").value);
+            const rotuloPeriodo = tipoPeriodo === "mensal"
+                ? `Mês: ${mesAnoFormatado}`
+                : `Ano: ${document.getElementById("anoReferencia").value}`;
+
             const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
             document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
-            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal" ? document.getElementById("mesReferencia").value : `Ano ${document.getElementById("anoReferencia").value}`;
+
+            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal"
+                ? mesAnoFormatado
+                : `Ano ${document.getElementById("anoReferencia").value}`;
+
             document.getElementById("sumVinculos").textContent = totalVinculos;
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
 
