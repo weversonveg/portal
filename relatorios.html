@@ -401,12 +401,21 @@ body {
     display: block;
 }
 
+/* CABEÇALHO DA IMPRESSÃO */
 .print-report-header {
     display: none;
     text-align: center;
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 2px solid #3d2450;
+}
+
+.print-logo {
+    display: none;
+    height: 56px;
+    width: auto;
+    object-fit: contain;
+    margin: 0 auto 10px;
 }
 
 .print-report-header h2 {
@@ -481,13 +490,50 @@ tr:hover td {
 
 /* IMPRESSÃO / PDF */
 @media print {
-    body { background: white; }
-    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header p, .mensagem { display: none !important; }
-    .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
-    .print-report-header { display: block !important; }
-    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; }
-    table { font-size: 10px !important; white-space: normal !important; }
-    th, td { padding: 6px 8px !important; }
+    body {
+        background: white;
+    }
+
+    .topbar,
+    .filter-card,
+    .btn-gerar,
+    .export-buttons,
+    .breadcrumb,
+    .page-header,
+    .mensagem,
+    .summary-container {
+        display: none !important;
+    }
+
+    .main {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .print-report-header {
+        display: block !important;
+    }
+
+    .print-logo {
+        display: block !important;
+    }
+
+    .table-card {
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    table {
+        font-size: 10px !important;
+        white-space: normal !important;
+    }
+
+    th, td {
+        padding: 6px 8px !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -643,9 +689,13 @@ tr:hover td {
     <!-- TABELA DE RELATÓRIO -->
     <section id="tableCard" class="table-card">
         <div class="print-report-header">
+            <!-- 👇 LOGO NO PDF -->
+            <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+
             <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
             <p id="printSubtitulo">Relatório Consolidado de Vale Transporte</p>
         </div>
+
         <table>
             <thead>
                 <tr>
@@ -911,7 +961,9 @@ tr:hover td {
         }
     }
 
-    window.exportarPDF = function() { window.print(); }
+    window.exportarPDF = function() {
+        window.print();
+    }
 
     // 👇 CSV agora usa os dados globais (muito mais confiável que parsear o DOM)
     window.exportarCSV = function() {
