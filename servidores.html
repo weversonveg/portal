@@ -255,23 +255,21 @@ tr:hover td { background: #f8fafc; }
 .nome-info strong { display: block; color: var(--text); font-weight: 600; }
 .nome-info small { color: var(--text-secondary); font-size: 11px; }
 
-/* 👇 NOVA COLUNA ESCOLAS */
-.escolas-cell { display: flex; flex-direction: column; gap: 4px; max-width: 220px; }
-.escola-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: #f1f5f9;
-  color: #475569;
-  width: fit-content;
+/* 👇 COLUNA ESCOLAS - TEXTO SIMPLES */
+.escolas-cell {
+  line-height: 1.5;
+  max-width: 250px;
 }
-.escola-item.matricula1 { background: #e8f5e9; color: #2e7d32; }
-.escola-item.matricula2 { background: #e3f2fd; color: #0277bd; }
-.escola-item .material-symbols-outlined { font-size: 12px; }
+.escolas-cell .escola-linha {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+}
+.escolas-cell .escola-linha small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-left: 4px;
+}
 
 .badges-cell { display: flex; gap: 6px; flex-wrap: wrap; }
 .badge {
@@ -577,7 +575,6 @@ tr:hover td { background: #f8fafc; }
             <th>Servidor</th>
             <th>CPF</th>
             <th>Matrícula</th>
-            <!-- 👇 NOVA COLUNA ESCOLAS -->
             <th>Escolas</th>
             <th>Telefone</th>
             <th>Status</th>
@@ -728,7 +725,7 @@ function obterStatusServidor(s) {
 }
 
 /* ==========================================
-   👇 NOVA FUNÇÃO: Obter todas as escolas do servidor
+   👇 COLUNA ESCOLAS - TEXTO SIMPLES
 ========================================== */
 function obterEscolasServidor(s) {
   const escolas = [];
@@ -737,18 +734,18 @@ function obterEscolasServidor(s) {
 
   // Escolas da Matrícula 1
   if (m1.escola1 && m1.escola1.nomeEscola) {
-    escolas.push({ nome: m1.escola1.nomeEscola, tipo: 'matricula1' });
+    escolas.push({ nome: m1.escola1.nomeEscola, matricula: 'M1' });
   }
   if (m1.escola2 && m1.escola2.nomeEscola) {
-    escolas.push({ nome: m1.escola2.nomeEscola, tipo: 'matricula1' });
+    escolas.push({ nome: m1.escola2.nomeEscola, matricula: 'M1' });
   }
 
   // Escolas da Matrícula 2
   if (m2.escola1 && m2.escola1.nomeEscola) {
-    escolas.push({ nome: m2.escola1.nomeEscola, tipo: 'matricula2' });
+    escolas.push({ nome: m2.escola1.nomeEscola, matricula: 'M2' });
   }
   if (m2.escola2 && m2.escola2.nomeEscola) {
-    escolas.push({ nome: m2.escola2.nomeEscola, tipo: 'matricula2' });
+    escolas.push({ nome: m2.escola2.nomeEscola, matricula: 'M2' });
   }
 
   return escolas;
@@ -810,18 +807,16 @@ function renderizarTabela(dados) {
     const status = obterStatusServidor(s);
     const iniciais = (s.nome || "?").split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
 
-    // 👇 Monta a coluna de escolas
+    // 👇 Monta a coluna de escolas em TEXTO SIMPLES
     const escolas = obterEscolasServidor(s);
     let escolasHtml = "";
     if (escolas.length === 0) {
       escolasHtml = '<span style="color:#9aa3aa;">-</span>';
     } else {
       escolas.forEach(e => {
-        const icone = e.tipo === 'matricula1' ? 'school' : 'work_history';
         escolasHtml += `
-          <span class="escola-item ${e.tipo}" title="${e.tipo === 'matricula1' ? 'Matrícula 1' : 'Matrícula 2'}">
-            <span class="material-symbols-outlined">${icone}</span>
-            ${e.nome}
+          <span class="escola-linha">
+            ${e.nome}<small>(${e.matricula})</small>
           </span>
         `;
       });
