@@ -235,7 +235,7 @@ th {
 tr:hover td { background: #f8f9fa; }
 tr:last-child td { border-bottom: none; }
 
-/* 👇 COLUNA SERVIDOR - COM CARGOS */
+/* 👇 COLUNA SERVIDOR */
 .servidor-cell strong {
   display: block;
   font-weight: 600;
@@ -244,24 +244,16 @@ tr:last-child td { border-bottom: none; }
 }
 
 .servidor-cell .cargos-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 3px;
-}
-
-.servidor-cell .cargo-linha {
   display: block;
   color: var(--text-secondary);
   font-size: 11px;
-  line-height: 1.3;
+  line-height: 1.4;
+  margin-top: 3px;
 }
 
-.servidor-cell .cargo-secundario {
-  color: #90a4ae;
-  padding-top: 3px;
-  border-top: 1px dashed #e0e4e7;
-  margin-top: 2px;
+.servidor-cell .cargo-separador {
+  color: #b0bec5;
+  margin: 0 4px;
 }
 
 /* COLUNA ESCOLAS */
@@ -770,15 +762,15 @@ function renderizarTabela(dados) {
       matriculaHtml += `<br><small style="color:#78909c;">${m2.numeroMatricula}</small>`;
     }
 
-    // 👇 NOVA LÓGICA: mostra os cargos das duas matrículas
+    // 👇 NOVA LÓGICA: cargos na mesma linha separados por " / "
     let cargosHtml = "";
-    if (cargo1) {
-      cargosHtml += `<span class="cargo-linha">${cargo1}</span>`;
-    }
-    if (m2.numeroMatricula && cargo2) {
-      cargosHtml += `<span class="cargo-linha cargo-secundario">${cargo2}</span>`;
-    }
-    if (!cargosHtml) {
+    const cargos = [];
+    if (cargo1) cargos.push(cargo1);
+    if (m2.numeroMatricula && cargo2) cargos.push(cargo2);
+    
+    if (cargos.length > 0) {
+      cargosHtml = cargos.join('<span class="cargo-separador">/</span>');
+    } else {
       cargosHtml = '<span style="color:#b0bec5;">-</span>';
     }
 
