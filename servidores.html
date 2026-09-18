@@ -255,7 +255,6 @@ tr:hover td { background: #f8fafc; }
 .nome-info strong { display: block; color: var(--text); font-weight: 600; }
 .nome-info small { color: var(--text-secondary); font-size: 11px; }
 
-/* 👇 COLUNA ESCOLAS - TEXTO SIMPLES */
 .escolas-cell {
   line-height: 1.5;
   max-width: 250px;
@@ -287,7 +286,12 @@ tr:hover td { background: #f8fafc; }
 .badge.pendencia { background: var(--orange-light); color: var(--orange); }
 .badge.completo { background: var(--green-light); color: var(--green); }
 
-.acoes { display: flex; gap: 8px; }
+/* 👇 BOTÕES DE AÇÃO - GARANTINDO VISIBILIDADE */
+.acoes { 
+  display: flex; 
+  gap: 8px; 
+  justify-content: flex-end;
+}
 .btn-acao {
   width: 32px;
   height: 32px;
@@ -301,11 +305,13 @@ tr:hover td { background: #f8fafc; }
   text-decoration: none;
   color: #555;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 .btn-acao:hover { background: #f1f3f5; }
 .btn-acao.editar:hover { border-color: var(--primary); color: var(--primary); background: #f1ebf6; }
 .btn-acao.vinculos:hover { border-color: var(--blue); color: var(--blue); background: #e3f2fd; }
 .btn-acao.excluir:hover { border-color: var(--red); color: var(--red); background: #fff0f0; }
+.btn-acao .material-symbols-outlined { font-size: 18px; }
 
 .empty-state {
   padding: 60px 40px;
@@ -441,6 +447,10 @@ tr:hover td { background: #f8fafc; }
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* ==========================================
+   👇 RESPONSIVIDADE CORRIGIDA
+   A coluna de AÇÕES NUNCA é escondida
+========================================== */
 @media (max-width: 800px) {
   .topbar, .main { width: calc(100% - 24px); }
   .system-divider, .system-module { display: none; }
@@ -451,9 +461,10 @@ tr:hover td { background: #f8fafc; }
   .filter-select { width: 100%; }
   .search-input { width: 100%; }
   
+  /* 👇 Esconde apenas Telefone e Status (colunas 5 e 6)
+     A coluna de Ações (7) permanece visível */
   th:nth-child(5), td:nth-child(5),
-  th:nth-child(6), td:nth-child(6),
-  th:nth-child(7), td:nth-child(7) {
+  th:nth-child(6), td:nth-child(6) {
     display: none;
   }
 }
@@ -724,23 +735,17 @@ function obterStatusServidor(s) {
   return { completo, pendencia, doisVinculos };
 }
 
-/* ==========================================
-   👇 COLUNA ESCOLAS - TEXTO SIMPLES
-========================================== */
 function obterEscolasServidor(s) {
   const escolas = [];
   const m1 = s.matricula1 || {};
   const m2 = s.matricula2 || {};
 
-  // Escolas da Matrícula 1
   if (m1.escola1 && m1.escola1.nomeEscola) {
     escolas.push({ nome: m1.escola1.nomeEscola, matricula: 'M1' });
   }
   if (m1.escola2 && m1.escola2.nomeEscola) {
     escolas.push({ nome: m1.escola2.nomeEscola, matricula: 'M1' });
   }
-
-  // Escolas da Matrícula 2
   if (m2.escola1 && m2.escola1.nomeEscola) {
     escolas.push({ nome: m2.escola1.nomeEscola, matricula: 'M2' });
   }
@@ -807,7 +812,6 @@ function renderizarTabela(dados) {
     const status = obterStatusServidor(s);
     const iniciais = (s.nome || "?").split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
 
-    // 👇 Monta a coluna de escolas em TEXTO SIMPLES
     const escolas = obterEscolasServidor(s);
     let escolasHtml = "";
     if (escolas.length === 0) {
@@ -851,15 +855,15 @@ function renderizarTabela(dados) {
         <td data-label="Telefone">${s.telefone || "-"}</td>
         <td data-label="Status"><div class="badges-cell">${badgesHtml}</div></td>
         <td data-label="Ações">
-          <div class="acoes" style="justify-content:flex-end;">
-            <a href="vinculos.html?id=${s.id}" class="btn-acao vinculos" title="Gerenciar Vínculos deste Servidor">
-              <span class="material-symbols-outlined" style="font-size: 18px;">swap_horiz</span>
+          <div class="acoes">
+            <a href="vinculos.html?id=${s.id}" class="btn-acao vinculos" title="Gerenciar Vínculos">
+              <span class="material-symbols-outlined">swap_horiz</span>
             </a>
             <a href="cadastro.html?id=${s.id}" class="btn-acao editar" title="Editar Cadastro">
-              <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+              <span class="material-symbols-outlined">edit</span>
             </a>
             <button type="button" class="btn-acao excluir" title="Excluir Servidor" onclick="abrirModalExcluir('${s.id}', '${(s.nome || '').replace(/'/g, "\\'")}')">
-              <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+              <span class="material-symbols-outlined">delete</span>
             </button>
           </div>
         </td>
