@@ -255,6 +255,24 @@ tr:hover td { background: #f8fafc; }
 .nome-info strong { display: block; color: var(--text); font-weight: 600; }
 .nome-info small { color: var(--text-secondary); font-size: 11px; }
 
+/* 👇 NOVA COLUNA ESCOLAS */
+.escolas-cell { display: flex; flex-direction: column; gap: 4px; max-width: 220px; }
+.escola-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  width: fit-content;
+}
+.escola-item.matricula1 { background: #e8f5e9; color: #2e7d32; }
+.escola-item.matricula2 { background: #e3f2fd; color: #0277bd; }
+.escola-item .material-symbols-outlined { font-size: 12px; }
+
 .badges-cell { display: flex; gap: 6px; flex-wrap: wrap; }
 .badge {
   display: inline-flex;
@@ -435,9 +453,9 @@ tr:hover td { background: #f8fafc; }
   .filter-select { width: 100%; }
   .search-input { width: 100%; }
   
-  th:nth-child(4), td:nth-child(4),
   th:nth-child(5), td:nth-child(5),
-  th:nth-child(6), td:nth-child(6) {
+  th:nth-child(6), td:nth-child(6),
+  th:nth-child(7), td:nth-child(7) {
     display: none;
   }
 }
@@ -549,7 +567,6 @@ tr:hover td { background: #f8fafc; }
         <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
         <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
       </select>
-      <!-- 👇 SELECT DE STATUS REMOVIDO -->
       <span class="counter-badge" id="contadorResultados">0 resultados</span>
     </div>
 
@@ -560,7 +577,8 @@ tr:hover td { background: #f8fafc; }
             <th>Servidor</th>
             <th>CPF</th>
             <th>Matrícula</th>
-            <th>Escola</th>
+            <!-- 👇 NOVA COLUNA ESCOLAS -->
+            <th>Escolas</th>
             <th>Telefone</th>
             <th>Status</th>
             <th style="text-align:right;">Ações</th>
@@ -709,6 +727,33 @@ function obterStatusServidor(s) {
   return { completo, pendencia, doisVinculos };
 }
 
+/* ==========================================
+   👇 NOVA FUNÇÃO: Obter todas as escolas do servidor
+========================================== */
+function obterEscolasServidor(s) {
+  const escolas = [];
+  const m1 = s.matricula1 || {};
+  const m2 = s.matricula2 || {};
+
+  // Escolas da Matrícula 1
+  if (m1.escola1 && m1.escola1.nomeEscola) {
+    escolas.push({ nome: m1.escola1.nomeEscola, tipo: 'matricula1' });
+  }
+  if (m1.escola2 && m1.escola2.nomeEscola) {
+    escolas.push({ nome: m1.escola2.nomeEscola, tipo: 'matricula1' });
+  }
+
+  // Escolas da Matrícula 2
+  if (m2.escola1 && m2.escola1.nomeEscola) {
+    escolas.push({ nome: m2.escola1.nomeEscola, tipo: 'matricula2' });
+  }
+  if (m2.escola2 && m2.escola2.nomeEscola) {
+    escolas.push({ nome: m2.escola2.nomeEscola, tipo: 'matricula2' });
+  }
+
+  return escolas;
+}
+
 window.aplicarFiltros = function() {
   const termo = document.getElementById("filtroBusca").value.toLowerCase().trim();
   const escolaFiltro = document.getElementById("filtroEscola").value;
@@ -730,14 +775,8 @@ window.aplicarFiltros = function() {
     }
 
     if (escolaFiltro) {
-      const m1 = s.matricula1 || {};
-      const m2 = s.matricula2 || {};
-      const e1_1 = (m1.escola1 && m1.escola1.nomeEscola) || "";
-      const e1_2 = (m1.escola2 && m1.escola2.nomeEscola) || "";
-      const e2_1 = (m2.escola1 && m2.escola1.nomeEscola) || "";
-      const e2_2 = (m2.escola2 && m2.escola2.nomeEscola) || "";
-      const temEscola = [e1_1, e1_2, e2_1, e2_2].includes(escolaFiltro);
-      if (!temEscola) return false;
+      const escolas = obterEscolasServidor(s).map(e => e.nome);
+      if (!escolas.includes(escolaFiltro)) return false;
     }
 
     return true;
@@ -767,10 +806,26 @@ function renderizarTabela(dados) {
     const m1 = s.matricula1 || {};
     const m2 = s.matricula2 || {};
     const mat1 = m1.numeroMatricula || "-";
-    const escola1 = (m1.escola1 && m1.escola1.nomeEscola) || "-";
     const cargo1 = m1.cargo || "";
     const status = obterStatusServidor(s);
     const iniciais = (s.nome || "?").split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase();
+
+    // 👇 Monta a coluna de escolas
+    const escolas = obterEscolasServidor(s);
+    let escolasHtml = "";
+    if (escolas.length === 0) {
+      escolasHtml = '<span style="color:#9aa3aa;">-</span>';
+    } else {
+      escolas.forEach(e => {
+        const icone = e.tipo === 'matricula1' ? 'school' : 'work_history';
+        escolasHtml += `
+          <span class="escola-item ${e.tipo}" title="${e.tipo === 'matricula1' ? 'Matrícula 1' : 'Matrícula 2'}">
+            <span class="material-symbols-outlined">${icone}</span>
+            ${e.nome}
+          </span>
+        `;
+      });
+    }
 
     let badgesHtml = "";
     if (status.doisVinculos) {
@@ -795,7 +850,9 @@ function renderizarTabela(dados) {
         </td>
         <td data-label="CPF">${s.cpf || "-"}</td>
         <td data-label="Matrícula">${mat1}${m2.numeroMatricula ? '<br><small style="color:#68737d;">e ' + m2.numeroMatricula + '</small>' : ''}</td>
-        <td data-label="Escola">${escola1}</td>
+        <td data-label="Escolas">
+          <div class="escolas-cell">${escolasHtml}</div>
+        </td>
         <td data-label="Telefone">${s.telefone || "-"}</td>
         <td data-label="Status"><div class="badges-cell">${badgesHtml}</div></td>
         <td data-label="Ações">
