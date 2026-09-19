@@ -284,6 +284,16 @@
 
         .cargo-nome { color: var(--text); font-weight: 500; flex-grow: 1; }
 
+        .vinculo-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 3px 10px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
         .vinculo-card {
             border: 1px solid #e0e4e7;
             border-radius: 8px;
@@ -524,12 +534,14 @@
                         <span class="cargo-label">Matrícula 1</span>
                         <span class="cargo-numero" id="cargoNum1">-</span>
                         <span class="cargo-nome" id="cargoNome1">-</span>
+                        <span class="vinculo-badge" id="vinculoBadge1" style="display:none;">-</span>
                     </div>
 
                     <div class="cargo-item" id="cargoItem2" style="display:none;">
                         <span class="cargo-label">Matrícula 2</span>
                         <span class="cargo-numero" id="cargoNum2">-</span>
                         <span class="cargo-nome" id="cargoNome2">-</span>
+                        <span class="vinculo-badge" id="vinculoBadge2" style="display:none;">-</span>
                     </div>
                 </div>
             </section>
@@ -544,6 +556,12 @@
                 </div>
 
                 <div class="form-grid">
+                    <!-- 👇 NOVO CAMPO: VÍNCULO 1 -->
+                    <div class="field field-6">
+                        <label for="vinculo1">Vínculo</label>
+                        <input type="text" id="vinculo1" readonly>
+                    </div>
+
                     <div class="field field-6">
                         <label for="matricula1">Nº da Matrícula 1</label>
                         <input type="text" id="matricula1" readonly>
@@ -642,11 +660,11 @@
                 <div class="checkbox-wrapper" id="wrapperSegundoVinculo">
                     <input type="checkbox" id="possuiSegundoVinculo">
                     <label for="possuiSegundoVinculo" id="labelSegundoVinculo">
-                        Este servidor possui segundo vínculo (Acumulação de Cargos / 2ª Matrícula)?
+                        Este servidor possui segunda matrícula?
                     </label>
                 </div>
                 <span class="checkbox-hint" id="hintSegundoVinculo" style="display:none;">
-                    O segundo vínculo já está cadastrado. Para alterações de matrícula, cargo ou admissão, procure o cadastro do servidor.
+                    A segunda matrícula já está cadastrada. Para alterações de vínculo, matrícula, cargo ou admissão, procure o cadastro do servidor.
                 </span>
 
                 <div id="areaMatricula2" style="display:none;">
@@ -655,11 +673,17 @@
                             <h2 class="vinculo-title">Matrícula 2</h2>
                             <span class="badge">
                                 <span class="material-symbols-outlined" style="font-size:16px;">work_history</span>
-                                Segundo vínculo
+                                Segunda matrícula
                             </span>
                         </div>
 
                         <div class="form-grid">
+                            <!-- 👇 NOVO CAMPO: VÍNCULO 2 -->
+                            <div class="field field-6">
+                                <label for="vinculo2">Vínculo</label>
+                                <input type="text" id="vinculo2" readonly>
+                            </div>
+
                             <div class="field field-6">
                                 <label for="matricula2">Nº da Matrícula 2</label>
                                 <input type="text" id="matricula2" readonly>
@@ -786,7 +810,6 @@
             doc, getDoc, updateDoc, deleteField
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 👇 IMPORT DO CACHE
         import { marcarCacheInvalido } from "./cache.js";
 
         let servidorEncontradoId = null;
@@ -927,6 +950,10 @@
             document.getElementById("cpf").value = dados.cpf || "";
 
             const m1 = dados.matricula1 || {};
+            
+            // 👇 PREENCHER VÍNCULO 1
+            document.getElementById("vinculo1").value = m1.vinculo || "";
+            
             document.getElementById("matricula1").value = m1.numeroMatricula || "";
             document.getElementById("cargo1").value = m1.cargo || "";
             document.getElementById("dataAdmissao1").value = dataParaInput(m1.dataAdmissao);
@@ -959,10 +986,13 @@
                 checkboxSegundoVinculo.checked = true;
                 checkboxSegundoVinculo.disabled = false;
                 hint.style.display = "block";
-                hint.textContent = "O segundo vínculo já está cadastrado. Para alterações de matrícula, cargo ou admissão, procure o cadastro do servidor.";
                 labelSegundo.classList.remove("disabled-label");
 
                 document.getElementById("areaMatricula2").style.display = "block";
+                
+                // 👇 PREENCHER VÍNCULO 2
+                document.getElementById("vinculo2").value = m2.vinculo || "";
+                
                 document.getElementById("matricula2").value = m2.numeroMatricula || "";
                 document.getElementById("cargo2").value = m2.cargo || "";
                 document.getElementById("dataAdmissao2").value = dataParaInput(m2.dataAdmissao);
@@ -989,7 +1019,7 @@
                 checkboxSegundoVinculo.checked = false;
                 checkboxSegundoVinculo.disabled = true;
                 hint.style.display = "block";
-                hint.textContent = "Este servidor não possui segundo vínculo cadastrado. O cadastro de vínculos é feito na tela de servidores.";
+                hint.textContent = "Este servidor não possui segunda matrícula cadastrada. O cadastro é feito na tela de servidores.";
                 labelSegundo.classList.add("disabled-label");
 
                 document.getElementById("areaMatricula2").style.display = "none";
@@ -999,11 +1029,20 @@
             const cargosResumo = document.getElementById("cargosResumo");
             const cargoItem1 = document.getElementById("cargoItem1");
             const cargoItem2 = document.getElementById("cargoItem2");
+            const vinculoBadge1 = document.getElementById("vinculoBadge1");
+            const vinculoBadge2 = document.getElementById("vinculoBadge2");
 
             if (m1.numeroMatricula || m1.cargo) {
                 cargoItem1.style.display = "flex";
                 document.getElementById("cargoNum1").textContent = m1.numeroMatricula || "-";
                 document.getElementById("cargoNome1").textContent = m1.cargo || "Cargo não informado";
+                
+                if (m1.vinculo) {
+                    vinculoBadge1.textContent = m1.vinculo;
+                    vinculoBadge1.style.display = "inline-block";
+                } else {
+                    vinculoBadge1.style.display = "none";
+                }
             } else {
                 cargoItem1.style.display = "none";
             }
@@ -1012,6 +1051,13 @@
                 cargoItem2.style.display = "flex";
                 document.getElementById("cargoNum2").textContent = m2.numeroMatricula || "-";
                 document.getElementById("cargoNome2").textContent = m2.cargo || "Cargo não informado";
+                
+                if (m2.vinculo) {
+                    vinculoBadge2.textContent = m2.vinculo;
+                    vinculoBadge2.style.display = "inline-block";
+                } else {
+                    vinculoBadge2.style.display = "none";
+                }
             } else {
                 cargoItem2.style.display = "none";
             }
@@ -1053,6 +1099,8 @@
             try {
                 const dadosAtualizar = {};
 
+                // 👇 SALVAR VÍNCULO 1
+                dadosAtualizar["matricula1.vinculo"] = document.getElementById("vinculo1").value.trim();
                 dadosAtualizar["matricula1.numeroMatricula"] = document.getElementById("matricula1").value.trim();
                 dadosAtualizar["matricula1.cargo"] = document.getElementById("cargo1").value.trim();
                 dadosAtualizar["matricula1.dataAdmissao"] = document.getElementById("dataAdmissao1").value.trim();
@@ -1078,6 +1126,8 @@
                 }
 
                 if (servidorTemMatricula2) {
+                    // 👇 SALVAR VÍNCULO 2
+                    dadosAtualizar["matricula2.vinculo"] = document.getElementById("vinculo2").value.trim();
                     dadosAtualizar["matricula2.numeroMatricula"] = document.getElementById("matricula2").value.trim();
                     dadosAtualizar["matricula2.cargo"] = document.getElementById("cargo2").value.trim();
                     dadosAtualizar["matricula2.dataAdmissao"] = document.getElementById("dataAdmissao2").value.trim();
@@ -1105,7 +1155,6 @@
 
                 await updateDoc(doc(db, "servidores", servidorEncontradoId), dadosAtualizar);
                 
-                // 👇 INVALIDAR CACHE DA PÁGINA DE SERVIDORES
                 marcarCacheInvalido();
                 
                 mostrarMensagemSalvar("Vínculos atualizados com sucesso!", "sucesso");
