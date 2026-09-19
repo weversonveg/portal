@@ -82,6 +82,15 @@ body {
 .signal-bars .bar-4 { height: 12px; }
 .status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
 .status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
+.status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
+.status-conexao.offline .signal-bars .bar {
+  background-color: #ef4444;
+  animation: pulsar-sinal 1.2s infinite ease-in-out;
+}
+@keyframes pulsar-sinal {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
 
 .main {
   flex: 1;
@@ -106,6 +115,7 @@ body {
 }
 .breadcrumb .material-symbols-outlined { font-size: 17px; }
 .breadcrumb a { text-decoration: none; color: inherit; }
+.breadcrumb a:hover { color: var(--primary); }
 
 .page-header {
   flex-shrink: 0;
@@ -584,64 +594,14 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-/* ==========================================
-   📦 CACHE EMBUTIDO (sem arquivo externo)
-========================================== */
-const CACHE_KEY = 'vt_servidores_cache';
-const CACHE_TIME_KEY = 'vt_servidores_cache_time';
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos
-
-const Cache = {
-  ehValido() {
-    const dataCache = localStorage.getItem(CACHE_TIME_KEY);
-    if (!dataCache) return false;
-    return (Date.now() - parseInt(dataCache)) < CACHE_DURATION;
-  },
-  
-  obter() {
-    if (!this.ehValido()) {
-      this.limpar();
-      return null;
-    }
-    try {
-      const dados = localStorage.getItem(CACHE_KEY);
-      return dados ? JSON.parse(dados) : null;
-    } catch (e) {
-      console.error('Erro ao ler cache:', e);
-      this.limpar();
-      return null;
-    }
-  },
-  
-  salvar(servidores) {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(servidores));
-      localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
-      return true;
-    } catch (e) {
-      console.error('Erro ao salvar cache:', e);
-      return false;
-    }
-  },
-  
-  limpar() {
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(CACHE_TIME_KEY);
-  },
-  
-  remover(id) {
-    const cache = this.obter();
-    if (!cache) return;
-    this.salvar(cache.filter(s => s.id !== id));
-  },
-  
-  tempoRestante() {
-    const dataCache = localStorage.getItem(CACHE_TIME_KEY);
-    if (!dataCache) return 0;
-    const restante = CACHE_DURATION - (Date.now() - parseInt(dataCache));
-    return Math.max(0, Math.ceil(restante / 60000));
-  }
-};
+// 👇 IMPORTAÇÕES DO CACHE COMPARTILHADO
+import {
+  obterServidoresCache,
+  salvarServidoresCache,
+  removerServidorDoCache,
+  tempoRestanteCache,
+  cacheFoiInvalidado
+} from "./cache.js";
 
 /* ==========================================
    CONFIGURAÇÕES E ESTADO
@@ -662,6 +622,18 @@ const cardFooter = document.getElementById("cardFooter");
 const btnCarregarMais = document.getElementById("btnCarregarMais");
 const avisoCarregando = document.getElementById("avisoCarregando");
 const infoPaginacao = document.getElementById("infoPaginacao");
+
+/* ==========================================
+   👇 DETECTAR QUANDO VOLTAR PARA A PÁGINA
+   Se o cache foi invalidado por outra página,
+   recarrega automaticamente
+========================================== */
+window.addEventListener('pageshow', function(event) {
+  if (cacheFoiInvalidado()) {
+    console.log('🔄 Cache invalidado detectado. Recarregando página...');
+    location.reload();
+  }
+});
 
 /* ==========================================
    STATUS DA CONEXÃO
@@ -718,14 +690,14 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 async function inicializar() {
   // 1️⃣ Tenta cache (0 leituras)
-  const cache = Cache.obter();
+  const cache = obterServidoresCache();
   
   if (cache && Array.isArray(cache) && cache.length > 0) {
     servidoresCarregados = cache;
     cacheCompleto = true;
     temMaisDados = false;
     
-    mostrarToast(`Cache utilizado (${Cache.tempoRestante()} min restantes). Zero leituras!`, "sucesso");
+    mostrarToast(`Cache utilizado (${tempoRestanteCache()} min restantes). Zero leituras!`, "sucesso");
     atualizarContador();
     aplicarFiltros();
     esconderRodape();
@@ -738,7 +710,6 @@ async function inicializar() {
 
 /* ==========================================
    PAGINAÇÃO FIRESTORE
-   🔧 USA orderBy("__name__") que SEMPRE funciona
 ========================================== */
 window.carregarProximaPagina = async function() {
   if (carregandoMais || !temMaisDados) return;
@@ -791,7 +762,7 @@ window.carregarProximaPagina = async function() {
     servidoresCarregados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
     
     if (!temMaisDados) {
-      Cache.salvar(servidoresCarregados);
+      salvarServidoresCache(servidoresCarregados);
       cacheCompleto = true;
       esconderRodape();
     } else {
@@ -810,7 +781,7 @@ window.carregarProximaPagina = async function() {
           <strong>Erro ao carregar dados</strong>
           <div>${erro.message || 'Erro desconhecido'}</div>
           <div style="margin-top:10px;">
-            <button onclick="location.reload()" style="padding:8px 16px;border:1px solid var(--primary);background:var(--primary);color:white;border-radius:6px;cursor:pointer;">
+            <button onclick="location.reload()" style="padding:8px 16px;border:1px solid var(--primary);background:var(--primary);color:white;border-radius:6px;cursor:pointer;font-size:13px;">
               Tentar novamente
             </button>
           </div>
@@ -1059,7 +1030,7 @@ window.confirmarExclusao = async function() {
     await deleteDoc(doc(db, "servidores", servidorParaExcluir));
     
     servidoresCarregados = servidoresCarregados.filter(s => s.id !== servidorParaExcluir);
-    Cache.remover(servidorParaExcluir);
+    removerServidorDoCache(servidorParaExcluir);
     
     aplicarFiltros();
     fecharModal();
