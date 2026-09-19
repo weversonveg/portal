@@ -294,10 +294,72 @@ tr:hover td { background: #f8f9fa; }
   margin: 0 4px;
 }
 
-/* COLUNA ESCOLAS */
-.escolas-cell { line-height: 1.6; font-size: 12px; color: var(--text); }
-.escolas-cell .escola-item { display: block; }
-.escolas-cell .escola-item small { color: var(--text-secondary); font-size: 11px; }
+/* 👇 COLUNA ESCOLAS - VERSÃO COMPLETA */
+.escolas-cell { 
+  line-height: 1.5; 
+  font-size: 12px; 
+  color: var(--text); 
+  min-width: 200px;
+}
+
+.escolas-cell .escola-item-completo { 
+  display: block;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #edf0f2;
+}
+
+.escolas-cell .escola-item-completo:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.escolas-cell .escola-linha-principal {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.escolas-cell .escola-linha-principal small {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  background: #f1f3f5;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+.escolas-cell .escola-linha-detalhes {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.escolas-cell .detalhe-separador {
+  color: #b0bec5;
+}
+
+.escolas-cell .passes-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.escolas-cell .passes-badge .material-symbols-outlined {
+  font-size: 12px;
+}
 
 .acoes { display: flex; gap: 6px; justify-content: flex-end; }
 .btn-acao {
@@ -906,22 +968,43 @@ function atualizarContador(totalFiltrado) {
   }
 }
 
+/* 👇 FUNÇÃO ATUALIZADA: retorna escola + matrícula + empresa + passes */
 function obterEscolasServidor(s) {
   const escolas = [];
   const m1 = s.matricula1 || {};
   const m2 = s.matricula2 || {};
 
   if (m1.escola1 && m1.escola1.nomeEscola) {
-    escolas.push({ nome: m1.escola1.nomeEscola, matricula: 'M1' });
+    escolas.push({ 
+      nome: m1.escola1.nomeEscola, 
+      matricula: 'M1',
+      empresa: m1.escola1.empresa || '-',
+      passes: m1.escola1.qtdPassagensDiarias || 0
+    });
   }
   if (m1.escola2 && m1.escola2.nomeEscola) {
-    escolas.push({ nome: m1.escola2.nomeEscola, matricula: 'M1' });
+    escolas.push({ 
+      nome: m1.escola2.nomeEscola, 
+      matricula: 'M1',
+      empresa: m1.escola2.empresa || '-',
+      passes: m1.escola2.qtdPassagensDiarias || 0
+    });
   }
   if (m2.escola1 && m2.escola1.nomeEscola) {
-    escolas.push({ nome: m2.escola1.nomeEscola, matricula: 'M2' });
+    escolas.push({ 
+      nome: m2.escola1.nomeEscola, 
+      matricula: 'M2',
+      empresa: m2.escola1.empresa || '-',
+      passes: m2.escola1.qtdPassagensDiarias || 0
+    });
   }
   if (m2.escola2 && m2.escola2.nomeEscola) {
-    escolas.push({ nome: m2.escola2.nomeEscola, matricula: 'M2' });
+    escolas.push({ 
+      nome: m2.escola2.nomeEscola, 
+      matricula: 'M2',
+      empresa: m2.escola2.empresa || '-',
+      passes: m2.escola2.qtdPassagensDiarias || 0
+    });
   }
 
   return escolas;
@@ -952,6 +1035,7 @@ function renderizarTabela(dados) {
     const vinculo1 = m1.vinculo || "";
     const vinculo2 = m2.vinculo || "";
 
+    // 👇 ESCOLAS COM INFORMAÇÕES COMPLETAS
     const escolas = obterEscolasServidor(s);
     let escolasHtml = "";
     if (escolas.length === 0) {
@@ -959,9 +1043,19 @@ function renderizarTabela(dados) {
     } else {
       escolas.forEach(e => {
         escolasHtml += `
-          <span class="escola-item">
-            ${e.nome} <small>(${e.matricula})</small>
-          </span>
+          <div class="escola-item-completo">
+            <div class="escola-linha-principal">
+              ${e.nome} <small>${e.matricula}</small>
+            </div>
+            <div class="escola-linha-detalhes">
+              <span>${e.empresa}</span>
+              <span class="detalhe-separador">·</span>
+              <span class="passes-badge">
+                <span class="material-symbols-outlined">confirmation_number</span>
+                ${e.passes}/dia
+              </span>
+            </div>
+          </div>
         `;
       });
     }
