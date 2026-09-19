@@ -82,6 +82,9 @@ body {
 .signal-bars .bar-4 { height: 12px; }
 .status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
 .status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
+.status-conexao.instavel { color: #b45309; background: #fef3c7; border-color: #fde68a; }
+.status-conexao.instavel .signal-bars .bar-1,
+.status-conexao.instavel .signal-bars .bar-2 { background-color: #d97706; }
 .status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
 .status-conexao.offline .signal-bars .bar {
   background-color: #ef4444;
@@ -245,14 +248,52 @@ tr:hover td { background: #f8f9fa; }
 .table-responsive::-webkit-scrollbar { width: 8px; height: 8px; }
 .table-responsive::-webkit-scrollbar-track { background: #f4f6f8; }
 .table-responsive::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 4px; }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: #b0bec5; }
 
-.servidor-cell strong { display: block; font-weight: 600; color: var(--text); font-size: 13px; }
-.servidor-cell .cargos-cell { display: block; color: var(--text-secondary); font-size: 11px; line-height: 1.4; margin-top: 3px; }
-.servidor-cell .cargo-separador { color: #b0bec5; margin: 0 4px; }
+/* COLUNA SERVIDOR */
+.servidor-cell strong {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 13px;
+}
 
-.escolas-cell { line-height: 1.6; font-size: 12px; color: var(--text); }
+.servidor-cell .cargos-cell {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.servidor-cell .cargo-separador {
+  color: #b0bec5;
+  margin: 0 4px;
+}
+
+/* COLUNA MATRÍCULA */
+.matricula-cell {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.matricula-separador {
+  color: #b0bec5;
+  margin: 0 4px;
+}
+
+/* COLUNA ESCOLAS */
+.escolas-cell {
+  line-height: 1.6;
+  font-size: 12px;
+  color: var(--text);
+}
 .escolas-cell .escola-item { display: block; }
-.escolas-cell .escola-item small { color: var(--text-secondary); font-size: 11px; }
+.escolas-cell .escola-item small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
 
 .acoes { display: flex; gap: 6px; justify-content: flex-end; }
 .btn-acao {
@@ -371,6 +412,7 @@ tr:hover td { background: #f8f9fa; }
   align-items: center;
   justify-content: center;
 }
+.modal-icon .material-symbols-outlined { font-size: 20px; }
 .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
 .modal-body { padding: 18px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 .modal-body strong { color: var(--text); font-weight: 600; }
@@ -387,8 +429,10 @@ tr:hover td { background: #f8f9fa; }
   align-items: center;
   gap: 6px;
 }
-.modal-btn.cancelar { background: #fff; color: #455a64; border: 1px solid var(--border); }
+.modal-btn.cancelar { background: #fff; color: #454b52; border: 1px solid var(--border); }
+.modal-btn.cancelar:hover { background: #f5f5f5; }
 .modal-btn.confirmar { background: var(--red); color: #fff; }
+.modal-btn.confirmar:hover { background: var(--red-hover); }
 .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
@@ -594,7 +638,6 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 👇 IMPORTAÇÕES DO CACHE COMPARTILHADO
 import {
   obterServidoresCache,
   salvarServidoresCache,
@@ -624,9 +667,7 @@ const avisoCarregando = document.getElementById("avisoCarregando");
 const infoPaginacao = document.getElementById("infoPaginacao");
 
 /* ==========================================
-   👇 DETECTAR QUANDO VOLTAR PARA A PÁGINA
-   Se o cache foi invalidado por outra página,
-   recarrega automaticamente
+   DETECTAR QUANDO VOLTAR PARA A PÁGINA
 ========================================== */
 window.addEventListener('pageshow', function(event) {
   if (cacheFoiInvalidado()) {
@@ -689,7 +730,6 @@ document.addEventListener("DOMContentLoaded", async function() {
 });
 
 async function inicializar() {
-  // 1️⃣ Tenta cache (0 leituras)
   const cache = obterServidoresCache();
   
   if (cache && Array.isArray(cache) && cache.length > 0) {
@@ -704,7 +744,6 @@ async function inicializar() {
     return;
   }
   
-  // 2️⃣ Sem cache: carrega primeira página
   await carregarProximaPagina();
 }
 
@@ -758,7 +797,6 @@ window.carregarProximaPagina = async function() {
     ultimoDocumento = snapshot.docs[snapshot.docs.length - 1] || null;
     temMaisDados = snapshot.size === PAGE_SIZE;
     
-    // Ordena alfabeticamente localmente
     servidoresCarregados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
     
     if (!temMaisDados) {
@@ -942,6 +980,7 @@ function renderizarTabela(dados) {
     const cargo1 = m1.cargo || "";
     const cargo2 = m2.cargo || "";
 
+    // Escolas
     const escolas = obterEscolasServidor(s);
     let escolasHtml = "";
     if (escolas.length === 0) {
@@ -956,11 +995,13 @@ function renderizarTabela(dados) {
       });
     }
 
+    // 👇 MATRÍCULAS NA MESMA LINHA (mat1 / mat2)
     let matriculaHtml = mat1;
     if (m2.numeroMatricula) {
-      matriculaHtml += `<br><small style="color:#78909c;">${m2.numeroMatricula}</small>`;
+      matriculaHtml += `<span class="matricula-separador">/</span>${m2.numeroMatricula}`;
     }
 
+    // Cargos na mesma linha (cargo1 / cargo2)
     let cargosHtml = "";
     const cargos = [];
     if (cargo1) cargos.push(cargo1);
@@ -981,7 +1022,9 @@ function renderizarTabela(dados) {
           </div>
         </td>
         <td data-label="CPF">${s.cpf || "-"}</td>
-        <td data-label="Matrícula">${matriculaHtml}</td>
+        <td data-label="Matrícula">
+          <div class="matricula-cell">${matriculaHtml}</div>
+        </td>
         <td data-label="Escolas">
           <div class="escolas-cell">${escolasHtml}</div>
         </td>
