@@ -338,9 +338,37 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
         .escola-title { margin: 0; font-size: 14px; font-weight: 700; color: #37474f; }
+
+        /* 👇 BOTÃO REMOVER LOTAÇÃO */
+        .btn-remover-lotacao {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-remover-lotacao:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-remover-lotacao .material-symbols-outlined {
+            font-size: 15px;
+        }
 
         .checkbox-wrapper {
             display: flex;
@@ -433,6 +461,8 @@
         @media (max-width: 600px) {
             .cargo-item { flex-direction: column; align-items: flex-start; gap: 6px; }
             .cargo-label { min-width: auto; }
+            .escola-header { flex-direction: column; align-items: flex-start; }
+            .btn-remover-lotacao { width: 100%; justify-content: center; }
         }
 
         @media (max-width: 500px) {
@@ -475,12 +505,12 @@
             <span>/</span>
             <a href="servidores.html">Servidores</a>
             <span>/</span>
-            <span>Lotação</span>
+            <span>Vínculos</span>
         </div>
 
         <div class="page-header">
-            <h1>Lotação</h1>
-            <p>Localize o servidor pelo CPF para consultar e editar sua lotação e dados de vale-transporte.</p>
+            <h1>Vínculos</h1>
+            <p>Localize o servidor pelo CPF para consultar e editar seus vínculos e dados de vale-transporte.</p>
         </div>
 
         <section class="card">
@@ -488,7 +518,7 @@
                 <span class="material-symbols-outlined">person_search</span>
                 Localizar servidor
             </h2>
-q
+
             <div class="busca-box">
                 <label class="busca-label" for="cpfBusca">CPF do servidor</label>
 
@@ -556,7 +586,6 @@ q
                 </div>
 
                 <div class="form-grid">
-                    <!-- 👇 NOVO CAMPO: VÍNCULO 1 -->
                     <div class="field field-6">
                         <label for="vinculo1">Vínculo</label>
                         <input type="text" id="vinculo1" readonly>
@@ -581,6 +610,10 @@ q
                 <div class="escola-box">
                     <div class="escola-header">
                         <h3 class="escola-title">Escola / Unidade de Lotação — Escola 1</h3>
+                        <button type="button" class="btn-remover-lotacao" onclick="limparLotacao('escola1_1', 'empresa1_1', 'passes1_1')">
+                            <span class="material-symbols-outlined">delete_outline</span>
+                            Limpar lotação
+                        </button>
                     </div>
 
                     <div class="form-grid">
@@ -622,6 +655,10 @@ q
                 <div class="escola-box" id="boxEscola2_1" style="display:none;">
                     <div class="escola-header">
                         <h3 class="escola-title">Escola / Unidade de Lotação — Escola 2</h3>
+                        <button type="button" class="btn-remover-lotacao" onclick="removerLotacaoEscola2('1')">
+                            <span class="material-symbols-outlined">delete_outline</span>
+                            Remover lotação
+                        </button>
                     </div>
 
                     <div class="form-grid">
@@ -678,7 +715,6 @@ q
                         </div>
 
                         <div class="form-grid">
-                            <!-- 👇 NOVO CAMPO: VÍNCULO 2 -->
                             <div class="field field-6">
                                 <label for="vinculo2">Vínculo</label>
                                 <input type="text" id="vinculo2" readonly>
@@ -703,6 +739,10 @@ q
                         <div class="escola-box">
                             <div class="escola-header">
                                 <h3 class="escola-title">Escola / Unidade de Lotação — Escola 1</h3>
+                                <button type="button" class="btn-remover-lotacao" onclick="limparLotacao('escola1_2', 'empresa1_2', 'passes1_2')">
+                                    <span class="material-symbols-outlined">delete_outline</span>
+                                    Limpar lotação
+                                </button>
                             </div>
 
                             <div class="form-grid">
@@ -744,6 +784,10 @@ q
                         <div class="escola-box" id="boxEscola2_2" style="display:none;">
                             <div class="escola-header">
                                 <h3 class="escola-title">Escola / Unidade de Lotação — Escola 2</h3>
+                                <button type="button" class="btn-remover-lotacao" onclick="removerLotacaoEscola2('2')">
+                                    <span class="material-symbols-outlined">delete_outline</span>
+                                    Remover lotação
+                                </button>
                             </div>
 
                             <div class="form-grid">
@@ -951,9 +995,7 @@ q
 
             const m1 = dados.matricula1 || {};
             
-            // 👇 PREENCHER VÍNCULO 1
             document.getElementById("vinculo1").value = m1.vinculo || "";
-            
             document.getElementById("matricula1").value = m1.numeroMatricula || "";
             document.getElementById("cargo1").value = m1.cargo || "";
             document.getElementById("dataAdmissao1").value = dataParaInput(m1.dataAdmissao);
@@ -990,9 +1032,7 @@ q
 
                 document.getElementById("areaMatricula2").style.display = "block";
                 
-                // 👇 PREENCHER VÍNCULO 2
                 document.getElementById("vinculo2").value = m2.vinculo || "";
-                
                 document.getElementById("matricula2").value = m2.numeroMatricula || "";
                 document.getElementById("cargo2").value = m2.cargo || "";
                 document.getElementById("dataAdmissao2").value = dataParaInput(m2.dataAdmissao);
@@ -1025,7 +1065,6 @@ q
                 document.getElementById("areaMatricula2").style.display = "none";
             }
 
-            // Preencher resumo de cargos
             const cargosResumo = document.getElementById("cargosResumo");
             const cargoItem1 = document.getElementById("cargoItem1");
             const cargoItem2 = document.getElementById("cargoItem2");
@@ -1099,7 +1138,6 @@ q
             try {
                 const dadosAtualizar = {};
 
-                // 👇 SALVAR VÍNCULO 1
                 dadosAtualizar["matricula1.vinculo"] = document.getElementById("vinculo1").value.trim();
                 dadosAtualizar["matricula1.numeroMatricula"] = document.getElementById("matricula1").value.trim();
                 dadosAtualizar["matricula1.cargo"] = document.getElementById("cargo1").value.trim();
@@ -1126,7 +1164,6 @@ q
                 }
 
                 if (servidorTemMatricula2) {
-                    // 👇 SALVAR VÍNCULO 2
                     dadosAtualizar["matricula2.vinculo"] = document.getElementById("vinculo2").value.trim();
                     dadosAtualizar["matricula2.numeroMatricula"] = document.getElementById("matricula2").value.trim();
                     dadosAtualizar["matricula2.cargo"] = document.getElementById("cargo2").value.trim();
@@ -1173,6 +1210,39 @@ q
             if (valor === "") return 0;
             return Number(valor);
         }
+
+        /* ==========================================
+           👇 LIMPAR LOTAÇÃO (Escola 1)
+           Limpa os 3 campos de uma vez
+        ========================================== */
+        window.limparLotacao = function(idEscola, idEmpresa, idPasses) {
+            if (confirm("Deseja limpar esta lotação? Os campos escola, concessionária e passes serão apagados.")) {
+                document.getElementById(idEscola).value = "";
+                document.getElementById(idEmpresa).value = "";
+                document.getElementById(idPasses).value = "";
+                
+                atualizarCoresCampos();
+                mostrarMensagemSalvar("Lotação limpa. Lembre-se de salvar para confirmar.", "info");
+            }
+        };
+
+        /* ==========================================
+           👇 REMOVER LOTAÇÃO (Escola 2)
+           Limpa campos + desmarca checkbox + esconde box
+        ========================================== */
+        window.removerLotacaoEscola2 = function(numMatricula) {
+            if (confirm("Deseja remover esta lotação? Os campos serão apagados e a escola 2 será ocultada.")) {
+                document.getElementById(`escola2_${numMatricula}`).value = "";
+                document.getElementById(`empresa2_${numMatricula}`).value = "";
+                document.getElementById(`passes2_${numMatricula}`).value = "";
+                
+                document.getElementById(`possuiEscola2_${numMatricula}`).checked = false;
+                document.getElementById(`boxEscola2_${numMatricula}`).style.display = "none";
+                
+                atualizarCoresCampos();
+                mostrarMensagemSalvar("Lotação removida. Lembre-se de salvar para confirmar.", "info");
+            }
+        };
 
         window.limparFormulario = function () {
             if (!servidorEncontradoId) return;
