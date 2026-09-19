@@ -79,6 +79,9 @@ body {
 .signal-bars .bar-4 { height: 12px; }
 .status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
 .status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
+.status-conexao.instavel { color: #b45309; background: #fef3c7; border-color: #fde68a; }
+.status-conexao.instavel .signal-bars .bar-1,
+.status-conexao.instavel .signal-bars .bar-2 { background-color: #d97706; }
 .status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
 .status-conexao.offline .signal-bars .bar {
   background-color: #ef4444;
@@ -128,7 +131,7 @@ body {
 
 .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-.btn-novo, .btn-vinculos {
+.btn-novo, .btn-lotacao {
   color: #fff;
   padding: 0 16px;
   height: 40px;
@@ -144,8 +147,8 @@ body {
 }
 .btn-novo { background: var(--primary); }
 .btn-novo:hover { background: var(--primary-hover); }
-.btn-vinculos { background: #455a64; }
-.btn-vinculos:hover { background: #37474f; }
+.btn-lotacao { background: #455a64; }
+.btn-lotacao:hover { background: #37474f; }
 
 .card {
   flex: 1;
@@ -242,6 +245,7 @@ tr:hover td { background: #f8f9fa; }
 .table-responsive::-webkit-scrollbar { width: 8px; height: 8px; }
 .table-responsive::-webkit-scrollbar-track { background: #f4f6f8; }
 .table-responsive::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 4px; }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: #b0bec5; }
 
 /* COLUNA SERVIDOR */
 .servidor-cell strong {
@@ -264,7 +268,6 @@ tr:hover td { background: #f8f9fa; }
   margin: 0 4px;
 }
 
-/* 👇 NOVA LINHA DE TIPO DE VÍNCULO */
 .servidor-cell .vinculos-cell {
   display: block;
   font-size: 11px;
@@ -313,7 +316,7 @@ tr:hover td { background: #f8f9fa; }
 .btn-acao .material-symbols-outlined { font-size: 16px; }
 .btn-acao:hover { background: #f5f5f5; border-color: #b0bec5; }
 .btn-acao.editar:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
-.btn-acao.vinculos:hover { color: #455a64; border-color: #455a64; background: #eceff1; }
+.btn-acao.lotacao:hover { color: #455a64; border-color: #455a64; background: #eceff1; }
 .btn-acao.excluir:hover { color: var(--red); border-color: var(--red); background: #fff5f5; }
 
 .empty-state { padding: 48px 40px; text-align: center; color: var(--text-secondary); font-size: 14px; }
@@ -430,7 +433,7 @@ tr:hover td { background: #f8f9fa; }
   align-items: center;
   gap: 6px;
 }
-.modal-btn.cancelar { background: #fff; color: #455a64; border: 1px solid var(--border); }
+.modal-btn.cancelar { background: #fff; color: #454b52; border: 1px solid var(--border); }
 .modal-btn.cancelar:hover { background: #f5f5f5; }
 .modal-btn.confirmar { background: var(--red); color: #fff; }
 .modal-btn.confirmar:hover { background: var(--red-hover); }
@@ -464,7 +467,7 @@ tr:hover td { background: #f8f9fa; }
   .system-divider, .system-module { display: none; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .header-actions { width: 100%; }
-  .btn-novo, .btn-vinculos { flex: 1; justify-content: center; }
+  .btn-novo, .btn-lotacao { flex: 1; justify-content: center; }
   .card-toolbar { flex-direction: column; align-items: stretch; }
   .filter-select, .search-input { width: 100%; }
   .card-footer { flex-direction: column; align-items: stretch; }
@@ -534,9 +537,8 @@ tr:hover td { background: #f8f9fa; }
       <p>Gerencie cadastros, vínculos e lotações dos servidores.</p>
     </div>
     <div class="header-actions">
-      <!-- 👇 BOTÃO RENOMEADO PARA LOTAÇÃO -->
-      <a href="vinculos.html" class="btn-vinculos">
-        <span class="material-symbols-outlined">location_on</span>
+      <a href="vinculos.html" class="btn-lotacao">
+        <span class="material-symbols-outlined">school</span>
         Lotação
       </a>
       <a href="cadastro.html" class="btn-novo">
@@ -950,7 +952,6 @@ function renderizarTabela(dados) {
     const vinculo1 = m1.vinculo || "";
     const vinculo2 = m2.vinculo || "";
 
-    // Escolas
     const escolas = obterEscolasServidor(s);
     let escolasHtml = "";
     if (escolas.length === 0) {
@@ -965,13 +966,11 @@ function renderizarTabela(dados) {
       });
     }
 
-    // Matrículas na mesma linha
     let matriculaHtml = mat1;
     if (m2.numeroMatricula) {
       matriculaHtml += `<span class="matricula-separador">/</span>${m2.numeroMatricula}`;
     }
 
-    // Cargos na mesma linha
     let cargosHtml = "";
     const cargos = [];
     if (cargo1) cargos.push(cargo1);
@@ -983,7 +982,6 @@ function renderizarTabela(dados) {
       cargosHtml = '<span style="color:#b0bec5;">-</span>';
     }
 
-    // 👇 NOVO: Tipos de vínculo na mesma linha
     let vinculosHtml = "";
     const vinculos = [];
     if (vinculo1) vinculos.push(vinculo1);
@@ -1011,8 +1009,8 @@ function renderizarTabela(dados) {
         </td>
         <td data-label="Ações">
           <div class="acoes">
-            <a href="vinculos.html?id=${s.id}" class="btn-acao vinculos" title="Gerenciar Lotação">
-              <span class="material-symbols-outlined">location_on</span>
+            <a href="vinculos.html?id=${s.id}" class="btn-acao lotacao" title="Gerenciar Lotação">
+              <span class="material-symbols-outlined">school</span>
             </a>
             <a href="cadastro.html?id=${s.id}" class="btn-acao editar" title="Editar Cadastro">
               <span class="material-symbols-outlined">edit</span>
