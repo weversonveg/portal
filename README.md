@@ -1,6 +1,9 @@
-Versão Atual 
+Versão 1.5
+Melhorias que  contém nesta versão:
 Painel Admin com botões exportação e importação 
-
+Tela de login,foi criada nova coleção usuários.Entra com todos e-mails Google e-mails adicionados manualmente no firebase authentication. Adicionado novo campi vínculos. Criado a  página usuário onde víincula e-mail a escola e filtra na página lançamento 
+das escolas. Criado a página de cache usada nas páginas vínculos,servidores e cadastro.
+Obs: página servidores foi renomeada para página de cadastro e página servidores passou a ser a principal que lista, e tem botões de edição lotação exclusão. Foi feito alterações no firebase.js por causa da tela de login.
 
 _____________________________
 -----------------------------
