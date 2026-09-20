@@ -1,7 +1,14 @@
+versão atual 
+
+Disas úteis por mês✅ Padrão global automático para meses futuros✅ Período de abertura/fechamento✅ Status calculado automaticamente✅ Congelamento manual✅ Exceções por escola (reabertura)🏫 Lançamentos das Escolas (escolas.html)✅ Autenticação por perfil✅ Bloqueio automático de meses anteriores✅ Respeita período configurado✅ Respeita exceções por escola✅ Salvamento automático ao sair do campo✅ Contador de sessão✅ Feedback visual completo📋 Lançamentos SEMED (lancamentos.html)✅ Autenticação admin✅ Férias, folgas, licenças✅ Data de término bloqueada para férias✅ Validação de conflitos.
+Criado botão limpa lotação 
+
+
+
 Versão 1.5
 Melhorias que  contém nesta versão:
 Painel Admin com botões exportação e importação 
-Tela de login,foi criada nova coleção usuários.Entra com todos e-mails Google e-mails adicionados manualmente no firebase authentication. Adicionado novo campi vínculos. Criado a  página usuário onde víincula e-mail a escola e filtra na página lançamento 
+Tela de login,foi criada nova coleção usuários.Entra com todos e-mails Google e-mails adicionados manualmente no firebase authentication. Adicionado novo campo vínculos. Criado a  página usuário onde víincula e-mail a escola e filtra na página lançamento 
 das escolas. Criado a página de cache usada nas páginas vínculos,servidores e cadastro.
 Obs: página servidores foi renomeada para página de cadastro e página servidores passou a ser a principal que lista, e tem botões de edição lotação exclusão. Foi feito alterações no firebase.js por causa da tela de login.
 
