@@ -299,7 +299,6 @@ body {
     opacity: 0.95;
 }
 
-/* 👇 BANNER DE EXCEÇÃO (AMARELO) */
 .excecao-banner {
     display: none;
     background: var(--yellow-light);
@@ -909,7 +908,7 @@ tr:hover td {
         </button>
     </section>
 
-    <!-- 👇 BANNER DE MÊS BLOQUEADO -->
+    <!-- BANNER DE MÊS BLOQUEADO -->
     <div id="lockBanner" class="lock-banner">
         <span class="material-symbols-outlined">lock</span>
         <div class="lock-info">
@@ -920,7 +919,7 @@ tr:hover td {
         </div>
     </div>
 
-    <!-- 👇 BANNER DE EXCEÇÃO (QUANDO ESCOLA TEM ACESSO LIBERADO) -->
+    <!-- BANNER DE EXCEÇÃO -->
     <div id="excecaoBanner" class="excecao-banner">
         <span class="material-symbols-outlined">lock_open_right</span>
         <div class="lock-info">
@@ -1055,13 +1054,43 @@ function normalizarTexto(valor) {
 }
 
 /* =========================================================
-   👇 NOVA FUNÇÃO: VERIFICAR ACESSO DA ESCOLA
-   Considera período + congelamento + exceções
+   👇 FUNÇÃO CORRIGIDA: VERIFICAR ACESSO DA ESCOLA
+   Considera: mês anterior + período + congelamento + exceções
    ========================================================= */
 
-function verificarAcessoEscola(config, escola) {
+function verificarAcessoEscola(config, escola, mesAno) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
+    
+    /* 👇 NOVA VERIFICAÇÃO: Mês anterior ao mês atual = BLOQUEADO AUTOMÁTICO */
+    if (mesAno) {
+        const [anoMes, mesMes] = mesAno.split("-").map(Number);
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1;
+        
+        const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
+        
+        if (ehMesAnterior) {
+            /* Verifica se a escola tem exceção (reabertura) */
+            const escolasReabertas = config.escolasReabertas || [];
+            
+            if (escola && escolasReabertas.includes(escola)) {
+                return {
+                    bloqueado: false,
+                    excessao: true,
+                    motivo: "Mês anterior com acesso liberado",
+                    descricao: "Este mês é anterior ao mês atual, mas a SEMED liberou o acesso especificamente para esta escola."
+                };
+            }
+            
+            return {
+                bloqueado: true,
+                excessao: false,
+                motivo: "Mês anterior ao mês atual",
+                descricao: "Este mês já passou. Meses anteriores são bloqueados automaticamente pelo sistema. Solicite reabertura à SEMED caso necessário."
+            };
+        }
+    }
     
     /* Congelamento manual bloqueia TODOS (sem exceções) */
     if (config.congelado === true) {
@@ -1076,7 +1105,7 @@ function verificarAcessoEscola(config, escola) {
     const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
     const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
     
-    /* Sem período definido = sempre aberto */
+    /* Sem período definido = sempre aberto (para mês atual/futuro) */
     if (!temAbertura && !temFechamento) {
         return {
             bloqueado: false,
@@ -1103,7 +1132,6 @@ function verificarAcessoEscola(config, escola) {
     if (temFechamento) {
         const dataFechamento = new Date(config.dataFechamento + "T23:59:59");
         if (hoje > dataFechamento) {
-            /* 👇 Verifica se a escola está na lista de exceções */
             const escolasReabertas = config.escolasReabertas || [];
             
             if (escola && escolasReabertas.includes(escola)) {
@@ -1336,8 +1364,8 @@ window.carregarDadosDaEscola = async function() {
         const semedData = semedSnap.exists() ? semedSnap.data() : {};
         const diasSemedDefault = Number(semedData.diasUteis) || 22;
         
-        /* 👇 NOVA VERIFICAÇÃO: Período + Exceções */
-        const acesso = verificarAcessoEscola(semedData, escolaSelecionada);
+        /* 👇 NOVA VERIFICAÇÃO: passando o mesAno */
+        const acesso = verificarAcessoEscola(semedData, escolaSelecionada, mesAno);
         mesBloqueadoAtual = acesso.bloqueado;
         escolaEmExcecao = acesso.excessao;
 
@@ -1602,15 +1630,15 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
         return;
     }
     
-    /* 👇 Verifica bloqueio novamente antes de salvar */
+    /* 👇 Verifica bloqueio novamente antes de salvar (com mesAno) */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-        if (semedSnap.exists()) {
-            const acesso = verificarAcessoEscola(semedSnap.data(), escola);
-            if (acesso.bloqueado) {
-                mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
-                return;
-            }
+        const semedDataVerificacao = semedSnap.exists() ? semedSnap.data() : {};
+        const acesso = verificarAcessoEscola(semedDataVerificacao, escola, mesAno);
+        if (acesso.bloqueado) {
+            mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
+            carregarDadosDaEscola();
+            return;
         }
     } catch (e) {
         console.error("Erro ao verificar bloqueio:", e);
@@ -1699,15 +1727,14 @@ window.salvarDiasUteisEscola = async function() {
         return;
     }
 
-    /* 👇 Verifica bloqueio antes de salvar */
+    /* 👇 Verifica bloqueio antes de salvar (com mesAno) */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-        if (semedSnap.exists()) {
-            const acesso = verificarAcessoEscola(semedSnap.data(), escola);
-            if (acesso.bloqueado) {
-                mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
-                return;
-            }
+        const semedDataVerificacao = semedSnap.exists() ? semedSnap.data() : {};
+        const acesso = verificarAcessoEscola(semedDataVerificacao, escola, mesAno);
+        if (acesso.bloqueado) {
+            mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
+            return;
         }
     } catch (e) {
         console.error("Erro ao verificar bloqueio:", e);
@@ -1756,5 +1783,4 @@ function mostrarMensagem(texto, tipo) {
 </script>
 
 </body>
-
 </html>
