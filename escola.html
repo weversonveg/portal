@@ -1054,24 +1054,25 @@ function normalizarTexto(valor) {
 }
 
 /* =========================================================
-   👇 FUNÇÃO CORRIGIDA: VERIFICAR ACESSO DA ESCOLA
-   Considera: mês anterior + período + congelamento + exceções
+   👇 FUNÇÃO COMPLETA: VERIFICAR ACESSO DA ESCOLA
+   Considera: mês anterior + mês futuro + período + congelamento + exceções
    ========================================================= */
 
 function verificarAcessoEscola(config, escola, mesAno) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    /* 👇 NOVA VERIFICAÇÃO: Mês anterior ao mês atual = BLOQUEADO AUTOMÁTICO */
+    /* 👇 VERIFICAÇÃO COMPLETA: mês anterior, atual e futuro */
     if (mesAno) {
         const [anoMes, mesMes] = mesAno.split("-").map(Number);
         const anoAtual = hoje.getFullYear();
         const mesAtual = hoje.getMonth() + 1;
         
         const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
+        const ehMesFuturo = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
         
+        /* 👇 MÊS ANTERIOR: Bloqueado (exceto com exceção) */
         if (ehMesAnterior) {
-            /* Verifica se a escola tem exceção (reabertura) */
             const escolasReabertas = config.escolasReabertas || [];
             
             if (escola && escolasReabertas.includes(escola)) {
@@ -1090,6 +1091,39 @@ function verificarAcessoEscola(config, escola, mesAno) {
                 descricao: "Este mês já passou. Meses anteriores são bloqueados automaticamente pelo sistema. Solicite reabertura à SEMED caso necessário."
             };
         }
+        
+        /* 👇 MÊS FUTURO SEM CONFIGURAÇÃO: Bloqueado */
+        if (ehMesFuturo) {
+            const temPeriodo = (config.dataAbertura && config.dataAbertura.trim() !== "") || 
+                               (config.dataFechamento && config.dataFechamento.trim() !== "");
+            const temConfiguracao = temPeriodo || config.congelado === true;
+            
+            /* Se não tem nenhuma configuração, bloqueia (mês ainda não chegou) */
+            if (!temConfiguracao) {
+                const escolasReabertas = config.escolasReabertas || [];
+                
+                /* Verifica exceção (abertura antecipada) */
+                if (escola && escolasReabertas.includes(escola)) {
+                    return {
+                        bloqueado: false,
+                        excessao: true,
+                        motivo: "Mês futuro com acesso antecipado",
+                        descricao: "Este mês ainda não chegou, mas a SEMED liberou o acesso antecipado para esta escola."
+                    };
+                }
+                
+                return {
+                    bloqueado: true,
+                    excessao: false,
+                    motivo: "Mês futuro ainda não iniciado",
+                    descricao: "Este mês ainda não chegou. Os lançamentos estarão disponíveis quando o mês iniciar e a SEMED configurar o período."
+                };
+            }
+            
+            /* Se tem configuração, segue a lógica normal de período abaixo */
+        }
+        
+        /* Mês atual: segue a lógica normal abaixo */
     }
     
     /* Congelamento manual bloqueia TODOS (sem exceções) */
@@ -1105,7 +1139,7 @@ function verificarAcessoEscola(config, escola, mesAno) {
     const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
     const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
     
-    /* Sem período definido = sempre aberto (para mês atual/futuro) */
+    /* Sem período definido = sempre aberto (para mês atual) */
     if (!temAbertura && !temFechamento) {
         return {
             bloqueado: false,
@@ -1364,7 +1398,7 @@ window.carregarDadosDaEscola = async function() {
         const semedData = semedSnap.exists() ? semedSnap.data() : {};
         const diasSemedDefault = Number(semedData.diasUteis) || 22;
         
-        /* 👇 NOVA VERIFICAÇÃO: passando o mesAno */
+        /* 👇 VERIFICAÇÃO COMPLETA: passando o mesAno */
         const acesso = verificarAcessoEscola(semedData, escolaSelecionada, mesAno);
         mesBloqueadoAtual = acesso.bloqueado;
         escolaEmExcecao = acesso.excessao;
@@ -1630,7 +1664,7 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
         return;
     }
     
-    /* 👇 Verifica bloqueio novamente antes de salvar (com mesAno) */
+    /* Verifica bloqueio novamente antes de salvar */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
         const semedDataVerificacao = semedSnap.exists() ? semedSnap.data() : {};
@@ -1727,7 +1761,7 @@ window.salvarDiasUteisEscola = async function() {
         return;
     }
 
-    /* 👇 Verifica bloqueio antes de salvar (com mesAno) */
+    /* Verifica bloqueio antes de salvar */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
         const semedDataVerificacao = semedSnap.exists() ? semedSnap.data() : {};
