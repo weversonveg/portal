@@ -1055,21 +1055,21 @@ function normalizarTexto(valor) {
 
 /* =========================================================
    👇 FUNÇÃO COMPLETA: VERIFICAR ACESSO DA ESCOLA
-   Considera: mês anterior + mês futuro + período + congelamento + exceções
+   Considera: mês anterior + mês não disponível + período + congelamento + exceções
    ========================================================= */
 
 function verificarAcessoEscola(config, escola, mesAno) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    /* 👇 VERIFICAÇÃO COMPLETA: mês anterior, atual e futuro */
+    /* 👇 VERIFICAÇÃO COMPLETA: mês anterior, atual e não disponível */
     if (mesAno) {
         const [anoMes, mesMes] = mesAno.split("-").map(Number);
         const anoAtual = hoje.getFullYear();
         const mesAtual = hoje.getMonth() + 1;
         
         const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
-        const ehMesFuturo = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
+        const ehMesNaoDisponivel = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
         
         /* 👇 MÊS ANTERIOR: Bloqueado (exceto com exceção) */
         if (ehMesAnterior) {
@@ -1092,13 +1092,13 @@ function verificarAcessoEscola(config, escola, mesAno) {
             };
         }
         
-        /* 👇 MÊS FUTURO SEM CONFIGURAÇÃO: Bloqueado */
-        if (ehMesFuturo) {
+        /* 👇 MÊS AINDA NÃO DISPONÍVEL: Bloqueado */
+        if (ehMesNaoDisponivel) {
             const temPeriodo = (config.dataAbertura && config.dataAbertura.trim() !== "") || 
                                (config.dataFechamento && config.dataFechamento.trim() !== "");
             const temConfiguracao = temPeriodo || config.congelado === true;
             
-            /* Se não tem nenhuma configuração, bloqueia (mês ainda não chegou) */
+            /* Se não tem nenhuma configuração, bloqueia (mês ainda não disponível) */
             if (!temConfiguracao) {
                 const escolasReabertas = config.escolasReabertas || [];
                 
@@ -1107,16 +1107,16 @@ function verificarAcessoEscola(config, escola, mesAno) {
                     return {
                         bloqueado: false,
                         excessao: true,
-                        motivo: "Mês futuro com acesso antecipado",
-                        descricao: "Este mês ainda não chegou, mas a SEMED liberou o acesso antecipado para esta escola."
+                        motivo: "Mês com acesso antecipado",
+                        descricao: "Este mês ainda não está disponível, mas a SEMED liberou o acesso antecipado para esta escola."
                     };
                 }
                 
                 return {
                     bloqueado: true,
                     excessao: false,
-                    motivo: "Mês futuro ainda não iniciado",
-                    descricao: "Este mês ainda não chegou. Os lançamentos estarão disponíveis quando o mês iniciar e a SEMED configurar o período."
+                    motivo: "Mês ainda não disponível",
+                    descricao: "Este mês ainda não está disponível para lançamentos. Os lançamentos estarão disponíveis quando o mês iniciar e a SEMED configurar o período."
                 };
             }
             
