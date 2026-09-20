@@ -25,6 +25,10 @@
     --red-light: #fff0f0;
     --red-border: #efc5c5;
 
+    --yellow: #b45309;
+    --yellow-light: #fef3c7;
+    --yellow-border: #fde68a;
+
     --text: #263238;
     --text-secondary: #68737d;
 
@@ -265,7 +269,7 @@ body {
     margin-bottom: 24px;
     font-size: 14px;
     font-weight: 600;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     box-shadow: var(--shadow);
 }
@@ -277,6 +281,48 @@ body {
 .lock-banner .material-symbols-outlined {
     font-size: 24px;
     flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.lock-banner .lock-info {
+    flex: 1;
+}
+
+.lock-banner .lock-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.lock-banner .lock-description {
+    font-weight: 500;
+    font-size: 13px;
+    opacity: 0.95;
+}
+
+/* 👇 BANNER DE EXCEÇÃO (AMARELO) */
+.excecao-banner {
+    display: none;
+    background: var(--yellow-light);
+    border: 1px solid var(--yellow-border);
+    color: var(--yellow);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: var(--shadow);
+}
+
+.excecao-banner.ativo {
+    display: flex;
+}
+
+.excecao-banner .material-symbols-outlined {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .school-config-card {
@@ -863,11 +909,25 @@ tr:hover td {
         </button>
     </section>
 
+    <!-- 👇 BANNER DE MÊS BLOQUEADO -->
     <div id="lockBanner" class="lock-banner">
         <span class="material-symbols-outlined">lock</span>
-        <div>
-            <strong>Mês Fechado / Congelado pela SEMED:</strong>
-            Este período encontra-se encerrado. Os lançamentos de afastamentos e alterações de dias úteis estão desativados para todas as escolas.
+        <div class="lock-info">
+            <div class="lock-title" id="lockTitle">Mês Fechado / Congelado pela SEMED</div>
+            <div class="lock-description" id="lockDescription">
+                Este período encontra-se encerrado. Os lançamentos de afastamentos e alterações de dias úteis estão desativados para todas as escolas.
+            </div>
+        </div>
+    </div>
+
+    <!-- 👇 BANNER DE EXCEÇÃO (QUANDO ESCOLA TEM ACESSO LIBERADO) -->
+    <div id="excecaoBanner" class="excecao-banner">
+        <span class="material-symbols-outlined">lock_open_right</span>
+        <div class="lock-info">
+            <div class="lock-title">Acesso Liberado por Exceção</div>
+            <div class="lock-description">
+                O mês está fechado para as demais escolas, mas a SEMED liberou o acesso especificamente para a sua unidade. Aproveite para realizar os lançamentos pendentes.
+            </div>
         </div>
     </div>
 
@@ -888,7 +948,6 @@ tr:hover td {
         </div>
     </section>
 
-    <!-- 👇 CARDS DE RESUMO ATUALIZADOS -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Vínculos com Ausência no Mês</label>
@@ -968,6 +1027,7 @@ let autenticacaoPronta = false;
 
 let alteracoesSalvasNaSessao = 0;
 let mesBloqueadoAtual = false;
+let escolaEmExcecao = false;
 
 /* =========================================================
    DATA ATUAL
@@ -995,20 +1055,93 @@ function normalizarTexto(valor) {
 }
 
 /* =========================================================
-   VERIFICA MÊS BLOQUEADO
+   👇 NOVA FUNÇÃO: VERIFICAR ACESSO DA ESCOLA
+   Considera período + congelamento + exceções
    ========================================================= */
 
-function verificarMesBloqueado(data) {
-    if (!data) return false;
-    return (
-        data.congelado === true ||
-        data.bloqueado === true ||
-        data.fechado === true ||
-        data.status === "fechado" ||
-        data.status === "bloqueado" ||
-        data.situacao === "fechado" ||
-        data.situacao === "bloqueado"
-    );
+function verificarAcessoEscola(config, escola) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    /* Congelamento manual bloqueia TODOS (sem exceções) */
+    if (config.congelado === true) {
+        return {
+            bloqueado: true,
+            excessao: false,
+            motivo: "Mês congelado manualmente pela SEMED",
+            descricao: "Este mês foi congelado manualmente pela SEMED. Todas as escolas estão bloqueadas, sem exceções."
+        };
+    }
+    
+    const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
+    const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
+    
+    /* Sem período definido = sempre aberto */
+    if (!temAbertura && !temFechamento) {
+        return {
+            bloqueado: false,
+            excessao: false,
+            motivo: "Sem período definido",
+            descricao: ""
+        };
+    }
+    
+    /* Antes da data de abertura */
+    if (temAbertura) {
+        const dataAbertura = new Date(config.dataAbertura + "T00:00:00");
+        if (hoje < dataAbertura) {
+            return {
+                bloqueado: true,
+                excessao: false,
+                motivo: `Mês abre em ${formatarData(config.dataAbertura)}`,
+                descricao: `O período de lançamentos deste mês ainda não começou. Os lançamentos estarão disponíveis a partir de ${formatarData(config.dataAbertura)}.`
+            };
+        }
+    }
+    
+    /* Depois da data de fechamento */
+    if (temFechamento) {
+        const dataFechamento = new Date(config.dataFechamento + "T23:59:59");
+        if (hoje > dataFechamento) {
+            /* 👇 Verifica se a escola está na lista de exceções */
+            const escolasReabertas = config.escolasReabertas || [];
+            
+            if (escola && escolasReabertas.includes(escola)) {
+                return {
+                    bloqueado: false,
+                    excessao: true,
+                    motivo: "Escola com acesso liberado por exceção",
+                    descricao: `O período encerrou em ${formatarData(config.dataFechamento)}, mas a SEMED liberou o acesso para esta escola específica.`
+                };
+            }
+            
+            return {
+                bloqueado: true,
+                excessao: false,
+                motivo: `Mês fechado em ${formatarData(config.dataFechamento)}`,
+                descricao: `O período de lançamentos deste mês encerrou em ${formatarData(config.dataFechamento)}. Solicite reabertura à SEMED caso necessário.`
+            };
+        }
+    }
+    
+    /* Dentro do período */
+    return {
+        bloqueado: false,
+        excessao: false,
+        motivo: "Dentro do período",
+        descricao: ""
+    };
+}
+
+/* =========================================================
+   FORMATAR DATA
+   ========================================================= */
+
+function formatarData(dataStr) {
+    if (!dataStr) return "-";
+    const partes = dataStr.split("-");
+    if (partes.length !== 3) return dataStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
 /* =========================================================
@@ -1030,7 +1163,7 @@ function mostrarToast(texto, tipo = "sucesso") {
     setTimeout(() => {
         toast.style.animation = "slideOut 0.25s ease forwards";
         setTimeout(() => toast.remove(), 250);
-    }, 2000);
+    }, 2500);
 }
 
 /* =========================================================
@@ -1168,6 +1301,7 @@ window.carregarDadosDaEscola = async function() {
     const summaryContainer = document.getElementById("summaryContainer");
     const schoolConfigCard = document.getElementById("schoolConfigCard");
     const lockBanner = document.getElementById("lockBanner");
+    const excecaoBanner = document.getElementById("excecaoBanner");
     const tableActionsBar = document.getElementById("tableActionsBar");
     const usageTip = document.getElementById("usageTip");
 
@@ -1177,6 +1311,7 @@ window.carregarDadosDaEscola = async function() {
     summaryContainer.classList.remove("ativo");
     schoolConfigCard.classList.remove("ativo");
     lockBanner.classList.remove("ativo");
+    excecaoBanner.classList.remove("ativo");
     tableActionsBar.classList.remove("ativo");
     usageTip.classList.remove("ativo");
 
@@ -1200,16 +1335,25 @@ window.carregarDadosDaEscola = async function() {
         const semedSnap = await getDoc(semedConfigRef);
         const semedData = semedSnap.exists() ? semedSnap.data() : {};
         const diasSemedDefault = Number(semedData.diasUteis) || 22;
-        const mesBloqueado = verificarMesBloqueado(semedData);
-        mesBloqueadoAtual = mesBloqueado;
+        
+        /* 👇 NOVA VERIFICAÇÃO: Período + Exceções */
+        const acesso = verificarAcessoEscola(semedData, escolaSelecionada);
+        mesBloqueadoAtual = acesso.bloqueado;
+        escolaEmExcecao = acesso.excessao;
 
-        if (mesBloqueado) {
+        if (acesso.bloqueado) {
             lockBanner.classList.add("ativo");
+            document.getElementById("lockTitle").textContent = acesso.motivo;
+            document.getElementById("lockDescription").textContent = acesso.descricao;
+        } else if (acesso.excessao) {
+            excecaoBanner.classList.add("ativo");
         }
 
         let textoInfo = `Padrão SEMED cadastrado: ${diasSemedDefault} dias úteis no mês.`;
-        if (mesBloqueado) {
-            textoInfo += " 🔒 [MÊS CONGELADO / FECHADO PELA SEMED]";
+        if (acesso.bloqueado) {
+            textoInfo += ` 🔒 [${acesso.motivo}]`;
+        } else if (acesso.excessao) {
+            textoInfo += " 🔓 [ACESSO LIBERADO POR EXCEÇÃO]";
         }
         document.getElementById("infoSemedDefault").textContent = textoInfo;
 
@@ -1221,11 +1365,11 @@ window.carregarDadosDaEscola = async function() {
 
         const inputDiasEscolaEl = document.getElementById("inputDiasEscola");
         inputDiasEscolaEl.value = diasEfetivosEscola;
-        inputDiasEscolaEl.disabled = mesBloqueado;
+        inputDiasEscolaEl.disabled = mesBloqueadoAtual;
 
         const btnSalvarDiasEl = document.getElementById("btnSalvarDias");
         if (btnSalvarDiasEl) {
-            btnSalvarDiasEl.style.display = mesBloqueado ? "none" : "flex";
+            btnSalvarDiasEl.style.display = mesBloqueadoAtual ? "none" : "flex";
         }
 
         schoolConfigCard.classList.add("ativo");
@@ -1327,7 +1471,6 @@ window.carregarDadosDaEscola = async function() {
                 const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
                 const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
 
-                /* 👇 CONTAGEM ATUALIZADA */
                 totalVinculosEscola++;
 
                 if (diasTotalExibido > 0) {
@@ -1343,7 +1486,7 @@ window.carregarDadosDaEscola = async function() {
 
                 const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
 
-                const acaoHtml = mesBloqueado
+                const acaoHtml = mesBloqueadoAtual
                     ? `<span class="badge-bloqueado-tabela"><span class="material-symbols-outlined" style="font-size:14px;">lock</span> Bloqueado</span>`
                     : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escolaSelecionada.replace(/'/g, "\\'")}', '${String(s.cpf || "").replace(/'/g, "\\'")}', '${servidorId.replace(/'/g, "\\'")}', '${numeroMatricula.replace(/'/g, "\\'")}')">
                         <span class="material-symbols-outlined" style="font-size:16px;">save</span> Salvar
@@ -1367,7 +1510,7 @@ window.carregarDadosDaEscola = async function() {
                                 data-servidor-id="${servidorId}"
                                 data-matricula="${numeroMatricula}"
                                 data-cpf="${String(s.cpf || "").replace(/'/g, "\\'")}"
-                                ${mesBloqueado ? "disabled" : ""}
+                                ${mesBloqueadoAtual ? "disabled" : ""}
                                 oninput="marcarComoModificado(this)"
                                 onblur="autoSalvarAoBlur(this)"
                             >
@@ -1382,7 +1525,6 @@ window.carregarDadosDaEscola = async function() {
             if (s.matricula2) await avaliarVinculo(s.matricula2, "Matrícula 2");
         }
 
-        /* 👇 EXIBIÇÃO ATUALIZADA DOS CARDS */
         document.getElementById("sumComAfastamento").textContent = vinculosComFalta + " vínculos";
         document.getElementById("sumTotalVinculos").textContent = totalVinculosEscola + " vínculos";
 
@@ -1395,7 +1537,10 @@ window.carregarDadosDaEscola = async function() {
         tableCard.classList.add("ativo");
         summaryContainer.classList.add("ativo");
         tableActionsBar.classList.add("ativo");
-        usageTip.classList.add("ativo");
+        
+        if (!mesBloqueadoAtual) {
+            usageTip.classList.add("ativo");
+        }
 
     } catch (erro) {
         console.error("Erro ao carregar dados:", erro);
@@ -1457,12 +1602,15 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
         return;
     }
     
+    /* 👇 Verifica bloqueio novamente antes de salvar */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-        if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-            mostrarToast("Mês congelado. Atualize a página.", "erro");
-            location.reload();
-            return;
+        if (semedSnap.exists()) {
+            const acesso = verificarAcessoEscola(semedSnap.data(), escola);
+            if (acesso.bloqueado) {
+                mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
+                return;
+            }
         }
     } catch (e) {
         console.error("Erro ao verificar bloqueio:", e);
@@ -1551,11 +1699,15 @@ window.salvarDiasUteisEscola = async function() {
         return;
     }
 
+    /* 👇 Verifica bloqueio antes de salvar */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
-        if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
-            mostrarToast("Mês congelado. Não é possível alterar.", "erro");
-            return;
+        if (semedSnap.exists()) {
+            const acesso = verificarAcessoEscola(semedSnap.data(), escola);
+            if (acesso.bloqueado) {
+                mostrarToast(`Mês bloqueado: ${acesso.motivo}`, "erro");
+                return;
+            }
         }
     } catch (e) {
         console.error("Erro ao verificar bloqueio:", e);
