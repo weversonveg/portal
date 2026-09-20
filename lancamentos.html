@@ -106,7 +106,7 @@ body {
 
 /* 👇 INFO DO USUÁRIO LOGADO */
 .info-usuario-logado {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 8px;
     font-size: 12px;
@@ -116,6 +116,11 @@ body {
     padding: 6px 12px;
     border-radius: 20px;
     border: 1px solid #e0d5ec;
+    flex-shrink: 0;
+}
+
+.info-usuario-logado.ativo {
+    display: flex;
 }
 
 .info-usuario-logado .material-symbols-outlined {
@@ -198,6 +203,30 @@ body {
     opacity: 0.4;
     pointer-events: none;
     filter: grayscale(30%);
+}
+
+/* 👇 LOADING DE AUTENTICAÇÃO */
+.loading-auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+    color: var(--text-secondary);
+}
+
+.loading-auth .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .form-card {
@@ -461,30 +490,6 @@ tr:hover td {
     color: #c62828;
 }
 
-/* 👇 LOADING DE AUTENTICAÇÃO */
-.loading-auth {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    gap: 16px;
-    color: var(--text-secondary);
-}
-
-.loading-auth .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #e2e8f0;
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
 @media (max-width: 600px) {
     .topbar {
         margin-top: 0;
@@ -508,7 +513,7 @@ tr:hover td {
         max-width: 100%;
     }
     .info-usuario-logado {
-        display: none;
+        display: none !important;
     }
 }
 </style>
@@ -524,7 +529,7 @@ tr:hover td {
         <span class="system-module">Semed - Férias, Folgas e Licenças</span>
         
         <!-- 👇 INFO DO USUÁRIO LOGADO -->
-        <div class="info-usuario-logado" id="infoUsuarioLogado" style="display: none;">
+        <div class="info-usuario-logado" id="infoUsuarioLogado">
             <span class="material-symbols-outlined">verified_user</span>
             <span id="textoUsuarioLogado">Administrador</span>
         </div>
@@ -674,7 +679,7 @@ tr:hover td {
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     /* =========================================================
-       VARIÁVEIS DE AUTENTICAÇÃO
+       VARIÁVEIS DE AUTENTICAÇÃO E ESTADO
        ========================================================= */
     let usuarioLogado = null;
     let perfilUsuario = "";
@@ -685,10 +690,13 @@ tr:hover td {
     let registrosCache = [];
 
     /* =========================================================
-       NORMALIZAÇÃO DE TEXTO
+       👇 MESMA NORMALIZAÇÃO DA ESCOLAS.HTML
        ========================================================= */
     function normalizarTexto(valor) {
-        if (valor === null || valor === undefined) return "";
+        if (valor === null || valor === undefined) {
+            return "";
+        }
+
         return String(valor)
             .trim()
             .normalize("NFD")
@@ -698,7 +706,7 @@ tr:hover td {
     }
 
     /* =========================================================
-       👇 VERIFICAÇÃO DE AUTENTICAÇÃO E PERMISSÕES
+       👇 AUTENTICAÇÃO (MESMA LÓGICA DA ESCOLAS.HTML QUE FUNCIONA)
        ========================================================= */
     onAuthStateChanged(auth, async function(user) {
         const loadingAuth = document.getElementById("loadingAuth");
@@ -711,38 +719,37 @@ tr:hover td {
         autenticacaoPronta = false;
         acessoAutorizado = false;
 
-        /* USUÁRIO NÃO LOGADO */
         if (!user) {
             usuarioLogado = null;
             perfilUsuario = "";
             
             loadingAuth.style.display = "none";
             acessoNegadoBanner.classList.add("ativo");
-            textoAcessoNegado.textContent = "Você não está autenticado. Faça login com uma conta de Administrador (SEMED) para acessar esta página.";
+            textoAcessoNegado.textContent = "Você não está autenticado. Faça login para acessar esta página.";
             conteudoPrincipal.style.display = "none";
-            
             return;
         }
 
         usuarioLogado = user;
 
         try {
-            /* Busca o cadastro do usuário na coleção 'usuarios' */
             const usuarioRef = doc(db, "usuarios", user.uid);
             const usuarioSnap = await getDoc(usuarioRef);
 
             if (!usuarioSnap.exists()) {
                 loadingAuth.style.display = "none";
                 acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.textContent = "Seu usuário está autenticado, mas não possui cadastro no sistema. Entre em contato com o administrador.";
+                textoAcessoNegado.textContent = "Seu usuário está autenticado, mas não possui cadastro na coleção 'usuarios'.";
                 conteudoPrincipal.style.display = "none";
                 return;
             }
 
             const dadosUsuario = usuarioSnap.data();
+
+            /* 👇 MESMA NORMALIZAÇÃO DA ESCOLAS.HTML */
             perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
 
-            /* 👇 VERIFICA SE É ADMINISTRADOR */
+            /* 👇 MESMA VERIFICAÇÃO DA ESCOLAS.HTML */
             if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
                 acessoAutorizado = true;
                 autenticacaoPronta = true;
@@ -752,25 +759,24 @@ tr:hover td {
                 conteudoPrincipal.style.display = "block";
                 conteudoPrincipal.classList.remove("conteudo-bloqueado");
                 
-                infoUsuarioLogado.style.display = "flex";
+                infoUsuarioLogado.classList.add("ativo");
                 textoUsuarioLogado.textContent = dadosUsuario.nome || "Administrador";
                 
-                /* Carrega os registros */
                 carregarRegistros();
-                
-            } else {
-                /* USUÁRIO SEM PERMISSÃO */
-                loadingAuth.style.display = "none";
-                acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.textContent = `Seu perfil "${dadosUsuario.perfil || 'sem perfil'}" não possui permissão para acessar esta página. Esta área é exclusiva para Administradores (SEMED).`;
-                conteudoPrincipal.style.display = "none";
+                return;
             }
 
-        } catch (erro) {
-            console.error("Erro ao verificar permissões:", erro);
+            /* Se não é admin, bloqueia */
             loadingAuth.style.display = "none";
             acessoNegadoBanner.classList.add("ativo");
-            textoAcessoNegado.textContent = "Erro ao verificar suas permissões. Tente novamente mais tarde.";
+            textoAcessoNegado.textContent = "Seu perfil não possui permissão para acessar esta página. Esta área é exclusiva para Administradores (SEMED).";
+            conteudoPrincipal.style.display = "none";
+
+        } catch (erro) {
+            console.error("Erro ao identificar usuário:", erro);
+            loadingAuth.style.display = "none";
+            acessoNegadoBanner.classList.add("ativo");
+            textoAcessoNegado.textContent = "Erro ao verificar a permissão do usuário.";
             conteudoPrincipal.style.display = "none";
         }
     });
@@ -859,7 +865,6 @@ tr:hover td {
        BUSCAR SERVIDOR POR CPF
        ========================================================= */
     window.buscarServidorPorCpf = async function() {
-        /* 👇 Verifica se tem acesso autorizado */
         if (!acessoAutorizado) {
             mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro");
             return;
@@ -942,7 +947,6 @@ tr:hover td {
     window.salvarRegistro = async function(event) {
         event.preventDefault();
 
-        /* 👇 Verifica se tem acesso autorizado */
         if (!acessoAutorizado) {
             mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro");
             return;
@@ -1030,7 +1034,6 @@ tr:hover td {
        CARREGAR REGISTROS
        ========================================================= */
     async function carregarRegistros() {
-        /* 👇 Só carrega se tiver acesso autorizado */
         if (!acessoAutorizado) return;
 
         const tbody = document.getElementById("tabelaRegistros");
@@ -1130,7 +1133,6 @@ tr:hover td {
     }
 
     window.excluirRegistro = async function(id) {
-        /* 👇 Verifica se tem acesso autorizado */
         if (!acessoAutorizado) {
             mostrarMensagem("Acesso negado. Você não possui permissão para excluir registros.", "erro");
             return;
