@@ -244,7 +244,7 @@ body {
     background: var(--primary-hover);
 }
 
-/* 👇 CARD DE STATUS DO MÊS */
+/* CARD DE STATUS DO MÊS */
 .status-card {
     display: none;
     background: var(--white);
@@ -631,7 +631,7 @@ tr:hover td {
         </button>
     </section>
 
-    <!-- 👇 CARD DE STATUS DO MÊS -->
+    <!-- CARD DE STATUS DO MÊS -->
     <div id="statusCard" class="status-card">
         <div class="status-icon liberado" id="statusIcon">
             <span class="material-symbols-outlined">info</span>
@@ -736,74 +736,23 @@ function formatarData(dataStr) {
 }
 
 /* =========================================================
-   👇 FUNÇÃO: VERIFICAR STATUS DO CÁLCULO
+   👇 FUNÇÃO CORRIGIDA: VERIFICAR STATUS DO CÁLCULO
+   Ordem de prioridade:
+   1. Exceções ativas (bloqueia QUALQUER mês)
+   2. Mês anterior (liberado)
+   3. Mês não disponível (bloqueado)
+   4. Congelado manualmente (liberado)
+   5. Sem período definido (bloqueado)
+   6. Antes da abertura (bloqueado)
+   7. Depois do fechamento (liberado)
+   8. Dentro do período (bloqueado)
    ========================================================= */
 function verificarStatusCalculo(config, mesAno) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    /* Verifica se é mês anterior ou não disponível */
-    if (mesAno) {
-        const [anoMes, mesMes] = mesAno.split("-").map(Number);
-        const anoAtual = hoje.getFullYear();
-        const mesAtual = hoje.getMonth() + 1;
-        
-        const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
-        const ehMesNaoDisponivel = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
-        
-        /* Mês anterior: liberado */
-        if (ehMesAnterior) {
-            return {
-                bloqueado: false,
-                tipo: "liberado",
-                motivo: "mes_anterior",
-                titulo: "Mês Anterior - Cálculo Disponível",
-                descricao: "Este mês já passou. Os dados históricos estão consolidados e disponíveis para cálculo.",
-                icone: "history"
-            };
-        }
-        
-        /* Mês não disponível: bloqueado */
-        if (ehMesNaoDisponivel) {
-            return {
-                bloqueado: true,
-                tipo: "bloqueado",
-                motivo: "mes_nao_disponivel",
-                titulo: "Mês Ainda Não Disponível",
-                descricao: "Este mês ainda não começou. Os cálculos só estarão disponíveis após o início do período de lançamentos.",
-                icone: "event_upcoming"
-            };
-        }
-    }
-    
-    /* Congelado manualmente: liberado */
-    if (config.congelado === true) {
-        return {
-            bloqueado: false,
-            tipo: "liberado",
-            motivo: "congelado",
-            titulo: "Mês Congelado - Cálculo Disponível",
-            descricao: "Este mês foi congelado manualmente pela SEMED. Os dados estão estáveis e prontos para cálculo.",
-            icone: "ac_unit"
-        };
-    }
-    
-    const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
-    const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
-    
-    /* Sem período definido: bloqueado */
-    if (!temAbertura && !temFechamento) {
-        return {
-            bloqueado: true,
-            tipo: "bloqueado",
-            motivo: "sem_periodo",
-            titulo: "Período Não Configurado",
-            descricao: "Este mês ainda não possui período de lançamentos configurado. Os cálculos só estarão disponíveis após os lançamentos das escolas.",
-            icone: "event_busy"
-        };
-    }
-    
-    /* Verifica exceções ativas */
+    /* 👇 PRIORIDADE 1: Verifica exceções ativas PRIMEIRO
+       Se há exceção ativa, bloqueia QUALQUER mês (inclusive anteriores) */
     const escolasReabertas = config.escolasReabertas || [];
     const excecoesAtivas = [];
     
@@ -814,11 +763,12 @@ function verificarStatusCalculo(config, mesAno) {
                 excecoesAtivas.push(exc);
             }
         } else if (typeof exc === 'string') {
+            /* Formato antigo sem data = considera ativo */
             excecoesAtivas.push({ escola: exc });
         }
     });
     
-    /* Se há exceções ativas: bloqueado */
+    /* Se há exceções ativas: BLOQUEIA (independente do mês) */
     if (excecoesAtivas.length > 0) {
         const listaEscolas = excecoesAtivas.map(e => 
             e.dataExpiracao 
@@ -837,7 +787,81 @@ function verificarStatusCalculo(config, mesAno) {
         };
     }
     
-    /* Verifica se está antes da abertura */
+    /* 👇 PRIORIDADE 2: Verifica mês anterior ou não disponível */
+    if (mesAno) {
+        const [anoMes, mesMes] = mesAno.split("-").map(Number);
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1;
+        
+        const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
+        const ehMesNaoDisponivel = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
+        
+        /* Mês anterior: liberado (já passou e sem exceções) */
+        if (ehMesAnterior) {
+            return {
+                bloqueado: false,
+                tipo: "liberado",
+                motivo: "mes_anterior",
+                titulo: "Mês Anterior - Cálculo Disponível",
+                descricao: "Este mês já passou. Os dados históricos estão consolidados e disponíveis para cálculo.",
+                icone: "history"
+            };
+        }
+        
+        /* Mês não disponível: bloqueado */
+        if (ehMesNaoDisponivel) {
+            /* 👇 Verifica se já tem período configurado para mensagem precisa */
+            const temPeriodoConfigurado = (config.dataAbertura && config.dataAbertura.trim() !== "") || 
+                                           (config.dataFechamento && config.dataFechamento.trim() !== "");
+            
+            let descricao;
+            if (temPeriodoConfigurado && config.dataFechamento) {
+                descricao = `Este mês ainda não começou. Os cálculos só estarão disponíveis após o fechamento do período em ${formatarData(config.dataFechamento)}, quando os dados estiverem estáveis.`;
+            } else if (temPeriodoConfigurado) {
+                descricao = "Este mês ainda não começou. Os cálculos só estarão disponíveis após o período de lançamentos ser concluído.";
+            } else {
+                descricao = "Este mês ainda não começou e não possui período configurado. Os cálculos só estarão disponíveis após a SEMED configurar o período e os lançamentos serem concluídos.";
+            }
+            
+            return {
+                bloqueado: true,
+                tipo: "bloqueado",
+                motivo: "mes_nao_disponivel",
+                titulo: "Mês Ainda Não Disponível",
+                descricao: descricao,
+                icone: "event_upcoming"
+            };
+        }
+    }
+    
+    /* 👇 PRIORIDADE 3: Congelado manualmente (liberado) */
+    if (config.congelado === true) {
+        return {
+            bloqueado: false,
+            tipo: "liberado",
+            motivo: "congelado",
+            titulo: "Mês Congelado - Cálculo Disponível",
+            descricao: "Este mês foi congelado manualmente pela SEMED. Os dados estão estáveis e prontos para cálculo.",
+            icone: "ac_unit"
+        };
+    }
+    
+    const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
+    const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
+    
+    /* 👇 PRIORIDADE 4: Sem período definido (bloqueado) */
+    if (!temAbertura && !temFechamento) {
+        return {
+            bloqueado: true,
+            tipo: "bloqueado",
+            motivo: "sem_periodo",
+            titulo: "Período Não Configurado",
+            descricao: "Este mês ainda não possui período de lançamentos configurado. Os cálculos só estarão disponíveis após os lançamentos das escolas.",
+            icone: "event_busy"
+        };
+    }
+    
+    /* 👇 PRIORIDADE 5: Antes da abertura (bloqueado) */
     if (temAbertura) {
         const dataAbertura = new Date(config.dataAbertura + "T00:00:00");
         if (hoje < dataAbertura) {
@@ -852,7 +876,7 @@ function verificarStatusCalculo(config, mesAno) {
         }
     }
     
-    /* Verifica se está depois do fechamento */
+    /* 👇 PRIORIDADE 6: Depois do fechamento (liberado) */
     if (temFechamento) {
         const dataFechamento = new Date(config.dataFechamento + "T23:59:59");
         if (hoje > dataFechamento) {
@@ -867,7 +891,7 @@ function verificarStatusCalculo(config, mesAno) {
         }
     }
     
-    /* Dentro do período: bloqueado */
+    /* 👇 PRIORIDADE 7: Dentro do período (bloqueado) */
     return {
         bloqueado: true,
         tipo: "bloqueado",
