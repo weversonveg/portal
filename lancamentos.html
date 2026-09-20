@@ -104,7 +104,6 @@ body {
     flex-grow: 1;
 }
 
-/* 👇 INFO DO USUÁRIO LOGADO */
 .info-usuario-logado {
     display: none;
     align-items: center;
@@ -163,7 +162,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* 👇 BANNER DE ACESSO NEGADO */
 .acesso-negado-banner {
     display: none;
     background: var(--red-light);
@@ -195,17 +193,19 @@ body {
 
 .acesso-negado-banner p {
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-/* 👇 ÁREA BLOQUEADA */
+.acesso-negado-banner code {
+    word-break: break-all;
+}
+
 .conteudo-bloqueado {
     opacity: 0.4;
     pointer-events: none;
     filter: grayscale(30%);
 }
 
-/* 👇 LOADING DE AUTENTICAÇÃO */
 .loading-auth {
     display: flex;
     flex-direction: column;
@@ -528,7 +528,6 @@ tr:hover td {
         <div class="system-divider"></div>
         <span class="system-module">Semed - Férias, Folgas e Licenças</span>
         
-        <!-- 👇 INFO DO USUÁRIO LOGADO -->
         <div class="info-usuario-logado" id="infoUsuarioLogado">
             <span class="material-symbols-outlined">verified_user</span>
             <span id="textoUsuarioLogado">Administrador</span>
@@ -548,22 +547,21 @@ tr:hover td {
         <p>Busque por CPF, selecione a matrícula/escola afetada, escolha o tipo de ausência e registre.</p>
     </div>
 
-    <!-- 👇 BANNER DE ACESSO NEGADO -->
+    <!-- BANNER DE ACESSO / DIAGNÓSTICO -->
     <div class="acesso-negado-banner" id="acessoNegadoBanner">
         <span class="material-symbols-outlined">block</span>
-        <div>
-            <strong>Acesso Restrito</strong>
-            <p id="textoAcessoNegado">Esta página é exclusiva para usuários com perfil de Administrador (SEMED). Faça login com uma conta autorizada.</p>
+        <div style="flex:1;">
+            <p id="textoAcessoNegado">Verificando permissões de acesso...</p>
         </div>
     </div>
 
-    <!-- 👇 LOADING DE AUTENTICAÇÃO -->
+    <!-- LOADING DE AUTENTICAÇÃO -->
     <div class="loading-auth" id="loadingAuth">
         <div class="spinner"></div>
         <span>Verificando permissões de acesso...</span>
     </div>
 
-    <!-- 👇 CONTEÚDO PRINCIPAL (BLOQUEADO ATÉ AUTENTICAR) -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <div id="conteudoPrincipal" class="conteudo-bloqueado" style="display: none;">
 
         <!-- FORMULÁRIO DE CADASTRO -->
@@ -690,7 +688,7 @@ tr:hover td {
     let registrosCache = [];
 
     /* =========================================================
-       👇 MESMA NORMALIZAÇÃO DA ESCOLAS.HTML
+       NORMALIZAÇÃO DE TEXTO
        ========================================================= */
     function normalizarTexto(valor) {
         if (valor === null || valor === undefined) {
@@ -706,7 +704,7 @@ tr:hover td {
     }
 
     /* =========================================================
-       👇 AUTENTICAÇÃO (MESMA LÓGICA DA ESCOLAS.HTML QUE FUNCIONA)
+       👇 AUTENTICAÇÃO COM DIAGNÓSTICO NA TELA (PARA CELULAR)
        ========================================================= */
     onAuthStateChanged(auth, async function(user) {
         const loadingAuth = document.getElementById("loadingAuth");
@@ -720,17 +718,24 @@ tr:hover td {
         acessoAutorizado = false;
 
         if (!user) {
-            usuarioLogado = null;
-            perfilUsuario = "";
-            
             loadingAuth.style.display = "none";
             acessoNegadoBanner.classList.add("ativo");
-            textoAcessoNegado.textContent = "Você não está autenticado. Faça login para acessar esta página.";
+            textoAcessoNegado.innerHTML = `
+                <strong>Você não está autenticado</strong>
+                Faça login para acessar esta página.
+            `;
             conteudoPrincipal.style.display = "none";
             return;
         }
 
         usuarioLogado = user;
+
+        /* Mostra diagnóstico inicial */
+        acessoNegadoBanner.classList.add("ativo");
+        textoAcessoNegado.innerHTML = `
+            <strong>🔍 Diagnosticando acesso...</strong><br>
+            <span style="font-size:12px;">Verificando permissões do usuário ${user.email}...</span>
+        `;
 
         try {
             const usuarioRef = doc(db, "usuarios", user.uid);
@@ -738,18 +743,20 @@ tr:hover td {
 
             if (!usuarioSnap.exists()) {
                 loadingAuth.style.display = "none";
-                acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.textContent = "Seu usuário está autenticado, mas não possui cadastro na coleção 'usuarios'.";
+                textoAcessoNegado.innerHTML = `
+                    <strong>❌ Usuário sem cadastro</strong><br>
+                    Seu email está autenticado mas não existe na coleção 'usuarios'.<br><br>
+                    <strong>UID:</strong> <code style="font-size:11px; background:#fff; padding:2px 6px; border-radius:3px;">${user.uid}</code><br>
+                    <strong>Email:</strong> ${user.email}<br><br>
+                    <span style="font-size:12px;">💡 Solicite ao administrador para cadastrar seu usuário com este UID.</span>
+                `;
                 conteudoPrincipal.style.display = "none";
                 return;
             }
 
             const dadosUsuario = usuarioSnap.data();
-
-            /* 👇 MESMA NORMALIZAÇÃO DA ESCOLAS.HTML */
             perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
 
-            /* 👇 MESMA VERIFICAÇÃO DA ESCOLAS.HTML */
             if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
                 acessoAutorizado = true;
                 autenticacaoPronta = true;
@@ -766,17 +773,39 @@ tr:hover td {
                 return;
             }
 
-            /* Se não é admin, bloqueia */
             loadingAuth.style.display = "none";
-            acessoNegadoBanner.classList.add("ativo");
-            textoAcessoNegado.textContent = "Seu perfil não possui permissão para acessar esta página. Esta área é exclusiva para Administradores (SEMED).";
+            textoAcessoNegado.innerHTML = `
+                <strong>⚠️ Perfil sem permissão</strong><br>
+                Seu perfil é "<strong>${dadosUsuario.perfil}</strong>" mas esta página exige perfil de Administrador.<br><br>
+                <strong>Dados encontrados:</strong><br>
+                <code style="font-size:11px; background:#fff; padding:8px; border-radius:4px; display:block; margin-top:6px; text-align:left;">
+                    Nome: ${dadosUsuario.nome || '-'}<br>
+                    Email: ${dadosUsuario.email || '-'}<br>
+                    Perfil: ${dadosUsuario.perfil || '-'}<br>
+                    Escola: ${dadosUsuario.escola || '-'}
+                </code>
+            `;
             conteudoPrincipal.style.display = "none";
 
         } catch (erro) {
-            console.error("Erro ao identificar usuário:", erro);
+            /* 👇 MOSTRA ERRO DETALHADO NA TELA */
             loadingAuth.style.display = "none";
-            acessoNegadoBanner.classList.add("ativo");
-            textoAcessoNegado.textContent = "Erro ao verificar a permissão do usuário.";
+            textoAcessoNegado.innerHTML = `
+                <strong>❌ Erro ao verificar permissões</strong><br>
+                <div style="background:#fff; border-left:4px solid #d32f2f; padding:12px; margin-top:8px; border-radius:4px; font-size:12px;">
+                    <strong>Código do erro:</strong><br>
+                    <code style="background:#f5f5f5; padding:2px 6px; border-radius:3px;">${erro.code || 'desconhecido'}</code><br><br>
+                    <strong>Mensagem:</strong><br>
+                    ${erro.message || 'Erro desconhecido'}
+                </div>
+                <br>
+                <span style="font-size:12px;">
+                    💡 Possíveis causas:<br>
+                    • Regras de segurança do Firestore bloqueando<br>
+                    • Problema de conexão com o banco<br>
+                    • Configuração do Firebase incorreta
+                </span>
+            `;
             conteudoPrincipal.style.display = "none";
         }
     });
