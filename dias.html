@@ -220,16 +220,6 @@ body {
     color: var(--blue);
 }
 
-.card-icon.green {
-    background: var(--green-light);
-    color: var(--green);
-}
-
-.card-icon.yellow {
-    background: var(--yellow-light);
-    color: var(--yellow);
-}
-
 .card-icon .material-symbols-outlined {
     font-size: 22px;
 }
@@ -306,7 +296,7 @@ body {
     border-color: var(--green-border) !important;
 }
 
-/* 👇 SEÇÃO PADRÃO GLOBAL */
+/* SEÇÃO PADRÃO GLOBAL */
 .padrao-section {
     grid-column: 1 / -1;
     background: var(--blue-light);
@@ -354,7 +344,7 @@ body {
     font-size: 14px;
 }
 
-/* 👇 SEÇÃO DE PERÍODO */
+/* SEÇÃO DE PERÍODO */
 .periodo-section {
     grid-column: 1 / -1;
     background: #fafbfc;
@@ -390,7 +380,7 @@ body {
     gap: 16px;
 }
 
-/* 👇 STATUS CALCULADO */
+/* STATUS CALCULADO */
 .status-calculado {
     grid-column: 1 / -1;
     padding: 16px 20px;
@@ -527,7 +517,7 @@ input:checked + .slider:before {
     margin-top: 2px;
 }
 
-/* 👇 SEÇÃO REABERTURA POR ESCOLA */
+/* 👇 SEÇÃO REABERTURA POR ESCOLA COM PRAZO */
 .reabertura-section {
     grid-column: 1 / -1;
     background: var(--yellow-light);
@@ -573,7 +563,7 @@ input:checked + .slider:before {
 
 .escolas-checkbox-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 10px;
 }
 
@@ -585,8 +575,8 @@ input:checked + .slider:before {
     padding: 10px 14px;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
-    cursor: pointer;
     transition: all 0.15s;
+    flex-wrap: wrap;
 }
 
 .escola-checkbox:hover {
@@ -600,6 +590,7 @@ input:checked + .slider:before {
     margin: 0;
     cursor: pointer;
     accent-color: var(--yellow);
+    flex-shrink: 0;
 }
 
 .escola-checkbox label {
@@ -608,6 +599,50 @@ input:checked + .slider:before {
     cursor: pointer;
     flex: 1;
     margin: 0;
+    min-width: 0;
+}
+
+/* 👇 Campo de dias permitidos (aparece quando marcado) */
+.escola-checkbox .dias-permitidos {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.escola-checkbox.marcado .dias-permitidos {
+    display: flex;
+}
+
+.escola-checkbox .dias-permitidos label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.escola-checkbox .dias-permitidos input {
+    width: 60px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--yellow);
+    background: #fffdf7;
+}
+
+.escola-checkbox .dias-permitidos .explicacao {
+    font-size: 10px;
+    color: var(--text-secondary);
+    flex: 1;
+    font-style: italic;
 }
 
 .escolas-selecionadas-info {
@@ -783,6 +818,13 @@ tr:hover td {
     font-size: 11px;
 }
 
+.reabertura-badge.expirada {
+    background: #f1f3f5;
+    color: #7a858d;
+    border-color: #e2e8f0;
+    text-decoration: line-through;
+}
+
 .form-footer {
     min-height: 76px;
     padding: 14px 24px;
@@ -929,7 +971,6 @@ button:disabled {
         <p>Configure o padrão global, defina períodos específicos e controle o acesso de cada mês.</p>
     </div>
 
-    <!-- CARD DO FORMULÁRIO -->
     <section class="form-card">
         <div class="card-header">
             <div class="card-icon">
@@ -937,7 +978,7 @@ button:disabled {
             </div>
             <div>
                 <div class="card-title">Cadastrar / Atualizar Mês</div>
-                <div class="card-description">Configure dias letivos, período de lançamentos e exceções.</div>
+                <div class="card-description">Configure dias letivos, período de lançamentos e exceções com prazo.</div>
             </div>
         </div>
 
@@ -945,7 +986,7 @@ button:disabled {
             <div class="form-body">
                 <div class="form-grid">
                     
-                    <!-- 👇 SEÇÃO PADRÃO GLOBAL -->
+                    <!-- PADRÃO GLOBAL -->
                     <div class="padrao-section">
                         <div class="padrao-header">
                             <div class="card-icon blue" style="width:32px; height:32px;">
@@ -1038,7 +1079,7 @@ button:disabled {
                         >
                     </div>
 
-                    <!-- SEÇÃO DE PERÍODO -->
+                    <!-- PERÍODO DE LANÇAMENTOS -->
                     <div class="periodo-section">
                         <div class="periodo-title">
                             <span class="material-symbols-outlined">date_range</span>
@@ -1085,7 +1126,7 @@ button:disabled {
                         </div>
                     </div>
 
-                    <!-- TOGGLE CONGELAR -->
+                    <!-- CONGELAMENTO MANUAL -->
                     <div class="form-group full">
                         <label>Congelamento Manual</label>
                         <div class="toggle-container">
@@ -1102,18 +1143,18 @@ button:disabled {
                         </div>
                     </div>
 
-                    <!-- 👇 SEÇÃO REABERTURA POR ESCOLA -->
+                    <!-- 👇 REABERTURA POR ESCOLA COM PRAZO -->
                     <div class="reabertura-section" id="reaberturaSection">
                         <div class="reabertura-header">
                             <div class="reabertura-title">
                                 <span class="material-symbols-outlined">lock_open_right</span>
-                                Reabertura por Escola (Exceção)
+                                Reabertura por Escola (Exceção com Prazo)
                             </div>
                         </div>
                         <p class="reabertura-description">
                             Quando o mês estiver fechado, selecione abaixo quais escolas específicas poderão 
-                            <strong>continuar lançando</strong> (útil para escolas que solicitam reabertura após o prazo). 
-                            As escolas não marcadas continuarão com o mês bloqueado normalmente.
+                            <strong>continuar lançando</strong> e defina quantos dias cada uma terá de acesso. 
+                            Após o prazo expirar, o acesso será bloqueado automaticamente.
                         </p>
                         
                         <div class="escolas-checkbox-grid" id="escolasCheckboxGrid">
@@ -1196,9 +1237,6 @@ button:disabled {
     import { db } from "./firebase.js";
     import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    /* =========================================================
-       LISTA DE ESCOLAS (MESMA DA ESCOLAS.HTML)
-       ========================================================= */
     const ESCOLAS_DISPONIVEIS = [
         "CEAE",
         "CETEPE",
@@ -1207,14 +1245,8 @@ button:disabled {
         "CMEI ANÁLIA NOGUEIRA"
     ];
 
-    /* =========================================================
-       VARIÁVEIS GLOBAIS
-       ========================================================= */
     let padraoGlobal = { diaAbertura: null, diaFechamento: null };
 
-    /* =========================================================
-       INICIALIZAÇÃO
-       ========================================================= */
     document.addEventListener("DOMContentLoaded", async function() {
         const hoje = new Date();
         const ano = hoje.getFullYear();
@@ -1225,38 +1257,46 @@ button:disabled {
         inputMes.value = mesAtualStr;
         atualizarCorCampo(inputMes);
         
-        /* Monta os checkboxes de escolas */
         montarCheckboxesEscolas();
         
-        /* Carrega padrão global */
         await carregarPadraoGlobal();
-        
-        /* Carrega configuração do mês atual */
         await carregarConfiguracao(mesAtualStr);
         
         carregarTodasConfiguracoes();
     });
 
     /* =========================================================
-       👇 MONTAR CHECKBOXES DE ESCOLAS
+       MONTAR CHECKBOXES DE ESCOLAS COM CAMPO DE DIAS
        ========================================================= */
-    function montarCheckboxesEscolas() {
+    window.montarCheckboxesEscolas = function() {
         const grid = document.getElementById("escolasCheckboxGrid");
         grid.innerHTML = ESCOLAS_DISPONIVEIS.map(escola => {
             const id = `escola_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
             return `
-                <div class="escola-checkbox" onclick="toggleCheckbox('${id}')">
-                    <input type="checkbox" id="${id}" value="${escola}" onchange="atualizarContadorEscolasSelecionadas()">
+                <div class="escola-checkbox" id="container_${id}">
+                    <input type="checkbox" id="${id}" value="${escola}" 
+                           onchange="toggleDiasInput('${id}', '${idDias}'); atualizarContadorEscolasSelecionadas()">
                     <label for="${id}">${escola}</label>
+                    <div class="dias-permitidos">
+                        <label for="${idDias}">Dias:</label>
+                        <input type="number" id="${idDias}" value="3" min="1" max="30">
+                        <span class="explicacao">após salvar</span>
+                    </div>
                 </div>
             `;
         }).join('');
-    }
+    };
 
-    window.toggleCheckbox = function(id) {
-        const checkbox = document.getElementById(id);
-        checkbox.checked = !checkbox.checked;
-        atualizarContadorEscolasSelecionadas();
+    window.toggleDiasInput = function(idCheckbox, idDias) {
+        const checkbox = document.getElementById(idCheckbox);
+        const container = document.getElementById(`container_${idCheckbox}`);
+        
+        if (checkbox.checked) {
+            container.classList.add("marcado");
+        } else {
+            container.classList.remove("marcado");
+        }
     };
 
     window.atualizarContadorEscolasSelecionadas = function() {
@@ -1267,14 +1307,37 @@ button:disabled {
         
         if (selecionadas.length > 0) {
             info.style.display = "flex";
-            texto.textContent = `${selecionadas.length} escola(s) com acesso liberado: ${selecionadas.map(c => c.value).join(', ')}`;
+            const detalhes = selecionadas.map(cb => {
+                const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                const inputDias = document.getElementById(idDias);
+                const dias = inputDias ? inputDias.value : 3;
+                return `${cb.value} (${dias} dia${dias != 1 ? 's' : ''})`;
+            }).join(', ');
+            texto.textContent = `${selecionadas.length} escola(s) com acesso liberado: ${detalhes}`;
         } else {
             info.style.display = "none";
         }
     };
 
     /* =========================================================
-       👇 PADRÃO GLOBAL
+       FORMATAR DATA
+       ========================================================= */
+    function formatarDataISO(data) {
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return "-";
+        const partes = dataStr.split("-");
+        if (partes.length !== 3) return dataStr;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    /* =========================================================
+       PADRÃO GLOBAL
        ========================================================= */
     async function carregarPadraoGlobal() {
         try {
@@ -1353,9 +1416,6 @@ button:disabled {
         }
     };
 
-    /* =========================================================
-       👇 APLICAR PADRÃO AO MÊS ATUAL
-       ========================================================= */
     window.aplicarPadraoAoMesAtual = function() {
         if (!padraoGlobal.diaAbertura || !padraoGlobal.diaFechamento) {
             mostrarMensagem("Defina primeiro um padrão global antes de aplicá-lo.", "erro");
@@ -1383,7 +1443,7 @@ button:disabled {
     };
 
     /* =========================================================
-       👇 CALCULAR STATUS DO MÊS
+       CALCULAR STATUS DO MÊS
        ========================================================= */
     function calcularStatusMes(config) {
         const hoje = new Date();
@@ -1446,16 +1506,6 @@ button:disabled {
         };
     }
 
-    function formatarData(dataStr) {
-        if (!dataStr) return "-";
-        const partes = dataStr.split("-");
-        if (partes.length !== 3) return dataStr;
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-
-    /* =========================================================
-       ATUALIZAR STATUS NA TELA
-       ========================================================= */
     window.atualizarStatusCalculado = function() {
         const config = {
             congelado: document.getElementById("toggleCongelado").checked,
@@ -1502,6 +1552,36 @@ button:disabled {
     }
 
     /* =========================================================
+       VERIFICAR EXPIRAÇÃO DE EXCEÇÃO (para exibição na tabela)
+       ========================================================= */
+    function verificarExpiracaoExcecao(excecao) {
+        if (typeof excecao === 'string') {
+            return { escola: excecao, expirada: false, dataExpiracao: null, diasPermitidos: null };
+        }
+        
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        if (!excecao.dataExpiracao) {
+            return { 
+                escola: excecao.escola, 
+                expirada: false, 
+                dataExpiracao: null, 
+                diasPermitidos: excecao.diasPermitidos || null 
+            };
+        }
+        
+        const dataExpiracao = new Date(excecao.dataExpiracao + "T23:59:59");
+        
+        return {
+            escola: excecao.escola,
+            expirada: hoje > dataExpiracao,
+            dataExpiracao: excecao.dataExpiracao,
+            diasPermitidos: excecao.diasPermitidos || null
+        };
+    }
+
+    /* =========================================================
        CARREGAR TODAS AS CONFIGURAÇÕES
        ========================================================= */
     async function carregarTodasConfiguracoes() {
@@ -1509,7 +1589,6 @@ button:disabled {
         try {
             const querySnapshot = await getDocs(collection(db, "configuracoes"));
             
-            /* Filtra o documento do padrão global */
             const docsList = [];
             querySnapshot.forEach(d => {
                 if (d.id !== "_padraoGlobal") {
@@ -1558,15 +1637,22 @@ button:disabled {
                     periodoTexto = `<div class="periodo-texto" style="color:#9aa3aa;">Sem período</div>`;
                 }
                 
-                /* Badges de exceções */
+                /* Badges de exceções com expiração */
                 let excecoesHtml = "";
                 if (escolasReabertas.length > 0) {
                     excecoesHtml = `<div class="reabertura-badges">`;
-                    escolasReabertas.forEach(escola => {
+                    escolasReabertas.forEach(exc => {
+                        const info = verificarExpiracaoExcecao(exc);
+                        const classeCss = info.expirada ? "expirada" : "";
+                        const iconeStatus = info.expirada ? "block" : "lock_open_right";
+                        const infoDias = info.diasPermitidos ? ` (${info.diasPermitidos}d)` : '';
+                        const infoExpiracao = info.dataExpiracao ? ` até ${formatarData(info.dataExpiracao)}` : '';
+                        const textoExpirada = info.expirada ? ' [expirada]' : '';
+                        
                         excecoesHtml += `
-                            <span class="reabertura-badge">
-                                <span class="material-symbols-outlined">lock_open_right</span>
-                                ${escola}
+                            <span class="reabertura-badge ${classeCss}" title="${info.escola}${infoDias}${infoExpiracao}${textoExpirada}">
+                                <span class="material-symbols-outlined">${iconeStatus}</span>
+                                ${info.escola}${infoDias}${textoExpirada}
                             </span>
                         `;
                     });
@@ -1575,7 +1661,7 @@ button:disabled {
                     excecoesHtml = `<span style="color:#9aa3aa; font-size:11px;">Nenhuma</span>`;
                 }
                 
-                const escolasReabertasStr = JSON.stringify(escolasReabertas).replace(/'/g, "\\'");
+                const escolasReabertasStr = JSON.stringify(escolasReabertas).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 linhas += `
                     <tr>
@@ -1620,10 +1706,32 @@ button:disabled {
         document.getElementById("dataAbertura").value = dataAbertura || '';
         document.getElementById("dataFechamento").value = dataFechamento || '';
         
-        /* Marca checkboxes de escolas reabertas */
+        /* Marca checkboxes e preenche dias das escolas reabertas */
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
         checkboxes.forEach(cb => {
-            cb.checked = escolasReabertas && escolasReabertas.includes(cb.value);
+            const escola = cb.value;
+            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const inputDias = document.getElementById(idDias);
+            const container = document.getElementById(`container_${cb.id}`);
+            
+            let encontrada = null;
+            if (escolasReabertas && Array.isArray(escolasReabertas)) {
+                encontrada = escolasReabertas.find(e => 
+                    typeof e === 'string' ? e === escola : e.escola === escola
+                );
+            }
+            
+            if (encontrada) {
+                cb.checked = true;
+                if (container) container.classList.add("marcado");
+                if (inputDias && typeof encontrada === 'object') {
+                    inputDias.value = encontrada.diasPermitidos || 3;
+                }
+            } else {
+                cb.checked = false;
+                if (container) container.classList.remove("marcado");
+                if (inputDias) inputDias.value = 3;
+            }
         });
         atualizarContadorEscolasSelecionadas();
         
@@ -1638,9 +1746,6 @@ button:disabled {
         mostrarMensagem(`Carregado mês ${formatarMesAno(mesAno)} para edição.`, "sucesso");
     };
 
-    /* =========================================================
-       EXCLUIR CONFIGURAÇÃO
-       ========================================================= */
     window.excluirConfiguracao = async function(mesAno) {
         if (confirm(`Deseja realmente excluir a configuração do mês ${formatarMesAno(mesAno)}?`)) {
             try {
@@ -1656,7 +1761,7 @@ button:disabled {
     };
 
     /* =========================================================
-       👇 CARREGAR CONFIGURAÇÃO (COM PADRÃO AUTOMÁTICO)
+       CARREGAR CONFIGURAÇÃO
        ========================================================= */
     window.carregarConfiguracao = async function(mesAno) {
         if (!mesAno) return;
@@ -1680,11 +1785,32 @@ button:disabled {
                 inputDataAbertura.value = dados.dataAbertura || "";
                 inputDataFechamento.value = dados.dataFechamento || "";
                 
-                /* Carrega escolas reabertas */
                 const escolasReabertas = dados.escolasReabertas || [];
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
                 checkboxes.forEach(cb => {
-                    cb.checked = escolasReabertas.includes(cb.value);
+                    const escola = cb.value;
+                    const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                    const inputDias = document.getElementById(idDias);
+                    const container = document.getElementById(`container_${cb.id}`);
+                    
+                    let encontrada = null;
+                    if (Array.isArray(escolasReabertas)) {
+                        encontrada = escolasReabertas.find(e => 
+                            typeof e === 'string' ? e === escola : e.escola === escola
+                        );
+                    }
+                    
+                    if (encontrada) {
+                        cb.checked = true;
+                        if (container) container.classList.add("marcado");
+                        if (inputDias && typeof encontrada === 'object') {
+                            inputDias.value = encontrada.diasPermitidos || 3;
+                        }
+                    } else {
+                        cb.checked = false;
+                        if (container) container.classList.remove("marcado");
+                        if (inputDias) inputDias.value = 3;
+                    }
                 });
                 atualizarContadorEscolasSelecionadas();
                 
@@ -1695,7 +1821,6 @@ button:disabled {
                 
                 mostrarMensagem("Configuração carregada para este mês.", "sucesso");
             } else {
-                /* 👇 MÊS NOVO: aplica padrão global automaticamente */
                 inputDias.value = "";
                 inputObs.value = "";
                 toggleCongelado.checked = false;
@@ -1717,9 +1842,15 @@ button:disabled {
                     inputDataFechamento.value = "";
                 }
                 
-                /* Limpa checkboxes de escolas */
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
-                checkboxes.forEach(cb => cb.checked = false);
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                    const container = document.getElementById(`container_${cb.id}`);
+                    if (container) container.classList.remove("marcado");
+                    const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                    const inputDias = document.getElementById(idDias);
+                    if (inputDias) inputDias.value = 3;
+                });
                 atualizarContadorEscolasSelecionadas();
                 
                 inputDias.classList.remove("preenchido");
@@ -1731,7 +1862,7 @@ button:disabled {
     };
 
     /* =========================================================
-       SALVAR CONFIGURAÇÃO
+       👇 SALVAR CONFIGURAÇÃO COM PRAZO DE EXPIRAÇÃO
        ========================================================= */
     window.salvarConfiguracao = async function(event) {
         event.preventDefault();
@@ -1753,9 +1884,25 @@ button:disabled {
             return;
         }
         
-        /* Coleta escolas selecionadas para reabertura */
+        /* Coleta escolas selecionadas com prazo de expiração */
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]:checked');
-        const escolasReabertas = Array.from(checkboxes).map(cb => cb.value);
+        const escolasReabertas = Array.from(checkboxes).map(cb => {
+            const escola = cb.value;
+            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const inputDias = document.getElementById(idDias);
+            const diasPermitidos = inputDias ? Number(inputDias.value) || 3 : 3;
+            
+            const hoje = new Date();
+            const dataExpiracao = new Date(hoje);
+            dataExpiracao.setDate(dataExpiracao.getDate() + diasPermitidos);
+            
+            return {
+                escola: escola,
+                diasPermitidos: diasPermitidos,
+                dataReabertura: formatarDataISO(hoje),
+                dataExpiracao: formatarDataISO(dataExpiracao)
+            };
+        });
 
         const btnSalvar = document.getElementById("btnSalvar");
         const textoBotao = document.getElementById("textoBotao");
@@ -1790,9 +1937,6 @@ button:disabled {
         }
     };
 
-    /* =========================================================
-       LIMPAR FORMULÁRIO
-       ========================================================= */
     window.limparFormulario = function() {
         document.getElementById("diasUteis").value = "";
         document.getElementById("observacoes").value = "";
@@ -1806,7 +1950,14 @@ button:disabled {
         document.getElementById("toggleCongelado").checked = false;
         
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            const container = document.getElementById(`container_${cb.id}`);
+            if (container) container.classList.remove("marcado");
+            const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const inputDias = document.getElementById(idDias);
+            if (inputDias) inputDias.value = 3;
+        });
         atualizarContadorEscolasSelecionadas();
         
         atualizarStatusCalculado();
