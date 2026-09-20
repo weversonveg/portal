@@ -343,7 +343,6 @@
 
         .escola-title { margin: 0; font-size: 14px; font-weight: 700; color: #37474f; }
 
-        /* 👇 BOTÃO REMOVER LOTAÇÃO */
         .btn-remover-lotacao {
             background: transparent;
             border: 1px solid var(--border);
@@ -1149,6 +1148,11 @@
                     qtdPassagensDiarias: obterPasses("passes1_1")
                 };
 
+                /* ==========================================
+                   👇 CORREÇÃO DO BUG - ESCOLA 2 MATRÍCULA 1
+                   Se checkbox marcado: salva ou remove conforme campos
+                   Se checkbox desmarcado: SEMPRE remove do banco
+                ========================================== */
                 if (document.getElementById("possuiEscola2_1").checked) {
                     const nomeEscola2_1 = document.getElementById("escola2_1").value;
 
@@ -1161,6 +1165,9 @@
                     } else {
                         dadosAtualizar["matricula1.escola2"] = deleteField();
                     }
+                } else {
+                    // Checkbox desmarcado → remove do banco (se existir)
+                    dadosAtualizar["matricula1.escola2"] = deleteField();
                 }
 
                 if (servidorTemMatricula2) {
@@ -1175,6 +1182,11 @@
                         qtdPassagensDiarias: obterPasses("passes1_2")
                     };
 
+                    /* ==========================================
+                       👇 CORREÇÃO DO BUG - ESCOLA 2 MATRÍCULA 2
+                       Se checkbox marcado: salva ou remove conforme campos
+                       Se checkbox desmarcado: SEMPRE remove do banco
+                    ========================================== */
                     if (document.getElementById("possuiEscola2_2").checked) {
                         const nomeEscola2_2 = document.getElementById("escola2_2").value;
 
@@ -1187,6 +1199,9 @@
                         } else {
                             dadosAtualizar["matricula2.escola2"] = deleteField();
                         }
+                    } else {
+                        // Checkbox desmarcado → remove do banco (se existir)
+                        dadosAtualizar["matricula2.escola2"] = deleteField();
                     }
                 }
 
@@ -1212,7 +1227,7 @@
         }
 
         /* ==========================================
-           👇 LIMPAR LOTAÇÃO (Escola 1)
+           LIMPAR LOTAÇÃO (Escola 1)
            Limpa os 3 campos de uma vez
         ========================================== */
         window.limparLotacao = function(idEscola, idEmpresa, idPasses) {
@@ -1227,7 +1242,7 @@
         };
 
         /* ==========================================
-           👇 REMOVER LOTAÇÃO (Escola 2)
+           REMOVER LOTAÇÃO (Escola 2)
            Limpa campos + desmarca checkbox + esconde box
         ========================================== */
         window.removerLotacaoEscola2 = function(numMatricula) {
