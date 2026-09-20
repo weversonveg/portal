@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
+<!-- Biblioteca para gerar arquivo ODS (formato nativo do LibreOffice) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <title>Cálculo de Passes - Vale Transporte</title>
 
 <style>
@@ -425,6 +428,15 @@ body {
     cursor: not-allowed;
 }
 
+/* 👇 Botão CSV (secundário, cinza) */
+.btn-exportar.csv {
+    background: #455a64;
+}
+
+.btn-exportar.csv:hover {
+    background: #37474f;
+}
+
 .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -673,7 +685,11 @@ tr:hover td {
                 Resultado do Cálculo
             </div>
             <div class="card-actions">
-                <button type="button" class="btn-exportar" id="btnExportar" onclick="exportarCSV()">
+                <button type="button" class="btn-exportar" id="btnExportarODS" onclick="exportarODS()">
+                    <span class="material-symbols-outlined">table_view</span>
+                    Exportar Planilha (LibreOffice)
+                </button>
+                <button type="button" class="btn-exportar csv" id="btnExportarCSV" onclick="exportarCSV()">
                     <span class="material-symbols-outlined">download</span>
                     Exportar CSV
                 </button>
@@ -736,23 +752,13 @@ function formatarData(dataStr) {
 }
 
 /* =========================================================
-   👇 FUNÇÃO CORRIGIDA: VERIFICAR STATUS DO CÁLCULO
-   Ordem de prioridade:
-   1. Exceções ativas (bloqueia QUALQUER mês)
-   2. Mês anterior (liberado)
-   3. Mês não disponível (bloqueado)
-   4. Congelado manualmente (liberado)
-   5. Sem período definido (bloqueado)
-   6. Antes da abertura (bloqueado)
-   7. Depois do fechamento (liberado)
-   8. Dentro do período (bloqueado)
+   FUNÇÃO: VERIFICAR STATUS DO CÁLCULO
    ========================================================= */
 function verificarStatusCalculo(config, mesAno) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    /* 👇 PRIORIDADE 1: Verifica exceções ativas PRIMEIRO
-       Se há exceção ativa, bloqueia QUALQUER mês (inclusive anteriores) */
+    /* PRIORIDADE 1: Exceções ativas bloqueiam QUALQUER mês */
     const escolasReabertas = config.escolasReabertas || [];
     const excecoesAtivas = [];
     
@@ -763,12 +769,10 @@ function verificarStatusCalculo(config, mesAno) {
                 excecoesAtivas.push(exc);
             }
         } else if (typeof exc === 'string') {
-            /* Formato antigo sem data = considera ativo */
             excecoesAtivas.push({ escola: exc });
         }
     });
     
-    /* Se há exceções ativas: BLOQUEIA (independente do mês) */
     if (excecoesAtivas.length > 0) {
         const listaEscolas = excecoesAtivas.map(e => 
             e.dataExpiracao 
@@ -787,7 +791,7 @@ function verificarStatusCalculo(config, mesAno) {
         };
     }
     
-    /* 👇 PRIORIDADE 2: Verifica mês anterior ou não disponível */
+    /* PRIORIDADE 2: Mês anterior ou não disponível */
     if (mesAno) {
         const [anoMes, mesMes] = mesAno.split("-").map(Number);
         const anoAtual = hoje.getFullYear();
@@ -796,7 +800,6 @@ function verificarStatusCalculo(config, mesAno) {
         const ehMesAnterior = (anoMes < anoAtual) || (anoMes === anoAtual && mesMes < mesAtual);
         const ehMesNaoDisponivel = (anoMes > anoAtual) || (anoMes === anoAtual && mesMes > mesAtual);
         
-        /* Mês anterior: liberado (já passou e sem exceções) */
         if (ehMesAnterior) {
             return {
                 bloqueado: false,
@@ -808,9 +811,7 @@ function verificarStatusCalculo(config, mesAno) {
             };
         }
         
-        /* Mês não disponível: bloqueado */
         if (ehMesNaoDisponivel) {
-            /* 👇 Verifica se já tem período configurado para mensagem precisa */
             const temPeriodoConfigurado = (config.dataAbertura && config.dataAbertura.trim() !== "") || 
                                            (config.dataFechamento && config.dataFechamento.trim() !== "");
             
@@ -834,7 +835,7 @@ function verificarStatusCalculo(config, mesAno) {
         }
     }
     
-    /* 👇 PRIORIDADE 3: Congelado manualmente (liberado) */
+    /* PRIORIDADE 3: Congelado manualmente */
     if (config.congelado === true) {
         return {
             bloqueado: false,
@@ -849,7 +850,7 @@ function verificarStatusCalculo(config, mesAno) {
     const temAbertura = config.dataAbertura && config.dataAbertura.trim() !== "";
     const temFechamento = config.dataFechamento && config.dataFechamento.trim() !== "";
     
-    /* 👇 PRIORIDADE 4: Sem período definido (bloqueado) */
+    /* PRIORIDADE 4: Sem período definido */
     if (!temAbertura && !temFechamento) {
         return {
             bloqueado: true,
@@ -861,7 +862,7 @@ function verificarStatusCalculo(config, mesAno) {
         };
     }
     
-    /* 👇 PRIORIDADE 5: Antes da abertura (bloqueado) */
+    /* PRIORIDADE 5: Antes da abertura */
     if (temAbertura) {
         const dataAbertura = new Date(config.dataAbertura + "T00:00:00");
         if (hoje < dataAbertura) {
@@ -876,7 +877,7 @@ function verificarStatusCalculo(config, mesAno) {
         }
     }
     
-    /* 👇 PRIORIDADE 6: Depois do fechamento (liberado) */
+    /* PRIORIDADE 6: Depois do fechamento */
     if (temFechamento) {
         const dataFechamento = new Date(config.dataFechamento + "T23:59:59");
         if (hoje > dataFechamento) {
@@ -891,7 +892,7 @@ function verificarStatusCalculo(config, mesAno) {
         }
     }
     
-    /* 👇 PRIORIDADE 7: Dentro do período (bloqueado) */
+    /* PRIORIDADE 7: Dentro do período */
     return {
         bloqueado: true,
         tipo: "bloqueado",
@@ -922,7 +923,6 @@ function atualizarCardStatus(status, config) {
     statusTitle.textContent = status.titulo;
     statusDescription.textContent = status.descricao;
     
-    /* Informações do período */
     let infoHtml = "";
     
     if (config.dataAbertura || config.dataFechamento) {
@@ -954,7 +954,6 @@ function atualizarCardStatus(status, config) {
     
     statusInfo.innerHTML = infoHtml;
     
-    /* Aviso de bloqueio */
     if (status.bloqueado) {
         avisoBloqueio.classList.add("visivel");
         textoBloqueio.innerHTML = `<strong>Cálculo bloqueado:</strong> ${status.titulo}. Aguarde o fechamento do período para realizar os cálculos.`;
@@ -975,7 +974,6 @@ window.carregarDados = async function() {
         return;
     }
     
-    /* Mostra loading */
     const tabelaResultado = document.getElementById("tabelaResultado");
     tabelaResultado.innerHTML = `
         <tr>
@@ -987,26 +985,21 @@ window.carregarDados = async function() {
     `;
     
     try {
-        /* Busca configuração do mês */
         const configRef = doc(db, "configuracoes", mesAno);
         const configSnap = await getDoc(configRef);
         const config = configSnap.exists() ? configSnap.data() : {};
         
-        /* Verifica status do cálculo */
         const status = verificarStatusCalculo(config, mesAno);
         mesBloqueadoParaCalculo = status.bloqueado;
         
-        /* Atualiza card de status */
         atualizarCardStatus(status, config);
         
-        /* Se bloqueado, não carrega os dados */
         if (status.bloqueado) {
             document.getElementById("cardResultado").classList.remove("ativo");
             document.getElementById("resumoBox").classList.remove("ativo");
             return;
         }
         
-        /* Busca servidores */
         const servidoresSnap = await getDocs(collection(db, "servidores"));
         if (servidoresSnap.empty) {
             tabelaResultado.innerHTML = `
@@ -1021,7 +1014,6 @@ window.carregarDados = async function() {
             return;
         }
         
-        /* Busca lançamentos */
         const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
         const lancamentosMap = {};
         lancamentosSnap.forEach(lancDoc => {
@@ -1032,7 +1024,6 @@ window.carregarDados = async function() {
             }
         });
         
-        /* Busca configurações de escolas */
         const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
         const configEscolasMap = {};
         configEscolasSnap.forEach(cfgDoc => {
@@ -1042,10 +1033,8 @@ window.carregarDados = async function() {
             }
         });
         
-        /* Dias úteis padrão */
         const diasUteisPadrao = config.diasUteis || 22;
         
-        /* Calcula passes */
         dadosCalculados = [];
         let totalPasses = 0;
         let totalAfastados = 0;
@@ -1054,7 +1043,7 @@ window.carregarDados = async function() {
             const servidor = servidorDoc.data();
             const cpfLimpo = servidor.cpf ? String(servidor.cpf).replace(/\D/g, "") : "";
             
-            const processarMatricula = (matricula, tipoMat) => {
+            const processarMatricula = (matricula) => {
                 if (!matricula) return;
                 
                 const processarEscola = (escolaObj) => {
@@ -1062,7 +1051,6 @@ window.carregarDados = async function() {
                     
                     const nomeEscola = escolaObj.nomeEscola;
                     
-                    /* Aplica filtro por escola */
                     if (filtroEscola && nomeEscola !== filtroEscola) return;
                     
                     const numeroMatricula = matricula.numeroMatricula || "";
@@ -1094,20 +1082,17 @@ window.carregarDados = async function() {
                 processarEscola(matricula.escola2);
             };
             
-            processarMatricula(servidor.matricula1, "M1");
-            processarMatricula(servidor.matricula2, "M2");
+            processarMatricula(servidor.matricula1);
+            processarMatricula(servidor.matricula2);
         });
         
-        /* Ordena por nome */
         dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
         
-        /* Atualiza resumo */
         document.getElementById("totalServidores").textContent = dadosCalculados.length;
         document.getElementById("totalPasses").textContent = totalPasses.toLocaleString("pt-BR");
         document.getElementById("totalAfastados").textContent = totalAfastados;
         document.getElementById("resumoBox").classList.add("ativo");
         
-        /* Renderiza tabela */
         renderizarTabela(dadosCalculados);
         document.getElementById("cardResultado").classList.add("ativo");
         
@@ -1161,7 +1146,189 @@ function renderizarTabela(dados) {
 }
 
 /* =========================================================
-   EXPORTAR CSV
+   👇 EXPORTAR ODS (FORMATO NATIVO DO LIBREOFFICE CALC)
+   ========================================================= */
+window.exportarODS = async function() {
+    if (dadosCalculados.length === 0) {
+        alert("Nenhum dado para exportar.");
+        return;
+    }
+    
+    const mesAno = document.getElementById("mesReferencia").value;
+    const [ano, mes] = mesAno.split("-");
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
+    
+    const totalPasses = dadosCalculados.reduce((sum, item) => sum + item.totalPasses, 0);
+    const totalAfastados = dadosCalculados.filter(item => item.afastamentos > 0).length;
+    
+    function escapeXml(text) {
+        if (text === null || text === undefined) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+    }
+    
+    function getCellXml(value) {
+        if (value === null || value === undefined || value === "") {
+            return `<table:table-cell/>`;
+        }
+        const escaped = escapeXml(value);
+        if (typeof value === "number") {
+            return `<table:table-cell office:value-type="float" office:value="${value}"><text:p>${escaped}</text:p></table:table-cell>`;
+        }
+        return `<table:table-cell office:value-type="string"><text:p>${escaped}</text:p></table:table-cell>`;
+    }
+    
+    const cabecalhos = ["Nº", "Servidor", "CPF", "Escola", "Matrícula", "Dias Úteis", "Afastamentos", "Dias Efetivos", "Passes/Dia", "Total de Passes"];
+    
+    let linhasTabela = "";
+    
+    linhasTabela += `<table:table-row table:style-name="ro1">`;
+    cabecalhos.forEach(cab => {
+        linhasTabela += `<table:table-cell office:value-type="string" table:style-name="ce1"><text:p>${escapeXml(cab)}</text:p></table:table-cell>`;
+    });
+    linhasTabela += `</table:table-row>`;
+    
+    dadosCalculados.forEach((item, index) => {
+        linhasTabela += `<table:table-row>`;
+        linhasTabela += getCellXml(index + 1);
+        linhasTabela += getCellXml(item.nome);
+        linhasTabela += getCellXml(item.cpf);
+        linhasTabela += getCellXml(item.escola);
+        linhasTabela += getCellXml(item.matricula);
+        linhasTabela += getCellXml(item.diasUteis);
+        linhasTabela += getCellXml(item.afastamentos);
+        linhasTabela += getCellXml(item.diasEfetivos);
+        linhasTabela += getCellXml(item.passesPorDia);
+        linhasTabela += getCellXml(item.totalPasses);
+        linhasTabela += `</table:table-row>`;
+    });
+    
+    const resumo = [
+        ["Campo", "Valor"],
+        ["Mês de Referência", `${nomeMes}/${ano}`],
+        ["Total de Servidores", dadosCalculados.length],
+        ["Total de Passes", totalPasses],
+        ["Servidores com Afastamento", totalAfastados],
+        ["Data da Exportação", new Date().toLocaleString("pt-BR")]
+    ];
+    
+    let linhasResumo = "";
+    resumo.forEach((linha, idx) => {
+        linhasResumo += `<table:table-row>`;
+        linha.forEach(celula => {
+            if (idx === 0) {
+                linhasResumo += `<table:table-cell office:value-type="string" table:style-name="ce1"><text:p>${escapeXml(celula)}</text:p></table:table-cell>`;
+            } else {
+                linhasResumo += getCellXml(celula);
+            }
+        });
+        linhasResumo += `</table:table-row>`;
+    });
+    
+    const contentXml = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content 
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+    xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+    office:version="1.2">
+    <office:automatic-styles>
+        <style:style style:name="ce1" style:family="table-cell">
+            <style:text-properties fo:font-weight="bold"/>
+        </style:style>
+    </office:automatic-styles>
+    <office:body>
+        <office:spreadsheet>
+            <table:table table:name="Cálculo de Passes">
+                <table:table-column table:style-name="co1" table:number-columns-repeated="10"/>
+                ${linhasTabela}
+            </table:table>
+            <table:table table:name="Resumo">
+                <table:table-column table:style-name="co1" table:number-columns-repeated="2"/>
+                ${linhasResumo}
+            </table:table>
+        </office:spreadsheet>
+    </office:body>
+</office:document-content>`;
+    
+    const metaXml = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-meta 
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    office:version="1.2">
+    <office:meta>
+        <dc:title>Cálculo de Passes - ${nomeMes}/${ano}</dc:title>
+        <dc:creator>Sistema Vale Transporte - SEMED</dc:creator>
+        <meta:creation-date>${new Date().toISOString()}</meta:creation-date>
+    </office:meta>
+</office:document-meta>`;
+    
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles 
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+    office:version="1.2">
+    <office:styles>
+        <style:style style:name="Default" style:family="table-cell"/>
+    </office:styles>
+    <office:automatic-styles>
+        <style:style style:name="co1" style:family="table-column">
+            <style:table-column-properties fo:break-before="auto" style:column-width="3cm"/>
+        </style:style>
+        <style:style style:name="ro1" style:family="table-row">
+            <style:table-row-properties style:row-height="0.5cm" fo:break-before="auto" style:use-optimal-row-height="true"/>
+        </style:style>
+    </office:automatic-styles>
+</office:document-styles>`;
+    
+    const manifestXml = `<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+    <manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.spreadsheet" manifest:full-path="/"/>
+    <manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>
+    <manifest:file-entry manifest:media-type="text/xml" manifest:full-path="meta.xml"/>
+    <manifest:file-entry manifest:media-type="text/xml" manifest:full-path="styles.xml"/>
+</manifest:manifest>`;
+    
+    const mimetype = "application/vnd.oasis.opendocument.spreadsheet";
+    
+    const zip = new JSZip();
+    
+    zip.file("mimetype", mimetype, { compression: "STORE" });
+    zip.file("content.xml", contentXml);
+    zip.file("meta.xml", metaXml);
+    zip.file("styles.xml", stylesXml);
+    zip.folder("META-INF").file("manifest.xml", manifestXml);
+    
+    const nomeArquivo = `calculo_passes_${mesAno}.ods`;
+    
+    try {
+        const blob = await zip.generateAsync({ 
+            type: "blob",
+            mimeType: mimetype
+        });
+        
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = nomeArquivo;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    } catch (erro) {
+        console.error("Erro ao gerar ODS:", erro);
+        alert("Erro ao gerar a planilha. Tente novamente.");
+    }
+};
+
+/* =========================================================
+   👇 EXPORTAR CSV (FORMATO UNIVERSAL)
    ========================================================= */
 window.exportarCSV = function() {
     if (dadosCalculados.length === 0) {
