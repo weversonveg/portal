@@ -198,6 +198,34 @@ body {
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
 
+/* 👇 Campo de data bloqueado (cálculo automático) */
+.form-group input[type="date"]:disabled {
+    background-color: #f1f3f5;
+    color: #68737d;
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+    opacity: 1;
+}
+
+.form-group input[type="date"].campo-automatico {
+    background-color: #f5f2f8;
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.info-campo-automatico {
+    display: none;
+    font-size: 11px;
+    color: var(--primary);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.info-campo-automatico.visivel {
+    display: block;
+}
+
 .cpf-search-wrapper {
     display: flex;
     gap: 8px;
@@ -472,9 +500,13 @@ tr:hover td {
                     <input type="date" id="dataInicio" required onchange="calcularDataFim()">
                 </div>
 
+                <!-- 👇 CAMPO DATA DE TÉRMINO COM INFO AUTOMÁTICO -->
                 <div class="form-group" id="grupoDataFim">
                     <label for="dataFim">Data de Término <span>*</span></label>
                     <input type="date" id="dataFim" required>
+                    <small class="info-campo-automatico" id="infoDataFimAuto">
+                        🔒 Calculado automaticamente (15 ou 30 dias)
+                    </small>
                 </div>
 
             </div>
@@ -545,34 +577,55 @@ tr:hover td {
             }
             e.target.value = value;
         });
+
+        /* 👇 Inicializa o estado do formulário */
+        mudarTipoAusencia();
     });
 
+    /* =========================================================
+       👇 ATUALIZADO: Controla bloqueio do campo Data de Término
+       ========================================================= */
     window.mudarTipoAusencia = function() {
         const tipo = document.getElementById("tipoAusencia").value;
         const grupoFim = document.getElementById("grupoDataFim");
         const grupoDuracao = document.getElementById("grupoDuracaoFerias");
         const lblInicio = document.getElementById("labelDataInicio");
         const inputFim = document.getElementById("dataFim");
+        const infoAuto = document.getElementById("infoDataFimAuto");
 
         if (tipo === "FOLGA_ANIVERSARIO") {
+            /* Folga aniversário: esconde data fim */
             grupoFim.style.display = "none";
             grupoDuracao.style.display = "none";
             inputFim.removeAttribute("required");
+            inputFim.disabled = false;
             inputFim.value = "";
+            inputFim.classList.remove("campo-automatico");
+            infoAuto.classList.remove("visivel");
             lblInicio.innerHTML = "Data da Folga <span>*</span>";
+            
         } else if (tipo === "FERIAS") {
+            /* 👇 FÉRIAS: campo bloqueado + cálculo automático */
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "flex";
-            inputFim.setAttribute("required", "true");
+            inputFim.disabled = true;
+            inputFim.removeAttribute("required");
+            inputFim.classList.add("campo-automatico");
+            infoAuto.classList.add("visivel");
             lblInicio.innerHTML = "Data de Início <span>*</span>";
             calcularDataFim();
+            
         } else {
+            /* Licenças: campo editável normalmente */
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "none";
+            inputFim.disabled = false;
             inputFim.setAttribute("required", "true");
+            inputFim.classList.remove("campo-automatico");
+            infoAuto.classList.remove("visivel");
             lblInicio.innerHTML = "Data de Início <span>*</span>";
         }
-    }
+    };
 
     window.calcularDataFim = function() {
         const tipo = document.getElementById("tipoAusencia").value;
@@ -590,7 +643,7 @@ tr:hover td {
         let dia = String(dataInicio.getDate()).padStart(2, '0');
 
         inputFim.value = `${ano}-${mes}-${dia}`;
-    }
+    };
 
     window.buscarServidorPorCpf = async function() {
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
@@ -662,7 +715,7 @@ tr:hover td {
             lblNome.textContent = "Erro ao buscar servidor.";
             lblNome.style.color = "var(--red)";
         }
-    }
+    };
 
     window.salvarRegistro = async function(event) {
         event.preventDefault();
@@ -701,7 +754,6 @@ tr:hover td {
         }
 
         try {
-            // CORREÇÃO APLICADA AQUI: Adicionado filtro por "matricula" para evitar conflito entre vínculos do mesmo CPF
             const qExistente = query(
                 collection(db, "registro_ferias_folgas"), 
                 where("cpf", "==", servidorCache.cpf),
@@ -744,7 +796,7 @@ tr:hover td {
             console.error("Erro ao salvar:", e);
             mostrarMensagem("Erro ao salvar o registro no banco.", "erro");
         }
-    }
+    };
 
     async function carregarRegistros() {
         const tbody = document.getElementById("tabelaRegistros");
@@ -789,7 +841,7 @@ tr:hover td {
         });
 
         renderizarTabela(filtrados);
-    }
+    };
 
     function renderizarTabela(dados) {
         const tbody = document.getElementById("tabelaRegistros");
@@ -854,7 +906,7 @@ tr:hover td {
                 mostrarMensagem("Erro ao excluir o registro.", "erro");
             }
         }
-    }
+    };
 
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
