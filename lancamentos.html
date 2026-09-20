@@ -25,6 +25,8 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 
     --red: #c62828;
     --red-hover: #a51f1f;
+    --red-light: #fff0f0;
+    --red-border: #efc5c5;
 
     --text: #263238;
     --text-secondary: #68737d;
@@ -99,6 +101,25 @@ body {
 .system-module {
     font-size: 13px;
     color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+/* 👇 INFO DO USUÁRIO LOGADO */
+.info-usuario-logado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #e0d5ec;
+}
+
+.info-usuario-logado .material-symbols-outlined {
+    font-size: 16px;
 }
 
 .main {
@@ -135,6 +156,48 @@ body {
 .page-header p {
     font-size: 13px;
     color: var(--text-secondary);
+}
+
+/* 👇 BANNER DE ACESSO NEGADO */
+.acesso-negado-banner {
+    display: none;
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 20px 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    align-items: flex-start;
+    gap: 14px;
+    box-shadow: var(--shadow);
+}
+
+.acesso-negado-banner.ativo {
+    display: flex;
+}
+
+.acesso-negado-banner .material-symbols-outlined {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.acesso-negado-banner strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.acesso-negado-banner p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 👇 ÁREA BLOQUEADA */
+.conteudo-bloqueado {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(30%);
 }
 
 .form-card {
@@ -198,7 +261,6 @@ body {
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
 
-/* 👇 Campo de data bloqueado (cálculo automático) */
 .form-group input[type="date"]:disabled {
     background-color: #f1f3f5;
     color: #68737d;
@@ -399,6 +461,30 @@ tr:hover td {
     color: #c62828;
 }
 
+/* 👇 LOADING DE AUTENTICAÇÃO */
+.loading-auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+    color: var(--text-secondary);
+}
+
+.loading-auth .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 @media (max-width: 600px) {
     .topbar {
         margin-top: 0;
@@ -421,6 +507,9 @@ tr:hover td {
     .search-table-wrapper {
         max-width: 100%;
     }
+    .info-usuario-logado {
+        display: none;
+    }
 }
 </style>
 </head>
@@ -433,6 +522,12 @@ tr:hover td {
         <span class="system-name">Vale Transporte</span>
         <div class="system-divider"></div>
         <span class="system-module">Semed - Férias, Folgas e Licenças</span>
+        
+        <!-- 👇 INFO DO USUÁRIO LOGADO -->
+        <div class="info-usuario-logado" id="infoUsuarioLogado" style="display: none;">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span id="textoUsuarioLogado">Administrador</span>
+        </div>
     </div>
 </header>
 
@@ -448,123 +543,242 @@ tr:hover td {
         <p>Busque por CPF, selecione a matrícula/escola afetada, escolha o tipo de ausência e registre.</p>
     </div>
 
-    <!-- FORMULÁRIO DE CADASTRO -->
-    <section class="form-card">
-        <div class="card-title">
-            <span class="material-symbols-outlined">event_note</span>
-            Registrar Período de Ausência
+    <!-- 👇 BANNER DE ACESSO NEGADO -->
+    <div class="acesso-negado-banner" id="acessoNegadoBanner">
+        <span class="material-symbols-outlined">block</span>
+        <div>
+            <strong>Acesso Restrito</strong>
+            <p id="textoAcessoNegado">Esta página é exclusiva para usuários com perfil de Administrador (SEMED). Faça login com uma conta autorizada.</p>
         </div>
+    </div>
 
-        <form id="formFerias" onsubmit="salvarRegistro(event)">
-            <div class="form-grid">
-                
-                <div class="form-group full-width">
-                    <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
-                    <div class="cpf-search-wrapper">
-                        <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
-                        <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
-                        </button>
+    <!-- 👇 LOADING DE AUTENTICAÇÃO -->
+    <div class="loading-auth" id="loadingAuth">
+        <div class="spinner"></div>
+        <span>Verificando permissões de acesso...</span>
+    </div>
+
+    <!-- 👇 CONTEÚDO PRINCIPAL (BLOQUEADO ATÉ AUTENTICAR) -->
+    <div id="conteudoPrincipal" class="conteudo-bloqueado" style="display: none;">
+
+        <!-- FORMULÁRIO DE CADASTRO -->
+        <section class="form-card">
+            <div class="card-title">
+                <span class="material-symbols-outlined">event_note</span>
+                Registrar Período de Ausência
+            </div>
+
+            <form id="formFerias" onsubmit="salvarRegistro(event)">
+                <div class="form-grid">
+                    
+                    <div class="form-group full-width">
+                        <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
+                        <div class="cpf-search-wrapper">
+                            <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
+                            <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
+                            </button>
+                        </div>
+                        <small id="nomeServidorEncontrado" style="margin-top: 6px; font-weight: 600; color: var(--primary);"></small>
                     </div>
-                    <small id="nomeServidorEncontrado" style="margin-top: 6px; font-weight: 600; color: var(--primary);"></small>
+
+                    <div class="form-group full-width" id="grupoVinculo" style="display:none;">
+                        <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
+                        <select id="selectVinculo" required>
+                            <option value="">Selecione o vínculo...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
+                        <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
+                            <option value="FERIAS">Férias Regulamentares</option>
+                            <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
+                            <option value="LICENCA_MEDICA">Licença Médica</option>
+                            <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupoDuracaoFerias">
+                        <label for="duracaoFerias">Duração das Férias <span>*</span></label>
+                        <select id="duracaoFerias" onchange="calcularDataFim()">
+                            <option value="30">30 Dias Corridos</option>
+                            <option value="15">15 Dias Corridos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupoDataInicio">
+                        <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
+                        <input type="date" id="dataInicio" required onchange="calcularDataFim()">
+                    </div>
+
+                    <div class="form-group" id="grupoDataFim">
+                        <label for="dataFim">Data de Término <span>*</span></label>
+                        <input type="date" id="dataFim" required>
+                        <small class="info-campo-automatico" id="infoDataFimAuto">
+                            🔒 Calculado automaticamente (15 ou 30 dias)
+                        </small>
+                    </div>
+
                 </div>
 
-                <!-- SELETOR DE VÍNCULO / MATRÍCULA -->
-                <div class="form-group full-width" id="grupoVinculo" style="display:none;">
-                    <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
-                    <select id="selectVinculo" required>
-                        <option value="">Selecione o vínculo...</option>
-                    </select>
-                </div>
+                <div id="mensagem" class="mensagem"></div>
 
-                <div class="form-group">
-                    <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
-                    <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
-                        <option value="FERIAS">Férias Regulamentares</option>
-                        <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
-                        <option value="LICENCA_MEDICA">Licença Médica</option>
-                        <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
-                    </select>
-                </div>
+                <button type="submit" class="btn-acao btn-salvar">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
+                    Salvar Lançamento
+                </button>
+            </form>
+        </section>
 
-                <div class="form-group" id="grupoDuracaoFerias">
-                    <label for="duracaoFerias">Duração das Férias <span>*</span></label>
-                    <select id="duracaoFerias" onchange="calcularDataFim()">
-                        <option value="30">30 Dias Corridos</option>
-                        <option value="15">15 Dias Corridos</option>
-                    </select>
+        <!-- TABELA DE REGISTRADOS -->
+        <section class="table-card">
+            <div class="table-header-actions">
+                <div class="table-title">
+                    <span class="material-symbols-outlined">list_alt</span>
+                    Registros Cadastrados
                 </div>
-
-                <div class="form-group" id="grupoDataInicio">
-                    <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
-                    <input type="date" id="dataInicio" required onchange="calcularDataFim()">
+                <div class="search-table-wrapper">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="filtroTabela" placeholder="Filtrar por nome, CPF, escola..." oninput="filtrarTabela()">
                 </div>
-
-                <!-- 👇 CAMPO DATA DE TÉRMINO COM INFO AUTOMÁTICO -->
-                <div class="form-group" id="grupoDataFim">
-                    <label for="dataFim">Data de Término <span>*</span></label>
-                    <input type="date" id="dataFim" required>
-                    <small class="info-campo-automatico" id="infoDataFimAuto">
-                        🔒 Calculado automaticamente (15 ou 30 dias)
-                    </small>
-                </div>
-
             </div>
-
-            <div id="mensagem" class="mensagem"></div>
-
-            <button type="submit" class="btn-acao btn-salvar">
-                <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
-                Salvar Lançamento
-            </button>
-        </form>
-    </section>
-
-    <!-- TABELA DE REGISTRADOS -->
-    <section class="table-card">
-        <div class="table-header-actions">
-            <div class="table-title">
-                <span class="material-symbols-outlined">list_alt</span>
-                Registros Cadastrados
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Servidor</th>
+                            <th>CPF / Matrícula</th>
+                            <th>Escola</th>
+                            <th>Tipo</th>
+                            <th>Início</th>
+                            <th>Término</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaRegistros">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="search-table-wrapper">
-                <span class="material-symbols-outlined">search</span>
-                <input type="text" id="filtroTabela" placeholder="Filtrar por nome, CPF, escola..." oninput="filtrarTabela()">
-            </div>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Servidor</th>
-                        <th>CPF / Matrícula</th>
-                        <th>Escola</th>
-                        <th>Tipo</th>
-                        <th>Início</th>
-                        <th>Término</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaRegistros">
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+        </section>
+
+    </div>
 </main>
 
 <script type="module">
-    import { db } from "./firebase.js";
+    import { db, auth } from "./firebase.js";
     import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    /* =========================================================
+       VARIÁVEIS DE AUTENTICAÇÃO
+       ========================================================= */
+    let usuarioLogado = null;
+    let perfilUsuario = "";
+    let autenticacaoPronta = false;
+    let acessoAutorizado = false;
 
     let servidorCache = null; 
-    let registrosCache = [];  
+    let registrosCache = [];
 
+    /* =========================================================
+       NORMALIZAÇÃO DE TEXTO
+       ========================================================= */
+    function normalizarTexto(valor) {
+        if (valor === null || valor === undefined) return "";
+        return String(valor)
+            .trim()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .toUpperCase();
+    }
+
+    /* =========================================================
+       👇 VERIFICAÇÃO DE AUTENTICAÇÃO E PERMISSÕES
+       ========================================================= */
+    onAuthStateChanged(auth, async function(user) {
+        const loadingAuth = document.getElementById("loadingAuth");
+        const conteudoPrincipal = document.getElementById("conteudoPrincipal");
+        const acessoNegadoBanner = document.getElementById("acessoNegadoBanner");
+        const infoUsuarioLogado = document.getElementById("infoUsuarioLogado");
+        const textoUsuarioLogado = document.getElementById("textoUsuarioLogado");
+        const textoAcessoNegado = document.getElementById("textoAcessoNegado");
+
+        autenticacaoPronta = false;
+        acessoAutorizado = false;
+
+        /* USUÁRIO NÃO LOGADO */
+        if (!user) {
+            usuarioLogado = null;
+            perfilUsuario = "";
+            
+            loadingAuth.style.display = "none";
+            acessoNegadoBanner.classList.add("ativo");
+            textoAcessoNegado.textContent = "Você não está autenticado. Faça login com uma conta de Administrador (SEMED) para acessar esta página.";
+            conteudoPrincipal.style.display = "none";
+            
+            return;
+        }
+
+        usuarioLogado = user;
+
+        try {
+            /* Busca o cadastro do usuário na coleção 'usuarios' */
+            const usuarioRef = doc(db, "usuarios", user.uid);
+            const usuarioSnap = await getDoc(usuarioRef);
+
+            if (!usuarioSnap.exists()) {
+                loadingAuth.style.display = "none";
+                acessoNegadoBanner.classList.add("ativo");
+                textoAcessoNegado.textContent = "Seu usuário está autenticado, mas não possui cadastro no sistema. Entre em contato com o administrador.";
+                conteudoPrincipal.style.display = "none";
+                return;
+            }
+
+            const dadosUsuario = usuarioSnap.data();
+            perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
+
+            /* 👇 VERIFICA SE É ADMINISTRADOR */
+            if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
+                acessoAutorizado = true;
+                autenticacaoPronta = true;
+                
+                loadingAuth.style.display = "none";
+                acessoNegadoBanner.classList.remove("ativo");
+                conteudoPrincipal.style.display = "block";
+                conteudoPrincipal.classList.remove("conteudo-bloqueado");
+                
+                infoUsuarioLogado.style.display = "flex";
+                textoUsuarioLogado.textContent = dadosUsuario.nome || "Administrador";
+                
+                /* Carrega os registros */
+                carregarRegistros();
+                
+            } else {
+                /* USUÁRIO SEM PERMISSÃO */
+                loadingAuth.style.display = "none";
+                acessoNegadoBanner.classList.add("ativo");
+                textoAcessoNegado.textContent = `Seu perfil "${dadosUsuario.perfil || 'sem perfil'}" não possui permissão para acessar esta página. Esta área é exclusiva para Administradores (SEMED).`;
+                conteudoPrincipal.style.display = "none";
+            }
+
+        } catch (erro) {
+            console.error("Erro ao verificar permissões:", erro);
+            loadingAuth.style.display = "none";
+            acessoNegadoBanner.classList.add("ativo");
+            textoAcessoNegado.textContent = "Erro ao verificar suas permissões. Tente novamente mais tarde.";
+            conteudoPrincipal.style.display = "none";
+        }
+    });
+
+    /* =========================================================
+       INICIALIZAÇÃO
+       ========================================================= */
     document.addEventListener("DOMContentLoaded", function() {
-        carregarRegistros();
-
         document.getElementById('inputCpf').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 11) value = value.slice(0, 11);
@@ -578,12 +792,11 @@ tr:hover td {
             e.target.value = value;
         });
 
-        /* 👇 Inicializa o estado do formulário */
         mudarTipoAusencia();
     });
 
     /* =========================================================
-       👇 ATUALIZADO: Controla bloqueio do campo Data de Término
+       CONTROLE DO CAMPO DATA DE TÉRMINO
        ========================================================= */
     window.mudarTipoAusencia = function() {
         const tipo = document.getElementById("tipoAusencia").value;
@@ -594,7 +807,6 @@ tr:hover td {
         const infoAuto = document.getElementById("infoDataFimAuto");
 
         if (tipo === "FOLGA_ANIVERSARIO") {
-            /* Folga aniversário: esconde data fim */
             grupoFim.style.display = "none";
             grupoDuracao.style.display = "none";
             inputFim.removeAttribute("required");
@@ -605,7 +817,6 @@ tr:hover td {
             lblInicio.innerHTML = "Data da Folga <span>*</span>";
             
         } else if (tipo === "FERIAS") {
-            /* 👇 FÉRIAS: campo bloqueado + cálculo automático */
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "flex";
             inputFim.disabled = true;
@@ -616,7 +827,6 @@ tr:hover td {
             calcularDataFim();
             
         } else {
-            /* Licenças: campo editável normalmente */
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "none";
             inputFim.disabled = false;
@@ -645,7 +855,16 @@ tr:hover td {
         inputFim.value = `${ano}-${mes}-${dia}`;
     };
 
+    /* =========================================================
+       BUSCAR SERVIDOR POR CPF
+       ========================================================= */
     window.buscarServidorPorCpf = async function() {
+        /* 👇 Verifica se tem acesso autorizado */
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro");
+            return;
+        }
+
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
         const lblNome = document.getElementById("nomeServidorEncontrado");
         const grupoVinculo = document.getElementById("grupoVinculo");
@@ -717,8 +936,17 @@ tr:hover td {
         }
     };
 
+    /* =========================================================
+       SALVAR REGISTRO
+       ========================================================= */
     window.salvarRegistro = async function(event) {
         event.preventDefault();
+
+        /* 👇 Verifica se tem acesso autorizado */
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro");
+            return;
+        }
 
         if (!servidorCache) {
             mostrarMensagem("Por favor, busque e valide o CPF do servidor antes de salvar.", "erro");
@@ -798,7 +1026,13 @@ tr:hover td {
         }
     };
 
+    /* =========================================================
+       CARREGAR REGISTROS
+       ========================================================= */
     async function carregarRegistros() {
+        /* 👇 Só carrega se tiver acesso autorizado */
+        if (!acessoAutorizado) return;
+
         const tbody = document.getElementById("tabelaRegistros");
         try {
             const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
@@ -896,6 +1130,12 @@ tr:hover td {
     }
 
     window.excluirRegistro = async function(id) {
+        /* 👇 Verifica se tem acesso autorizado */
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para excluir registros.", "erro");
+            return;
+        }
+
         if (confirm("Deseja realmente excluir este registro de ausência?")) {
             try {
                 await deleteDoc(doc(db, "registro_ferias_folgas", id));
