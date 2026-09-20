@@ -353,7 +353,6 @@ body {
     background: var(--green-hover);
 }
 
-/* 👇 NOVO: BARRA DE AÇÕES DA TABELA */
 .table-actions-bar {
     display: none;
     background: var(--white);
@@ -379,6 +378,7 @@ body {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
+    flex-wrap: wrap;
 }
 
 .session-counter {
@@ -649,7 +649,6 @@ tr:hover td {
     font-size: 18px;
 }
 
-/* 👇 TOAST NOTIFICATIONS */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -697,7 +696,6 @@ tr:hover td {
     to { transform: translateX(100%); opacity: 0; }
 }
 
-/* DICA DE USO */
 .usage-tip {
     display: none;
     background: #e3f2fd;
@@ -890,6 +888,7 @@ tr:hover td {
         </div>
     </section>
 
+    <!-- 👇 CARDS DE RESUMO ATUALIZADOS -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label>Vínculos com Ausência no Mês</label>
@@ -897,12 +896,11 @@ tr:hover td {
         </div>
 
         <div class="summary-box">
-            <label>Total de Dias de Ausência Registrados</label>
-            <p id="sumTotalDias">0 dias</p>
+            <label>Total de Vínculos da Escola</label>
+            <p id="sumTotalVinculos">0 vínculos</p>
         </div>
     </section>
 
-    <!-- 👇 NOVO: BARRA DE AÇÕES E CONTADOR DE SESSÃO -->
     <div id="tableActionsBar" class="table-actions-bar">
         <div class="session-info">
             <span class="session-counter zero" id="sessionCounter">
@@ -919,7 +917,6 @@ tr:hover td {
         </button>
     </div>
 
-    <!-- 👇 NOVO: DICA DE USO -->
     <div id="usageTip" class="usage-tip">
         <span class="material-symbols-outlined">lightbulb</span>
         <div>
@@ -948,7 +945,6 @@ tr:hover td {
 
 </main>
 
-<!-- 👇 TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
@@ -970,7 +966,6 @@ let perfilUsuario = "";
 let escolaUsuario = "";
 let autenticacaoPronta = false;
 
-/* 👇 NOVO: Contador de alterações salvas na sessão atual */
 let alteracoesSalvasNaSessao = 0;
 let mesBloqueadoAtual = false;
 
@@ -1017,7 +1012,7 @@ function verificarMesBloqueado(data) {
 }
 
 /* =========================================================
-   👇 TOAST NOTIFICATIONS
+   TOAST NOTIFICATIONS
    ========================================================= */
 
 function mostrarToast(texto, tipo = "sucesso") {
@@ -1039,7 +1034,7 @@ function mostrarToast(texto, tipo = "sucesso") {
 }
 
 /* =========================================================
-   👇 ATUALIZAR CONTADOR DA SESSÃO
+   CONTADOR DA SESSÃO
    ========================================================= */
 
 function incrementarContador() {
@@ -1185,7 +1180,6 @@ window.carregarDadosDaEscola = async function() {
     tableActionsBar.classList.remove("ativo");
     usageTip.classList.remove("ativo");
 
-    /* 👇 Zerar contador ao carregar nova unidade */
     zerarContador();
 
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR") {
@@ -1282,7 +1276,7 @@ window.carregarDadosDaEscola = async function() {
 
         let linhasTabela = "";
         let vinculosComFalta = 0;
-        let somaTotalDias = 0;
+        let totalVinculosEscola = 0;
         const escolaFiltroNormalizada = normalizarTexto(escolaSelecionada);
 
         for (const servidorDoc of querySnapshot.docs) {
@@ -1333,9 +1327,11 @@ window.carregarDadosDaEscola = async function() {
                 const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
                 const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
 
+                /* 👇 CONTAGEM ATUALIZADA */
+                totalVinculosEscola++;
+
                 if (diasTotalExibido > 0) {
                     vinculosComFalta++;
-                    somaTotalDias += diasTotalExibido;
                 }
 
                 let badgeHtml = "";
@@ -1386,8 +1382,10 @@ window.carregarDadosDaEscola = async function() {
             if (s.matricula2) await avaliarVinculo(s.matricula2, "Matrícula 2");
         }
 
+        /* 👇 EXIBIÇÃO ATUALIZADA DOS CARDS */
         document.getElementById("sumComAfastamento").textContent = vinculosComFalta + " vínculos";
-        document.getElementById("sumTotalDias").textContent = somaTotalDias + " dias";
+        document.getElementById("sumTotalVinculos").textContent = totalVinculosEscola + " vínculos";
+
         document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
 
         if (!linhasTabela) {
@@ -1406,7 +1404,7 @@ window.carregarDadosDaEscola = async function() {
 };
 
 /* =========================================================
-   👇 NOVO: MARCAR INPUT COMO MODIFICADO
+   MARCAR INPUT COMO MODIFICADO
    ========================================================= */
 
 window.marcarComoModificado = function(input) {
@@ -1426,7 +1424,7 @@ window.marcarComoModificado = function(input) {
 };
 
 /* =========================================================
-   👇 NOVO: AUTO-SALVAR AO SAIR DO CAMPO (onblur)
+   AUTO-SALVAR AO SAIR DO CAMPO (onblur)
    ========================================================= */
 
 window.autoSalvarAoBlur = async function(input) {
@@ -1435,7 +1433,6 @@ window.autoSalvarAoBlur = async function(input) {
     const valorOriginal = Number(input.dataset.valorOriginal) || 0;
     const valorAtual = Number(input.value) || 0;
     
-    /* Se o valor não mudou, não faz nada */
     if (valorAtual === valorOriginal) {
         input.classList.remove("modificado");
         return;
@@ -1447,22 +1444,19 @@ window.autoSalvarAoBlur = async function(input) {
     const mesAno = document.getElementById("mesReferencia").value;
     const escola = document.getElementById("filtroEscola").value;
     
-    /* Chama salvarAfastamento mas sem recarregar a tabela */
     await salvarAfastamentoSilencioso(mesAno, escola, cpf, servidorId, numeroMatricula, input);
 };
 
 /* =========================================================
-   👇 NOVO: SALVAR SILENCIOSO (SEM RECARREGAR TABELA)
+   SALVAR SILENCIOSO (SEM RECARREGAR TABELA)
    ========================================================= */
 
 async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElement) {
-    /* Validação de segurança */
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && normalizarTexto(escola) !== normalizarTexto(escolaUsuario)) {
         mostrarToast("Acesso negado para esta escola.", "erro");
         return;
     }
     
-    /* Verifica bloqueio */
     try {
         const semedSnap = await getDoc(doc(db, "configuracoes", mesAno));
         if (semedSnap.exists() && verificarMesBloqueado(semedSnap.data())) {
@@ -1479,12 +1473,11 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
     const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
     const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
     
-    /* Feedback visual: salvando */
     inputElement.classList.add("salvando");
     inputElement.classList.remove("modificado");
     const badge = document.getElementById(`badge_${inputElement.id}`);
     if (badge) {
-        badge.innerHTML = `<span class="badge-modificado" style="background:#e3f2fd;color:#1565c0;border-color:#bbdefb;"><span class="material-symbols-outlined" style="font-size:14px; animation: spin 1s linear infinite;">progress_activity</span> Salvando...</span>`;
+        badge.innerHTML = `<span class="badge-modificado" style="background:#e3f2fd;color:#1565c0;border-color:#bbdefb;"><span class="material-symbols-outlined" style="font-size:14px;">progress_activity</span> Salvando...</span>`;
     }
     
     try {
@@ -1502,23 +1495,17 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
             }, { merge: true });
         }
         
-        /* ✅ Atualiza valor original para não salvar novamente */
         inputElement.dataset.valorOriginal = diasAfastamento;
         inputElement.classList.remove("salvando");
         inputElement.classList.add("salvo");
         
-        /* Atualiza badge */
         if (badge) {
             badge.innerHTML = `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Salvo!</span>`;
         }
         
-        /* Incrementa contador */
         incrementarContador();
-        
-        /* Toast discreto */
         mostrarToast(`Afastamento salvo: ${diasAfastamento} dias`, "sucesso");
         
-        /* Remove a classe "salvo" após 3 segundos */
         setTimeout(() => {
             inputElement.classList.remove("salvo");
         }, 3000);
@@ -1535,7 +1522,7 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
 }
 
 /* =========================================================
-   👇 NOVO: ATUALIZAR TABELA MANUALMENTE
+   ATUALIZAR TABELA MANUALMENTE
    ========================================================= */
 
 window.atualizarTabela = async function() {
@@ -1591,7 +1578,7 @@ window.salvarDiasUteisEscola = async function() {
 };
 
 /* =========================================================
-   SALVAR AFASTAMENTO (BOTÃO MANUAL - AGORA USA O MESMO MÉTODO)
+   SALVAR AFASTAMENTO (BOTÃO MANUAL)
    ========================================================= */
 
 window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
