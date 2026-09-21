@@ -238,13 +238,14 @@ tr:hover td { background: #f8fafc; }
                             <th>CPF / Matrícula</th>
                             <th>Escola</th>
                             <th>Tipo</th>
+                            <th>Período</th>
                             <th>Início</th>
                             <th>Término</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaRegistros">
-                        <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td></tr>
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -462,6 +463,9 @@ tr:hover td { background: #f8fafc; }
         }
     };
 
+    /* =========================================================
+       👇 SALVAR REGISTRO (COM CPF LIMPO E ANO_REFERENCIA)
+       ========================================================= */
     window.salvarRegistro = async function(event) {
         event.preventDefault();
 
@@ -504,13 +508,23 @@ tr:hover td { background: #f8fafc; }
         }
 
         try {
-            const qExistente = query(collection(db, "registro_ferias_folgas"), where("cpf", "==", servidorCache.cpf), where("matricula", "==", matriculaEscolhida));
+            // 👇 LIMPA O CPF (remove pontos e traços) ANTES DE SALVAR
+            const cpfLimpo = servidorCache.cpf ? servidorCache.cpf.replace(/\D/g, '') : '';
+            
+            // Verifica conflito de datas usando o CPF limpo
+            const qExistente = query(
+                collection(db, "registro_ferias_folgas"), 
+                where("cpf", "==", cpfLimpo),
+                where("matricula", "==", matriculaEscolhida)
+            );
             const existentesSnap = await getDocs(qExistente);
             
             let temConflito = false;
             existentesSnap.forEach(docSnap => {
                 const r = docSnap.data();
-                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) temConflito = true;
+                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) {
+                    temConflito = true;
+                }
             });
 
             if (temConflito) {
@@ -518,19 +532,20 @@ tr:hover td { background: #f8fafc; }
                 return;
             }
 
-            // 👇 CÁLCULO DO ANO DE REFERÊNCIA (Essencial para a Linha do Tempo)
+            // 👇 CALCULA O ANO DE REFERÊNCIA (Essencial para a Linha do Tempo)
             const anoInicio = new Date(dataInicio).getFullYear();
             const anoReferencia = `${anoInicio}/${anoInicio + 1}`;
 
+            // 👇 SALVA COM CPF LIMPO E ANO_REFERENCIA
             await addDoc(collection(db, "registro_ferias_folgas"), {
-                cpf: servidorCache.cpf,
+                cpf: cpfLimpo, // ✅ CPF LIMPO (sem pontos e traços)
                 nome: servidorCache.nome,
                 matricula: matriculaEscolhida,
                 escola: escolaEscolhida,
                 tipo: tipo,
                 dataInicio: dataInicio,
                 dataFim: dataFim,
-                ano_referencia: anoReferencia, // 👈 CAMPO ADICIONADO
+                ano_referencia: anoReferencia, // ✅ PERÍODO AQUISITIVO CALCULADO
                 dataRegistro: new Date().toISOString()
             });
 
@@ -557,7 +572,7 @@ tr:hover td { background: #f8fafc; }
             renderizarTabela(registrosCache);
         } catch (e) {
             console.error("Erro ao carregar registros:", e);
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--red);">Erro ao carregar dados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--red);">Erro ao carregar dados.</td></tr>`;
         }
     }
 
@@ -570,7 +585,8 @@ tr:hover td { background: #f8fafc; }
             const matricula = (r.matricula || "").toLowerCase();
             const escola = (r.escola || "").toLowerCase();
             const tipo = (r.tipo || "").toLowerCase();
-            return nome.includes(termo) || cpf.includes(termo) || matricula.includes(termo) || escola.includes(termo) || tipo.includes(termo);
+            const periodo = (r.ano_referencia || "").toLowerCase();
+            return nome.includes(termo) || cpf.includes(termo) || matricula.includes(termo) || escola.includes(termo) || tipo.includes(termo) || periodo.includes(termo);
         });
         renderizarTabela(filtrados);
     };
@@ -578,9 +594,16 @@ tr:hover td { background: #f8fafc; }
     function renderizarTabela(dados) {
         const tbody = document.getElementById("tabelaRegistros");
         if (dados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>`;
             return;
         }
+
+        // Ordena por data de registro (mais recente primeiro)
+        dados.sort((a, b) => {
+            const dataA = a.dataRegistro || '';
+            const dataB = b.dataRegistro || '';
+            return dataB.localeCompare(dataA);
+        });
 
         let linhas = "";
         dados.forEach(r => {
@@ -594,6 +617,8 @@ tr:hover td { background: #f8fafc; }
             else if (r.tipo === "LICENCA_OUTRAS") { tipoLabel = "Outras Licenças"; badgeColor = "#6a1b9a"; badgeBg = "#f3e5f5"; }
 
             const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
+            const inicioFormatado = r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-';
+            const periodoRef = r.ano_referencia || '-';
 
             linhas += `
                 <tr>
@@ -601,7 +626,8 @@ tr:hover td { background: #f8fafc; }
                     <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
                     <td>${r.escola || '-'}</td>
                     <td><span style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
-                    <td>${r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-'}</td>
+                    <td><b>${periodoRef}</b></td>
+                    <td>${inicioFormatado}</td>
                     <td>${terminoFormatado}</td>
                     <td><button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')"><span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir</button></td>
                 </tr>
@@ -633,5 +659,6 @@ tr:hover td { background: #f8fafc; }
         msg.className = "mensagem " + tipo;
     }
 </script>
+
 </body>
 </html>
