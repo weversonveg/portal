@@ -278,7 +278,34 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 
 let usuarioLogado = null;
 let perfilUsuario = "";
-let acessoAutorizado = false; // 👈 CONTROLE DE ACESSO
+let acessoAutorizado = false;
+
+/* =========================================================
+   PAINEL DE DEBUG NA TELA (FUNCIONA NO CELULAR)
+   ========================================================= */
+function debugNaTela(mensagem, tipo = 'info') {
+    let painel = document.getElementById('painelDebug');
+    if (!painel) {
+        painel = document.createElement('div');
+        painel.id = 'painelDebug';
+        painel.style.cssText = 'background:#1e1e1e; color:#d4d4d4; padding:16px; margin:0 0 24px 0; border-radius:8px; font-family:monospace; font-size:11px; max-height:300px; overflow-y:auto; border:1px solid #333;';
+        const container = document.querySelector('.main');
+        const pageHeader = document.querySelector('.page-header');
+        if (container && pageHeader) {
+            container.insertBefore(painel, pageHeader.nextSibling);
+        }
+    }
+    const cores = { info: '#9cdcfe', sucesso: '#4ec9b0', erro: '#f48771', aviso: '#dcdcaa' };
+    const linha = document.createElement('div');
+    linha.style.cssText = `padding:3px 0; border-bottom:1px solid #333; color:${cores[tipo] || cores.info}; word-break: break-word;`;
+    linha.textContent = mensagem;
+    painel.appendChild(linha);
+}
+
+function limparDebug() {
+    const painel = document.getElementById('painelDebug');
+    if (painel) painel.remove();
+}
 
 /* =========================================================
    AUTENTICAÇÃO COM BLOQUEIO REAL
@@ -287,7 +314,10 @@ onAuthStateChanged(auth, async function(user) {
     const formBusca = document.getElementById('formBuscaCard');
     const resultadoContainer = document.getElementById('resultadoContainer');
     
+    debugNaTela("🔍 Iniciando verificação de acesso...", 'info');
+    
     if (!user) {
+        debugNaTela("❌ Nenhum usuário logado", 'erro');
         mostrarErro("Sua sessão expirou. Faça login novamente.");
         if (formBusca) formBusca.style.display = 'none';
         if (resultadoContainer) resultadoContainer.classList.add('hidden');
@@ -296,32 +326,59 @@ onAuthStateChanged(auth, async function(user) {
     }
     
     usuarioLogado = user;
+    debugNaTela(`✅ Usuário logado: ${user.email}`, 'sucesso');
+    debugNaTela(`🆔 UID: ${user.uid}`, 'info');
     
     try {
-        const usuarioSnap = await getDoc(doc(db, "usuarios", user.uid));
+        const usuarioRef = doc(db, "usuarios", user.uid);
+        debugNaTela(`🔍 Buscando documento em usuarios/${user.uid}...`, 'info');
+        
+        const usuarioSnap = await getDoc(usuarioRef);
+        debugNaTela(`📄 Documento existe? ${usuarioSnap.exists() ? 'SIM' : 'NÃO'}`, usuarioSnap.exists() ? 'sucesso' : 'erro');
+        
         if (usuarioSnap.exists()) {
-            perfilUsuario = (usuarioSnap.data().perfil || "").toUpperCase();
+            const dadosUsuario = usuarioSnap.data();
+            debugNaTela(`📋 Dados encontrados:`, 'info');
+            debugNaTela(`   • Nome: ${dadosUsuario.nome || '-'}`, 'info');
+            debugNaTela(`   • Email: ${dadosUsuario.email || '-'}`, 'info');
+            debugNaTela(`   • Perfil (original): "${dadosUsuario.perfil}"`, 'aviso');
+            debugNaTela(`   • Perfil (normalizado): "${(dadosUsuario.perfil || "").toUpperCase()}"`, 'aviso');
+            debugNaTela(`   • Escola: ${dadosUsuario.escola || '-'}`, 'info');
             
-            if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
+            perfilUsuario = (dadosUsuario.perfil || "").toUpperCase();
+            
+            // Verificação expandida (aceita mais variações)
+            const perfisAdmin = ["ADMIN", "ADMINISTRADOR", "SEMED", "RH", "GESTOR", "MASTER", "DIRETOR"];
+            
+            debugNaTela(`🔎 Perfis aceitos: ${perfisAdmin.join(', ')}`, 'info');
+            
+            if (perfisAdmin.includes(perfilUsuario)) {
+                debugNaTela(`✅ ACESSO AUTORIZADO para perfil: ${perfilUsuario}`, 'sucesso');
                 acessoAutorizado = true;
                 if (formBusca) formBusca.style.display = 'block';
                 ocultarErro();
             } else {
+                debugNaTela(`❌ ACESSO NEGADO para perfil: ${perfilUsuario}`, 'erro');
                 acessoAutorizado = false;
-                mostrarErro("Acesso restrito: apenas administradores podem visualizar esta página.");
+                mostrarErro(`Acesso restrito: seu perfil é "${dadosUsuario.perfil}" mas esta página exige perfil de Administrador.`);
                 if (formBusca) formBusca.style.display = 'none';
                 if (resultadoContainer) resultadoContainer.classList.add('hidden');
             }
         } else {
+            debugNaTela(`❌ Documento NÃO existe na coleção 'usuarios'`, 'erro');
+            debugNaTela(`💡 O UID ${user.uid} não tem cadastro no banco`, 'aviso');
             acessoAutorizado = false;
-            mostrarErro("Usuário não encontrado no sistema.");
+            mostrarErro(`Usuário ${user.email} não encontrado na coleção 'usuarios'.`);
             if (formBusca) formBusca.style.display = 'none';
+            if (resultadoContainer) resultadoContainer.classList.add('hidden');
         }
     } catch (erro) {
-        console.error("Erro ao verificar usuário:", erro);
+        debugNaTela(`❌ ERRO: ${erro.message}`, 'erro');
+        debugNaTela(`💡 Código do erro: ${erro.code || 'desconhecido'}`, 'aviso');
         acessoAutorizado = false;
-        mostrarErro("Erro ao verificar permissões de acesso.");
+        mostrarErro("Erro ao verificar permissões: " + erro.message);
         if (formBusca) formBusca.style.display = 'none';
+        if (resultadoContainer) resultadoContainer.classList.add('hidden');
     }
 });
 
@@ -376,11 +433,14 @@ function calcularDiasFerias(reg) {
    BUSCA COM VERIFICAÇÃO DE ACESSO
    ========================================================= */
 window.buscarServidor = async function() {
-    // 👇 BLOQUEIO REAL DE ACESSO
+    // Bloqueio real de acesso
     if (!acessoAutorizado) {
         mostrarErro("Acesso negado: apenas administradores podem realizar buscas.");
         return;
     }
+    
+    limparDebug();
+    debugNaTela("🚀 Iniciando busca de servidor...", 'info');
     
     const termoInput = document.getElementById('termoBusca').value.trim();
     if (!termoInput) { alert('Por favor, digite um CPF ou Matrícula.'); return; }
@@ -424,6 +484,8 @@ window.buscarServidor = async function() {
             });
         }
 
+        debugNaTela(`📊 Servidores encontrados: ${servidoresEncontrados.size}`, servidoresEncontrados.size > 0 ? 'sucesso' : 'erro');
+
         if (servidoresEncontrados.size === 0) {
             alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
             document.getElementById('resultadoContainer').classList.add('hidden');
@@ -432,16 +494,25 @@ window.buscarServidor = async function() {
 
         await processarServidores(Array.from(servidoresEncontrados.values()));
     } catch (error) {
+        debugNaTela(`❌ ERRO: ${error.message}`, 'erro');
         console.error("Erro na busca:", error);
         mostrarErro("Erro ao consultar o banco de dados.");
     }
 };
 
+/* =========================================================
+   PROCESSAR SERVIDORES (COM BUSCA ROBUSTA)
+   ========================================================= */
 async function processarServidores(docs) {
     const primeiroData = docs[0].data();
     const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
     const cpfServidor = (primeiroData.cpf || primeiroData.CPF || '').toString().replace(/\D/g, '');
+    const cpfFormatado = (primeiroData.cpf || primeiroData.CPF || '').toString();
     const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
+    
+    debugNaTela(`👤 Servidor: ${nomeServidor}`, 'info');
+    debugNaTela(`🆔 CPF limpo: "${cpfServidor}"`, 'info');
+    debugNaTela(`🆔 CPF formatado: "${cpfFormatado}"`, 'info');
     
     const vinculosMap = new Map();
     const servidorIds = docs.map(d => d.id);
@@ -472,23 +543,117 @@ async function processarServidores(docs) {
     });
 
     const vinculos = Array.from(vinculosMap.values());
+    debugNaTela(`🔗 Matrículas encontradas: ${vinculos.map(v => v.matricula).join(', ')}`, 'info');
+    
     if (vinculos.length === 0) vinculos.push({ matricula: 'Não informada', dataAdmissao: '', anoAdmissao: null });
 
+    // ===== BUSCA DE REGISTROS (CORRIGIDA E ROBUSTA) =====
     let registros = [];
+    let registrosIds = new Set();
+    
     try {
+        debugNaTela(`🔎 Iniciando busca de registros na coleção 'registro_ferias_folgas'...`, 'info');
+        
+        // 1. Busca por CPF limpo
         if (cpfServidor) {
-            const snapCpf = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfServidor)));
-            snapCpf.forEach(d => registros.push({ id: d.id, ...d.data() }));
+            debugNaTela(`🔎 Buscando por CPF limpo: "${cpfServidor}"`, 'info');
+            const snapCpfLimpo = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfServidor)));
+            debugNaTela(`   📊 Encontrados: ${snapCpfLimpo.size}`, snapCpfLimpo.size > 0 ? 'sucesso' : 'aviso');
+            snapCpfLimpo.forEach(d => {
+                if (!registrosIds.has(d.id)) {
+                    registros.push({ id: d.id, ...d.data() });
+                    registrosIds.add(d.id);
+                }
+            });
         }
-        if (registros.length < 5 && servidorIds.length > 0) {
+        
+        // 2. Busca por CPF formatado (como está no cadastro)
+        if (cpfFormatado && cpfFormatado !== cpfServidor) {
+            debugNaTela(`🔎 Buscando por CPF formatado: "${cpfFormatado}"`, 'info');
+            const snapCpfFormatado = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFormatado)));
+            debugNaTela(`   📊 Encontrados: ${snapCpfFormatado.size}`, snapCpfFormatado.size > 0 ? 'sucesso' : 'aviso');
+            snapCpfFormatado.forEach(d => {
+                if (!registrosIds.has(d.id)) {
+                    registros.push({ id: d.id, ...d.data() });
+                    registrosIds.add(d.id);
+                }
+            });
+        }
+        
+        // 3. Busca por servidorId
+        if (servidorIds.length > 0) {
             for (const sid of servidorIds) {
-                const snapId = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
-                snapId.forEach(d => {
-                    if (!registros.find(r => r.id === d.id)) registros.push({ id: d.id, ...d.data() });
-                });
+                debugNaTela(`🔎 Buscando por servidorId: "${sid}"`, 'info');
+                try {
+                    const snapId = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
+                    debugNaTela(`   📊 Encontrados: ${snapId.size}`, snapId.size > 0 ? 'sucesso' : 'aviso');
+                    snapId.forEach(d => {
+                        if (!registrosIds.has(d.id)) {
+                            registros.push({ id: d.id, ...d.data() });
+                            registrosIds.add(d.id);
+                        }
+                    });
+                } catch (e) {
+                    debugNaTela(`   ⚠️ Query falhou (provavelmente sem índice)`, 'aviso');
+                }
             }
         }
-    } catch (e) { console.error("Erro ao buscar registros:", e); }
+        
+        // 4. FALLBACK: Se não encontrou nada, busca TODOS e filtra no código
+        if (registros.length === 0) {
+            debugNaTela(`⚠️ Nenhuma query encontrou registros. Fazendo busca completa e filtrando no código...`, 'aviso');
+            const snapAll = await getDocs(collection(db, 'registro_ferias_folgas'));
+            debugNaTela(`   📊 Total de registros na coleção: ${snapAll.size}`, 'info');
+            
+            let amostraMostrada = 0;
+            snapAll.forEach(d => {
+                const data = d.data();
+                
+                // Mostra os primeiros 3 registros como amostra
+                if (amostraMostrada < 3) {
+                    debugNaTela(`   📝 Amostra de registro (ID: ${d.id}): ${JSON.stringify(data).substring(0, 150)}...`, 'info');
+                    amostraMostrada++;
+                }
+                
+                const regCpf = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
+                const regMat = (data.matricula || '').toString().trim().replace(/^0+/, '');
+                
+                // Verifica se o CPF bate (limpo)
+                if (regCpf === cpfServidor) {
+                    if (!registrosIds.has(d.id)) {
+                        registros.push({ id: d.id, ...data });
+                        registrosIds.add(d.id);
+                        debugNaTela(`   ✅ MATCH por CPF no registro ${d.id}`, 'sucesso');
+                    }
+                    return;
+                }
+                
+                // Verifica se a matrícula bate
+                for (const v of vinculos) {
+                    const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+                    if (regMat && (regMat === cleanVMat || regMat === v.matricula.toString().trim())) {
+                        if (!registrosIds.has(d.id)) {
+                            registros.push({ id: d.id, ...data });
+                            registrosIds.add(d.id);
+                            debugNaTela(`   ✅ MATCH por matrícula no registro ${d.id}`, 'sucesso');
+                        }
+                        return;
+                    }
+                }
+            });
+        }
+        
+        debugNaTela(`🎯 TOTAL DE REGISTROS ENCONTRADOS: ${registros.length}`, registros.length > 0 ? 'sucesso' : 'erro');
+        
+        if (registros.length > 0) {
+            debugNaTela(`📋 Primeiro registro encontrado:`, 'info');
+            debugNaTela(JSON.stringify(registros[0], null, 2).substring(0, 500), 'info');
+        }
+        
+    } catch (e) { 
+        debugNaTela(`❌ ERRO ao buscar registros: ${e.message}`, 'erro');
+        console.error("Erro ao buscar registros:", e);
+    }
 
     document.getElementById('nomeServidor').innerText = nomeServidor;
     document.getElementById('cpfServidor').innerText = cpfServidor ? cpfServidor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado';
@@ -506,6 +671,9 @@ async function processarServidores(docs) {
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
 
+/* =========================================================
+   RENDERIZAR RESUMOS (COM FALLBACK DE ANO_REFERENCIA)
+   ========================================================= */
 function renderizarResumos(vinculos, dataNascimento, registros) {
     const container = document.getElementById('resumoMatriculas');
     container.innerHTML = '';
@@ -521,6 +689,8 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
             return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
         });
+
+        debugNaTela(`📊 Matrícula ${v.matricula}: ${feriasVinc.length} registro(s) de férias filtrado(s)`, 'info');
 
         const periodosLancados = new Set();
         feriasVinc.forEach(r => {
@@ -568,6 +738,8 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
             return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
         });
+
+        debugNaTela(`📊 Matrícula ${v.matricula}: ${folgasVinc.length} registro(s) de folga filtrado(s)`, 'info');
 
         const periodosFolgaLancados = new Set();
         folgasVinc.forEach(r => {
@@ -634,6 +806,9 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     });
 }
 
+/* =========================================================
+   RENDERIZAR TIMELINE
+   ========================================================= */
 function renderizarTimeline(registros, vinculos) {
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
