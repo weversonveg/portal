@@ -1,667 +1,1176 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linha do Tempo do Servidor - SEMED v1.4.9</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Linha do Tempo do Servidor - Vale Transporte</title>
+
+<style>
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+
+    --red: #c62828;
+    --red-hover: #a51f1f;
+    --red-light: #fff0f0;
+    --red-border: #efc5c5;
+
+    --yellow: #b45309;
+    --yellow-light: #fef3c7;
+    --yellow-border: #fde68a;
+
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+.topbar {
+    width: 100%;
+    max-width: 1116px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.topbar-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.system-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #3d2450;
+}
+
+.system-divider {
+    width: 1px;
+    height: 24px;
+    background: #dfe3e6;
+    margin: 0 2px;
+}
+
+.system-module {
+    font-size: 14px;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+.main {
+    width: 100%;
+    max-width: 1116px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #7b858e;
+    margin-bottom: 10px;
+}
+
+.breadcrumb .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.breadcrumb a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary);
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #263238;
+    margin-bottom: 6px;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* CARDS E FORMULÁRIOS */
+.form-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #37474f;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e8eb;
+}
+
+.card-title .material-symbols-outlined {
+    color: var(--primary);
+}
+
+.search-wrapper {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.btn-buscar {
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+}
+
+.btn-buscar:hover {
+    background: var(--primary-hover);
+}
+
+/* DADOS DO SERVIDOR */
+.dados-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.dado-item label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.dado-item strong {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* RESUMO POR MATRÍCULA */
+.resumo-matriculas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.card-matricula {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.matricula-header {
+    background: #fafbfc;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e5e8eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.matricula-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    background: var(--blue-light);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.matricula-admissao {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.matricula-body {
+    padding: 18px;
+}
+
+.alerta-saldo {
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.alerta-saldo .material-symbols-outlined {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.alerta-verde {
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+}
+
+.alerta-amarelo {
+    background: var(--yellow-light);
+    color: var(--yellow);
+    border: 1px solid var(--yellow-border);
+}
+
+.alerta-vermelho {
+    background: var(--red-light);
+    color: var(--red);
+    border: 1px solid var(--red-border);
+}
+
+.saldo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.saldo-box {
+    background: #fafbfc;
+    border: 1px solid #e5e8eb;
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+}
+
+.saldo-box label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.saldo-box .valor {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.saldo-box .subvalor {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.saldo-box.ferias {
+    border-left: 3px solid var(--blue);
+}
+
+.saldo-box.folga {
+    border-left: 3px solid var(--green);
+}
+
+.saldo-box.folga .valor {
+    font-size: 14px;
+    color: var(--text);
+    margin-top: 4px;
+}
+
+/* LINHA DO TEMPO */
+.timeline-container {
+    position: relative;
+    padding-left: 24px;
+}
+
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: #e5e8eb;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+    padding-left: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: 0 0 0 2px #e5e8eb;
+}
+
+.timeline-item.ferias::before {
+    background: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-light);
+}
+
+.timeline-item.folga::before {
+    background: var(--green);
+    box-shadow: 0 0 0 2px var(--green-light);
+}
+
+.timeline-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.timeline-tipo {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.timeline-tipo.ferias {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.timeline-tipo.folga {
+    background: var(--green-light);
+    color: var(--green);
+}
+
+.timeline-ano {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.timeline-desc {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.timeline-detalhes {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.timeline-detalhes span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.timeline-detalhes .material-symbols-outlined {
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-secondary);
+}
+
+.empty-state .material-symbols-outlined {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.empty-state strong {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.mensagem-erro {
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.mensagem-erro.ativo {
+    display: flex;
+}
+
+.mensagem-erro .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        margin: 8px 12px 0;
+        width: calc(100% - 24px);
+        padding: 0 12px;
+        height: 60px;
+    }
+    .system-module, .system-divider {
+        display: none;
+    }
+    .main {
+        padding: 20px 12px;
+    }
+    .search-wrapper {
+        flex-direction: column;
+    }
+    .btn-buscar {
+        width: 100%;
+        justify-content: center;
+    }
+    .saldo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen text-gray-800">
 
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <!-- Cabeçalho Responsivo -->
-        <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Linha do Tempo do Servidor</h1>
-                <p class="text-xs sm:text-sm text-gray-500">Controle de Férias e Folga Aniversário (Versão 1.4.9)</p>
-            </div>
-            <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">← Voltar ao Painel</a>
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Linha do Tempo do Servidor</span>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <a href="index.html"><span class="material-symbols-outlined">home</span></a>
+            <span>/</span>
+            <span>Linha do Tempo</span>
         </div>
-
-        <!-- Alerta de Erro Global -->
-        <div id="erroGlobalContainer" class="hidden mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-            <strong>Erro de Inicialização/Conexão:</strong> <span id="mensagemErroGlobal"></span>
-        </div>
-
-        <!-- Formulário de Busca -->
-        <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 mb-6 border border-gray-100">
-            <label for="termoBusca" class="block text-sm font-semibold text-gray-700 mb-2">Digite o CPF ou a Matrícula do Servidor</label>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="termoBusca" maxlength="20" placeholder="Ex: 000.000.000-00 ou Matrícula" class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <button onclick="buscarServidor()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-sm">Buscar</button>
-            </div>
-        </div>
-
-        <!-- Container de Resultados -->
-        <div id="resultadoContainer" class="hidden space-y-6">
-            
-            <!-- Card de Dados do Servidor -->
-            <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border border-gray-100">
-                <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dados Cadastrais</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Nome:</span> <strong id="nomeServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Matrícula(s):</span> <strong id="matriculaServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data(s) de Admissão:</span> <strong id="admissaoServidor" class="text-gray-900 text-base">-</strong></div>
-                    <div><span class="text-gray-500 block text-xs uppercase tracking-wider">Data de Nascimento:</span> <strong id="nascimentoServidor" class="text-gray-900 text-base">-</strong></div>
-                </div>
-            </div>
-
-            <!-- Resumos Dinâmicos Separados por Matrícula -->
-            <div id="resumosMatriculasContainer" class="space-y-6">
-                <!-- Preenchido via JavaScript para cada matrícula separadamente -->
-            </div>
-
-            <!-- Linha do Tempo Visual -->
-            <div class="bg-white shadow-sm rounded-xl p-5 sm:p-6 border border-gray-100">
-                <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-6 border-b pb-2">Histórico Cronológico</h2>
-                <div id="timelineHistorico" class="space-y-6 border-l-2 border-blue-200 pl-4 ml-2">
-                    <!-- Preenchido via JavaScript -->
-                </div>
-            </div>
-
-        </div>
+        <h1>Linha do Tempo do Servidor</h1>
+        <p>Acompanhe o histórico de férias, folgas e o saldo de direitos por matrícula.</p>
     </div>
 
-    <!-- Script Modular do Firebase v10 -->
-    <script type="module">
-        import { db } from "./firebase.js";
-        import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <div id="mensagemErro" class="mensagem-erro">
+        <span class="material-symbols-outlined">error_outline</span>
+        <span id="textoErro">Erro ao carregar dados.</span>
+    </div>
 
-        const termoBuscaEl = document.getElementById('termoBusca');
-        if (termoBuscaEl) {
-            termoBuscaEl.addEventListener('input', function(e) {
-                let value = e.target.value;
-                if (/^[0-9.\-]*$/.test(value) && value.replace(/\D/g, '').length <= 11) {
-                    let nums = value.replace(/\D/g, '');
-                    if (nums.length > 11) nums = nums.slice(0, 11);
-                    if (nums.length > 9) {
-                        value = nums.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
-                    } else if (nums.length > 6) {
-                        value = nums.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, '$1.$2.$3');
-                    } else if (nums.length > 3) {
-                        value = nums.replace(/^(\d{3})(\d{1,3}).*/, '$1.$2');
-                    } else {
-                        value = nums;
-                    }
-                    e.target.value = value;
+    <!-- BUSCA -->
+    <section class="form-card">
+        <div class="card-title">
+            <span class="material-symbols-outlined">search</span>
+            Localizar Servidor
+        </div>
+        <div class="search-wrapper">
+            <input type="text" id="termoBusca" class="search-input" placeholder="Digite o CPF (000.000.000-00) ou Matrícula" maxlength="20">
+            <button class="btn-buscar" onclick="buscarServidor()">
+                <span class="material-symbols-outlined">search</span>
+                Buscar
+            </button>
+        </div>
+    </section>
+
+    <!-- RESULTADOS -->
+    <div id="resultadoContainer" class="hidden">
+        
+        <!-- DADOS CADASTRAIS -->
+        <section class="form-card">
+            <div class="card-title">
+                <span class="material-symbols-outlined">person</span>
+                Dados Cadastrais
+            </div>
+            <div class="dados-grid">
+                <div class="dado-item">
+                    <label>Nome do Servidor</label>
+                    <strong id="nomeServidor">-</strong>
+                </div>
+                <div class="dado-item">
+                    <label>CPF</label>
+                    <strong id="cpfServidor">-</strong>
+                </div>
+                <div class="dado-item">
+                    <label>Data de Nascimento</label>
+                    <strong id="nascimentoServidor">-</strong>
+                </div>
+                <div class="dado-item">
+                    <label>Matrícula(s) e Admissão</label>
+                    <strong id="matriculasServidor" style="font-size: 13px; line-height: 1.5;">-</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESUMO POR MATRÍCULA -->
+        <div id="resumoMatriculas" class="resumo-matriculas"></div>
+
+        <!-- LINHA DO TEMPO -->
+        <section class="form-card">
+            <div class="card-title">
+                <span class="material-symbols-outlined">timeline</span>
+                Histórico Cronológico
+            </div>
+            <div id="timelineContainer" class="timeline-container">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<script type="module">
+import { db, auth } from "./firebase.js";
+import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+let usuarioLogado = null;
+let perfilUsuario = "";
+
+/* =========================================================
+   AUTENTICAÇÃO
+   ========================================================= */
+onAuthStateChanged(auth, async function(user) {
+    if (!user) {
+        mostrarErro("Sua sessão expirou. Faça login novamente.");
+        return;
+    }
+    usuarioLogado = user;
+    
+    try {
+        const usuarioSnap = await getDoc(doc(db, "usuarios", user.uid));
+        if (usuarioSnap.exists()) {
+            perfilUsuario = (usuarioSnap.data().perfil || "").toUpperCase();
+            if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR") {
+                mostrarErro("Acesso restrito: apenas administradores podem visualizar esta página.");
+            }
+        } else {
+            mostrarErro("Usuário não encontrado no sistema.");
+        }
+    } catch (erro) {
+        console.error("Erro ao verificar usuário:", erro);
+        mostrarErro("Erro ao verificar permissões de acesso.");
+    }
+});
+
+/* =========================================================
+   FORMATAÇÃO DE CPF NO INPUT
+   ========================================================= */
+document.getElementById('termoBusca').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    if (value.length > 9) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+    } else if (value.length > 3) {
+        value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+    }
+    e.target.value = value;
+});
+
+/* =========================================================
+   FUNÇÕES AUXILIARES DE DATA
+   ========================================================= */
+function formatarData(dataStr) {
+    if (!dataStr) return '';
+    if (typeof dataStr === 'object' && dataStr.toDate) {
+        dataStr = dataStr.toDate().toISOString().split('T')[0];
+    }
+    dataStr = dataStr.toString().trim();
+    if (dataStr.includes('-') && dataStr.length >= 10) {
+        const partes = dataStr.substring(0, 10).split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    return dataStr;
+}
+
+function parseDataParaDate(dataStr) {
+    if (!dataStr) return null;
+    if (typeof dataStr === 'object' && dataStr.toDate) {
+        return dataStr.toDate();
+    }
+    dataStr = dataStr.toString().trim();
+    if (dataStr.includes('/')) {
+        const partes = dataStr.split('/');
+        return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+    } else if (dataStr.includes('-')) {
+        const partes = dataStr.substring(0, 10).split('-');
+        if (partes[0].length === 4) {
+            return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+        } else {
+            return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        }
+    }
+    return null;
+}
+
+function calcularDiasFerias(reg) {
+    let dias = parseInt(reg.dias || reg.quantidade_dias || reg.total_dias || reg.qtd_dias);
+    if (!isNaN(dias) && dias > 0) return dias;
+
+    const dtInicio = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+    const dtTermino = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
+
+    if (dtInicio && dtTermino) {
+        const diffTime = Math.abs(dtTermino - dtInicio);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    }
+    return 30;
+}
+
+function obterDataFolgaAniversario(dataNascStr, ano) {
+    if (!dataNascStr) return null;
+    if (typeof dataNascStr === 'object' && dataNascStr.toDate) {
+        dataNascStr = dataNascStr.toDate().toISOString().split('T')[0];
+    }
+    dataNascStr = dataNascStr.toString().trim();
+    
+    let dia = 0, mes = 0;
+    if (dataNascStr.includes('/')) {
+        const partes = dataNascStr.split('/');
+        dia = parseInt(partes[0]);
+        mes = parseInt(partes[1]);
+    } else if (dataNascStr.includes('-')) {
+        const partes = dataNascStr.split('-');
+        if (partes[0].length === 4) {
+            mes = parseInt(partes[1]);
+            dia = parseInt(partes[2]);
+        } else {
+            dia = parseInt(partes[0]);
+            mes = parseInt(partes[1]);
+        }
+    }
+    
+    if (!dia || !mes) return null;
+    const dataFolga = new Date(ano, mes - 1, dia);
+    dataFolga.setHours(0, 0, 0, 0);
+    return dataFolga;
+}
+
+/* =========================================================
+   BUSCA DO SERVIDOR
+   ========================================================= */
+window.buscarServidor = async function() {
+    const termoInput = document.getElementById('termoBusca').value.trim();
+    if (!termoInput) {
+        alert('Por favor, digite um CPF ou Matrícula.');
+        return;
+    }
+
+    const termoLimpo = termoInput.replace(/\D/g, '');
+    const colRef = collection(db, 'servidores');
+    let servidoresEncontrados = new Map();
+
+    try {
+        // 1. Busca direta por ID do documento
+        if (termoInput) {
+            const snapId = await getDoc(doc(db, 'servidores', termoInput));
+            if (snapId.exists()) servidoresEncontrados.set(snapId.id, snapId);
+        }
+        if (termoLimpo) {
+            const snapIdLimpo = await getDoc(doc(db, 'servidores', termoLimpo));
+            if (snapIdLimpo.exists()) servidoresEncontrados.set(snapIdLimpo.id, snapIdLimpo);
+        }
+
+        // 2. Queries por campos indexados
+        const queries = [
+            where('cpf', '==', termoInput),
+            where('cpf', '==', termoLimpo),
+            where('CPF', '==', termoInput),
+            where('CPF', '==', termoLimpo),
+            where('matricula', '==', termoInput),
+            where('matricula', '==', termoLimpo),
+            where('matricula_servidor', '==', termoInput)
+        ];
+
+        for (const q of queries) {
+            try {
+                const snap = await getDocs(query(colRef, q));
+                snap.forEach(d => servidoresEncontrados.set(d.id, d));
+            } catch (e) {
+                // Ignora erros de índice composto, continua para a próxima query
+            }
+        }
+
+        // 3. Se ainda não achou e o termo é numérico (matrícula), tenta buscar em matricula1 e matricula2
+        if (servidoresEncontrados.size === 0 && /^\d+$/.test(termoLimpo)) {
+            // Nota: buscar em campos aninhados sem índice pode ser lento, mas é um fallback necessário
+            // Para otimizar, o ideal é que o frontend de cadastro salve um campo "matriculas_busca" array
+            const snapAll = await getDocs(colRef); // ⚠️ Fallback apenas se a busca inicial falhar e o banco for pequeno
+            // Em produção, remova este bloco e exija índice composto ou campo array
+            snapAll.forEach(d => {
+                const data = d.data();
+                const m1 = (data.matricula1 && data.matricula1.numeroMatricula) ? String(data.matricula1.numeroMatricula).replace(/^0+/, '') : '';
+                const m2 = (data.matricula2 && data.matricula2.numeroMatricula) ? String(data.matricula2.numeroMatricula).replace(/^0+/, '') : '';
+                const termoBuscaLimpo = termoLimpo.replace(/^0+/, '');
+                
+                if (m1 === termoBuscaLimpo || m2 === termoBuscaLimpo) {
+                    servidoresEncontrados.set(d.id, d);
                 }
             });
         }
 
-        function formatarData(dataStr) {
-            if (!dataStr) return '';
-            if (typeof dataStr.toDate === 'function') {
-                dataStr = dataStr.toDate().toISOString().split('T')[0];
-            }
-            dataStr = dataStr.toString().trim();
-            if (dataStr.includes('-') && dataStr.length >= 10) {
-                const partes = dataStr.substring(0, 10).split('-');
-                if (partes.length === 3) {
-                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-                }
-            }
-            return dataStr;
+        if (servidoresEncontrados.size === 0) {
+            alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
+            document.getElementById('resultadoContainer').classList.add('hidden');
+            return;
         }
 
-        function parseDataParaDate(dataStr) {
-            if (!dataStr) return null;
-            if (typeof dataStr.toDate === 'function') {
-                return dataStr.toDate();
-            }
-            dataStr = dataStr.toString().trim();
-            if (dataStr.includes('/')) {
-                const partes = dataStr.split('/');
-                if (partes.length === 3) {
-                    return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-                }
-            } else if (dataStr.includes('-')) {
-                const partes = dataStr.substring(0, 10).split('-');
-                if (partes.length === 3) {
-                    if (partes[0].length === 4) {
-                        return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
-                    } else {
-                        return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-                    }
-                }
-            }
-            return null;
-        }
+        await processarServidores(Array.from(servidoresEncontrados.values()));
 
-        function formatarAnoReferencia(anoRef, tipoReg = '') {
-            if (!anoRef) return 'N/A';
-            let str = anoRef.toString().trim();
-            const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
-            if (isFerias && /^\d{4}$/.test(str)) {
-                let anoNum = parseInt(str);
-                return `${anoNum}/${anoNum + 1}`;
-            }
-            return str;
-        }
+    } catch (error) {
+        console.error("Erro na busca:", error);
+        mostrarErro("Erro ao consultar o banco de dados. Verifique o console.");
+    }
+};
 
-        function obterDataFolgaAniversario(dataNascStr, ano) {
-            if (!dataNascStr) return null;
-            if (typeof dataNascStr.toDate === 'function') {
-                dataNascStr = dataNascStr.toDate().toISOString().split('T')[0];
-            }
-            dataNascStr = dataNascStr.toString().trim();
-            
-            let dia = 0, mes = 0;
-            if (dataNascStr.includes('/')) {
-                const partes = dataNascStr.split('/');
-                dia = parseInt(partes[0]);
-                mes = parseInt(partes[1]);
-            } else if (dataNascStr.includes('-')) {
-                const partes = dataNascStr.split('-');
-                if (partes[0].length === 4) {
-                    mes = parseInt(partes[1]);
-                    dia = parseInt(partes[2]);
-                } else {
-                    dia = parseInt(partes[0]);
-                    mes = parseInt(partes[1]);
-                }
-            }
-            
-            if (!dia || !mes) return null;
-            
-            let dataFolga = new Date(ano, mes - 1, dia);
-            dataFolga.setHours(0, 0, 0, 0);
-            return dataFolga;
-        }
+/* =========================================================
+   PROCESSAMENTO DOS DADOS
+   ========================================================= */
+async function processarServidores(docs) {
+    const primeiroData = docs[0].data();
+    const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
+    const cpfServidor = (primeiroData.cpf || primeiroData.CPF || '').toString().replace(/\D/g, '');
+    const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
+    
+    // Extrair todas as matrículas únicas
+    const vinculosMap = new Map();
+    const servidorIds = docs.map(d => d.id);
 
-        function calcularDiasFerias(reg) {
-            let dias = parseInt(reg.dias || reg.quantidade_dias || reg.total_dias || reg.qtd_dias);
-            if (!isNaN(dias) && dias > 0) return dias;
-
-            const dtInicioObj = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-            const dtTerminoObj = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-
-            if (dtInicioObj && dtTerminoObj) {
-                const diffTime = Math.abs(dtTerminoObj - dtInicioObj);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                if (diffDays > 0) return diffDays;
-            }
-
-            return 30;
-        }
-
-        window.buscarServidor = async function() {
-            const inputEl = document.getElementById('termoBusca');
-            if (!inputEl) return;
-            let termoInput = inputEl.value.trim();
-            if (!termoInput) {
-                alert('Por favor, digite um CPF ou Matrícula.');
-                return;
-            }
-
-            const termoLimpo = termoInput.replace(/\D/g, '');
-
-            try {
-                const colRef = collection(db, 'servidores');
-                let mapIds = new Map();
-
-                let docSnap = await getDoc(doc(db, 'servidores', termoInput));
-                if (docSnap.exists()) mapIds.set(docSnap.id, docSnap);
-
-                if (termoLimpo) {
-                    let docSnapLimpo = await getDoc(doc(db, 'servidores', termoLimpo));
-                    if (docSnapLimpo.exists()) mapIds.set(docSnapLimpo.id, docSnapLimpo);
-                }
-
-                const queries = [
-                    getDocs(query(colRef, where('cpf', '==', termoInput))),
-                    getDocs(query(colRef, where('cpf', '==', termoLimpo))),
-                    getDocs(query(colRef, where('CPF', '==', termoInput))),
-                    getDocs(query(colRef, where('CPF', '==', termoLimpo))),
-                    getDocs(query(colRef, where('matricula', '==', termoInput))),
-                    getDocs(query(colRef, where('Matricula', '==', termoInput))),
-                    getDocs(query(colRef, where('matricula', '==', termoLimpo ? Number(termoLimpo) : null))),
-                    getDocs(query(colRef, where('matricula_servidor', '==', termoInput)))
-                ];
-
-                const resultados = await Promise.all(queries.map(q => q.catch(() => ({ empty: true }))));
-                resultados.forEach(snap => {
-                    if (!snap.empty) {
-                        snap.forEach(d => mapIds.set(d.id, d));
-                    }
-                });
-
-                if (mapIds.size === 0) {
-                    const todosSnap = await getDocs(colRef);
-                    todosSnap.forEach(d => {
-                        const data = d.data();
-                        const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                        const m1 = (data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || (data.matricula1 && data.matricula1.numeroMatricula) || '').toString().toLowerCase();
-                        const m2 = (data.matricula2 && data.matricula2.numeroMatricula || '').toString().toLowerCase();
-                        if (c === termoLimpo || c === termoInput || m1 === termoInput.toLowerCase() || m2 === termoInput.toLowerCase() || d.id === termoInput) {
-                            mapIds.set(d.id, d);
-                        }
-                    });
-                }
-
-                let servidoresEncontrados = Array.from(mapIds.values());
-
-                if (servidoresEncontrados.length === 0) {
-                    alert('Nenhum servidor encontrado com este CPF ou Matrícula.');
-                    document.getElementById('resultadoContainer').classList.add('hidden');
-                    return;
-                }
-
-                let cpfsEncontrados = new Set();
-                servidoresEncontrados.forEach(d => {
-                    const data = d.data();
-                    const c = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                    if (c) cpfsEncontrados.add(c);
-                });
-
-                if (cpfsEncontrados.size > 0) {
-                    for (const cpf of cpfsEncontrados) {
-                        const qCpf1 = getDocs(query(colRef, where('cpf', '==', cpf)));
-                        const qCpf2 = getDocs(query(colRef, where('CPF', '==', cpf)));
-                        const [snap1, snap2] = await Promise.all([qCpf1.catch(() => ({ empty: true })), qCpf2.catch(() => ({ empty: true }))]);
-                        snap1.forEach(d => mapIds.set(d.id, d));
-                        snap2.forEach(d => mapIds.set(d.id, d));
-                    }
-                    servidoresEncontrados = Array.from(mapIds.values());
-                }
-
-                await processarServidoresUnificados(servidoresEncontrados, termoLimpo || termoInput);
-
-            } catch (error) {
-                console.error("Erro na busca:", error);
-                alert('Erro ao consultar o banco de dados. Verifique o console (F12).');
-            }
-        };
-
-        function adicionarVinculo(map, mat, adm) {
+    docs.forEach(d => {
+        const data = d.data();
+        
+        const adicionarVinculo = (mat, adm) => {
             if (!mat) return;
             const matStr = mat.toString().trim();
+            if (vinculosMap.has(matStr)) return;
+            
             let anoAdm = null;
             if (adm) {
                 const admStr = adm.toString();
-                if (admStr.includes('/')) {
-                    anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
-                } else if (admStr.includes('-')) {
-                    anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
-                } else if (/^\d{4}$/.test(admStr)) {
-                    anoAdm = parseInt(admStr);
-                }
+                if (admStr.includes('/')) anoAdm = parseInt(admStr.split('/')[2] || admStr.split('/')[0]);
+                else if (admStr.includes('-')) anoAdm = parseInt(admStr.split('-')[0] || admStr.split('-')[2]);
+                else if (/^\d{4}$/.test(admStr)) anoAdm = parseInt(admStr);
             }
-            if (map.has(matStr)) {
-                const existing = map.get(matStr);
-                if (!existing.dataAdmissao && adm) {
-                    existing.dataAdmissao = adm;
-                    existing.anoAdmissao = isNaN(anoAdm) || !anoAdm ? existing.anoAdmissao : anoAdm;
-                }
-                return;
-            }
-            map.set(matStr, {
+            
+            vinculosMap.set(matStr, {
                 matricula: matStr,
                 dataAdmissao: adm || '',
                 anoAdmissao: isNaN(anoAdm) || !anoAdm ? null : anoAdm
             });
+        };
+
+        const mat1 = data.matricula || data.Matricula || data.matricula_servidor || (data.matricula1 && data.matricula1.numeroMatricula);
+        const adm1 = data.data_admissao || data.dataAdmissao || (data.matricula1 && data.matricula1.dataAdmissao);
+        if (mat1) adicionarVinculo(mat1, adm1);
+
+        const mat2 = data.matricula2 && (data.matricula2.numeroMatricula || data.matricula2.matricula);
+        const adm2 = data.matricula2 && (data.matricula2.dataAdmissao || data.matricula2.data_admissao);
+        if (mat2) adicionarVinculo(mat2, adm2);
+    });
+
+    const vinculos = Array.from(vinculosMap.values());
+    if (vinculos.length === 0) {
+        vinculos.push({ matricula: 'Não informada', dataAdmissao: '', anoAdmissao: null });
+    }
+
+    // Buscar histórico de férias/folgas
+    // Estratégia: Buscar por CPF (mais confiável) e complementar por servidorId
+    let registros = [];
+    try {
+        if (cpfServidor) {
+            const snapCpf = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfServidor)));
+            snapCpf.forEach(d => registros.push({ id: d.id, ...d.data() }));
+        }
+        
+        // Complementar com buscas por servidorId se houver poucos resultados
+        if (registros.length < 5 && servidorIds.length > 0) {
+            for (const sid of servidorIds) {
+                const snapId = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
+                snapId.forEach(d => {
+                    if (!registros.find(r => r.id === d.id)) {
+                        registros.push({ id: d.id, ...d.data() });
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao buscar registros:", e);
+    }
+
+    // Renderizar Dados Cadastrais
+    document.getElementById('nomeServidor').innerText = nomeServidor;
+    document.getElementById('cpfServidor').innerText = cpfServidor ? cpfServidor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado';
+    document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
+    
+    const matriculasTexto = vinculos.map(v => {
+        const admFormatada = formatarData(v.dataAdmissao) || 'Não informada';
+        return `Mat. ${v.matricula} (Adm: ${admFormatada})`;
+    }).join('<br>');
+    document.getElementById('matriculasServidor').innerHTML = matriculasTexto;
+
+    // Renderizar Resumos e Timeline
+    renderizarResumos(vinculos, nascimentoServidor, registros);
+    renderizarTimeline(registros, vinculos);
+
+    document.getElementById('resultadoContainer').classList.remove('hidden');
+}
+
+/* =========================================================
+   RENDERIZAR RESUMOS POR MATRÍCULA
+   ========================================================= */
+function renderizarResumos(vinculos, dataNascimento, registros) {
+    const container = document.getElementById('resumoMatriculas');
+    container.innerHTML = '';
+
+    const anoAtual = new Date().getFullYear();
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    vinculos.forEach(v => {
+        // 1. Calcular períodos de direito
+        let totalPeriodosDireito = 0;
+        const dtAdmissao = parseDataParaDate(v.dataAdmissao);
+
+        if (dtAdmissao) {
+            let i = 1;
+            while (true) {
+                let dataFimAno = new Date(dtAdmissao);
+                dataFimAno.setFullYear(dataFimAno.getFullYear() + i);
+                if (dataFimAno <= hoje) {
+                    totalPeriodosDireito++;
+                    i++;
+                } else {
+                    break;
+                }
+            }
+        } else if (v.anoAdmissao && v.anoAdmissao < anoAtual) {
+            totalPeriodosDireito = anoAtual - v.anoAdmissao;
         }
 
-        async function processarServidoresUnificados(servidoresDocs, termoBusca) {
-            const primeiroData = servidoresDocs[0].data();
-            const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
-            const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
+        // 2. Filtrar férias desta matrícula
+        const feriasVinc = registros.filter(r => {
+            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
+            if (!tipo.includes('ferias') && !tipo.includes('férias')) return false;
             
-            const vinculosMap = new Map();
-            let cpfsSet = new Set();
-            const servidorIds = [];
+            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+            
+            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
+        });
 
-            servidoresDocs.forEach(d => {
-                servidorIds.push(d.id);
-                const data = d.data();
-                
-                const mat1 = data.matricula || data.Matricula || data.matricula_servidor || data.n_matricula || data.codigo || (data.matricula1 && data.matricula1.numeroMatricula);
-                const adm1 = data.data_admissao || data.dataAdmissao || data.data_admissão || data.admissao || (data.matricula1 && (data.matricula1.dataAdmissao || data.matricula1.data_admissao));
-                if (mat1) adicionarVinculo(vinculosMap, mat1, adm1);
-
-                const mat2 = data.matricula2 && (data.matricula2.numeroMatricula || data.matricula2.matricula);
-                const adm2 = data.matricula2 && (data.matricula2.dataAdmissao || data.matricula2.data_admissao);
-                if (mat2) adicionarVinculo(vinculosMap, mat2, adm2);
-
-                if (Array.isArray(data.matriculas)) {
-                    data.matriculas.forEach(m => {
-                        if (typeof m === 'object' && m !== null) {
-                            adicionarVinculo(vinculosMap, m.numeroMatricula || m.matricula || m.codigo, m.dataAdmissao || m.data_admissao || m.admissao);
-                        } else if (m) {
-                            adicionarVinculo(vinculosMap, m, '');
-                        }
-                    });
-                }
-                
-                const cpfDoc = (data.cpf || data.CPF || '').toString().replace(/\D/g, '');
-                if (cpfDoc) cpfsSet.add(cpfDoc);
-            });
-
-            const vinculos = Array.from(vinculosMap.values());
-            if (vinculos.length === 0) {
-                vinculos.push({
-                    matricula: 'Não informada',
-                    dataAdmissao: '',
-                    anoAdmissao: null
-                });
+        // 3. Somar dias gozados (apenas os que já passaram)
+        let diasGozados = 0;
+        feriasVinc.forEach(r => {
+            const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
+            const dtInicio = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
+            const dataComp = dtTermino || dtInicio;
+            
+            if (!dataComp || dataComp <= hoje) {
+                diasGozados += calcularDiasFerias(r);
             }
+        });
 
-            const cpfEfetivo = cpfsSet.size > 0 ? Array.from(cpfsSet)[0] : termoBusca;
+        const diasDireito = totalPeriodosDireito * 30;
+        const diasPendentes = Math.max(0, diasDireito - diasGozados);
+        const periodosPendentes = (diasPendentes / 30).toFixed(1).replace('.', ',');
 
-            const snapshotHistorico = await getDocs(collection(db, 'registro_ferias_folgas'));
-            const registros = [];
-
-            snapshotHistorico.forEach(docSnap => {
-                const regData = docSnap.data();
-                const regCpf = (regData.cpf || regData.CPF || regData.servidor_cpf || '').toString().replace(/\D/g, '');
-                const regMat = (regData.matricula || regData.Matricula || regData.servidor_matricula || '').toString();
-                const regServId = regData.servidorId || regData.servidor_id || '';
-
-                const matchCpf = cpfEfetivo && regCpf === cpfEfetivo;
-                const matchId = servidorIds.includes(regServId);
-                const matchMat = vinculos.some(v => v.matricula === regMat || v.matricula === regMat.replace(/^0+/, ''));
-
-                if (matchCpf || matchId || matchMat) {
-                    registros.push(regData);
-                    if (regMat && !vinculosMap.has(regMat)) {
-                        adicionarVinculo(vinculosMap, regMat, '');
-                    }
-                }
-            });
-
-            const listaMatriculasFinal = Array.from(vinculosMap.keys());
-            const matriculaExibicao = listaMatriculasFinal.length > 0 ? listaMatriculasFinal.join(' / ') : 'Não informada';
-            const admissaoExibicao = Array.from(vinculosMap.values()).map(v => `Mat ${v.matricula}: ${formatarData(v.dataAdmissao) || 'Não informada (Inferida)'}`).join(' | ');
-
-            document.getElementById('nomeServidor').innerText = nomeServidor;
-            document.getElementById('matriculaServidor').innerText = matriculaExibicao;
-            document.getElementById('admissaoServidor').innerText = admissaoExibicao;
-            document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
-
-            processarLinhaDoTempo(Array.from(vinculosMap.values()), nascimentoServidor, registros);
-
-            document.getElementById('resultadoContainer').classList.remove('hidden');
+        // 4. Definir alerta
+        let alertaClasse = 'alerta-verde';
+        let alertaIcone = 'check_circle';
+        let alertaTexto = `Regular: Saldo dentro dos conformes legais (${diasPendentes} dias pendentes).`;
+        
+        if (diasPendentes >= 90) { 
+            alertaClasse = 'alerta-vermelho';
+            alertaIcone = 'error';
+            alertaTexto = `CRÍTICO: Limite de 3 períodos de férias acumulados atingido ou ultrapassado (${diasPendentes} dias).`;
+        } else if (diasPendentes >= 60) { 
+            alertaClasse = 'alerta-amarelo';
+            alertaIcone = 'warning';
+            alertaTexto = `ATENÇÃO: Possui 2 períodos acumulados (${diasPendentes} dias), correndo risco de atingir o limite legal.`;
         }
 
-        function processarLinhaDoTempo(vinculos, dataNascimento, registros) {
-            const timelineEl = document.getElementById('timelineHistorico');
-            if (!timelineEl) return;
-            timelineEl.innerHTML = '';
+        // 5. Verificar Folga de Aniversário
+        const dataAnivEsteAno = obterDataFolgaAniversario(dataNascimento, anoAtual);
+        const folgasVinc = registros.filter(r => {
+            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
+            if (!tipo.includes('aniversario') && !tipo.includes('aniversário') && !tipo.includes('folga')) return false;
+            
+            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
+        });
 
-            const containerResumos = document.getElementById('resumosMatriculasContainer');
-            containerResumos.innerHTML = '';
+        const folgaRealizada = folgasVinc.find(f => {
+            const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
+            const dataRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
+            const dtObj = parseDataParaDate(dataRaw);
+            let matchAno = (anoRef && anoRef.toString() == anoAtual) || (dataRaw && dataRaw.toString().includes(anoAtual));
+            if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
+            return matchAno && dtObj && dtObj <= hoje;
+        });
 
-            const anoAtual = new Date().getFullYear();
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
+        const folgaProgramada = folgasVinc.find(f => {
+            const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
+            const dataRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
+            const dtObj = parseDataParaDate(dataRaw);
+            let matchAno = (anoRef && anoRef.toString() == anoAtual) || (dataRaw && dataRaw.toString().includes(anoAtual));
+            if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
+            return matchAno && dtObj && dtObj > hoje;
+        });
 
-            const feriasTiradas = registros.filter(r => {
-                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
-                return t.includes('ferias') || t.includes('férias');
-            });
-
-            const folgasAniversario = registros.filter(r => {
-                const t = (r.tipo || r.tipo_registro || r.categoria || '').toString().toLowerCase();
-                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
-            });
-
-            // Gerar card individual para cada matrícula
-            vinculos.forEach(v => {
-                let totalPeriodosDireitoVinc = 0;
-                const dtAdmissaoObj = parseDataParaDate(v.dataAdmissao);
-
-                if (dtAdmissaoObj) {
-                    let i = 1;
-                    while (true) {
-                        let dataFimAno = new Date(dtAdmissaoObj);
-                        dataFimAno.setFullYear(dataFimAno.getFullYear() + i);
-                        if (dataFimAno <= hoje) {
-                            totalPeriodosDireitoVinc++;
-                            i++;
-                        } else {
-                            break;
-                        }
-                    }
-                } else {
-                    let anoAdmissaoVinc = v.anoAdmissao;
-                    if (!anoAdmissaoVinc) {
-                        let anosReg = [];
-                        registros.forEach(r => {
-                            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim();
-                            const cleanRegMat = regMat.replace(/^0+/, '');
-                            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-                            if (regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat) || !regMat) {
-                                const anoRef = r.ano_referencia || r.ano || r.anoReferencia;
-                                if (anoRef) {
-                                    const matchYear = anoRef.toString().match(/\d{4}/);
-                                    if (matchYear) anosReg.push(parseInt(matchYear[0]));
-                                }
-                            }
-                        });
-                        if (anosReg.length > 0) {
-                            anoAdmissaoVinc = Math.min(...anosReg);
-                        }
-                    }
-
-                    if (anoAdmissaoVinc && anoAdmissaoVinc < anoAtual) {
-                        totalPeriodosDireitoVinc = anoAtual - anoAdmissaoVinc;
-                    } else {
-                        totalPeriodosDireitoVinc = 0;
-                    }
-                }
-
-                const feriasVinc = feriasTiradas.filter(r => {
-                    const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim();
-                    if (!regMat) return vinculos.length === 1;
-                    const cleanRegMat = regMat.replace(/^0+/, '');
-                    const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-                    return regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat);
-                });
-
-                let diasGozadosVinc = 0;
-                feriasVinc.forEach(r => {
-                    const dtTerminoObj = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
-                    const dtInicioObj = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
-                    const dataComp = dtTerminoObj || dtInicioObj;
-                    
-                    let jaPassou = true;
-                    if (dataComp) {
-                        const d = new Date(dataComp);
-                        d.setHours(0, 0, 0, 0);
-                        jaPassou = d <= hoje;
-                    }
-
-                    if (jaPassou) {
-                        diasGozadosVinc += calcularDiasFerias(r);
-                    }
-                });
-
-                const diasDireitoVinc = totalPeriodosDireitoVinc * 30;
-                const diasPendentesVinc = Math.max(0, diasDireitoVinc - diasGozadosVinc);
-                const periodosPendentesDec = diasPendentesVinc / 30;
-                const periodosPendentesFormatado = periodosPendentesDec % 1 === 0 ? periodosPendentesDec.toString() : periodosPendentesDec.toFixed(1).replace('.', ',');
-
-                let alertaClasse = 'bg-green-50 border-green-200 text-green-700';
-                let alertaTexto = `✓ Regular: O saldo de férias está dentro dos conformes legais (${diasPendentesVinc} dias pendentes).`;
-                if (diasPendentesVinc >= 90) { 
-                    alertaClasse = 'bg-red-50 border-red-200 text-red-700';
-                    alertaTexto = `⚠️ ALERTA CRÍTICO: Esta matrícula atingiu ou ultrapassou o limite de 3 períodos de férias acumulados (${diasPendentesVinc} dias).`;
-                } else if (diasPendentesVinc >= 60) { 
-                    alertaClasse = 'bg-yellow-50 border-yellow-200 text-yellow-700';
-                    alertaTexto = `⚠️ ATENÇÃO: Esta matrícula possui 2 períodos acumulados (${diasPendentesVinc} dias), correndo risco de atingir o limite legal.`;
-                }
-
-                const dataAnivEsteAno = obterDataFolgaAniversario(dataNascimento, anoAtual);
-                const folgaEsteAnoRealizada = folgasAniversario.find(f => {
-                    const regMat = (f.matricula || f.Matricula || f.servidor_matricula || '').toString().trim();
-                    const cleanRegMat = regMat.replace(/^0+/, '');
-                    const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-                    const matchMatCheck = !regMat || regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat);
-                    if (!matchMatCheck) return false;
-
-                    const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-                    const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
-                    const dtObj = parseDataParaDate(dataUsoRaw);
-                    let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
-                    if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
-                    return matchAno;
-                });
-
-                const folgaEsteAnoProgramada = folgasAniversario.find(f => {
-                    const regMat = (f.matricula || f.Matricula || f.servidor_matricula || '').toString().trim();
-                    const cleanRegMat = regMat.replace(/^0+/, '');
-                    const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-                    const matchMatCheck = !regMat || regMat === v.matricula.toString().trim() || (cleanRegMat && cleanRegMat === cleanVMat);
-                    if (!matchMatCheck) return false;
-
-                    const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-                    const dataUsoRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
-                    const dtObj = parseDataParaDate(dataUsoRaw);
-                    let matchAno = anoRef == anoAtual || (dataUsoRaw && dataUsoRaw.toString().includes(anoAtual));
-                    if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
-                    if (!matchAno) return false;
-                    if (dtObj) {
-                        let d = new Date(dtObj);
-                        d.setHours(0, 0, 0, 0);
-                        return d > hoje;
-                    }
-                    return false;
-                });
-
-                let statusFolgaHtml = '';
-                if (folgaEsteAnoRealizada) {
-                    const dataUsoRaw = folgaEsteAnoRealizada.data || folgaEsteAnoRealizada.data_gozo || folgaEsteAnoRealizada.data_inicio || folgaEsteAnoRealizada.dataInicio || 'Registrada';
-                    statusFolgaHtml = `<span class="text-green-600 font-semibold">Usufruída em ${formatarData(dataUsoRaw)}</span>`;
-                } else if (folgaEsteAnoProgramada) {
-                    const dataUsoRaw = folgaEsteAnoProgramada.data || folgaEsteAnoProgramada.data_gozo || folgaEsteAnoProgramada.data_inicio || folgaEsteAnoProgramada.dataInicio;
-                    statusFolgaHtml = `<span class="text-amber-600 font-semibold">Programada para ${formatarData(dataUsoRaw)}</span>`;
-                } else if (dataAnivEsteAno) {
-                    if (hoje > dataAnivEsteAno) {
-                        const dataAnivProximoAno = obterDataFolgaAniversario(dataNascimento, anoAtual + 1);
-                        const dataProxStr = dataAnivProximoAno ? dataAnivProximoAno.toLocaleDateString('pt-BR') : '';
-                        statusFolgaHtml = `<span class="text-red-600 font-semibold">Expirada (Não gozada este ano)</span> <span class="text-xs text-gray-500 block mt-0.5">Próxima em ${dataProxStr}</span>`;
-                    } else {
-                        statusFolgaHtml = `<span class="text-amber-600 font-semibold">Disponível a partir de ${dataAnivEsteAno.toLocaleDateString('pt-BR')}</span>`;
-                    }
-                } else {
-                    statusFolgaHtml = `<span class="text-blue-600 font-semibold">Disponível para gozo</span>`;
-                }
-
-                const cardDiv = document.createElement('div');
-                cardDiv.className = "bg-white shadow-sm rounded-xl p-5 sm:p-6 border border-gray-200 space-y-4";
-                cardDiv.innerHTML = `
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">Matrícula: ${v.matricula}</span>
-                            <span class="text-xs text-gray-500 ml-2">Admissão: ${formatarData(v.dataAdmissao) || 'Não informada'}</span>
-                        </div>
-                    </div>
-
-                    <div class="p-3 rounded-xl border text-sm font-medium ${alertaClasse}">
-                        ${alertaTexto}
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 border-l-4 border-l-blue-500">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Férias a Gozar</h3>
-                            <div class="mt-2 flex justify-between items-baseline">
-                                <span class="text-xl sm:text-2xl font-extrabold text-gray-900">${periodosPendentesFormatado}</span>
-                                <span class="text-xs sm:text-sm text-gray-600">Períodos (${diasPendentesVinc} dias)</span>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 border-l-4 border-l-green-500">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Folga Aniversário</h3>
-                            <div class="mt-2">
-                                <span class="text-sm font-bold text-gray-900">${statusFolgaHtml}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                containerResumos.appendChild(cardDiv);
-            });
-
-            registros.forEach(reg => {
-                const tipoReg = (reg.tipo || reg.tipo_registro || 'Registro').toString();
-                const isFerias = tipoReg.toLowerCase().includes('ferias') || tipoReg.toLowerCase().includes('férias');
-
-                const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-                const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-                const matRegistro = reg.matricula || reg.Matricula || reg.servidor_matricula;
-
-                let textoDetalhe = '';
-                if (isFerias) {
-                    const dtTerminoObj = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-                    const dtInicioObj = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-                    const dataComp = dtTerminoObj || dtInicioObj;
-                    let jaPassou = true;
-                    if (dataComp) {
-                        const d = new Date(dataComp);
-                        d.setHours(0, 0, 0, 0);
-                        jaPassou = d <= hoje;
-                    }
-
-                    const qtdDiasReg = calcularDiasFerias(reg);
-                    const infoDias = ` (${qtdDiasReg} dias)`;
-
-                    if (dtInicio && dtTermino) {
-                        if (jaPassou) {
-                            textoDetalhe = `Período gozado de ${dtInicio} até ${dtTermino}${infoDias}`;
-                        } else {
-                            textoDetalhe = `Férias programadas (A gozar) de ${dtInicio} até ${dtTermino}${infoDias}`;
-                        }
-                    } else if (dtInicio) {
-                        if (jaPassou) {
-                            textoDetalhe = `Período gozado em ${dtInicio}${infoDias}`;
-                        } else {
-                            textoDetalhe = `Férias programadas (A gozar) para ${dtInicio}${infoDias}`;
-                        }
-                    } else {
-                        textoDetalhe = reg.descricao || (jaPassou ? `Férias gozadas${infoDias}` : `Férias programadas${infoDias}`);
-                    }
-                } else {
-                    const dtGozoRaw = reg.data_gozo || reg.dataGozo || reg.data || reg.data_inicio || reg.dataInicio;
-                    const dtGozo = formatarData(dtGozoRaw);
-                    const dtObj = parseDataParaDate(dtGozoRaw);
-                    let jaPassou = true;
-                    if (dtObj) {
-                        const d = new Date(dtObj);
-                        d.setHours(0, 0, 0, 0);
-                        jaPassou = d <= hoje;
-                    }
-
-                    if (dtGozo) {
-                        if (jaPassou) {
-                            textoDetalhe = `Usufruída em ${dtGozo}`;
-                        } else {
-                            textoDetalhe = `Folga programada para ${dtGozo}`;
-                        }
-                    } else {
-                        textoDetalhe = reg.descricao || 'Folga aniversário registrada';
-                    }
-                }
-
-                if (matRegistro) {
-                    textoDetalhe += ` <span class="text-xs font-semibold text-gray-500">(Matrícula: ${matRegistro})</span>`;
-                }
-
-                const anoRefBruto = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
-                const anoRefFormatado = formatarAnoReferencia(anoRefBruto, tipoReg);
-
-                const itemDiv = document.createElement('div');
-                itemDiv.className = "relative pl-6";
-                itemDiv.innerHTML = `
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full ${isFerias ? 'bg-blue-600' : 'bg-green-600'} border-2 border-white shadow-sm"></div>
-                    <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">${tipoReg}</span>
-                    <p class="text-sm font-medium text-gray-800 mt-0.5">${textoDetalhe}</p>
-                    <span class="text-xs text-gray-500">Ano Referência: ${anoRefFormatado}</span>
-                `;
-                timelineEl.appendChild(itemDiv);
-            });
-
-            if (registros.length === 0) {
-                timelineEl.innerHTML = `<p class="text-sm text-gray-500 italic">Nenhum registro de férias ou folga encontrado para este servidor.</p>`;
+        let statusFolgaHtml = '<span style="color: var(--text-secondary);">Sem registro</span>';
+        if (folgaRealizada) {
+            const dataRaw = folgaRealizada.data || folgaRealizada.data_gozo || folgaRealizada.data_inicio;
+            statusFolgaHtml = `<span style="color: var(--green); font-weight: 600;">✓ Usufruída em ${formatarData(dataRaw)}</span>`;
+        } else if (folgaProgramada) {
+            const dataRaw = folgaProgramada.data || folgaProgramada.data_gozo || folgaProgramada.data_inicio;
+            statusFolgaHtml = `<span style="color: var(--yellow); font-weight: 600;">⏳ Programada para ${formatarData(dataRaw)}</span>`;
+        } else if (dataAnivEsteAno) {
+            if (hoje > dataAnivEsteAno) {
+                const dataProx = obterDataFolgaAniversario(dataNascimento, anoAtual + 1);
+                statusFolgaHtml = `<span style="color: var(--red); font-weight: 600;">✗ Expirada (Não gozada)</span><br><span style="font-size:11px; color:var(--text-secondary);">Próxima: ${dataProx ? formatarData(dataProx.toISOString().split('T')[0]) : '-'}</span>`;
+            } else {
+                statusFolgaHtml = `<span style="color: var(--blue); font-weight: 600;">📅 Disponível a partir de ${formatarData(dataAnivEsteAno.toISOString().split('T')[0])}</span>`;
             }
         }
-    </script>
+
+        // Montar Card
+        const card = document.createElement('div');
+        card.className = 'card-matricula';
+        card.innerHTML = `
+            <div class="matricula-header">
+                <span class="matricula-badge">Matrícula: ${v.matricula}</span>
+                <span class="matricula-admissao">Admissão: ${formatarData(v.dataAdmissao) || 'N/A'}</span>
+            </div>
+            <div class="matricula-body">
+                <div class="alerta-saldo ${alertaClasse}">
+                    <span class="material-symbols-outlined">${alertaIcone}</span>
+                    <span>${alertaTexto}</span>
+                </div>
+                <div class="saldo-grid">
+                    <div class="saldo-box ferias">
+                        <label>Férias a Gozar</label>
+                        <div class="valor">${periodosPendentes}</div>
+                        <div class="subvalor">Períodos (${diasPendentes} dias)</div>
+                    </div>
+                    <div class="saldo-box folga">
+                        <label>Folga Aniversário</label>
+                        <div class="valor">${statusFolgaHtml}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+/* =========================================================
+   RENDERIZAR LINHA DO TEMPO
+   ========================================================= */
+function renderizarTimeline(registros, vinculos) {
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = '';
+
+    if (registros.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span class="material-symbols-outlined">event_busy</span>
+                <strong>Nenhum registro encontrado</strong>
+                <p>Este servidor ainda não possui lançamentos de férias ou folgas no sistema.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por data de início (mais recente primeiro)
+    registros.sort((a, b) => {
+        const dataA = parseDataParaDate(a.data_inicio || a.dataInicio || a.data) || new Date(0);
+        const dataB = parseDataParaDate(b.data_inicio || b.dataInicio || b.data) || new Date(0);
+        return dataB - dataA;
+    });
+
+    registros.forEach(reg => {
+        const tipoRaw = (reg.tipo || reg.tipo_registro || reg.categoria || 'Registro').toString();
+        const isFerias = tipoRaw.toLowerCase().includes('ferias') || tipoRaw.toLowerCase().includes('férias');
+        const tipoExibicao = isFerias ? 'Férias' : 'Folga Aniversário';
+        const classeTipo = isFerias ? 'ferias' : 'folga';
+
+        const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+        const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
+        const matriculaReg = reg.matricula || reg.Matricula || reg.servidor_matricula || 'N/A';
+        const escolaReg = reg.escola || 'Não informada';
+        const anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
+
+        let descricao = '';
+        if (isFerias) {
+            const dias = calcularDiasFerias(reg);
+            if (dtInicio && dtTermino) {
+                descricao = `Período de ${dtInicio} a ${dtTermino} (${dias} dias)`;
+            } else if (dtInicio) {
+                descricao = `Início em ${dtInicio} (${dias} dias)`;
+            } else {
+                descricao = `${dias} dias registrados`;
+            }
+        } else {
+            const dataGozo = formatarData(reg.data || reg.data_gozo || reg.dataInicio);
+            descricao = dataGozo ? `Gozo em ${dataGozo}` : 'Data não especificada';
+        }
+
+        const item = document.createElement('div');
+        item.className = `timeline-item ${classeTipo}`;
+        item.innerHTML = `
+            <div class="timeline-card">
+                <div class="timeline-header">
+                    <span class="timeline-tipo ${classeTipo}">${tipoExibicao}</span>
+                    <span class="timeline-ano">Ref: ${anoRef}</span>
+                </div>
+                <div class="timeline-desc">${descricao}</div>
+                <div class="timeline-detalhes">
+                    <span><span class="material-symbols-outlined">badge</span> Mat: ${matriculaReg}</span>
+                    <span><span class="material-symbols-outlined">school</span> ${escolaReg}</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+/* =========================================================
+   UTILITÁRIOS
+   ========================================================= */
+function mostrarErro(texto) {
+    const el = document.getElementById('mensagemErro');
+    document.getElementById('textoErro').innerText = texto;
+    el.classList.add('ativo');
+    document.getElementById('resultadoContainer').classList.add('hidden');
+}
+</script>
+
 </body>
 </html>
