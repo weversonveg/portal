@@ -1,5 +1,5 @@
 versão atual 
-
+página cálculos atuslizada
 Disas úteis por mês✅ Padrão global automático para meses futuros✅ Período de abertura/fechamento✅ Status calculado automaticamente✅ Congelamento manual✅ Exceções por escola (reabertura)🏫 Lançamentos das Escolas (escolas.html)✅ Autenticação por perfil✅ Bloqueio automático de meses anteriores✅ Respeita período configurado✅ Respeita exceções por escola✅ Salvamento automático ao sair do campo✅ Contador de sessão✅ Feedback visual completo📋 Lançamentos SEMED (lancamentos.html)✅ Autenticação admin✅ Férias, folgas, licenças✅ Data de término bloqueada para férias✅ Validação de conflitos.
 Criado botão limpa lotação 
 
