@@ -154,7 +154,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* CARDS E FORMULÁRIOS */
 .form-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
@@ -222,7 +221,6 @@ body {
     background: var(--primary-hover);
 }
 
-/* DADOS DO SERVIDOR */
 .dados-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -245,7 +243,6 @@ body {
     font-weight: 600;
 }
 
-/* RESUMO POR MATRÍCULA */
 .resumo-matriculas {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -371,7 +368,100 @@ body {
     margin-top: 4px;
 }
 
-/* LINHA DO TEMPO */
+/* TABELA DE PERÍODOS */
+.periodos-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+.periodos-table th {
+    background: #fafbfc;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 2px solid #e5e8eb;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.periodos-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.periodos-table tr:hover {
+    background: #f8fafc;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-badge.expirado {
+    background: #f1f3f5;
+    color: #7a858d;
+    border: 1px solid #e2e8f0;
+}
+
+.status-badge.disponivel {
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+}
+
+.status-badge.aguardando {
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1px solid #bbdefb;
+}
+
+.status-badge.usufruido {
+    background: var(--yellow-light);
+    color: var(--yellow);
+    border: 1px solid var(--yellow-border);
+}
+
+.status-badge .material-symbols-outlined {
+    font-size: 13px;
+}
+
+.mensagem-erro {
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.mensagem-erro.ativo {
+    display: flex;
+}
+
+.mensagem-erro .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
 .timeline-container {
     position: relative;
     padding-left: 24px;
@@ -501,32 +591,6 @@ body {
     margin-bottom: 4px;
 }
 
-.mensagem-erro {
-    background: var(--red-light);
-    border: 1px solid var(--red-border);
-    color: var(--red);
-    padding: 14px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 24px;
-    display: none;
-    align-items: center;
-    gap: 10px;
-}
-
-.mensagem-erro.ativo {
-    display: flex;
-}
-
-.mensagem-erro .material-symbols-outlined {
-    font-size: 20px;
-}
-
-.hidden {
-    display: none !important;
-}
-
 @media (max-width: 768px) {
     .topbar {
         margin: 8px 12px 0;
@@ -549,6 +613,13 @@ body {
     }
     .saldo-grid {
         grid-template-columns: 1fr;
+    }
+    .periodos-table {
+        font-size: 11px;
+    }
+    .periodos-table th,
+    .periodos-table td {
+        padding: 8px 6px;
     }
 }
 </style>
@@ -573,7 +644,7 @@ body {
             <span>Linha do Tempo</span>
         </div>
         <h1>Linha do Tempo do Servidor</h1>
-        <p>Acompanhe o histórico de férias, folgas e o saldo de direitos por matrícula.</p>
+        <p>Acompanhe o histórico completo de férias, folgas e períodos aquisitivos por matrícula.</p>
     </div>
 
     <div id="mensagemErro" class="mensagem-erro">
@@ -581,7 +652,6 @@ body {
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
-    <!-- BUSCA -->
     <section class="form-card">
         <div class="card-title">
             <span class="material-symbols-outlined">search</span>
@@ -596,10 +666,8 @@ body {
         </div>
     </section>
 
-    <!-- RESULTADOS -->
     <div id="resultadoContainer" class="hidden">
         
-        <!-- DADOS CADASTRAIS -->
         <section class="form-card">
             <div class="card-title">
                 <span class="material-symbols-outlined">person</span>
@@ -625,18 +693,16 @@ body {
             </div>
         </section>
 
-        <!-- RESUMO POR MATRÍCULA -->
         <div id="resumoMatriculas" class="resumo-matriculas"></div>
 
-        <!-- LINHA DO TEMPO -->
+        <div id="historicoPeriodos"></div>
+
         <section class="form-card">
             <div class="card-title">
                 <span class="material-symbols-outlined">timeline</span>
-                Histórico Cronológico
+                Histórico de Lançamentos
             </div>
-            <div id="timelineContainer" class="timeline-container">
-                <!-- Preenchido via JS -->
-            </div>
+            <div id="timelineContainer" class="timeline-container"></div>
         </section>
 
     </div>
@@ -650,9 +716,6 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 let usuarioLogado = null;
 let perfilUsuario = "";
 
-/* =========================================================
-   AUTENTICAÇÃO
-   ========================================================= */
 onAuthStateChanged(auth, async function(user) {
     if (!user) {
         mostrarErro("Sua sessão expirou. Faça login novamente.");
@@ -676,9 +739,6 @@ onAuthStateChanged(auth, async function(user) {
     }
 });
 
-/* =========================================================
-   FORMATAÇÃO DE CPF NO INPUT
-   ========================================================= */
 document.getElementById('termoBusca').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
@@ -693,9 +753,6 @@ document.getElementById('termoBusca').addEventListener('input', function(e) {
     e.target.value = value;
 });
 
-/* =========================================================
-   FUNÇÕES AUXILIARES DE DATA
-   ========================================================= */
 function formatarData(dataStr) {
     if (!dataStr) return '';
     if (typeof dataStr === 'object' && dataStr.toDate) {
@@ -743,38 +800,6 @@ function calcularDiasFerias(reg) {
     return 30;
 }
 
-function obterDataFolgaAniversario(dataNascStr, ano) {
-    if (!dataNascStr) return null;
-    if (typeof dataNascStr === 'object' && dataNascStr.toDate) {
-        dataNascStr = dataNascStr.toDate().toISOString().split('T')[0];
-    }
-    dataNascStr = dataNascStr.toString().trim();
-    
-    let dia = 0, mes = 0;
-    if (dataNascStr.includes('/')) {
-        const partes = dataNascStr.split('/');
-        dia = parseInt(partes[0]);
-        mes = parseInt(partes[1]);
-    } else if (dataNascStr.includes('-')) {
-        const partes = dataNascStr.split('-');
-        if (partes[0].length === 4) {
-            mes = parseInt(partes[1]);
-            dia = parseInt(partes[2]);
-        } else {
-            dia = parseInt(partes[0]);
-            mes = parseInt(partes[1]);
-        }
-    }
-    
-    if (!dia || !mes) return null;
-    const dataFolga = new Date(ano, mes - 1, dia);
-    dataFolga.setHours(0, 0, 0, 0);
-    return dataFolga;
-}
-
-/* =========================================================
-   BUSCA DO SERVIDOR
-   ========================================================= */
 window.buscarServidor = async function() {
     const termoInput = document.getElementById('termoBusca').value.trim();
     if (!termoInput) {
@@ -787,7 +812,6 @@ window.buscarServidor = async function() {
     let servidoresEncontrados = new Map();
 
     try {
-        // 1. Busca direta por ID do documento
         if (termoInput) {
             const snapId = await getDoc(doc(db, 'servidores', termoInput));
             if (snapId.exists()) servidoresEncontrados.set(snapId.id, snapId);
@@ -797,7 +821,6 @@ window.buscarServidor = async function() {
             if (snapIdLimpo.exists()) servidoresEncontrados.set(snapIdLimpo.id, snapIdLimpo);
         }
 
-        // 2. Queries por campos indexados
         const queries = [
             where('cpf', '==', termoInput),
             where('cpf', '==', termoLimpo),
@@ -812,17 +835,11 @@ window.buscarServidor = async function() {
             try {
                 const snap = await getDocs(query(colRef, q));
                 snap.forEach(d => servidoresEncontrados.set(d.id, d));
-            } catch (e) {
-                // Ignora erros de índice composto, continua para a próxima query
-            }
+            } catch (e) {}
         }
 
-        // 3. Se ainda não achou e o termo é numérico (matrícula), tenta buscar em matricula1 e matricula2
         if (servidoresEncontrados.size === 0 && /^\d+$/.test(termoLimpo)) {
-            // Nota: buscar em campos aninhados sem índice pode ser lento, mas é um fallback necessário
-            // Para otimizar, o ideal é que o frontend de cadastro salve um campo "matriculas_busca" array
-            const snapAll = await getDocs(colRef); // ⚠️ Fallback apenas se a busca inicial falhar e o banco for pequeno
-            // Em produção, remova este bloco e exija índice composto ou campo array
+            const snapAll = await getDocs(colRef);
             snapAll.forEach(d => {
                 const data = d.data();
                 const m1 = (data.matricula1 && data.matricula1.numeroMatricula) ? String(data.matricula1.numeroMatricula).replace(/^0+/, '') : '';
@@ -849,16 +866,12 @@ window.buscarServidor = async function() {
     }
 };
 
-/* =========================================================
-   PROCESSAMENTO DOS DADOS
-   ========================================================= */
 async function processarServidores(docs) {
     const primeiroData = docs[0].data();
     const nomeServidor = primeiroData.nome || primeiroData.Nome || 'Não informado';
     const cpfServidor = (primeiroData.cpf || primeiroData.CPF || '').toString().replace(/\D/g, '');
     const nascimentoServidor = primeiroData.data_nascimento || primeiroData.dataNascimento;
     
-    // Extrair todas as matrículas únicas
     const vinculosMap = new Map();
     const servidorIds = docs.map(d => d.id);
 
@@ -899,8 +912,6 @@ async function processarServidores(docs) {
         vinculos.push({ matricula: 'Não informada', dataAdmissao: '', anoAdmissao: null });
     }
 
-    // Buscar histórico de férias/folgas
-    // Estratégia: Buscar por CPF (mais confiável) e complementar por servidorId
     let registros = [];
     try {
         if (cpfServidor) {
@@ -908,7 +919,6 @@ async function processarServidores(docs) {
             snapCpf.forEach(d => registros.push({ id: d.id, ...d.data() }));
         }
         
-        // Complementar com buscas por servidorId se houver poucos resultados
         if (registros.length < 5 && servidorIds.length > 0) {
             for (const sid of servidorIds) {
                 const snapId = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
@@ -923,7 +933,6 @@ async function processarServidores(docs) {
         console.error("Erro ao buscar registros:", e);
     }
 
-    // Renderizar Dados Cadastrais
     document.getElementById('nomeServidor').innerText = nomeServidor;
     document.getElementById('cpfServidor').innerText = cpfServidor ? cpfServidor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : 'Não informado';
     document.getElementById('nascimentoServidor').innerText = formatarData(nascimentoServidor) || 'Não informado';
@@ -934,46 +943,21 @@ async function processarServidores(docs) {
     }).join('<br>');
     document.getElementById('matriculasServidor').innerHTML = matriculasTexto;
 
-    // Renderizar Resumos e Timeline
     renderizarResumos(vinculos, nascimentoServidor, registros);
+    renderizarHistoricoPeriodos(vinculos, registros);
     renderizarTimeline(registros, vinculos);
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
 
-/* =========================================================
-   RENDERIZAR RESUMOS POR MATRÍCULA
-   ========================================================= */
 function renderizarResumos(vinculos, dataNascimento, registros) {
     const container = document.getElementById('resumoMatriculas');
     container.innerHTML = '';
 
-    const anoAtual = new Date().getFullYear();
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
     vinculos.forEach(v => {
-        // 1. Calcular períodos de direito
-        let totalPeriodosDireito = 0;
-        const dtAdmissao = parseDataParaDate(v.dataAdmissao);
-
-        if (dtAdmissao) {
-            let i = 1;
-            while (true) {
-                let dataFimAno = new Date(dtAdmissao);
-                dataFimAno.setFullYear(dataFimAno.getFullYear() + i);
-                if (dataFimAno <= hoje) {
-                    totalPeriodosDireito++;
-                    i++;
-                } else {
-                    break;
-                }
-            }
-        } else if (v.anoAdmissao && v.anoAdmissao < anoAtual) {
-            totalPeriodosDireito = anoAtual - v.anoAdmissao;
-        }
-
-        // 2. Filtrar férias desta matrícula
         const feriasVinc = registros.filter(r => {
             const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
             if (!tipo.includes('ferias') && !tipo.includes('férias')) return false;
@@ -984,7 +968,16 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
         });
 
-        // 3. Somar dias gozados (apenas os que já passaram)
+        // Contar períodos únicos registrados
+        const periodosRegistrados = new Set();
+        feriasVinc.forEach(r => {
+            const anoRef = r.ano_referencia || r.ano || r.anoReferencia;
+            if (anoRef) {
+                periodosRegistrados.add(anoRef.toString());
+            }
+        });
+
+        const totalPeriodos = periodosRegistrados.size;
         let diasGozados = 0;
         feriasVinc.forEach(r => {
             const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.data_fim || r.dataFim);
@@ -996,14 +989,13 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             }
         });
 
-        const diasDireito = totalPeriodosDireito * 30;
+        const diasDireito = totalPeriodos * 30;
         const diasPendentes = Math.max(0, diasDireito - diasGozados);
         const periodosPendentes = (diasPendentes / 30).toFixed(1).replace('.', ',');
 
-        // 4. Definir alerta
         let alertaClasse = 'alerta-verde';
         let alertaIcone = 'check_circle';
-        let alertaTexto = `Regular: Saldo dentro dos conformes legais (${diasPendentes} dias pendentes).`;
+        let alertaTexto = `Regular: Saldo de férias dentro dos conformes legais (${diasPendentes} dias pendentes).`;
         
         if (diasPendentes >= 90) { 
             alertaClasse = 'alerta-vermelho';
@@ -1015,52 +1007,6 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             alertaTexto = `ATENÇÃO: Possui 2 períodos acumulados (${diasPendentes} dias), correndo risco de atingir o limite legal.`;
         }
 
-        // 5. Verificar Folga de Aniversário
-        const dataAnivEsteAno = obterDataFolgaAniversario(dataNascimento, anoAtual);
-        const folgasVinc = registros.filter(r => {
-            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
-            if (!tipo.includes('aniversario') && !tipo.includes('aniversário') && !tipo.includes('folga')) return false;
-            
-            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
-        });
-
-        const folgaRealizada = folgasVinc.find(f => {
-            const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-            const dataRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
-            const dtObj = parseDataParaDate(dataRaw);
-            let matchAno = (anoRef && anoRef.toString() == anoAtual) || (dataRaw && dataRaw.toString().includes(anoAtual));
-            if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
-            return matchAno && dtObj && dtObj <= hoje;
-        });
-
-        const folgaProgramada = folgasVinc.find(f => {
-            const anoRef = f.ano_referencia || f.ano || f.anoReferencia;
-            const dataRaw = f.data || f.data_gozo || f.data_inicio || f.dataInicio;
-            const dtObj = parseDataParaDate(dataRaw);
-            let matchAno = (anoRef && anoRef.toString() == anoAtual) || (dataRaw && dataRaw.toString().includes(anoAtual));
-            if (!matchAno && dtObj) matchAno = dtObj.getFullYear() === anoAtual;
-            return matchAno && dtObj && dtObj > hoje;
-        });
-
-        let statusFolgaHtml = '<span style="color: var(--text-secondary);">Sem registro</span>';
-        if (folgaRealizada) {
-            const dataRaw = folgaRealizada.data || folgaRealizada.data_gozo || folgaRealizada.data_inicio;
-            statusFolgaHtml = `<span style="color: var(--green); font-weight: 600;">✓ Usufruída em ${formatarData(dataRaw)}</span>`;
-        } else if (folgaProgramada) {
-            const dataRaw = folgaProgramada.data || folgaProgramada.data_gozo || folgaProgramada.data_inicio;
-            statusFolgaHtml = `<span style="color: var(--yellow); font-weight: 600;">⏳ Programada para ${formatarData(dataRaw)}</span>`;
-        } else if (dataAnivEsteAno) {
-            if (hoje > dataAnivEsteAno) {
-                const dataProx = obterDataFolgaAniversario(dataNascimento, anoAtual + 1);
-                statusFolgaHtml = `<span style="color: var(--red); font-weight: 600;">✗ Expirada (Não gozada)</span><br><span style="font-size:11px; color:var(--text-secondary);">Próxima: ${dataProx ? formatarData(dataProx.toISOString().split('T')[0]) : '-'}</span>`;
-            } else {
-                statusFolgaHtml = `<span style="color: var(--blue); font-weight: 600;">📅 Disponível a partir de ${formatarData(dataAnivEsteAno.toISOString().split('T')[0])}</span>`;
-            }
-        }
-
-        // Montar Card
         const card = document.createElement('div');
         card.className = 'card-matricula';
         card.innerHTML = `
@@ -1081,7 +1027,7 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
                     </div>
                     <div class="saldo-box folga">
                         <label>Folga Aniversário</label>
-                        <div class="valor">${statusFolgaHtml}</div>
+                        <div class="subvalor" style="font-size: 11px; margin-top: 8px;">Veja histórico completo abaixo</div>
                     </div>
                 </div>
             </div>
@@ -1090,87 +1036,123 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     });
 }
 
-/* =========================================================
-   RENDERIZAR LINHA DO TEMPO
-   ========================================================= */
-function renderizarTimeline(registros, vinculos) {
-    const container = document.getElementById('timelineContainer');
+function renderizarHistoricoPeriodos(vinculos, registros) {
+    const container = document.getElementById('historicoPeriodos');
     container.innerHTML = '';
 
-    if (registros.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="material-symbols-outlined">event_busy</span>
-                <strong>Nenhum registro encontrado</strong>
-                <p>Este servidor ainda não possui lançamentos de férias ou folgas no sistema.</p>
-            </div>
-        `;
-        return;
-    }
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const anoAtual = hoje.getFullYear();
 
-    // Ordenar por data de início (mais recente primeiro)
-    registros.sort((a, b) => {
-        const dataA = parseDataParaDate(a.data_inicio || a.dataInicio || a.data) || new Date(0);
-        const dataB = parseDataParaDate(b.data_inicio || b.dataInicio || b.data) || new Date(0);
-        return dataB - dataA;
-    });
+    vinculos.forEach(v => {
+        const dtAdmissao = parseDataParaDate(v.dataAdmissao);
+        if (!dtAdmissao) return;
 
-    registros.forEach(reg => {
-        const tipoRaw = (reg.tipo || reg.tipo_registro || reg.categoria || 'Registro').toString();
-        const isFerias = tipoRaw.toLowerCase().includes('ferias') || tipoRaw.toLowerCase().includes('férias');
-        const tipoExibicao = isFerias ? 'Férias' : 'Folga Aniversário';
-        const classeTipo = isFerias ? 'ferias' : 'folga';
+        // Calcular todos os períodos aquisitivos até aposentadoria (40 anos ou 70 anos de idade)
+        const periodos = [];
+        let dataInicioPeriodo = new Date(dtAdmissao);
+        let numPeriodo = 1;
 
-        const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-        const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.data_fim || reg.dataFim);
-        const matriculaReg = reg.matricula || reg.Matricula || reg.servidor_matricula || 'N/A';
-        const escolaReg = reg.escola || 'Não informada';
-        const anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
+        while (numPeriodo <= 40) { // Máximo 40 períodos (40 anos)
+            const dataFimPeriodo = new Date(dataInicioPeriodo);
+            dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
+            dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1); // Dia anterior
 
-        let descricao = '';
-        if (isFerias) {
-            const dias = calcularDiasFerias(reg);
-            if (dtInicio && dtTermino) {
-                descricao = `Período de ${dtInicio} a ${dtTermino} (${dias} dias)`;
-            } else if (dtInicio) {
-                descricao = `Início em ${dtInicio} (${dias} dias)`;
-            } else {
-                descricao = `${dias} dias registrados`;
-            }
-        } else {
-            const dataGozo = formatarData(reg.data || reg.data_gozo || reg.dataInicio);
-            descricao = dataGozo ? `Gozo em ${dataGozo}` : 'Data não especificada';
+            periodos.push({
+                numero: numPeriodo,
+                inicio: new Date(dataInicioPeriodo),
+                fim: new Date(dataFimPeriodo),
+                anoReferencia: `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`
+            });
+
+            dataInicioPeriodo = new Date(dataFimPeriodo);
+            dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
+            numPeriodo++;
         }
 
-        const item = document.createElement('div');
-        item.className = `timeline-item ${classeTipo}`;
-        item.innerHTML = `
-            <div class="timeline-card">
-                <div class="timeline-header">
-                    <span class="timeline-tipo ${classeTipo}">${tipoExibicao}</span>
-                    <span class="timeline-ano">Ref: ${anoRef}</span>
-                </div>
-                <div class="timeline-desc">${descricao}</div>
-                <div class="timeline-detalhes">
-                    <span><span class="material-symbols-outlined">badge</span> Mat: ${matriculaReg}</span>
-                    <span><span class="material-symbols-outlined">school</span> ${escolaReg}</span>
-                </div>
+        // Filtrar férias desta matrícula
+        const feriasVinc = registros.filter(r => {
+            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
+            if (!tipo.includes('ferias') && !tipo.includes('férias')) return false;
+            
+            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+            
+            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
+        });
+
+        // Filtrar folgas desta matrícula
+        const folgasVinc = registros.filter(r => {
+            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
+            if (!tipo.includes('aniversario') && !tipo.includes('aniversário') && !tipo.includes('folga')) return false;
+            
+            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+            
+            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
+        });
+
+        // Criar tabela de períodos
+        let linhasTabela = '';
+        periodos.forEach(p => {
+            // Verificar se há gozo de férias neste período
+            const feriasGozadas = feriasVinc.filter(f => {
+                const anoRef = (f.ano_referencia || f.ano || f.anoReferencia || '').toString();
+                return anoRef === p.anoReferencia || anoRef === p.inicio.getFullYear().toString();
+            });
+
+            // Verificar se há gozo de folga neste período
+            const folgasGozadas = folgasVinc.filter(f => {
+                const dataGozo = parseDataParaDate(f.data || f.data_gozo || f.data_inicio);
+                return dataGozo && dataGozo >= p.inicio && dataGozo <= p.fim;
+            });
+
+            let statusFerias, statusFolga;
+
+            // Status Férias
+            if (feriasGozadas.length > 0) {
+                const dataGozo = feriasGozadas[0].data_inicio || feriasGozadas[0].data;
+                statusFerias = `<span class="status-badge usufruido"><span class="material-symbols-outlined">check_circle</span> Gozado em ${formatarData(dataGozo)}</span>`;
+            } else if (hoje > p.fim) {
+                statusFerias = `<span class="status-badge expirado"><span class="material-symbols-outlined">block</span> Expirou</span>`;
+            } else if (hoje >= p.inicio && hoje <= p.fim) {
+                statusFerias = `<span class="status-badge disponivel"><span class="material-symbols-outlined">check</span> Disponível</span>`;
+            } else {
+                statusFerias = `<span class="status-badge aguardando"><span class="material-symbols-outlined">schedule</span> Aguardando</span>`;
+            }
+
+            // Status Folga
+            if (folgasGozadas.length > 0) {
+                const dataGozo = folgasGozadas[0].data || folgasGozadas[0].data_gozo;
+                statusFolga = `<span class="status-badge usufruido"><span class="material-symbols-outlined">check_circle</span> Gozado em ${formatarData(dataGozo)}</span>`;
+            } else if (hoje > p.fim) {
+                statusFolga = `<span class="status-badge expirado"><span class="material-symbols-outlined">block</span> Expirou</span>`;
+            } else if (hoje >= p.inicio && hoje <= p.fim) {
+                statusFolga = `<span class="status-badge disponivel"><span class="material-symbols-outlined">check</span> Disponível</span>`;
+            } else {
+                statusFolga = `<span class="status-badge aguardando"><span class="material-symbols-outlined">schedule</span> Aguardando</span>`;
+            }
+
+            linhasTabela += `
+                <tr>
+                    <td><strong>${p.numero}º</strong></td>
+                    <td>${p.anoReferencia}</td>
+                    <td>${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}</td>
+                    <td>${statusFerias}</td>
+                    <td>${statusFolga}</td>
+                </tr>
+            `;
+        });
+
+        const card = document.createElement('div');
+        card.className = 'form-card';
+        card.innerHTML = `
+            <div class="card-title">
+                <span class="material-symbols-outlined">history</span>
+                Histórico Completo de Períodos - Matrícula ${v.matricula}
             </div>
-        `;
-        container.appendChild(item);
-    });
-}
-
-/* =========================================================
-   UTILITÁRIOS
-   ========================================================= */
-function mostrarErro(texto) {
-    const el = document.getElementById('mensagemErro');
-    document.getElementById('textoErro').innerText = texto;
-    el.classList.add('ativo');
-    document.getElementById('resultadoContainer').classList.add('hidden');
-}
-</script>
-
-</body>
-</html>
+            <div style="overflow-x: auto;">
+                <table class="periodos-table">
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
