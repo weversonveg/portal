@@ -131,29 +131,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .saldo-box .subvalor { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 .saldo-box.ferias { border-left: 3px solid var(--blue); }
 .saldo-box.folga { border-left: 3px solid var(--green); }
-
-/* TABELA DE PERÍODOS */
-.periodos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.periodos-table th {
-    background: #fafbfc; padding: 10px 12px; text-align: left;
-    font-weight: 700; color: #455a64; border-bottom: 2px solid #e5e8eb;
-    font-size: 11px; text-transform: uppercase;
-}
-.periodos-table td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
-.periodos-table tr:hover { background: #f8fafc; }
-.periodos-table tr.periodo-atual { background: #fffdf7; }
-.periodos-table tr.periodo-atual:hover { background: #fff9e6; }
-
-.status-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 4px 8px; border-radius: 4px; font-size: 11px;
-    font-weight: 700; white-space: nowrap;
-}
-.status-badge.expirado { background: #f1f3f5; color: #7a858d; border: 1px solid #e2e8f0; }
-.status-badge.disponivel { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
-.status-badge.aguardando { background: var(--blue-light); color: var(--blue); border: 1px solid #bbdefb; }
-.status-badge.usufruido { background: var(--yellow-light); color: var(--yellow); border: 1px solid var(--yellow-border); }
-.status-badge .material-symbols-outlined { font-size: 13px; }
+.saldo-box.folga .valor { font-size: 14px; color: var(--text); margin-top: 4px; }
 
 .mensagem-erro {
     background: var(--red-light); border: 1px solid var(--red-border); color: var(--red);
@@ -210,8 +188,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     .search-wrapper { flex-direction: column; }
     .btn-buscar { width: 100%; justify-content: center; }
     .saldo-grid { grid-template-columns: 1fr; }
-    .periodos-table { font-size: 11px; }
-    .periodos-table th, .periodos-table td { padding: 8px 6px; }
 }
 </style>
 </head>
@@ -235,7 +211,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
             <span>Linha do Tempo</span>
         </div>
         <h1>Linha do Tempo do Servidor</h1>
-        <p>Acompanhe o histórico completo de férias, folgas e períodos aquisitivos por matrícula.</p>
+        <p>Acompanhe o histórico de férias e folga de aniversário com base nos períodos lançados pela SEMED.</p>
     </div>
 
     <div id="mensagemErro" class="mensagem-erro">
@@ -284,7 +260,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
         </section>
 
         <div id="resumoMatriculas" class="resumo-matriculas"></div>
-        <div id="historicoPeriodos"></div>
 
         <section class="form-card">
             <div class="card-title">
@@ -493,7 +468,6 @@ async function processarServidores(docs) {
     document.getElementById('matriculasServidor').innerHTML = matriculasTexto;
 
     renderizarResumos(vinculos, nascimentoServidor, registros);
-    renderizarHistoricoPeriodos(vinculos, registros);
     renderizarTimeline(registros, vinculos);
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
@@ -503,8 +477,10 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     const container = document.getElementById('resumoMatriculas');
     container.innerHTML = '';
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const anoAtual = hoje.getFullYear();
 
     vinculos.forEach(v => {
+        // ===== FÉRIAS =====
         const feriasVinc = registros.filter(r => {
             const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
             if (!tipo.includes('ferias') && !tipo.includes('férias')) return false;
@@ -513,13 +489,16 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
         });
 
-        const periodosRegistrados = new Set();
+        // Contar períodos aquisitivos LANÇADOS (não calcula automático)
+        const periodosLancados = new Set();
         feriasVinc.forEach(r => {
             const anoRef = r.ano_referencia || r.ano || r.anoReferencia;
-            if (anoRef) periodosRegistrados.add(anoRef.toString());
+            if (anoRef) periodosLancados.add(anoRef.toString());
         });
 
-        const totalPeriodos = periodosRegistrados.size;
+        const totalPeriodosLancados = periodosLancados.size;
+        
+        // Somar dias gozados (lançamentos de gozo já concluídos)
         let diasGozados = 0;
         feriasVinc.forEach(r => {
             const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim);
@@ -528,20 +507,64 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
             if (!dataComp || dataComp <= hoje) diasGozados += calcularDiasFerias(r);
         });
 
-        const diasDireito = totalPeriodos * 30;
+        const diasDireito = totalPeriodosLancados * 30;
         const diasPendentes = Math.max(0, diasDireito - diasGozados);
         const periodosPendentes = (diasPendentes / 30).toFixed(1).replace('.', ',');
 
         let alertaClasse = 'alerta-verde';
         let alertaIcone = 'check_circle';
-        let alertaTexto = `Regular: Saldo de férias dentro dos conformes legais (${diasPendentes} dias pendentes).`;
+        let alertaTexto = `Regular: Saldo de férias dentro dos conformes (${diasPendentes} dias pendentes de ${totalPeriodosLancados} períodos lançados).`;
         
-        if (diasPendentes >= 90) { 
+        if (totalPeriodosLancados === 0) {
+            alertaClasse = 'alerta-amarelo';
+            alertaIcone = 'info';
+            alertaTexto = `Nenhum período aquisitivo de férias foi lançado para esta matrícula.`;
+        } else if (diasPendentes >= 90) { 
             alertaClasse = 'alerta-vermelho'; alertaIcone = 'error';
-            alertaTexto = `CRÍTICO: Limite de 3 períodos de férias acumulados atingido (${diasPendentes} dias).`;
+            alertaTexto = `CRÍTICO: Limite de 3 períodos de férias pendentes (${diasPendentes} dias).`;
         } else if (diasPendentes >= 60) { 
             alertaClasse = 'alerta-amarelo'; alertaIcone = 'warning';
-            alertaTexto = `ATENÇÃO: Possui 2 períodos acumulados (${diasPendentes} dias).`;
+            alertaTexto = `ATENÇÃO: Possui 2 períodos de férias pendentes (${diasPendentes} dias).`;
+        }
+
+        // ===== FOLGA ANIVERSÁRIO =====
+        const folgasVinc = registros.filter(r => {
+            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
+            if (!tipo.includes('aniversario') && !tipo.includes('aniversário') && !tipo.includes('folga')) return false;
+            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
+        });
+
+        // Contar períodos de folga LANÇADOS
+        const periodosFolgaLancados = new Set();
+        folgasVinc.forEach(r => {
+            const anoRef = r.ano_referencia || r.ano || r.anoReferencia;
+            if (anoRef) periodosFolgaLancados.add(anoRef.toString());
+        });
+
+        // Verificar status da folga do ano atual (se houver período lançado para o ano atual)
+        let statusFolgaHtml = '<span style="color: var(--text-secondary);">Nenhum período lançado</span>';
+        
+        const periodoAnoAtual = periodosFolgaLancados.has(anoAtual.toString()) || 
+                                 Array.from(periodosFolgaLancados).some(p => p.includes(anoAtual.toString()));
+        
+        if (periodoAnoAtual) {
+            const folgaGozadaEsteAno = folgasVinc.find(f => {
+                const dataGozo = parseDataParaDate(f.data || f.data_gozo || f.data_inicio);
+                return dataGozo && dataGozo.getFullYear() === anoAtual;
+            });
+            
+            if (folgaGozadaEsteAno) {
+                const dataGozo = folgaGozadaEsteAno.data || folgaGozadaEsteAno.data_gozo || folgaGozadaEsteAno.data_inicio;
+                statusFolgaHtml = `<span style="color: var(--green); font-weight: 600;">✓ Gozada em ${formatarData(dataGozo)}</span>`;
+            } else {
+                statusFolgaHtml = `<span style="color: var(--blue); font-weight: 600;">📅 Período lançado - Aguardando gozo</span>`;
+            }
+        } else if (periodosFolgaLancados.size > 0) {
+            // Tem períodos lançados, mas não para o ano atual
+            const ultimoPeriodo = Array.from(periodosFolgaLancados).sort().pop();
+            statusFolgaHtml = `<span style="color: var(--text-secondary);">Último período: ${ultimoPeriodo}</span>`;
         }
 
         const card = document.createElement('div');
@@ -561,134 +584,19 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
                         <label>Férias a Gozar</label>
                         <div class="valor">${periodosPendentes}</div>
                         <div class="subvalor">Períodos (${diasPendentes} dias)</div>
+                        <div class="subvalor" style="margin-top: 6px; font-size: 10px;">
+                            ${totalPeriodosLancados} período(s) lançado(s)<br>
+                            ${Math.floor(diasGozados / 30)} gozado(s) (${diasGozados} dias)
+                        </div>
                     </div>
                     <div class="saldo-box folga">
                         <label>Folga Aniversário</label>
-                        <div class="subvalor" style="font-size: 11px; margin-top: 8px;">Veja histórico completo abaixo</div>
+                        <div class="valor">${statusFolgaHtml}</div>
+                        <div class="subvalor" style="margin-top: 6px; font-size: 10px;">
+                            ${periodosFolgaLancados.size} período(s) lançado(s)
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function renderizarHistoricoPeriodos(vinculos, registros) {
-    const container = document.getElementById('historicoPeriodos');
-    container.innerHTML = '';
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-
-    vinculos.forEach(v => {
-        const dtAdmissao = parseDataParaDate(v.dataAdmissao);
-        if (!dtAdmissao) return;
-
-        // Calcular períodos aquisitivos até aposentadoria (máx 40 períodos = 40 anos)
-        const periodos = [];
-        let dataInicioPeriodo = new Date(dtAdmissao);
-        let numPeriodo = 1;
-
-        while (numPeriodo <= 40) {
-            const dataFimPeriodo = new Date(dataInicioPeriodo);
-            dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
-            dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
-
-            periodos.push({
-                numero: numPeriodo,
-                inicio: new Date(dataInicioPeriodo),
-                fim: new Date(dataFimPeriodo),
-                anoReferencia: `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`
-            });
-
-            dataInicioPeriodo = new Date(dataFimPeriodo);
-            dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
-            numPeriodo++;
-        }
-
-        const feriasVinc = registros.filter(r => {
-            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
-            if (!tipo.includes('ferias') && !tipo.includes('férias')) return false;
-            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
-        });
-
-        const folgasVinc = registros.filter(r => {
-            const tipo = (r.tipo || r.tipo_registro || r.categoria || '').toLowerCase();
-            if (!tipo.includes('aniversario') && !tipo.includes('aniversário') && !tipo.includes('folga')) return false;
-            const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-            const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
-            return !regMat || regMat === cleanVMat || regMat === v.matricula.toString().trim();
-        });
-
-        let linhasTabela = '';
-        periodos.forEach(p => {
-            const feriasGozadas = feriasVinc.filter(f => {
-                const anoRef = (f.ano_referencia || f.ano || f.anoReferencia || '').toString();
-                return anoRef === p.anoReferencia || anoRef === p.inicio.getFullYear().toString();
-            });
-
-            const folgasGozadas = folgasVinc.filter(f => {
-                const dataGozo = parseDataParaDate(f.data || f.data_gozo || f.data_inicio);
-                return dataGozo && dataGozo >= p.inicio && dataGozo <= p.fim;
-            });
-
-            let statusFerias, statusFolga;
-
-            if (feriasGozadas.length > 0) {
-                const dataGozo = feriasGozadas[0].data_inicio || feriasGozadas[0].data;
-                statusFerias = `<span class="status-badge usufruido"><span class="material-symbols-outlined">check_circle</span> Gozado em ${formatarData(dataGozo)}</span>`;
-            } else if (hoje > p.fim) {
-                statusFerias = `<span class="status-badge expirado"><span class="material-symbols-outlined">block</span> Expirou</span>`;
-            } else if (hoje >= p.inicio && hoje <= p.fim) {
-                statusFerias = `<span class="status-badge disponivel"><span class="material-symbols-outlined">check</span> Disponível</span>`;
-            } else {
-                statusFerias = `<span class="status-badge aguardando"><span class="material-symbols-outlined">schedule</span> Aguardando</span>`;
-            }
-
-            if (folgasGozadas.length > 0) {
-                const dataGozo = folgasGozadas[0].data || folgasGozadas[0].data_gozo;
-                statusFolga = `<span class="status-badge usufruido"><span class="material-symbols-outlined">check_circle</span> Gozado em ${formatarData(dataGozo)}</span>`;
-            } else if (hoje > p.fim) {
-                statusFolga = `<span class="status-badge expirado"><span class="material-symbols-outlined">block</span> Expirou</span>`;
-            } else if (hoje >= p.inicio && hoje <= p.fim) {
-                statusFolga = `<span class="status-badge disponivel"><span class="material-symbols-outlined">check</span> Disponível</span>`;
-            } else {
-                statusFolga = `<span class="status-badge aguardando"><span class="material-symbols-outlined">schedule</span> Aguardando</span>`;
-            }
-
-            const classeLinha = (hoje >= p.inicio && hoje <= p.fim) ? 'periodo-atual' : '';
-
-            linhasTabela += `
-                <tr class="${classeLinha}">
-                    <td><strong>${p.numero}º</strong></td>
-                    <td>${p.anoReferencia}</td>
-                    <td>${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}</td>
-                    <td>${statusFerias}</td>
-                    <td>${statusFolga}</td>
-                </tr>
-            `;
-        });
-
-        const card = document.createElement('div');
-        card.className = 'form-card';
-        card.innerHTML = `
-            <div class="card-title">
-                <span class="material-symbols-outlined">history</span>
-                Histórico Completo de Períodos - Matrícula ${v.matricula}
-            </div>
-            <div style="overflow-x: auto;">
-                <table class="periodos-table">
-                    <thead>
-                        <tr>
-                            <th>Nº</th>
-                            <th>Período</th>
-                            <th>Aquisitivo</th>
-                            <th>Férias</th>
-                            <th>Folga Aniversário</th>
-                        </tr>
-                    </thead>
-                    <tbody>${linhasTabela}</tbody>
-                </table>
             </div>
         `;
         container.appendChild(card);
@@ -745,7 +653,7 @@ function renderizarTimeline(registros, vinculos) {
             <div class="timeline-card">
                 <div class="timeline-header">
                     <span class="timeline-tipo ${classeTipo}">${tipoExibicao}</span>
-                    <span class="timeline-ano">Ref: ${anoRef}</span>
+                    <span class="timeline-ano">Período: ${anoRef}</span>
                 </div>
                 <div class="timeline-desc">${descricao}</div>
                 <div class="timeline-detalhes">
