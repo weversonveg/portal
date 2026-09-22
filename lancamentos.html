@@ -464,7 +464,7 @@ tr:hover td { background: #f8fafc; }
     };
 
     /* =========================================================
-       👇 SALVAR REGISTRO (COM CPF LIMPO E ANO_REFERENCIA)
+       👇 SALVAR REGISTRO (COM CPF LIMPO E PERÍODO CORRIGIDO)
        ========================================================= */
     window.salvarRegistro = async function(event) {
         event.preventDefault();
@@ -532,20 +532,21 @@ tr:hover td { background: #f8fafc; }
                 return;
             }
 
-            // 👇 CALCULA O ANO DE REFERÊNCIA (Essencial para a Linha do Tempo)
+            // 👇 PERÍODO AQUISITIVO CORRIGIDO: ano anterior / ano atual
+            // Ex: férias em maio/2026 → período aquisitivo 2025/2026
             const anoInicio = new Date(dataInicio).getFullYear();
-            const anoReferencia = `${anoInicio}/${anoInicio + 1}`;
+            const anoReferencia = `${anoInicio - 1}/${anoInicio}`;
 
-            // 👇 SALVA COM CPF LIMPO E ANO_REFERENCIA
+            // 👇 SALVA COM CPF LIMPO E PERÍODO CORRIGIDO
             await addDoc(collection(db, "registro_ferias_folgas"), {
-                cpf: cpfLimpo, // ✅ CPF LIMPO (sem pontos e traços)
+                cpf: cpfLimpo,
                 nome: servidorCache.nome,
                 matricula: matriculaEscolhida,
                 escola: escolaEscolhida,
                 tipo: tipo,
                 dataInicio: dataInicio,
                 dataFim: dataFim,
-                ano_referencia: anoReferencia, // ✅ PERÍODO AQUISITIVO CALCULADO
+                ano_referencia: anoReferencia,
                 dataRegistro: new Date().toISOString()
             });
 
@@ -598,7 +599,6 @@ tr:hover td { background: #f8fafc; }
             return;
         }
 
-        // Ordena por data de registro (mais recente primeiro)
         dados.sort((a, b) => {
             const dataA = a.dataRegistro || '';
             const dataB = b.dataRegistro || '';
