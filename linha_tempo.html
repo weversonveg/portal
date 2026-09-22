@@ -51,7 +51,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .system-divider { width: 1px; height: 24px; background: #dfe3e6; margin: 0 2px; }
 .system-module { font-size: 14px; color: var(--text-secondary); flex-grow: 1; }
 
-/* 👇 STATUS DE CONEXÃO */
 .status-conexao {
     display: flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 600;
@@ -92,16 +91,38 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .card-title .material-symbols-outlined { color: var(--primary); }
 
 .search-wrapper { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* 👇 Campo de busca padronizado igual aos outros inputs do sistema */
 .search-input {
-    flex: 1; min-width: 250px; height: 44px; padding: 0 16px;
-    border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none;
+    flex: 1;
+    min-width: 250px;
+    height: 44px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: #263238;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color .15s ease, box-shadow .15s ease;
 }
-.search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
+
+.search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.search-input::placeholder {
+    color: #9aa3aa;
+}
 
 .btn-buscar {
     height: 44px; background: var(--primary); color: white; border: none;
     border-radius: 6px; padding: 0 24px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 8px; font-size: 14px;
+    transition: background 0.15s;
 }
 .btn-buscar:hover { background: var(--primary-hover); }
 
@@ -198,12 +219,11 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .timeline-ano { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
 .timeline-desc { font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
 
-/* 👇 NOVO: Linha de datas com início e término destacados */
 .timeline-datas {
     display: flex; gap: 12px; flex-wrap: wrap;
     font-size: 12px; color: var(--text-secondary);
     margin-bottom: 8px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     background: #fafbfc;
     border-radius: 6px;
     border-left: 3px solid var(--primary);
@@ -222,7 +242,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .empty-state .material-symbols-outlined { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
 .empty-state strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
 
-/* 👇 MODAL DE ALERTA PROFISSIONAL */
+/* Modal de Alerta Profissional */
 .modal-alerta-overlay {
     display: none;
     position: fixed;
@@ -264,24 +284,12 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     margin: 0 auto 16px;
 }
 
-.modal-alerta-icon.info {
-    background: var(--blue-light);
-    color: var(--blue);
-}
+.modal-alerta-icon.info { background: var(--blue-light); color: var(--blue); }
+.modal-alerta-icon.erro { background: var(--red-light); color: var(--red); }
+.modal-alerta-icon.sucesso { background: var(--green-light); color: var(--green); }
+.modal-alerta-icon.aviso { background: var(--yellow-light); color: var(--yellow); }
 
-.modal-alerta-icon.erro {
-    background: var(--red-light);
-    color: var(--red);
-}
-
-.modal-alerta-icon.sucesso {
-    background: var(--green-light);
-    color: var(--green);
-}
-
-.modal-alerta-icon .material-symbols-outlined {
-    font-size: 32px;
-}
+.modal-alerta-icon .material-symbols-outlined { font-size: 32px; }
 
 .modal-alerta-titulo {
     font-size: 17px;
@@ -316,22 +324,26 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     min-width: 120px;
 }
 
-.modal-alerta-btn:hover {
-    background: var(--primary-hover);
-}
+.modal-alerta-btn:hover { background: var(--primary-hover); }
 
 @media (max-width: 768px) {
     .topbar { margin: 8px 12px 0; width: calc(100% - 24px); padding: 0 12px; height: 60px; }
     .system-module, .system-divider { display: none; }
     .main { padding: 20px 12px; }
     
-    /* 👇 CORREÇÃO: Campo de busca não fica espremido no mobile */
-    .search-wrapper { flex-direction: column; }
-    .search-input { min-width: 0; width: 100%; }
-    .btn-buscar { width: 100%; justify-content: center; }
+    /* 👇 Correção: Campo de busca não fica espremido no mobile */
+    .search-wrapper { flex-direction: column; gap: 10px; }
+    .search-input { 
+        min-width: 0; 
+        width: 100%; 
+        height: 44px;
+        border-radius: 6px;
+    }
+    .btn-buscar { width: 100%; justify-content: center; height: 44px; }
     
     .saldo-grid { grid-template-columns: 1fr; }
     .timeline-datas { flex-direction: column; gap: 6px; }
+    .dados-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -345,7 +357,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
         <div class="system-divider"></div>
         <span class="system-module">Semed - Linha do Tempo do Servidor</span>
         
-        <!-- 👇 STATUS DE CONEXÃO -->
         <div id="statusConexao" class="status-conexao online">
             <div class="signal-bars">
                 <span class="bar bar-1"></span>
@@ -426,7 +437,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     </div>
 </main>
 
-<!-- 👇 MODAL DE ALERTA PROFISSIONAL -->
+<!-- Modal de Alerta Profissional -->
 <div id="modalAlerta" class="modal-alerta-overlay">
     <div class="modal-alerta">
         <div class="modal-alerta-header">
@@ -452,7 +463,7 @@ let perfilUsuario = "";
 let acessoAutorizado = false;
 
 /* =========================================================
-   👇 STATUS DE CONEXÃO
+   STATUS DE CONEXÃO
    ========================================================= */
 function atualizarStatusConexao() {
     const statusDiv = document.getElementById("statusConexao");
@@ -472,7 +483,7 @@ window.addEventListener('offline', atualizarStatusConexao);
 atualizarStatusConexao();
 
 /* =========================================================
-   👇 MODAL DE ALERTA PROFISSIONAL (substitui o alert())
+   MODAL DE ALERTA PROFISSIONAL (substitui o alert())
    ========================================================= */
 window.mostrarAlerta = function(mensagem, tipo = 'info', titulo = 'Aviso') {
     const modal = document.getElementById('modalAlerta');
@@ -480,7 +491,6 @@ window.mostrarAlerta = function(mensagem, tipo = 'info', titulo = 'Aviso') {
     const tituloEl = document.getElementById('modalAlertaTitulo');
     const mensagemEl = document.getElementById('modalAlertaMensagem');
     
-    // Define o ícone e cor conforme o tipo
     icon.className = 'modal-alerta-icon ' + tipo;
     
     const icones = {
@@ -502,12 +512,10 @@ window.fecharModalAlerta = function() {
     modal.classList.remove('ativo');
 };
 
-// Fechar modal ao clicar fora
 document.getElementById('modalAlerta').addEventListener('click', function(e) {
     if (e.target === this) fecharModalAlerta();
 });
 
-// Fechar modal com tecla ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') fecharModalAlerta();
 });
@@ -573,7 +581,6 @@ document.getElementById('termoBusca').addEventListener('input', function(e) {
     e.target.value = value;
 });
 
-// Permitir buscar com Enter
 document.getElementById('termoBusca').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -611,7 +618,7 @@ function calcularDiasFerias(reg) {
     let dias = parseInt(reg.dias || reg.quantidade_dias || reg.total_dias || reg.qtd_dias);
     if (!isNaN(dias) && dias > 0) return dias;
     const dtInicio = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-    const dtTermino = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim);
+    const dtTermino = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.dataFim || reg.data_fim);
     if (dtInicio && dtTermino) {
         const diffTime = Math.abs(dtTermino - dtInicio);
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
@@ -627,7 +634,6 @@ window.buscarServidor = async function() {
     
     const termoInput = document.getElementById('termoBusca').value.trim();
     if (!termoInput) { 
-        // 👇 Substitui o alert() pelo modal profissional
         mostrarAlerta('Por favor, digite um CPF ou Matrícula para realizar a busca.', 'aviso', 'Campo obrigatório');
         return; 
     }
@@ -672,7 +678,6 @@ window.buscarServidor = async function() {
         }
 
         if (servidoresEncontrados.size === 0) {
-            // 👇 Substitui o alert() pelo modal profissional
             mostrarAlerta('CPF não localizado no sistema.', 'erro', 'Servidor não encontrado');
             document.getElementById('resultadoContainer').classList.add('hidden');
             return;
@@ -836,7 +841,7 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
         const totalPeriodosLancados = periodosLancados.size;
         let diasGozados = 0;
         feriasVinc.forEach(r => {
-            const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim);
+            const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.dataFim || r.data_fim);
             const dtInicio = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
             const dataComp = dtTermino || dtInicio;
             if (!dataComp || dataComp <= hoje) diasGozados += calcularDiasFerias(r);
@@ -937,7 +942,7 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
 }
 
 /* =========================================================
-   👇 TIMELINE COM DATA DE INÍCIO E TÉRMINO DESTACADAS
+   TIMELINE COM DATA DE INÍCIO E TÉRMINO
    ========================================================= */
 function renderizarTimeline(registros, vinculos) {
     const container = document.getElementById('timelineContainer');
@@ -980,16 +985,15 @@ function renderizarTimeline(registros, vinculos) {
         }
 
         const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-        const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim);
+        // 👇 CORRIGIDO: Adicionado reg.dataFim e reg.data_fim na busca
+        const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.dataFim || reg.data_fim);
         const matriculaReg = reg.matricula || reg.Matricula || reg.servidor_matricula || 'N/A';
         const escolaReg = reg.escola || 'Não informada';
         const anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
 
-        // 👇 MONTA A LINHA DE DATAS (início + término + duração)
         let datasHtml = '';
         
         if (tipoExibicao === 'Folga Aniversário') {
-            // Folga tem apenas uma data
             const dataGozo = formatarData(reg.data || reg.data_gozo || reg.dataInicio);
             if (dataGozo) {
                 datasHtml = `
@@ -1002,7 +1006,6 @@ function renderizarTimeline(registros, vinculos) {
                 `;
             }
         } else {
-            // Férias e licenças têm início e término
             const dias = tipoExibicao === 'Férias' ? calcularDiasFerias(reg) : null;
             
             let datasItems = '';
