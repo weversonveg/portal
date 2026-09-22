@@ -156,6 +156,8 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .timeline-item.ferias::before { background: var(--blue); box-shadow: 0 0 0 2px var(--blue-light); }
 .timeline-item.folga::before { background: var(--green); box-shadow: 0 0 0 2px var(--green-light); }
+.timeline-item.licenca::before { background: #0277bd; box-shadow: 0 0 0 2px #e1f5fe; }
+.timeline-item.outros::before { background: #6a1b9a; box-shadow: 0 0 0 2px #f3e5f5; }
 
 .timeline-card {
     background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
@@ -171,6 +173,8 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .timeline-tipo.ferias { background: var(--blue-light); color: var(--blue); }
 .timeline-tipo.folga { background: var(--green-light); color: var(--green); }
+.timeline-tipo.licenca { background: #e1f5fe; color: #0277bd; }
+.timeline-tipo.outros { background: #f3e5f5; color: #6a1b9a; }
 .timeline-ano { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
 .timeline-desc { font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
 .timeline-detalhes { font-size: 12px; color: var(--text-secondary); display: flex; gap: 16px; flex-wrap: wrap; }
@@ -211,7 +215,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
             <span>Linha do Tempo</span>
         </div>
         <h1>Linha do Tempo do Servidor</h1>
-        <p>Acompanhe o histórico de férias e folga de aniversário com base nos períodos lançados pela SEMED.</p>
+        <p>Acompanhe o histórico de férias, folgas e licenças com base nos períodos lançados pela SEMED.</p>
     </div>
 
     <div id="mensagemErro" class="mensagem-erro">
@@ -578,9 +582,10 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
         const periodosLancados = new Set();
         feriasVinc.forEach(r => {
             let anoRef = r.ano_referencia || r.ano || r.anoReferencia;
+            // Fallback: calcula do ano anterior para o atual (ex: 2025/2026)
             if (!anoRef && r.dataInicio) {
                 const anoInicio = new Date(r.dataInicio).getFullYear();
-                anoRef = `${anoInicio}/${anoInicio + 1}`;
+                anoRef = `${anoInicio - 1}/${anoInicio}`;
             }
             if (anoRef) periodosLancados.add(anoRef.toString());
         });
@@ -624,15 +629,18 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
         const periodosFolgaLancados = new Set();
         folgasVinc.forEach(r => {
             let anoRef = r.ano_referencia || r.ano || r.anoReferencia;
+            // Fallback: calcula do ano anterior para o atual (ex: 2025/2026)
             if (!anoRef && r.dataInicio) {
                 const anoInicio = new Date(r.dataInicio).getFullYear();
-                anoRef = `${anoInicio}/${anoInicio + 1}`;
+                anoRef = `${anoInicio - 1}/${anoInicio}`;
             }
             if (anoRef) periodosFolgaLancados.add(anoRef.toString());
         });
 
         let statusFolgaHtml = '<span style="color: var(--text-secondary);">Nenhum período lançado</span>';
-        const periodoAnoAtual = periodosFolgaLancados.has(anoAtual.toString()) || Array.from(periodosFolgaLancados).some(p => p.includes(anoAtual.toString()));
+        const periodoAnoAtual = periodosFolgaLancados.has(anoAtual.toString()) || 
+                                 Array.from(periodosFolgaLancados).some(p => p.includes(anoAtual.toString())) ||
+                                 Array.from(periodosFolgaLancados).some(p => p.includes((anoAtual - 1).toString()));
         
         if (periodoAnoAtual) {
             const folgaGozadaEsteAno = folgasVinc.find(f => {
@@ -695,7 +703,7 @@ function renderizarTimeline(registros, vinculos) {
             <div class="empty-state">
                 <span class="material-symbols-outlined">event_busy</span>
                 <strong>Nenhum registro encontrado</strong>
-                <p>Este servidor ainda não possui lançamentos de férias ou folgas no sistema.</p>
+                <p>Este servidor ainda não possui lançamentos no sistema.</p>
             </div>
         `;
         return;
@@ -709,9 +717,23 @@ function renderizarTimeline(registros, vinculos) {
 
     registros.forEach(reg => {
         const tipoRaw = (reg.tipo || reg.tipo_registro || reg.categoria || 'Registro').toString();
-        const isFerias = tipoRaw.toLowerCase().includes('ferias') || tipoRaw.toLowerCase().includes('férias');
-        const tipoExibicao = isFerias ? 'Férias' : 'Folga Aniversário';
-        const classeTipo = isFerias ? 'ferias' : 'folga';
+        const tipoLower = tipoRaw.toLowerCase();
+        
+        // Classificação correta dos tipos
+        let tipoExibicao, classeTipo;
+        if (tipoLower.includes('ferias') || tipoLower.includes('férias')) {
+            tipoExibicao = 'Férias';
+            classeTipo = 'ferias';
+        } else if (tipoLower.includes('aniversario') || tipoLower.includes('aniversário') || tipoLower === 'folga_aniversario') {
+            tipoExibicao = 'Folga Aniversário';
+            classeTipo = 'folga';
+        } else if (tipoLower.includes('licenca') || tipoLower.includes('licença')) {
+            tipoExibicao = tipoRaw.includes('MEDICA') || tipoRaw.includes('MÉDICA') ? 'Licença Médica' : 'Outras Licenças';
+            classeTipo = 'licenca';
+        } else {
+            tipoExibicao = tipoRaw;
+            classeTipo = 'outros';
+        }
 
         const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
         const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim);
@@ -720,14 +742,19 @@ function renderizarTimeline(registros, vinculos) {
         const anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
 
         let descricao = '';
-        if (isFerias) {
+        if (tipoExibicao === 'Férias') {
             const dias = calcularDiasFerias(reg);
             if (dtInicio && dtTermino) descricao = `Período de ${dtInicio} a ${dtTermino} (${dias} dias)`;
             else if (dtInicio) descricao = `Início em ${dtInicio} (${dias} dias)`;
             else descricao = `${dias} dias registrados`;
-        } else {
+        } else if (tipoExibicao === 'Folga Aniversário') {
             const dataGozo = formatarData(reg.data || reg.data_gozo || reg.dataInicio);
             descricao = dataGozo ? `Gozo em ${dataGozo}` : 'Data não especificada';
+        } else {
+            // Licenças e outros
+            if (dtInicio && dtTermino) descricao = `Período de ${dtInicio} a ${dtTermino}`;
+            else if (dtInicio) descricao = `Início em ${dtInicio}`;
+            else descricao = 'Período não especificado';
         }
 
         const item = document.createElement('div');
