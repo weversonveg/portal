@@ -90,20 +90,40 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .card-title .material-symbols-outlined { color: var(--primary); }
 
-.search-wrapper { display: flex; gap: 12px; flex-wrap: wrap; }
+/* 👇 Grid do formulário (igual às outras páginas) */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
 
-/* 👇 Campo de busca padronizado igual aos outros inputs do sistema */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 6px;
+}
+
+.form-group label span {
+    color: var(--red);
+}
+
+/* 👇 Campo de busca idêntico aos outros inputs do sistema */
 .search-input {
-    flex: 1;
-    min-width: 250px;
     height: 44px;
-    padding: 0 16px;
+    padding: 0 13px;
     background: #ffffff;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
+    outline: none;
     font-size: 14px;
     color: #263238;
-    outline: none;
     width: 100%;
     box-sizing: border-box;
     transition: border-color .15s ease, box-shadow .15s ease;
@@ -118,13 +138,28 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     color: #9aa3aa;
 }
 
+/* 👇 Botão de buscar em largura total */
 .btn-buscar {
-    height: 44px; background: var(--primary); color: white; border: none;
-    border-radius: 6px; padding: 0 24px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 8px; font-size: 14px;
+    width: 100%;
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0 24px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     transition: background 0.15s;
 }
-.btn-buscar:hover { background: var(--primary-hover); }
+
+.btn-buscar:hover {
+    background: var(--primary-hover);
+}
 
 .dados-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
 .dado-item label {
@@ -217,7 +252,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .timeline-tipo.licenca { background: #e1f5fe; color: #0277bd; }
 .timeline-tipo.outros { background: #f3e5f5; color: #6a1b9a; }
 .timeline-ano { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
-.timeline-desc { font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
 
 .timeline-datas {
     display: flex; gap: 12px; flex-wrap: wrap;
@@ -330,17 +364,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     .topbar { margin: 8px 12px 0; width: calc(100% - 24px); padding: 0 12px; height: 60px; }
     .system-module, .system-divider { display: none; }
     .main { padding: 20px 12px; }
-    
-    /* 👇 Correção: Campo de busca não fica espremido no mobile */
-    .search-wrapper { flex-direction: column; gap: 10px; }
-    .search-input { 
-        min-width: 0; 
-        width: 100%; 
-        height: 44px;
-        border-radius: 6px;
-    }
-    .btn-buscar { width: 100%; justify-content: center; height: 44px; }
-    
     .saldo-grid { grid-template-columns: 1fr; }
     .timeline-datas { flex-direction: column; gap: 6px; }
     .dados-grid { grid-template-columns: 1fr; }
@@ -385,18 +408,24 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
+    <!-- 👇 SEÇÃO DE BUSCA PADRONIZADA (igual às outras páginas) -->
     <section class="form-card" id="formBuscaCard">
         <div class="card-title">
             <span class="material-symbols-outlined">search</span>
             Localizar Servidor
         </div>
-        <div class="search-wrapper">
-            <input type="text" id="termoBusca" class="search-input" placeholder="Digite o CPF (000.000.000-00) ou Matrícula" maxlength="20">
-            <button class="btn-buscar" onclick="buscarServidor()">
-                <span class="material-symbols-outlined">search</span>
-                Buscar
-            </button>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="termoBusca">CPF ou Matrícula do Servidor <span>*</span></label>
+                <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20">
+            </div>
         </div>
+        
+        <button class="btn-buscar" onclick="buscarServidor()">
+            <span class="material-symbols-outlined">search</span>
+            Buscar Servidor
+        </button>
     </section>
 
     <div id="resultadoContainer" class="hidden">
@@ -941,9 +970,6 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     });
 }
 
-/* =========================================================
-   TIMELINE COM DATA DE INÍCIO E TÉRMINO
-   ========================================================= */
 function renderizarTimeline(registros, vinculos) {
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
@@ -985,7 +1011,6 @@ function renderizarTimeline(registros, vinculos) {
         }
 
         const dtInicio = formatarData(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
-        // 👇 CORRIGIDO: Adicionado reg.dataFim e reg.data_fim na busca
         const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.dataFim || reg.data_fim);
         const matriculaReg = reg.matricula || reg.Matricula || reg.servidor_matricula || 'N/A';
         const escolaReg = reg.escola || 'Não informada';
