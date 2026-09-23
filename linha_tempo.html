@@ -28,6 +28,8 @@
     --yellow-border: #fde68a;
     --blue: #1565c0;
     --blue-light: #e3f2fd;
+    --purple: #6a1b9a;
+    --purple-light: #f3e5f5;
     --text: #263238;
     --text-secondary: #68737d;
     --border: #d9dee3;
@@ -196,7 +198,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 
 .resumo-motor {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -214,6 +216,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .motor-card.destaque-verde { border-left: 4px solid var(--green); }
 .motor-card.destaque-amarelo { border-left: 4px solid var(--yellow); }
 .motor-card.destaque-vermelho { border-left: 4px solid var(--red); }
+.motor-card.destaque-roxo { border-left: 4px solid var(--purple); }
 
 .motor-card label {
     font-size: 11px;
@@ -234,6 +237,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .motor-card .valor.verde { color: var(--green); }
 .motor-card .valor.amarelo { color: var(--yellow); }
 .motor-card .valor.vermelho { color: var(--red); }
+.motor-card .valor.roxo { color: var(--purple); }
 
 .motor-card .subvalor {
     font-size: 11px;
@@ -303,6 +307,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .periodos-table tr.periodo-vencido { background: var(--red-light); }
 .periodos-table tr.periodo-pendente { background: var(--yellow-light); }
 .periodos-table tr.periodo-gozado { background: var(--green-light); }
+.periodos-table tr.periodo-programado { background: var(--purple-light); }
 .periodos-table tr.periodo-atual { background: var(--blue-light); font-weight: 600; }
 
 .badge-status {
@@ -319,6 +324,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .badge-pendente { background: var(--yellow-light); color: var(--yellow); }
 .badge-vencido { background: var(--red-light); color: var(--red); }
 .badge-atual { background: var(--blue-light); color: var(--blue); }
+.badge-programado { background: var(--purple-light); color: var(--purple); }
 
 .badge-status .material-symbols-outlined { font-size: 13px; }
 
@@ -813,10 +819,29 @@ function calcularDiasFerias(reg) {
 }
 
 /* =========================================================
-   👇 MOTOR DE CÁLCULO - DIREITO DO SERVIDOR
+   👇 VERIFICA SE AS FÉRIAS JÁ FORAM REALMENTE GOZADAS
    =========================================================
-   CORREÇÃO: A data de vencimento agora é quando o período
-   aquisitivo FECHA (não +1 ano depois).
+   Retorna true se a data de início das férias já passou.
+   Retorna false se as férias são futuras (programadas).
+========================================================= */
+function verificarSeFeriasJaGozadas(reg, hoje) {
+    const dtInicio = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.inicio || reg.data);
+    
+    // Se não tem data, considera como não gozado
+    if (!dtInicio) return false;
+    
+    // Se a data de início é futura, ainda não foi gozado (está programado)
+    if (dtInicio > hoje) return false;
+    
+    // Se a data de início já passou, considera como gozado
+    return true;
+}
+
+/* =========================================================
+   MOTOR DE CÁLCULO - DIREITO DO SERVIDOR
+   =========================================================
+   - Vencimento = quando o período aquisitivo FECHA
+   - Status "programado" para férias futuras
 ========================================================= */
 function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     const dtAdmissao = parseDataParaDate(dataAdmissao);
@@ -833,7 +858,7 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
         dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
         dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
         
-        // 👇 CORREÇÃO: Vencimento = quando o período aquisitivo FECHA
+        // 👇 Vencimento = quando o período aquisitivo FECHA
         const dataLimiteGozo = new Date(dataFimPeriodo);
         
         const periodo = {
@@ -935,13 +960,21 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         return tipo.includes('ferias') || tipo.includes('férias');
     });
     
+    // 👇 Só conta como gozado se a data de início já passou
     let diasGozados = 0;
+    let diasProgramados = 0;
+    
     feriasLancadas.forEach(r => {
-        diasGozados += calcularDiasFerias(r);
+        const dias = calcularDiasFerias(r);
+        if (verificarSeFeriasJaGozadas(r, hoje)) {
+            diasGozados += dias;
+        } else {
+            diasProgramados += dias;
+        }
     });
     
     const diasDireito = direitoFerias ? direitoFerias.diasDireito : 0;
-    const saldoDias = Math.max(0, diasDireito - diasGozados);
+    const saldoDias = Math.max(0, diasDireito - diasGozados - diasProgramados);
     const saldoPeriodos = (saldoDias / 30).toFixed(1).replace('.', ',');
     
     let statusClasse, statusIcone, statusTexto;
@@ -962,17 +995,28 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     let periodosVencidos = 0;
     let periodosGozados = 0;
     let periodosPendentes = 0;
+    let periodosProgramados = 0;
     
     if (direitoFerias && direitoFerias.periodosDetalhados) {
         direitoFerias.periodosDetalhados.forEach(p => {
-            const foiGozado = feriasLancadas.some(r => {
+            // Encontra lançamentos correspondentes a este período
+            const lancamentosDoPeriodo = feriasLancadas.filter(r => {
                 const anoRef = r.ano_referencia || r.ano || '';
                 return anoRef === p.anoReferencia;
             });
             
-            if (foiGozado) {
-                p.status = 'gozado';
-                periodosGozados++;
+            if (lancamentosDoPeriodo.length > 0) {
+                // 👇 Verifica se algum lançamento já foi realmente gozado
+                const algumJaGozado = lancamentosDoPeriodo.some(r => verificarSeFeriasJaGozadas(r, hoje));
+                
+                if (algumJaGozado) {
+                    p.status = 'gozado';
+                    periodosGozados++;
+                } else {
+                    // Existe lançamento mas a data é futura = PROGRAMADO
+                    p.status = 'programado';
+                    periodosProgramados++;
+                }
             } else if (p.status !== 'atual' && p.dataLimiteGozo < hoje) {
                 p.status = 'vencido';
                 periodosVencidos++;
@@ -1008,10 +1052,16 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                     <div class="subvalor">${direitoFerias ? direitoFerias.diasDireito : 0} dias de direito</div>
                 </div>
                 
-                <div class="motor-card destaque-amarelo">
+                <div class="motor-card destaque-verde">
                     <label>Períodos Gozados</label>
-                    <div class="valor amarelo">${periodosGozados}</div>
+                    <div class="valor verde">${periodosGozados}</div>
                     <div class="subvalor">${diasGozados} dias gozados</div>
+                </div>
+                
+                <div class="motor-card destaque-roxo">
+                    <label>Programados</label>
+                    <div class="valor roxo">${periodosProgramados}</div>
+                    <div class="subvalor">${diasProgramados} dias futuros</div>
                 </div>
                 
                 <div class="motor-card ${saldoDias >= 60 ? 'destaque-vermelho' : 'destaque'}">
@@ -1086,6 +1136,10 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 case 'gozado':
                     statusBadge = `<span class="badge-status badge-gozado"><span class="material-symbols-outlined">check_circle</span> Gozado</span>`;
                     classeLinha = 'periodo-gozado';
+                    break;
+                case 'programado':
+                    statusBadge = `<span class="badge-status badge-programado"><span class="material-symbols-outlined">event_upcoming</span> Programado</span>`;
+                    classeLinha = 'periodo-programado';
                     break;
                 case 'vencido':
                     statusBadge = `<span class="badge-status badge-vencido"><span class="material-symbols-outlined">error</span> Vencido</span>`;
@@ -1340,16 +1394,22 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
         });
 
         const totalPeriodosLancados = periodosLancados.size;
+        
+        // 👇 Só conta como gozado se a data de início já passou
         let diasGozados = 0;
+        let diasProgramados = 0;
+        
         feriasVinc.forEach(r => {
-            const dtTermino = parseDataParaDate(r.data_termino || r.dataTermino || r.termino || r.fim || r.dataFim || r.data_fim);
-            const dtInicio = parseDataParaDate(r.data_inicio || r.dataInicio || r.inicio || r.data);
-            const dataComp = dtTermino || dtInicio;
-            if (!dataComp || dataComp <= hoje) diasGozados += calcularDiasFerias(r);
+            const dias = calcularDiasFerias(r);
+            if (verificarSeFeriasJaGozadas(r, hoje)) {
+                diasGozados += dias;
+            } else {
+                diasProgramados += dias;
+            }
         });
 
         const diasDireito = totalPeriodosLancados * 30;
-        const diasPendentes = Math.max(0, diasDireito - diasGozados);
+        const diasPendentes = Math.max(0, diasDireito - diasGozados - diasProgramados);
         const periodosPendentes = (diasPendentes / 30).toFixed(1).replace('.', ',');
 
         let alertaClasse = 'alerta-verde';
@@ -1425,7 +1485,8 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
                         <div class="subvalor">Períodos (${diasPendentes} dias)</div>
                         <div class="subvalor" style="margin-top: 6px; font-size: 10px;">
                             ${totalPeriodosLancados} período(s) lançado(s)<br>
-                            ${Math.floor(diasGozados / 30)} gozado(s) (${diasGozados} dias)
+                            ${Math.floor(diasGozados / 30)} gozado(s) (${diasGozados} dias)<br>
+                            ${Math.floor(diasProgramados / 30)} programado(s) (${diasProgramados} dias)
                         </div>
                     </div>
                     <div class="saldo-box folga">
