@@ -1038,17 +1038,15 @@ window.toggleEscolaExtra = function(numMatricula) {
 
 
 /* =========================================================
-   👇 CORREÇÃO PRINCIPAL: LIMPAR CAMPOS AO DESMARCAR
+   👇 LIMPAR CAMPOS AO DESMARCAR SEGUNDA MATRÍCULA
    =========================================================
-   Quando o usuário desmarca o checkbox "segunda matrícula",
-   TODOS os campos da matrícula 2 são limpos automaticamente,
-   incluindo a escola extra 2 e a data de admissão (flatpickr).
+   Quando o usuário desmarca o checkbox, TODOS os campos
+   da matrícula 2 são limpos automaticamente.
 ========================================================= */
 window.toggleSegundoVinculo = function() {
   const bloco = document.getElementById("blocoSegundoVinculo");
   const checkBox = document.getElementById("possuiSegundoVinculo");
 
-  // Campos principais da matrícula 2
   const camposM2 = [
     "vinculo2",
     "numeroMatricula2",
@@ -1059,7 +1057,6 @@ window.toggleSegundoVinculo = function() {
     "qtdPassagens1_m2"
   ];
 
-  // Campos da escola extra 2
   const camposEscolaExtra2 = [
     "escola2_m2",
     "empresa_escola2_m2",
@@ -1067,12 +1064,9 @@ window.toggleSegundoVinculo = function() {
   ];
 
   if (checkBox.checked) {
-    // 👉 MARCOU: mostra o bloco e ativa campos obrigatórios
     bloco.classList.add("ativo");
     camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
   } else {
-    // 👉 DESMARCOU: esconde o bloco, remove obrigatoriedade e LIMPA TUDO
-    
     bloco.classList.remove("ativo");
     
     // Remove obrigatoriedade e LIMPA os campos principais
@@ -1097,7 +1091,7 @@ window.toggleSegundoVinculo = function() {
       atualizarCorCampo(campo);
     });
     
-    // LIMPA o flatpickr da data de admissão 2 (campo de data)
+    // LIMPA o flatpickr da data de admissão 2
     const dataAdmissao2 = document.getElementById("dataAdmissao2");
     if (dataAdmissao2._flatpickr) {
       dataAdmissao2._flatpickr.clear();
@@ -1107,7 +1101,11 @@ window.toggleSegundoVinculo = function() {
 
 
 /* =========================================================
-   SALVAR SERVIDOR (COM deleteField CORRIGIDO)
+   👇 SALVAR SERVIDOR (ABORDAGEM SEGURA EM DUAS ETAPAS)
+   =========================================================
+   1ª etapa: Salva os dados principais
+   2ª etapa: Remove campos indesejados separadamente
+   Isso evita erros com deleteField() em objetos aninhados.
 ========================================================= */
 window.salvarServidor = async function(event) {
   event.preventDefault();
@@ -1134,7 +1132,6 @@ window.salvarServidor = async function(event) {
 
     if (cpfAtual !== ultimoCpfVerificado) {
       await verificarCpfDuplicado(cpfCampo);
-
       if (cpfDuplicado) {
         cpfCampo.focus();
         return;
@@ -1169,22 +1166,19 @@ window.salvarServidor = async function(event) {
       }
     };
 
-    // Escola extra 1 - com deleteField se estiver desativada
+    // Escola extra 1 (só adiciona se estiver ativa)
     const escolaExtra1Ativa = document.getElementById("escolaExtra1").classList.contains("ativo");
-
     if (escolaExtra1Ativa) {
       dadosServidor.matricula1.escola2 = {
         nomeEscola: document.getElementById("escola2_m1").value,
         empresa: document.getElementById("empresa_escola2_m1").value,
         qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m1").value)
       };
-    } else if (servidorId) {
-      // Remove a escola 2 da matrícula 1 do banco (apenas em edição)
-      dadosServidor.matricula1.escola2 = deleteField();
     }
 
-    // Matrícula 2 - com deleteField se checkbox estiver desmarcado
-    if (document.getElementById("possuiSegundoVinculo").checked) {
+    // Matrícula 2 (só adiciona se o checkbox estiver marcado)
+    const temSegundaMatricula = document.getElementById("possuiSegundoVinculo").checked;
+    if (temSegundaMatricula) {
       dadosServidor.matricula2 = {
         vinculo: document.getElementById("vinculo2").value,
         numeroMatricula: document.getElementById("numeroMatricula2").value.trim(),
@@ -1199,24 +1193,41 @@ window.salvarServidor = async function(event) {
       };
 
       const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
-
       if (escolaExtra2Ativa) {
         dadosServidor.matricula2.escola2 = {
           nomeEscola: document.getElementById("escola2_m2").value,
           empresa: document.getElementById("empresa_escola2_m2").value,
           qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m2").value)
         };
-      } else if (servidorId) {
-        // Remove a escola 2 da matrícula 2 do banco (apenas em edição)
-        dadosServidor.matricula2.escola2 = deleteField();
       }
-    } else if (servidorId) {
-      // 👇 Remove a matrícula 2 COMPLETA do banco (apenas em edição)
-      dadosServidor.matricula2 = deleteField();
     }
 
     if (servidorId) {
+      // 👇 1ª ETAPA: Salva os dados principais
       await updateDoc(doc(db, "servidores", servidorId), dadosServidor);
+
+      // 👇 2ª ETAPA: Remove campos indesejados separadamente
+      const camposParaRemover = {};
+
+      if (!temSegundaMatricula) {
+        camposParaRemover["matricula2"] = deleteField();
+      }
+
+      if (!escolaExtra1Ativa) {
+        camposParaRemover["matricula1.escola2"] = deleteField();
+      }
+
+      if (temSegundaMatricula) {
+        const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
+        if (!escolaExtra2Ativa) {
+          camposParaRemover["matricula2.escola2"] = deleteField();
+        }
+      }
+
+      if (Object.keys(camposParaRemover).length > 0) {
+        await updateDoc(doc(db, "servidores", servidorId), camposParaRemover);
+      }
+
       marcarCacheInvalido();
       mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
     } else {
@@ -1231,7 +1242,7 @@ window.salvarServidor = async function(event) {
 
   } catch (erro) {
     console.error("Erro ao salvar:", erro);
-    mostrarMensagem("Erro ao salvar os dados no banco.", "erro");
+    mostrarMensagem("Erro ao salvar os dados no banco: " + erro.message, "erro");
   } finally {
     btnSalvar.disabled = false;
   }
