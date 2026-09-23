@@ -437,7 +437,6 @@ button .material-symbols-outlined { font-size: 19px; }
 
           <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
 
-          <!-- 👇 NOVO CAMPO: VÍNCULO 1 -->
           <div class="form-group">
             <label for="vinculo1">Vínculo 1 <span>*</span></label>
             <select id="vinculo1" name="vinculo1" required>
@@ -541,7 +540,6 @@ button .material-symbols-outlined { font-size: 19px; }
 
             <div class="form-section-title">Matrícula 2 (Segunda Matrícula)</div>
 
-            <!-- 👇 NOVO CAMPO: VÍNCULO 2 -->
             <div class="form-group">
               <label for="vinculo2">Vínculo 2 <span>*</span></label>
               <select id="vinculo2" name="vinculo2">
@@ -682,6 +680,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteField,
   getDocs,
   query,
   where,
@@ -797,7 +796,6 @@ async function carregarDadosServidor(id) {
       document.getElementById("uf").value = d.uf || "";
 
       if (d.matricula1) {
-        // 👇 CARREGAR VÍNCULO 1
         document.getElementById("vinculo1").value = d.matricula1.vinculo || "";
         
         document.getElementById("numeroMatricula1").value = d.matricula1.numeroMatricula || "";
@@ -826,7 +824,6 @@ async function carregarDadosServidor(id) {
         document.getElementById("possuiSegundoVinculo").checked = true;
         toggleSegundoVinculo();
 
-        // 👇 CARREGAR VÍNCULO 2
         document.getElementById("vinculo2").value = d.matricula2.vinculo || "";
 
         document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
@@ -1044,7 +1041,6 @@ window.toggleSegundoVinculo = function() {
   const bloco = document.getElementById("blocoSegundoVinculo");
   const checkBox = document.getElementById("possuiSegundoVinculo");
 
-  // 👇 ADICIONADO vinculo2 NA LISTA
   const camposM2 = [
     "vinculo2",
     "numeroMatricula2",
@@ -1066,7 +1062,7 @@ window.toggleSegundoVinculo = function() {
 
 
 /* =========================================================
-   SALVAR SERVIDOR
+   SALVAR SERVIDOR (COM deleteField CORRIGIDO)
 ========================================================= */
 window.salvarServidor = async function(event) {
   event.preventDefault();
@@ -1115,7 +1111,6 @@ window.salvarServidor = async function(event) {
       uf: document.getElementById("uf").value.trim(),
 
       matricula1: {
-        // 👇 SALVAR VÍNCULO 1
         vinculo: document.getElementById("vinculo1").value,
         numeroMatricula: document.getElementById("numeroMatricula1").value.trim(),
         cargo: document.getElementById("cargo1").value.trim(),
@@ -1129,6 +1124,7 @@ window.salvarServidor = async function(event) {
       }
     };
 
+    // 👇 ESCOLA EXTRA 1 - com deleteField se estiver desativada
     const escolaExtra1Ativa = document.getElementById("escolaExtra1").classList.contains("ativo");
 
     if (escolaExtra1Ativa) {
@@ -1137,11 +1133,14 @@ window.salvarServidor = async function(event) {
         empresa: document.getElementById("empresa_escola2_m1").value,
         qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m1").value)
       };
+    } else {
+      // Remove a escola 2 da matrícula 1 do banco se estiver desativada
+      dadosServidor.matricula1.escola2 = deleteField();
     }
 
+    // 👇 MATRÍCULA 2 - com deleteField se checkbox estiver desmarcado
     if (document.getElementById("possuiSegundoVinculo").checked) {
       dadosServidor.matricula2 = {
-        // 👇 SALVAR VÍNCULO 2
         vinculo: document.getElementById("vinculo2").value,
         numeroMatricula: document.getElementById("numeroMatricula2").value.trim(),
         cargo: document.getElementById("cargo2").value.trim(),
@@ -1154,6 +1153,7 @@ window.salvarServidor = async function(event) {
         }
       };
 
+      // 👇 ESCOLA EXTRA 2 - com deleteField se estiver desativada
       const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
 
       if (escolaExtra2Ativa) {
@@ -1162,7 +1162,13 @@ window.salvarServidor = async function(event) {
           empresa: document.getElementById("empresa_escola2_m2").value,
           qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m2").value)
         };
+      } else {
+        // Remove a escola 2 da matrícula 2 do banco se estiver desativada
+        dadosServidor.matricula2.escola2 = deleteField();
       }
+    } else {
+      // 👇 Remove a matrícula 2 COMPLETA do banco se checkbox estiver desmarcado
+      dadosServidor.matricula2 = deleteField();
     }
 
     if (servidorId) {
@@ -1170,6 +1176,15 @@ window.salvarServidor = async function(event) {
       marcarCacheInvalido();
       mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
     } else {
+      // Para novo cadastro, remove os campos deleteField antes de salvar
+      // (novos cadastros não têm esses campos no banco, então não precisa remover)
+      if (dadosServidor.matricula2 && typeof dadosServidor.matricula2 === 'object' && dadosServidor.matricula2._methodName === 'FieldValue.delete') {
+        delete dadosServidor.matricula2;
+      }
+      if (dadosServidor.matricula1.escola2 && typeof dadosServidor.matricula1.escola2 === 'object' && dadosServidor.matricula1.escola2._methodName === 'FieldValue.delete') {
+        delete dadosServidor.matricula1.escola2;
+      }
+      
       await addDoc(collection(db, "servidores"), dadosServidor);
       marcarCacheInvalido();
       mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
