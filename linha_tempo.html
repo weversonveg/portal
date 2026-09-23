@@ -67,7 +67,10 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
 .status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
 .status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
-.status-conexao.offline .signal-bars .bar { background-color: #ef4444; animation: pulsar 1.2s infinite ease-in-out; }
+.status-conexao.offline .signal-bars .bar {
+    background-color: #ef4444;
+    animation: pulsar 1.2s infinite ease-in-out;
+}
 @keyframes pulsar { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
 .main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 32px 16px; }
@@ -165,7 +168,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .dado-item strong { font-size: 15px; color: var(--text); font-weight: 600; }
 
-/* 👇 NOVO: Seção do Motor de Cálculo */
+/* Motor de Cálculo */
 .motor-section {
     background: linear-gradient(135deg, #f5f2f8 0%, #ffffff 100%);
     border: 1px solid #e0d5ec;
@@ -207,21 +210,10 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
-.motor-card.destaque {
-    border-left: 4px solid var(--primary);
-}
-
-.motor-card.destaque-verde {
-    border-left: 4px solid var(--green);
-}
-
-.motor-card.destaque-amarelo {
-    border-left: 4px solid var(--yellow);
-}
-
-.motor-card.destaque-vermelho {
-    border-left: 4px solid var(--red);
-}
+.motor-card.destaque { border-left: 4px solid var(--primary); }
+.motor-card.destaque-verde { border-left: 4px solid var(--green); }
+.motor-card.destaque-amarelo { border-left: 4px solid var(--yellow); }
+.motor-card.destaque-vermelho { border-left: 4px solid var(--red); }
 
 .motor-card label {
     font-size: 11px;
@@ -249,7 +241,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     margin-top: 4px;
 }
 
-/* Status do servidor */
 .status-servidor {
     padding: 14px 16px;
     border-radius: 8px;
@@ -284,7 +275,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     border: 1px solid var(--red-border);
 }
 
-/* Tabela de períodos aquisitivos */
 .periodos-table {
     width: 100%;
     border-collapse: collapse;
@@ -309,26 +299,11 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     vertical-align: middle;
 }
 
-.periodos-table tr:hover {
-    background: #f8fafc;
-}
-
-.periodos-table tr.periodo-vencido {
-    background: var(--red-light);
-}
-
-.periodos-table tr.periodo-pendente {
-    background: var(--yellow-light);
-}
-
-.periodos-table tr.periodo-gozado {
-    background: var(--green-light);
-}
-
-.periodos-table tr.periodo-atual {
-    background: var(--blue-light);
-    font-weight: 600;
-}
+.periodos-table tr:hover { background: #f8fafc; }
+.periodos-table tr.periodo-vencido { background: var(--red-light); }
+.periodos-table tr.periodo-pendente { background: var(--yellow-light); }
+.periodos-table tr.periodo-gozado { background: var(--green-light); }
+.periodos-table tr.periodo-atual { background: var(--blue-light); font-weight: 600; }
 
 .badge-status {
     display: inline-flex;
@@ -340,31 +315,14 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     font-weight: 700;
 }
 
-.badge-gozado {
-    background: var(--green-light);
-    color: var(--green);
-}
+.badge-gozado { background: var(--green-light); color: var(--green); }
+.badge-pendente { background: var(--yellow-light); color: var(--yellow); }
+.badge-vencido { background: var(--red-light); color: var(--red); }
+.badge-atual { background: var(--blue-light); color: var(--blue); }
 
-.badge-pendente {
-    background: var(--yellow-light);
-    color: var(--yellow);
-}
+.badge-status .material-symbols-outlined { font-size: 13px; }
 
-.badge-vencido {
-    background: var(--red-light);
-    color: var(--red);
-}
-
-.badge-atual {
-    background: var(--blue-light);
-    color: var(--blue);
-}
-
-.badge-status .material-symbols-outlined {
-    font-size: 13px;
-}
-
-/* Resumo por matrícula (mantido) */
+/* Resumo por matrícula */
 .resumo-matriculas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px; }
 
 .card-matricula {
@@ -651,7 +609,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
             </div>
         </section>
 
-        <!-- 👇 NOVO: MOTOR DE CÁLCULO -->
         <div id="motorCalculo"></div>
 
         <div id="resumoMatriculas" class="resumo-matriculas"></div>
@@ -857,14 +814,10 @@ function calcularDiasFerias(reg) {
 
 /* =========================================================
    👇 MOTOR DE CÁLCULO - DIREITO DO SERVIDOR
-   ========================================================= */
-
-/**
- * Calcula o direito a férias do servidor com base na data de admissão
- * @param {string} dataAdmissao - Data de admissão do servidor
- * @param {Date} dataReferencia - Data de referência (padrão: hoje)
- * @returns {object} - Objeto com periodosCompletos, diasDireito, periodosDetalhados
- */
+   =========================================================
+   CORREÇÃO: A data de vencimento agora é quando o período
+   aquisitivo FECHA (não +1 ano depois).
+========================================================= */
 function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     const dtAdmissao = parseDataParaDate(dataAdmissao);
     if (!dtAdmissao) return null;
@@ -875,15 +828,13 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     let periodosDetalhados = [];
     let dataInicioPeriodo = new Date(dtAdmissao);
     
-    // Limita a 40 períodos (40 anos) para evitar loop infinito
     while (periodosCompletos < 40) {
         const dataFimPeriodo = new Date(dataInicioPeriodo);
         dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
         dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
         
-        // Data limite para gozo (período concessivo = 12 meses após aquisição)
+        // 👇 CORREÇÃO: Vencimento = quando o período aquisitivo FECHA
         const dataLimiteGozo = new Date(dataFimPeriodo);
-        dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
         
         const periodo = {
             numero: periodosCompletos + 1,
@@ -892,7 +843,7 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
             anoReferencia: `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`,
             dataAquisicao: new Date(dataFimPeriodo),
             dataLimiteGozo: dataLimiteGozo,
-            status: 'pendente' // Será atualizado depois
+            status: 'pendente'
         };
         
         if (dataFimPeriodo <= dataReferencia) {
@@ -901,7 +852,6 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
             dataInicioPeriodo = new Date(dataFimPeriodo);
             dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
         } else {
-            // Período atual (em andamento)
             periodo.status = 'atual';
             periodosDetalhados.push(periodo);
             break;
@@ -915,13 +865,6 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     };
 }
 
-/**
- * Calcula o direito a folgas de aniversário do servidor
- * @param {string} dataNascimento - Data de nascimento do servidor
- * @param {string} dataAdmissao - Data de admissão do servidor
- * @param {Date} dataReferencia - Data de referência (padrão: hoje)
- * @returns {object} - Objeto com totalAniversarios e proximoAniversario
- */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
     const dtAdmissao = parseDataParaDate(dataAdmissao);
@@ -955,9 +898,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
     };
 }
 
-/**
- * Renderiza a seção do motor de cálculo
- */
 function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     const container = document.getElementById('motorCalculo');
     container.innerHTML = '';
@@ -967,7 +907,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
-    // Usa a primeira matrícula como referência principal
     const vinculoPrincipal = vinculos[0];
     const dataAdmissao = vinculoPrincipal.dataAdmissao;
     
@@ -988,30 +927,23 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         return;
     }
     
-    // Calcula direito a férias
     const direitoFerias = calcularDireitoFerias(dataAdmissao, hoje);
-    
-    // Calcula direito a folga de aniversário
     const direitoFolga = dataNascimento ? calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, hoje) : null;
     
-    // Filtra lançamentos de férias
     const feriasLancadas = registros.filter(r => {
         const tipo = (r.tipo || '').toLowerCase();
         return tipo.includes('ferias') || tipo.includes('férias');
     });
     
-    // Calcula dias já gozados
     let diasGozados = 0;
     feriasLancadas.forEach(r => {
         diasGozados += calcularDiasFerias(r);
     });
     
-    // Calcula saldo
     const diasDireito = direitoFerias ? direitoFerias.diasDireito : 0;
     const saldoDias = Math.max(0, diasDireito - diasGozados);
     const saldoPeriodos = (saldoDias / 30).toFixed(1).replace('.', ',');
     
-    // Determina status do servidor
     let statusClasse, statusIcone, statusTexto;
     if (saldoDias >= 90) {
         statusClasse = 'status-critico';
@@ -1027,14 +959,12 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         statusTexto = `Regular: O servidor possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias).`;
     }
     
-    // Verifica períodos vencidos
     let periodosVencidos = 0;
     let periodosGozados = 0;
     let periodosPendentes = 0;
     
     if (direitoFerias && direitoFerias.periodosDetalhados) {
         direitoFerias.periodosDetalhados.forEach(p => {
-            // Verifica se o período foi gozado
             const foiGozado = feriasLancadas.some(r => {
                 const anoRef = r.ano_referencia || r.ano || '';
                 return anoRef === p.anoReferencia;
@@ -1053,7 +983,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         });
     }
     
-    // Monta HTML do motor
     let html = `
         <div class="motor-section">
             <div class="motor-title">
@@ -1061,13 +990,11 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 Motor de Cálculo - Direito do Servidor
             </div>
             
-            <!-- Status do Servidor -->
             <div class="status-servidor ${statusClasse}">
                 <span class="material-symbols-outlined">${statusIcone}</span>
                 <span>${statusTexto}</span>
             </div>
             
-            <!-- Resumo do Motor -->
             <div class="resumo-motor">
                 <div class="motor-card destaque">
                     <label>Data de Admissão</label>
@@ -1095,7 +1022,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
     `;
     
-    // Folga de aniversário
     if (direitoFolga) {
         const folgasGozadas = registros.filter(r => {
             const tipo = (r.tipo || '').toLowerCase();
@@ -1133,7 +1059,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         `;
     }
     
-    // Tabela de períodos aquisitivos
     if (direitoFerias && direitoFerias.periodosDetalhados && direitoFerias.periodosDetalhados.length > 0) {
         html += `
             <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
@@ -1382,9 +1307,7 @@ async function processarServidores(docs) {
     }).join('<br>');
     document.getElementById('matriculasServidor').innerHTML = matriculasTexto;
 
-    // 👇 Renderiza o motor de cálculo
     renderizarMotorCalculo(vinculos, nascimentoServidor, registros);
-    
     renderizarResumos(vinculos, nascimentoServidor, registros);
     renderizarTimeline(registros, vinculos);
 
