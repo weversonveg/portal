@@ -1038,10 +1038,11 @@ window.toggleEscolaExtra = function(numMatricula) {
 
 
 /* =========================================================
-   👇 LIMPAR CAMPOS AO DESMARCAR SEGUNDA MATRÍCULA
+   👇 CONFIRMAÇÃO ANTES DE DESMARCAR SEGUNDA MATRÍCULA
    =========================================================
-   Quando o usuário desmarca o checkbox, TODOS os campos
-   da matrícula 2 são limpos automaticamente.
+   Se o usuário desmarcar o checkbox, o sistema pergunta
+   se ele realmente deseja remover a matrícula 2.
+   Se cancelar, o checkbox volta a ser marcado automaticamente.
 ========================================================= */
 window.toggleSegundoVinculo = function() {
   const bloco = document.getElementById("blocoSegundoVinculo");
@@ -1064,9 +1065,26 @@ window.toggleSegundoVinculo = function() {
   ];
 
   if (checkBox.checked) {
+    // 👉 MARCOU: mostra o bloco e ativa campos obrigatórios
     bloco.classList.add("ativo");
     camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
   } else {
+    // 👉 DESMARCOU: pede confirmação antes de limpar
+    
+    const confirmacao = confirm(
+      "⚠️ ATENÇÃO\n\n" +
+      "Isso irá remover todos os dados da Segunda Matrícula deste servidor.\n\n" +
+      "Deseja realmente continuar?"
+    );
+
+    if (!confirmacao) {
+      // 👇 Usuário CANCELOU: reverte o checkbox para marcado
+      checkBox.checked = true;
+      return;
+    }
+
+    // 👇 Usuário CONFIRMOU: limpa tudo
+    
     bloco.classList.remove("ativo");
     
     // Remove obrigatoriedade e LIMPA os campos principais
