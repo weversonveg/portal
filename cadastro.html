@@ -1037,10 +1037,18 @@ window.toggleEscolaExtra = function(numMatricula) {
 };
 
 
+/* =========================================================
+   👇 CORREÇÃO PRINCIPAL: LIMPAR CAMPOS AO DESMARCAR
+   =========================================================
+   Quando o usuário desmarca o checkbox "segunda matrícula",
+   TODOS os campos da matrícula 2 são limpos automaticamente,
+   incluindo a escola extra 2 e a data de admissão (flatpickr).
+========================================================= */
 window.toggleSegundoVinculo = function() {
   const bloco = document.getElementById("blocoSegundoVinculo");
   const checkBox = document.getElementById("possuiSegundoVinculo");
 
+  // Campos principais da matrícula 2
   const camposM2 = [
     "vinculo2",
     "numeroMatricula2",
@@ -1051,12 +1059,49 @@ window.toggleSegundoVinculo = function() {
     "qtdPassagens1_m2"
   ];
 
+  // Campos da escola extra 2
+  const camposEscolaExtra2 = [
+    "escola2_m2",
+    "empresa_escola2_m2",
+    "qtdPassagens_escola2_m2"
+  ];
+
   if (checkBox.checked) {
+    // 👉 MARCOU: mostra o bloco e ativa campos obrigatórios
     bloco.classList.add("ativo");
     camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
   } else {
+    // 👉 DESMARCOU: esconde o bloco, remove obrigatoriedade e LIMPA TUDO
+    
     bloco.classList.remove("ativo");
-    camposM2.forEach(id => document.getElementById(id).removeAttribute("required"));
+    
+    // Remove obrigatoriedade e LIMPA os campos principais
+    camposM2.forEach(id => {
+      const campo = document.getElementById(id);
+      campo.removeAttribute("required");
+      campo.value = "";
+      atualizarCorCampo(campo);
+    });
+    
+    // Desativa a escola extra 2 se estiver ativa
+    const escolaExtra2 = document.getElementById("escolaExtra2");
+    if (escolaExtra2.classList.contains("ativo")) {
+      toggleEscolaExtra(2);
+    }
+    
+    // LIMPA também os campos da escola extra 2
+    camposEscolaExtra2.forEach(id => {
+      const campo = document.getElementById(id);
+      campo.removeAttribute("required");
+      campo.value = "";
+      atualizarCorCampo(campo);
+    });
+    
+    // LIMPA o flatpickr da data de admissão 2 (campo de data)
+    const dataAdmissao2 = document.getElementById("dataAdmissao2");
+    if (dataAdmissao2._flatpickr) {
+      dataAdmissao2._flatpickr.clear();
+    }
   }
 };
 
@@ -1124,7 +1169,7 @@ window.salvarServidor = async function(event) {
       }
     };
 
-    // 👇 ESCOLA EXTRA 1 - com deleteField se estiver desativada
+    // Escola extra 1 - com deleteField se estiver desativada
     const escolaExtra1Ativa = document.getElementById("escolaExtra1").classList.contains("ativo");
 
     if (escolaExtra1Ativa) {
@@ -1133,12 +1178,12 @@ window.salvarServidor = async function(event) {
         empresa: document.getElementById("empresa_escola2_m1").value,
         qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m1").value)
       };
-    } else {
-      // Remove a escola 2 da matrícula 1 do banco se estiver desativada
+    } else if (servidorId) {
+      // Remove a escola 2 da matrícula 1 do banco (apenas em edição)
       dadosServidor.matricula1.escola2 = deleteField();
     }
 
-    // 👇 MATRÍCULA 2 - com deleteField se checkbox estiver desmarcado
+    // Matrícula 2 - com deleteField se checkbox estiver desmarcado
     if (document.getElementById("possuiSegundoVinculo").checked) {
       dadosServidor.matricula2 = {
         vinculo: document.getElementById("vinculo2").value,
@@ -1153,7 +1198,6 @@ window.salvarServidor = async function(event) {
         }
       };
 
-      // 👇 ESCOLA EXTRA 2 - com deleteField se estiver desativada
       const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
 
       if (escolaExtra2Ativa) {
@@ -1162,12 +1206,12 @@ window.salvarServidor = async function(event) {
           empresa: document.getElementById("empresa_escola2_m2").value,
           qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m2").value)
         };
-      } else {
-        // Remove a escola 2 da matrícula 2 do banco se estiver desativada
+      } else if (servidorId) {
+        // Remove a escola 2 da matrícula 2 do banco (apenas em edição)
         dadosServidor.matricula2.escola2 = deleteField();
       }
-    } else {
-      // 👇 Remove a matrícula 2 COMPLETA do banco se checkbox estiver desmarcado
+    } else if (servidorId) {
+      // 👇 Remove a matrícula 2 COMPLETA do banco (apenas em edição)
       dadosServidor.matricula2 = deleteField();
     }
 
@@ -1176,15 +1220,6 @@ window.salvarServidor = async function(event) {
       marcarCacheInvalido();
       mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
     } else {
-      // Para novo cadastro, remove os campos deleteField antes de salvar
-      // (novos cadastros não têm esses campos no banco, então não precisa remover)
-      if (dadosServidor.matricula2 && typeof dadosServidor.matricula2 === 'object' && dadosServidor.matricula2._methodName === 'FieldValue.delete') {
-        delete dadosServidor.matricula2;
-      }
-      if (dadosServidor.matricula1.escola2 && typeof dadosServidor.matricula1.escola2 === 'object' && dadosServidor.matricula1.escola2._methodName === 'FieldValue.delete') {
-        delete dadosServidor.matricula1.escola2;
-      }
-      
       await addDoc(collection(db, "servidores"), dadosServidor);
       marcarCacheInvalido();
       mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
