@@ -692,6 +692,9 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
 
 /* =========================================================
    MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
+   - Base em PERÍODOS AQUISITIVOS (igual férias)
+   - Prazo para gozo = aniversário dentro do período
+   - 👇 Próxima aquisição = próximo ANIVERSÁRIO
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -758,8 +761,18 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
         } else {
             periodo.status = 'disponivel';
             folgasDisponiveis++;
-            proximaAquisicao = dataFimPeriodo;
             periodosDetalhados.push(periodo);
+            break;
+        }
+    }
+    
+    // 👇 Próxima aquisição = próximo ANIVERSÁRIO
+    //    (é no aniversário que o servidor adquire a próxima folga)
+    const anoBase = dataReferencia.getFullYear();
+    for (let ano = anoBase; ano <= anoBase + 2; ano++) {
+        const candidato = new Date(ano, mesNascimento, diaNascimento);
+        if (candidato > dataReferencia) {
+            proximaAquisicao = candidato;
             break;
         }
     }
@@ -986,7 +999,7 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 <div class="motor-card">
                     <label>Próxima Aquisição</label>
                     <div class="valor" style="font-size: 16px;">${direitoFolga.proximaAquisicao ? formatarData(direitoFolga.proximaAquisicao.toISOString().split('T')[0]) : '-'}</div>
-                    <div class="subvalor">Fim do período atual</div>
+                    <div class="subvalor">Data do próximo aniversário</div>
                 </div>
             </div>
         `;
@@ -1459,9 +1472,6 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     });
 }
 
-/* =========================================================
-   👇 TIMELINE COM PERÍODO CORRIGIDO PELA REGRA DO ANIVERSÁRIO
-   ========================================================= */
 function renderizarTimeline(registros, vinculos, dataNascimento) {
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
@@ -1509,7 +1519,6 @@ function renderizarTimeline(registros, vinculos, dataNascimento) {
         let anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
 
         // 👇 Para FOLGA ANIVERSÁRIO, recalcula o período pela REGRA DO ANIVERSÁRIO
-        //    (igual à tabela do motor de cálculo)
         if (tipoExibicao === 'Folga Aniversário' && dataNascimento && vinculos.length > 0) {
             const dataGozo = reg.data || reg.data_gozo || reg.data_inicio || reg.dataInicio;
             const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, vinculos[0].dataAdmissao);
