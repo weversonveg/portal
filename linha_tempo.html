@@ -95,13 +95,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .card-title .material-symbols-outlined { color: var(--primary); }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    margin-bottom: 18px;
-}
-
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 18px; }
 .form-group { display: flex; flex-direction: column; }
 .form-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
 .form-group label span { color: var(--red); }
@@ -597,7 +591,6 @@ function verificarSeFeriasJaGozadas(reg, hoje) {
 
 /* =========================================================
    MOTOR DE CÁLCULO - FÉRIAS
-   Vencimento = fim do período aquisitivo
 ========================================================= */
 function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     const dtAdmissao = parseDataParaDate(dataAdmissao);
@@ -645,13 +638,14 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
 }
 
 /* =========================================================
-   👇 MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (CORRIGIDO)
+   👇 MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
    =========================================================
-   Regras:
-   1. Folga adquirida na data do aniversário, MAS apenas se
-      o servidor já tiver pelo menos 1 ano de trabalho
-   2. Tem 1 ano para gozar (até o próximo aniversário)
-   3. Se não gozar até o próximo aniversário, PERDE
+   Regra confirmada:
+   - Base em PERÍODOS AQUISITIVOS (igual férias)
+   - Cada período de 1 ano = 1 folga aniversário
+   - A data do aniversário determina quando gozar dentro do período
+   - Prazo de 1 ano após o aniversário para gozar
+   - Se não gozar no prazo, PERDE
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -663,46 +657,58 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
     const mesNascimento = dtNascimento.getMonth();
     const diaNascimento = dtNascimento.getDate();
     
-    // Data em que o servidor completa 1 ano de trabalho
-    const umAnoDeTrabalho = new Date(dtAdmissao);
-    umAnoDeTrabalho.setFullYear(umAnoDeTrabalho.getFullYear() + 1);
-    
     let folgasAdquiridas = 0;
     let folgasDisponiveis = 0;
     let folgasPerdidas = 0;
     let proximaAquisicao = null;
     let periodosDetalhados = [];
+    let dataInicioPeriodo = new Date(dtAdmissao);
     
-    const anoAdmissao = dtAdmissao.getFullYear();
-    const anoAtual = dataReferencia.getFullYear();
-    
-    // Verifica cada aniversário desde a admissão até o próximo ano
-    for (let ano = anoAdmissao; ano <= anoAtual + 1; ano++) {
-        const dataAniversario = new Date(ano, mesNascimento, diaNascimento);
+    // Calcula períodos aquisitivos a partir da admissão (igual férias)
+    for (let i = 0; i < 40; i++) {
+        const dataFimPeriodo = new Date(dataInicioPeriodo);
+        dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
+        dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
         
-        // 👇 REGRA 1: Só adquire se já tiver 1 ano de trabalho
-        if (dataAniversario < umAnoDeTrabalho) {
-            continue;
+        // Encontra o aniversário que cai dentro deste período
+        let aniversarioNoPeriodo = null;
+        for (let ano = dataInicioPeriodo.getFullYear(); ano <= dataFimPeriodo.getFullYear(); ano++) {
+            const possivelAniversario = new Date(ano, mesNascimento, diaNascimento);
+            if (possivelAniversario >= dataInicioPeriodo && possivelAniversario <= dataFimPeriodo) {
+                aniversarioNoPeriodo = possivelAniversario;
+                break;
+            }
         }
         
-        // 👇 REGRA 2: Prazo para gozar = até o próximo aniversário (1 ano)
-        const dataLimiteGozo = new Date(dataAniversario);
-        dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
-        dataLimiteGozo.setDate(dataLimiteGozo.getDate() - 1);
+        // Prazo para gozar: 1 ano após o aniversário no período
+        let dataLimiteGozo = null;
+        if (aniversarioNoPeriodo) {
+            dataLimiteGozo = new Date(aniversarioNoPeriodo);
+            dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
+            dataLimiteGozo.setDate(dataLimiteGozo.getDate() - 1);
+        } else {
+            // Caso raro: aniversário não cai no período (ex: primeiro período antes do aniversário)
+            dataLimiteGozo = new Date(dataFimPeriodo);
+            dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
+            dataLimiteGozo.setDate(dataLimiteGozo.getDate() - 1);
+        }
         
         const periodo = {
-            aniversario: new Date(dataAniversario),
-            anoReferencia: `${ano - 1}/${ano}`,
+            numero: i + 1,
+            inicio: new Date(dataInicioPeriodo),
+            fim: new Date(dataFimPeriodo),
+            anoReferencia: `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`,
+            aniversarioNoPeriodo: aniversarioNoPeriodo,
             dataLimiteGozo: dataLimiteGozo,
             status: 'pendente'
         };
         
-        if (dataAniversario <= dataReferencia) {
-            // Aniversário já passou
+        if (dataFimPeriodo <= dataReferencia) {
+            // Período já foi completado
             folgasAdquiridas++;
             
             if (dataLimiteGozo < dataReferencia) {
-                // 👇 REGRA 3: Prazo venceu, PERDEU a folga
+                // Prazo venceu, PERDEU a folga
                 periodo.status = 'perdido';
                 folgasPerdidas++;
             } else {
@@ -712,10 +718,12 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             }
             
             periodosDetalhados.push(periodo);
+            dataInicioPeriodo = new Date(dataFimPeriodo);
+            dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
         } else {
-            // Aniversário ainda não chegou - é a próxima aquisição
-            periodo.status = 'futuro';
-            proximaAquisicao = dataAniversario;
+            // Período em andamento
+            periodo.status = 'atual';
+            proximaAquisicao = dataFimPeriodo;
             periodosDetalhados.push(periodo);
             break;
         }
@@ -874,29 +882,50 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
     `;
     
-    // 👇 SEÇÃO DE FOLGA ANIVERSÁRIO CORRIGIDA
+    // 👇 SEÇÃO DE FOLGA ANIVERSÁRIO POR PERÍODOS
     if (direitoFolga) {
         const folgasLancadas = registros.filter(r => {
             const tipo = (r.tipo || '').toLowerCase();
             return tipo.includes('aniversario') || tipo.includes('aniversário') || tipo.includes('folga');
-        }).length;
+        });
+        
+        // Cruza lançamentos com períodos para determinar status real
+        if (direitoFolga.periodosDetalhados) {
+            direitoFolga.periodosDetalhados.forEach(p => {
+                const lancamentosDoPeriodo = folgasLancadas.filter(r => {
+                    const anoRef = r.ano_referencia || r.ano || '';
+                    return anoRef === p.anoReferencia;
+                });
+                
+                if (lancamentosDoPeriodo.length > 0) {
+                    const algumJaGozado = lancamentosDoPeriodo.some(r => verificarSeFeriasJaGozadas(r, hoje));
+                    if (algumJaGozado) {
+                        p.status = 'gozado';
+                    } else {
+                        p.status = 'programado';
+                    }
+                }
+            });
+        }
+        
+        const folgasGozadas = direitoFolga.periodosDetalhados.filter(p => p.status === 'gozado').length;
         
         html += `
             <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
                 <span class="material-symbols-outlined" style="font-size: 18px; color: var(--green);">cake</span>
-                Folga de Aniversário
+                Folga de Aniversário (por Períodos)
             </h3>
             
             <div class="resumo-motor">
                 <div class="motor-card destaque-verde">
                     <label>Folgas Adquiridas</label>
                     <div class="valor verde">${direitoFolga.folgasAdquiridas}</div>
-                    <div class="subvalor">Desde que completou 1 ano</div>
+                    <div class="subvalor">Períodos completados</div>
                 </div>
                 
                 <div class="motor-card destaque-verde">
                     <label>Folgas Gozadas</label>
-                    <div class="valor verde">${folgasLancadas}</div>
+                    <div class="valor verde">${folgasGozadas}</div>
                     <div class="subvalor">Registradas no sistema</div>
                 </div>
                 
@@ -913,9 +942,9 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 </div>
                 
                 <div class="motor-card">
-                    <label>Próxima Folga</label>
+                    <label>Próxima Aquisição</label>
                     <div class="valor" style="font-size: 16px;">${direitoFolga.proximaAquisicao ? formatarData(direitoFolga.proximaAquisicao.toISOString().split('T')[0]) : '-'}</div>
-                    <div class="subvalor">Data da próxima aquisição</div>
+                    <div class="subvalor">Fim do período atual</div>
                 </div>
             </div>
         `;
@@ -927,8 +956,10 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                     <table class="periodos-table">
                         <thead>
                             <tr>
-                                <th>Aniversário</th>
+                                <th>Nº</th>
                                 <th>Período</th>
+                                <th>Aquisitivo</th>
+                                <th>Aniversário no Período</th>
                                 <th>Prazo para Gozo</th>
                                 <th>Status</th>
                             </tr>
@@ -944,6 +975,10 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                         statusBadge = `<span class="badge-status badge-gozado"><span class="material-symbols-outlined">check_circle</span> Gozado</span>`;
                         classeLinha = 'periodo-gozado';
                         break;
+                    case 'programado':
+                        statusBadge = `<span class="badge-status badge-programado"><span class="material-symbols-outlined">event_upcoming</span> Programado</span>`;
+                        classeLinha = 'periodo-programado';
+                        break;
                     case 'disponivel':
                         statusBadge = `<span class="badge-status badge-disponivel"><span class="material-symbols-outlined">event_available</span> Disponível</span>`;
                         classeLinha = 'periodo-disponivel';
@@ -951,6 +986,10 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                     case 'perdido':
                         statusBadge = `<span class="badge-status badge-perdido"><span class="material-symbols-outlined">cancel</span> Perdido</span>`;
                         classeLinha = 'periodo-perdido';
+                        break;
+                    case 'atual':
+                        statusBadge = `<span class="badge-status badge-atual"><span class="material-symbols-outlined">hourglass_top</span> Em andamento</span>`;
+                        classeLinha = 'periodo-atual';
                         break;
                     case 'futuro':
                         statusBadge = `<span class="badge-status badge-futuro"><span class="material-symbols-outlined">schedule</span> Futuro</span>`;
@@ -961,10 +1000,14 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                         classeLinha = '';
                 }
                 
+                const aniversarioTexto = p.aniversarioNoPeriodo ? formatarData(p.aniversarioNoPeriodo.toISOString().split('T')[0]) : '-';
+                
                 html += `
                     <tr class="${classeLinha}">
-                        <td>${formatarData(p.aniversario.toISOString().split('T')[0])}</td>
+                        <td><strong>${p.numero}º</strong></td>
                         <td>${p.anoReferencia}</td>
+                        <td>${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}</td>
+                        <td>${aniversarioTexto}</td>
                         <td>até ${formatarData(p.dataLimiteGozo.toISOString().split('T')[0])}</td>
                         <td>${statusBadge}</td>
                     </tr>
