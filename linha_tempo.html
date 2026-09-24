@@ -590,16 +590,9 @@ function verificarSeFeriasJaGozadas(reg, hoje) {
 }
 
 /* =========================================================
-   👇 IDENTIFICA O PERÍODO CORRETO DA FOLGA ANIVERSÁRIO
-   =========================================================
+   IDENTIFICA O PERÍODO CORRETO DA FOLGA ANIVERSÁRIO
    O divisor de períodos é o ANIVERSÁRIO DENTRO DO PERÍODO
    AQUISITIVO (não o ano civil).
-   
-   Exemplo Maria (admissão 23/09/2023, aniversário 10/09):
-   - Período 2025/2026 vai de 23/09/2025 a 22/09/2026
-     → aniversário dentro: 10/09/2026
-     → folga gozada ATÉ 10/09/2026 = período 2025/2026
-   - Folga gozada DEPOIS de 10/09/2026 = período 2026/2027
 ========================================================= */
 function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
     const dtGozo = parseDataParaDate(dataGozo);
@@ -611,7 +604,6 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
     const mesNascimento = dtNascimento.getMonth();
     const diaNascimento = dtNascimento.getDate();
     
-    // Percorre os períodos aquisitivos a partir da admissão
     let dataInicioPeriodo = new Date(dtAdmissao);
     
     for (let i = 0; i < 40; i++) {
@@ -619,7 +611,6 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
         dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
         dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
         
-        // Encontra o aniversário dentro deste período
         let aniversarioNoPeriodo = null;
         for (let ano = dataInicioPeriodo.getFullYear(); ano <= dataFimPeriodo.getFullYear(); ano++) {
             const possivelAniversario = new Date(ano, mesNascimento, diaNascimento);
@@ -629,17 +620,12 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
             }
         }
         
-        // 👇 REGRA: a folga pertence a este período se foi gozada
-        //    ATÉ o aniversário dentro do período
         const limiteDoPeriodo = aniversarioNoPeriodo || dataFimPeriodo;
         
         if (dtGozo <= limiteDoPeriodo && dtGozo >= dataInicioPeriodo) {
-            // Gozou dentro do período (antes ou no aniversário)
             return `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`;
         }
         
-        // Se a data de gozo é depois do aniversário mas antes do fim do período,
-        // pertence ao PRÓXIMO período
         if (dtGozo > limiteDoPeriodo && dtGozo <= dataFimPeriodo) {
             const proxInicio = new Date(dataFimPeriodo);
             proxInicio.setDate(proxInicio.getDate() + 1);
@@ -706,11 +692,6 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
 
 /* =========================================================
    MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
-   - Base em PERÍODOS AQUISITIVOS (igual férias)
-   - Cada período de 1 ano = 1 folga aniversário
-   - Prazo para gozo = o próprio aniversário dentro do período
-   - Se não gozar até o aniversário, PERDE
-   - 👇 Período atual (em andamento) conta como DISPONÍVEL
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -775,8 +756,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             dataInicioPeriodo = new Date(dataFimPeriodo);
             dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
         } else {
-            // 👇 Período em andamento: a folga já está disponível
-            //    (pode ser gozada até o aniversário dentro do período)
             periodo.status = 'disponivel';
             folgasDisponiveis++;
             proximaAquisicao = dataFimPeriodo;
@@ -938,18 +917,15 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
     `;
     
-    // 👇 SEÇÃO DE FOLGA ANIVERSÁRIO COM REGRA DO ANIVERSÁRIO
     if (direitoFolga) {
         const folgasLancadas = registros.filter(r => {
             const tipo = (r.tipo || '').toLowerCase();
             return tipo.includes('aniversario') || tipo.includes('aniversário') || tipo.includes('folga');
         });
         
-        // 👇 Cruza lançamentos com períodos usando a REGRA DO ANIVERSÁRIO
         if (direitoFolga.periodosDetalhados) {
             direitoFolga.periodosDetalhados.forEach(p => {
                 const lancamentosDoPeriodo = folgasLancadas.filter(r => {
-                    // 👇 CORREÇÃO: inclui dataInicio (camelCase) salvo pela página de lançamentos
                     const dataGozo = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
                     const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao);
                     const periodoFinal = periodoCorreto || r.ano_referencia || r.ano || '';
@@ -967,7 +943,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             });
         }
         
-        // 👇 CORREÇÃO: Recalcula os contadores DEPOIS do cruzamento
         let folgasGozadas = 0;
         let folgasDisponiveis = 0;
         let folgasPerdidas = 0;
@@ -1016,7 +991,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
         `;
         
-        // Tabela de períodos de folga aniversário
         if (direitoFolga.periodosDetalhados && direitoFolga.periodosDetalhados.length > 0) {
             html += `
                 <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
@@ -1093,7 +1067,6 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         }
     }
     
-    // Tabela de períodos de férias
     if (direitoFerias && direitoFerias.periodosDetalhados && direitoFerias.periodosDetalhados.length > 0) {
         html += `
             <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
@@ -1348,7 +1321,7 @@ async function processarServidores(docs) {
 
     renderizarMotorCalculo(vinculos, nascimentoServidor, registros);
     renderizarResumos(vinculos, nascimentoServidor, registros);
-    renderizarTimeline(registros, vinculos);
+    renderizarTimeline(registros, vinculos, nascimentoServidor);
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
@@ -1486,7 +1459,10 @@ function renderizarResumos(vinculos, dataNascimento, registros) {
     });
 }
 
-function renderizarTimeline(registros, vinculos) {
+/* =========================================================
+   👇 TIMELINE COM PERÍODO CORRIGIDO PELA REGRA DO ANIVERSÁRIO
+   ========================================================= */
+function renderizarTimeline(registros, vinculos, dataNascimento) {
     const container = document.getElementById('timelineContainer');
     container.innerHTML = '';
 
@@ -1530,7 +1506,17 @@ function renderizarTimeline(registros, vinculos) {
         const dtTermino = formatarData(reg.data_termino || reg.dataTermino || reg.termino || reg.fim || reg.dataFim || reg.data_fim);
         const matriculaReg = reg.matricula || reg.Matricula || reg.servidor_matricula || 'N/A';
         const escolaReg = reg.escola || 'Não informada';
-        const anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
+        let anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
+
+        // 👇 Para FOLGA ANIVERSÁRIO, recalcula o período pela REGRA DO ANIVERSÁRIO
+        //    (igual à tabela do motor de cálculo)
+        if (tipoExibicao === 'Folga Aniversário' && dataNascimento && vinculos.length > 0) {
+            const dataGozo = reg.data || reg.data_gozo || reg.data_inicio || reg.dataInicio;
+            const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, vinculos[0].dataAdmissao);
+            if (periodoCorreto) {
+                anoRef = periodoCorreto;
+            }
+        }
 
         let datasHtml = '';
         
