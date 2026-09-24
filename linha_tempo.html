@@ -590,6 +590,34 @@ function verificarSeFeriasJaGozadas(reg, hoje) {
 }
 
 /* =========================================================
+   👇 IDENTIFICA O PERÍODO CORRETO DA FOLGA ANIVERSÁRIO
+   =========================================================
+   A data do aniversário é o divisor de períodos:
+   - Gozou ANTES do aniversário → período anterior
+   - Gozou NO DIA ou DEPOIS → período atual
+========================================================= */
+function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento) {
+    const dtGozo = parseDataParaDate(dataGozo);
+    const dtNascimento = parseDataParaDate(dataNascimento);
+    
+    if (!dtGozo || !dtNascimento) return null;
+    
+    const mesNascimento = dtNascimento.getMonth();
+    const diaNascimento = dtNascimento.getDate();
+    
+    const anoGozo = dtGozo.getFullYear();
+    const aniversarioEsteAno = new Date(anoGozo, mesNascimento, diaNascimento);
+    
+    if (dtGozo >= aniversarioEsteAno) {
+        // Gozou no dia ou depois do aniversário → período atual
+        return `${anoGozo}/${anoGozo + 1}`;
+    } else {
+        // Gozou antes do aniversário → período anterior
+        return `${anoGozo - 1}/${anoGozo}`;
+    }
+}
+
+/* =========================================================
    MOTOR DE CÁLCULO - FÉRIAS
 ========================================================= */
 function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
@@ -638,13 +666,10 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
 }
 
 /* =========================================================
-   👇 MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
-   =========================================================
-   Regra confirmada:
+   MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
    - Base em PERÍODOS AQUISITIVOS (igual férias)
    - Cada período de 1 ano = 1 folga aniversário
-   - A data do aniversário determina o gozo dentro do período
-   - 👇 Prazo para gozo = o próprio aniversário dentro do período
+   - Prazo para gozo = o próprio aniversário dentro do período
    - Se não gozar até o aniversário, PERDE
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
@@ -664,7 +689,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
     let periodosDetalhados = [];
     let dataInicioPeriodo = new Date(dtAdmissao);
     
-    // Calcula períodos aquisitivos a partir da admissão (igual férias)
     for (let i = 0; i < 40; i++) {
         const dataFimPeriodo = new Date(dataInicioPeriodo);
         dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
@@ -680,7 +704,7 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             }
         }
         
-        // 👇 Prazo para gozar: o próprio aniversário dentro do período
+        // Prazo para gozar: o próprio aniversário dentro do período
         let dataLimiteGozo = null;
         if (aniversarioNoPeriodo) {
             dataLimiteGozo = new Date(aniversarioNoPeriodo);
@@ -699,15 +723,12 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
         };
         
         if (dataFimPeriodo <= dataReferencia) {
-            // Período já foi completado
             folgasAdquiridas++;
             
             if (dataLimiteGozo < dataReferencia) {
-                // Prazo venceu, PERDEU a folga
                 periodo.status = 'perdido';
                 folgasPerdidas++;
             } else {
-                // Ainda está dentro do prazo para gozar
                 periodo.status = 'disponivel';
                 folgasDisponiveis++;
             }
@@ -716,7 +737,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             dataInicioPeriodo = new Date(dataFimPeriodo);
             dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
         } else {
-            // Período em andamento
             periodo.status = 'atual';
             proximaAquisicao = dataFimPeriodo;
             periodosDetalhados.push(periodo);
@@ -877,19 +897,26 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
     `;
     
-    // 👇 SEÇÃO DE FOLGA ANIVERSÁRIO POR PERÍODOS
+    // 👇 SEÇÃO DE FOLGA ANIVERSÁRIO COM REGRA DO ANIVERSÁRIO
     if (direitoFolga) {
         const folgasLancadas = registros.filter(r => {
             const tipo = (r.tipo || '').toLowerCase();
             return tipo.includes('aniversario') || tipo.includes('aniversário') || tipo.includes('folga');
         });
         
-        // Cruza lançamentos com períodos para determinar status real
+        // 👇 Cruza lançamentos com períodos usando a REGRA DO ANIVERSÁRIO
         if (direitoFolga.periodosDetalhados) {
             direitoFolga.periodosDetalhados.forEach(p => {
                 const lancamentosDoPeriodo = folgasLancadas.filter(r => {
-                    const anoRef = r.ano_referencia || r.ano || '';
-                    return anoRef === p.anoReferencia;
+                    // Identifica o período correto baseado na data de gozo e aniversário
+                    const dataGozo = r.data || r.data_gozo || r.data_inicio;
+                    const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento);
+                    
+                    // Se conseguiu identificar, usa o período calculado
+                    // Se não, usa o ano_referencia salvo no banco
+                    const periodoFinal = periodoCorreto || r.ano_referencia || r.ano || '';
+                    
+                    return periodoFinal === p.anoReferencia;
                 });
                 
                 if (lancamentosDoPeriodo.length > 0) {
@@ -944,7 +971,7 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
         `;
         
-        // 👇 TÍTULO ADICIONADO NA TABELA DE FOLGA ANIVERSÁRIO
+        // Tabela de períodos de folga aniversário
         if (direitoFolga.periodosDetalhados && direitoFolga.periodosDetalhados.length > 0) {
             html += `
                 <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
