@@ -592,29 +592,68 @@ function verificarSeFeriasJaGozadas(reg, hoje) {
 /* =========================================================
    👇 IDENTIFICA O PERÍODO CORRETO DA FOLGA ANIVERSÁRIO
    =========================================================
-   A data do aniversário é o divisor de períodos:
-   - Gozou ANTES do aniversário → período anterior
-   - Gozou NO DIA ou DEPOIS → período atual
+   O divisor de períodos é o ANIVERSÁRIO DENTRO DO PERÍODO
+   AQUISITIVO (não o ano civil).
+   
+   Exemplo Maria (admissão 23/09/2023, aniversário 10/09):
+   - Período 2025/2026 vai de 23/09/2025 a 22/09/2026
+     → aniversário dentro: 10/09/2026
+     → folga gozada ATÉ 10/09/2026 = período 2025/2026
+   - Folga gozada DEPOIS de 10/09/2026 = período 2026/2027
 ========================================================= */
-function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento) {
+function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
     const dtGozo = parseDataParaDate(dataGozo);
     const dtNascimento = parseDataParaDate(dataNascimento);
+    const dtAdmissao = parseDataParaDate(dataAdmissao);
     
-    if (!dtGozo || !dtNascimento) return null;
+    if (!dtGozo || !dtNascimento || !dtAdmissao) return null;
     
     const mesNascimento = dtNascimento.getMonth();
     const diaNascimento = dtNascimento.getDate();
     
-    const anoGozo = dtGozo.getFullYear();
-    const aniversarioEsteAno = new Date(anoGozo, mesNascimento, diaNascimento);
+    // Percorre os períodos aquisitivos a partir da admissão
+    let dataInicioPeriodo = new Date(dtAdmissao);
     
-    if (dtGozo >= aniversarioEsteAno) {
-        // Gozou no dia ou depois do aniversário → período atual
-        return `${anoGozo}/${anoGozo + 1}`;
-    } else {
-        // Gozou antes do aniversário → período anterior
-        return `${anoGozo - 1}/${anoGozo}`;
+    for (let i = 0; i < 40; i++) {
+        const dataFimPeriodo = new Date(dataInicioPeriodo);
+        dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
+        dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
+        
+        // Encontra o aniversário dentro deste período
+        let aniversarioNoPeriodo = null;
+        for (let ano = dataInicioPeriodo.getFullYear(); ano <= dataFimPeriodo.getFullYear(); ano++) {
+            const possivelAniversario = new Date(ano, mesNascimento, diaNascimento);
+            if (possivelAniversario >= dataInicioPeriodo && possivelAniversario <= dataFimPeriodo) {
+                aniversarioNoPeriodo = possivelAniversario;
+                break;
+            }
+        }
+        
+        // 👇 REGRA: a folga pertence a este período se foi gozada
+        //    ATÉ o aniversário dentro do período
+        const limiteDoPeriodo = aniversarioNoPeriodo || dataFimPeriodo;
+        
+        if (dtGozo <= limiteDoPeriodo && dtGozo >= dataInicioPeriodo) {
+            // Gozou dentro do período (antes ou no aniversário)
+            return `${dataInicioPeriodo.getFullYear()}/${dataFimPeriodo.getFullYear()}`;
+        }
+        
+        // Se a data de gozo é depois do aniversário mas antes do fim do período,
+        // pertence ao PRÓXIMO período
+        if (dtGozo > limiteDoPeriodo && dtGozo <= dataFimPeriodo) {
+            const proxInicio = new Date(dataFimPeriodo);
+            proxInicio.setDate(proxInicio.getDate() + 1);
+            const proxFim = new Date(proxInicio);
+            proxFim.setFullYear(proxFim.getFullYear() + 1);
+            proxFim.setDate(proxFim.getDate() - 1);
+            return `${proxInicio.getFullYear()}/${proxFim.getFullYear()}`;
+        }
+        
+        dataInicioPeriodo = new Date(dataFimPeriodo);
+        dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
     }
+    
+    return null;
 }
 
 /* =========================================================
@@ -671,6 +710,7 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
    - Cada período de 1 ano = 1 folga aniversário
    - Prazo para gozo = o próprio aniversário dentro do período
    - Se não gozar até o aniversário, PERDE
+   - 👇 Período atual (em andamento) conta como DISPONÍVEL
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -694,7 +734,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
         dataFimPeriodo.setFullYear(dataFimPeriodo.getFullYear() + 1);
         dataFimPeriodo.setDate(dataFimPeriodo.getDate() - 1);
         
-        // Encontra o aniversário que cai dentro deste período
         let aniversarioNoPeriodo = null;
         for (let ano = dataInicioPeriodo.getFullYear(); ano <= dataFimPeriodo.getFullYear(); ano++) {
             const possivelAniversario = new Date(ano, mesNascimento, diaNascimento);
@@ -704,7 +743,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             }
         }
         
-        // Prazo para gozar: o próprio aniversário dentro do período
         let dataLimiteGozo = null;
         if (aniversarioNoPeriodo) {
             dataLimiteGozo = new Date(aniversarioNoPeriodo);
@@ -737,7 +775,10 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             dataInicioPeriodo = new Date(dataFimPeriodo);
             dataInicioPeriodo.setDate(dataInicioPeriodo.getDate() + 1);
         } else {
-            periodo.status = 'atual';
+            // 👇 Período em andamento: a folga já está disponível
+            //    (pode ser gozada até o aniversário dentro do período)
+            periodo.status = 'disponivel';
+            folgasDisponiveis++;
             proximaAquisicao = dataFimPeriodo;
             periodosDetalhados.push(periodo);
             break;
@@ -908,14 +949,10 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         if (direitoFolga.periodosDetalhados) {
             direitoFolga.periodosDetalhados.forEach(p => {
                 const lancamentosDoPeriodo = folgasLancadas.filter(r => {
-                    // Identifica o período correto baseado na data de gozo e aniversário
-                    const dataGozo = r.data || r.data_gozo || r.data_inicio;
-                    const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento);
-                    
-                    // Se conseguiu identificar, usa o período calculado
-                    // Se não, usa o ano_referencia salvo no banco
+                    // 👇 CORREÇÃO: inclui dataInicio (camelCase) salvo pela página de lançamentos
+                    const dataGozo = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                    const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao);
                     const periodoFinal = periodoCorreto || r.ano_referencia || r.ano || '';
-                    
                     return periodoFinal === p.anoReferencia;
                 });
                 
@@ -930,7 +967,15 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             });
         }
         
-        const folgasGozadas = direitoFolga.periodosDetalhados.filter(p => p.status === 'gozado').length;
+        // 👇 CORREÇÃO: Recalcula os contadores DEPOIS do cruzamento
+        let folgasGozadas = 0;
+        let folgasDisponiveis = 0;
+        let folgasPerdidas = 0;
+        direitoFolga.periodosDetalhados.forEach(p => {
+            if (p.status === 'gozado') folgasGozadas++;
+            else if (p.status === 'disponivel') folgasDisponiveis++;
+            else if (p.status === 'perdido') folgasPerdidas++;
+        });
         
         html += `
             <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
@@ -953,13 +998,13 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 
                 <div class="motor-card destaque-verde">
                     <label>Disponíveis</label>
-                    <div class="valor verde">${direitoFolga.folgasDisponiveis}</div>
+                    <div class="valor verde">${folgasDisponiveis}</div>
                     <div class="subvalor">Dentro do prazo para gozo</div>
                 </div>
                 
                 <div class="motor-card destaque-vermelho">
                     <label>Perdidas</label>
-                    <div class="valor vermelho">${direitoFolga.folgasPerdidas}</div>
+                    <div class="valor vermelho">${folgasPerdidas}</div>
                     <div class="subvalor">Não gozadas no prazo</div>
                 </div>
                 
@@ -1014,8 +1059,8 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                         classeLinha = 'periodo-perdido';
                         break;
                     case 'atual':
-                        statusBadge = `<span class="badge-status badge-atual"><span class="material-symbols-outlined">hourglass_top</span> Em andamento</span>`;
-                        classeLinha = 'periodo-atual';
+                        statusBadge = `<span class="badge-status badge-disponivel"><span class="material-symbols-outlined">event_available</span> Disponível</span>`;
+                        classeLinha = 'periodo-disponivel';
                         break;
                     case 'futuro':
                         statusBadge = `<span class="badge-status badge-futuro"><span class="material-symbols-outlined">schedule</span> Futuro</span>`;
