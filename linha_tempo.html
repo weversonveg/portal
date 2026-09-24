@@ -643,9 +643,9 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
    Regra confirmada:
    - Base em PERÍODOS AQUISITIVOS (igual férias)
    - Cada período de 1 ano = 1 folga aniversário
-   - A data do aniversário determina quando gozar dentro do período
-   - Prazo de 1 ano após o aniversário para gozar
-   - Se não gozar no prazo, PERDE
+   - A data do aniversário determina o gozo dentro do período
+   - 👇 Prazo para gozo = o próprio aniversário dentro do período
+   - Se não gozar até o aniversário, PERDE
 ========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -680,17 +680,12 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
             }
         }
         
-        // Prazo para gozar: 1 ano após o aniversário no período
+        // 👇 Prazo para gozar: o próprio aniversário dentro do período
         let dataLimiteGozo = null;
         if (aniversarioNoPeriodo) {
             dataLimiteGozo = new Date(aniversarioNoPeriodo);
-            dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
-            dataLimiteGozo.setDate(dataLimiteGozo.getDate() - 1);
         } else {
-            // Caso raro: aniversário não cai no período (ex: primeiro período antes do aniversário)
             dataLimiteGozo = new Date(dataFimPeriodo);
-            dataLimiteGozo.setFullYear(dataLimiteGozo.getFullYear() + 1);
-            dataLimiteGozo.setDate(dataLimiteGozo.getDate() - 1);
         }
         
         const periodo = {
@@ -949,9 +944,13 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
             </div>
         `;
         
-        // Tabela de períodos de folga aniversário
+        // 👇 TÍTULO ADICIONADO NA TABELA DE FOLGA ANIVERSÁRIO
         if (direitoFolga.periodosDetalhados && direitoFolga.periodosDetalhados.length > 0) {
             html += `
+                <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-outlined" style="font-size: 18px; color: var(--green);">table_view</span>
+                    Períodos Aquisitivos de Folga Aniversário
+                </h3>
                 <div style="overflow-x: auto; margin-top: 10px;">
                     <table class="periodos-table">
                         <thead>
