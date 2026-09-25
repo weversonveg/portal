@@ -93,7 +93,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .form-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
 .form-group label span { color: var(--red); }
 
-/* 👇 BUSCA COMPACTA */
 .form-card.busca-compacta { padding: 16px 20px; margin-bottom: 16px; }
 .busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
@@ -123,10 +122,29 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .cab-item strong { font-size: 14px; color: var(--text); }
 .cab-div { width: 1px; height: 32px; background: #e5e8eb; }
 
-.resumo-executivo { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
-.resumo-bloco {
+/* 👇 RESUMO EXECUTIVO POR MATRÍCULA */
+.resumo-executivo { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.resumo-matricula {
     background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
-    padding: 14px 18px; box-shadow: var(--shadow); flex: 1; min-width: 280px;
+    padding: 16px 18px; box-shadow: var(--shadow);
+}
+.resumo-matricula-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid #eef0f2;
+}
+.resumo-matricula-badge {
+    font-size: 11px; font-weight: 700; color: var(--blue);
+    background: var(--blue-light); padding: 4px 10px; border-radius: 12px;
+    letter-spacing: .3px;
+}
+.resumo-matricula-nome {
+    font-size: 13px; color: var(--text-secondary); font-weight: 500;
+}
+.resumo-cards-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.resumo-bloco {
+    background: #fafbfc; border: 1px solid #e5e8eb; border-radius: 8px;
+    padding: 12px 16px; flex: 1; min-width: 260px;
 }
 .resumo-bloco-titulo {
     font-size: 13px; font-weight: 700; color: var(--primary);
@@ -228,6 +246,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     .filtro-group { max-width: 100%; }
     .busca-linha { flex-direction: column; align-items: stretch; }
     .btn-buscar { width: 100%; }
+    .resumo-cards-row { flex-direction: column; }
 }
 </style>
 </head>
@@ -266,7 +285,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
-    <!-- 👇 BUSCA COMPACTA -->
     <section class="form-card busca-compacta" id="formBuscaCard">
         <div class="busca-linha">
             <div class="form-group">
@@ -292,6 +310,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
             <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">-</strong></div>
         </section>
 
+        <!-- 👇 RESUMO EXECUTIVO SEPARADO POR MATRÍCULA -->
         <div id="resumoExecutivo" class="resumo-executivo"></div>
 
         <section class="form-card">
@@ -610,32 +629,58 @@ function badgeTipo(k){
     return k==='ferias'?'<span class="tipo-badge ferias">Férias</span>':'<span class="tipo-badge folga">Folga Aniv.</span>';
 }
 
+/* =========================================================
+   👇 RESUMO EXECUTIVO SEPARADO POR MATRÍCULA
+========================================================= */
 function renderizarResumoExecutivo(){
-    const f=linhasUnificadas.filter(l=>l.tipoKey==='ferias');
-    const g=linhasUnificadas.filter(l=>l.tipoKey==='folga');
-    const c=(a,s)=>a.filter(l=>l.status===s).length;
-    document.getElementById('resumoExecutivo').innerHTML=`
-        <div class="resumo-bloco">
-            <div class="resumo-bloco-titulo"><span class="material-symbols-outlined">beach_access</span> Férias</div>
-            <div class="resumo-chips">
-                <span class="chip chip-cinza">Adquiridas <span class="num">${totaisGlobais.feriasAdquiridas}</span></span>
-                <span class="chip chip-verde">Gozadas <span class="num">${c(f,'gozado')}</span></span>
-                <span class="chip chip-roxo">Programadas <span class="num">${c(f,'programado')}</span></span>
-                <span class="chip chip-amarelo">Pendentes <span class="num">${c(f,'pendente')}</span></span>
-                <span class="chip chip-vermelho">Vencidas <span class="num">${c(f,'vencido')}</span></span>
+    const container = document.getElementById('resumoExecutivo');
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+    
+    let html = '';
+    
+    mats.forEach(mat => {
+        const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
+        const f = linhasMat.filter(l => l.tipoKey === 'ferias');
+        const g = linhasMat.filter(l => l.tipoKey === 'folga');
+        const c = (a, s) => a.filter(l => l.status === s).length;
+        
+        html += `
+            <div class="resumo-matricula">
+                <div class="resumo-matricula-header">
+                    <span class="resumo-matricula-badge">Matrícula ${mat}</span>
+                    <span class="resumo-matricula-nome">${nomeServidorAtual}</span>
+                </div>
+                <div class="resumo-cards-row">
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">
+                            <span class="material-symbols-outlined">beach_access</span> Férias
+                        </div>
+                        <div class="resumo-chips">
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${f.length}</span></span>
+                            <span class="chip chip-verde">Gozadas <span class="num">${c(f,'gozado')}</span></span>
+                            <span class="chip chip-roxo">Programadas <span class="num">${c(f,'programado')}</span></span>
+                            <span class="chip chip-amarelo">Pendentes <span class="num">${c(f,'pendente')}</span></span>
+                            <span class="chip chip-vermelho">Vencidas <span class="num">${c(f,'vencido')}</span></span>
+                        </div>
+                    </div>
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">
+                            <span class="material-symbols-outlined">cake</span> Folga Aniversário
+                        </div>
+                        <div class="resumo-chips">
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${g.length}</span></span>
+                            <span class="chip chip-verde">Gozadas <span class="num">${c(g,'gozado')}</span></span>
+                            <span class="chip chip-roxo">Programadas <span class="num">${c(g,'programado')}</span></span>
+                            <span class="chip chip-azul">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
+                            <span class="chip chip-vermelho">Perdidas <span class="num">${c(g,'perdido')}</span></span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="resumo-bloco">
-            <div class="resumo-bloco-titulo"><span class="material-symbols-outlined">cake</span> Folga Aniversário</div>
-            <div class="resumo-chips">
-                <span class="chip chip-cinza">Adquiridas <span class="num">${totaisGlobais.folgasAdquiridas}</span></span>
-                <span class="chip chip-verde">Gozadas <span class="num">${c(g,'gozado')}</span></span>
-                <span class="chip chip-roxo">Programadas <span class="num">${c(g,'programado')}</span></span>
-                <span class="chip chip-azul">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
-                <span class="chip chip-vermelho">Perdidas <span class="num">${c(g,'perdido')}</span></span>
-            </div>
-        </div>
-    `;
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 
 function popularFiltroMatricula(){
