@@ -838,4 +838,881 @@ button, input, select, textarea { font: inherit; color: inherit; }
     </div>
 
     <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="assertive">
-        <span class="material-symbols-outlined
+        <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
+        <span id="textoErro">Erro ao carregar dados.</span>
+    </div>
+
+    <section class="form-card busca-compacta" id="formBuscaCard" aria-labelledby="tituloBusca">
+        <h2 id="tituloBusca" class="visually-hidden">Buscar servidor</h2>
+        <div class="busca-linha">
+            <div class="form-group">
+                <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
+                <input
+                    type="text"
+                    id="termoBusca"
+                    class="search-input"
+                    placeholder="000.000.000-00"
+                    maxlength="20"
+                    autocomplete="off"
+                    inputmode="numeric"
+                    aria-required="true">
+            </div>
+            <button type="button" class="btn-buscar" id="btnBuscar">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                Buscar
+            </button>
+        </div>
+    </section>
+
+    <div id="resultadoContainer" class="hidden">
+
+        <section class="form-card cabecalho-compacto" aria-label="Dados do servidor">
+            <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
+        </section>
+
+        <div id="resumoExecutivo" class="resumo-executivo"></div>
+
+        <section class="form-card" aria-labelledby="tituloTabela">
+            <div class="card-title" id="tituloTabela">
+                <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+                Situação de Férias e Folgas por Período
+            </div>
+
+            <div class="filtros-row" role="group" aria-label="Filtros da tabela">
+                <div class="filtro-group">
+                    <label for="filtroMatricula">Matrícula</label>
+                    <select id="filtroMatricula" class="filtro-select"></select>
+                </div>
+                <div class="filtro-group">
+                    <label for="filtroTipo">Tipo</label>
+                    <select id="filtroTipo" class="filtro-select">
+                        <option value="">Todos</option>
+                        <option value="ferias">Férias</option>
+                        <option value="folga">Folga Aniversário</option>
+                    </select>
+                </div>
+                <div class="filtro-group">
+                    <label for="filtroStatus">Status</label>
+                    <select id="filtroStatus" class="filtro-select">
+                        <option value="">Todos</option>
+                        <option value="gozado">Gozado</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="programado">Programado</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="perdido">Perdido</option>
+                        <option value="atual">Em andamento</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tabela-wrapper">
+                <table class="periodos-table" aria-describedby="tituloTabela">
+                    <caption class="visually-hidden">Férias e folgas por período aquisitivo do servidor</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Servidor</th>
+                            <th scope="col">Matrícula</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Período</th>
+                            <th scope="col">Ciclo Aquisitivo</th>
+                            <th scope="col">Prazo de Gozo</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Gozo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUnica"></tbody>
+                </table>
+            </div>
+
+            <p id="contadorResultados" class="visually-hidden" role="status" aria-live="polite"></p>
+        </section>
+
+    </div>
+</main>
+
+<div id="loading" class="loading-overlay" role="status" aria-live="polite" aria-label="Carregando">
+    <div class="loading-box">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Consultando…</span>
+    </div>
+</div>
+
+<div id="modalAlerta" class="modal-alerta-overlay" role="presentation">
+    <div class="modal-alerta" role="alertdialog" aria-modal="true"
+         aria-labelledby="modalAlertaTitulo" aria-describedby="modalAlertaMensagem">
+        <div class="modal-alerta-header">
+            <div class="modal-alerta-icon" id="modalAlertaIcon" aria-hidden="true">
+                <span class="material-symbols-outlined">info</span>
+            </div>
+            <div class="modal-alerta-titulo" id="modalAlertaTitulo">Aviso</div>
+            <div class="modal-alerta-mensagem" id="modalAlertaMensagem">Mensagem</div>
+        </div>
+        <div class="modal-alerta-footer">
+            <button type="button" class="modal-alerta-btn" id="btnFecharModal">OK</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { db, auth } from "./firebase.js";
+import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+let usuarioLogado = null;
+let acessoAutorizado = false;
+let linhasUnificadas = [];
+let totaisGlobais = { feriasAdquiridas: 0, folgasAdquiridas: 0 };
+let nomeServidorAtual = '';
+let ultimoFocoModal = null;
+
+/* ============================================================
+   HELPERS DOM
+   ============================================================ */
+const $  = (id) => document.getElementById(id);
+const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
+
+function setLoading(ativo) {
+    $('loading').classList.toggle('ativo', !!ativo);
+}
+
+/* ============================================================
+   ALTERNAR TEMA
+   ============================================================ */
+const btnTema = $('btnTema');
+
+function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', tema === 'dark' ? '#1a1a1c' : '#4a3068');
+    try { localStorage.setItem('tema-vt', tema); } catch (e) {}
+}
+
+btnTema.addEventListener('click', () => {
+    const atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    aplicarTema(atual === 'dark' ? 'light' : 'dark');
+});
+
+/* ============================================================
+   STATUS DE CONEXÃO
+   ============================================================ */
+function atualizarStatusConexao() {
+    const div = $('statusConexao');
+    const txt = $('statusTexto');
+    if (!navigator.onLine) {
+        div.className = 'status-conexao offline';
+        txt.textContent = 'Offline';
+    } else {
+        div.className = 'status-conexao online';
+        txt.textContent = 'Online';
+    }
+}
+window.addEventListener('online',  atualizarStatusConexao);
+window.addEventListener('offline', atualizarStatusConexao);
+atualizarStatusConexao();
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function mostrarAlerta(mensagem, tipo = 'info', titulo = 'Aviso') {
+    const modal = $('modalAlerta');
+    const icon  = $('modalAlertaIcon');
+    icon.className = 'modal-alerta-icon ' + tipo;
+    const icones = { info: 'info', erro: 'error', aviso: 'warning' };
+    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo] || 'info'}</span>`;
+    $('modalAlertaTitulo').textContent   = titulo;
+    $('modalAlertaMensagem').textContent = mensagem;
+
+    ultimoFocoModal = document.activeElement;
+    modal.classList.add('ativo');
+    requestAnimationFrame(() => $('btnFecharModal').focus());
+}
+
+function fecharModalAlerta() {
+    $('modalAlerta').classList.remove('ativo');
+    if (ultimoFocoModal && typeof ultimoFocoModal.focus === 'function') {
+        ultimoFocoModal.focus();
+    }
+}
+
+$('btnFecharModal').addEventListener('click', fecharModalAlerta);
+$('modalAlerta').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) fecharModalAlerta();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('modalAlerta').classList.contains('ativo')) {
+        fecharModalAlerta();
+    }
+    if (e.key === 'Tab' && $('modalAlerta').classList.contains('ativo')) {
+        const foco = Array.from(
+            $$('.modal-alerta button, .modal-alerta [href], .modal-alerta input, .modal-alerta select, .modal-alerta textarea, .modal-alerta [tabindex]:not([tabindex="-1"])', $('modalAlerta'))
+        ).filter(el => !el.disabled && el.offsetParent !== null);
+        if (foco.length === 0) return;
+        const primeiro = foco[0];
+        const ultimo = foco[foco.length - 1];
+        if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+    }
+});
+
+window.mostrarAlerta = mostrarAlerta;
+window.fecharModalAlerta = fecharModalAlerta;
+
+/* ============================================================
+   AUTENTICAÇÃO
+   ============================================================ */
+onAuthStateChanged(auth, async (user) => {
+    const formBusca = $('formBuscaCard');
+    const resultado = $('resultadoContainer');
+
+    if (!user) {
+        mostrarErro('Sua sessão expirou. Faça login novamente.');
+        formBusca.style.display = 'none';
+        resultado.classList.add('hidden');
+        acessoAutorizado = false;
+        return;
+    }
+    usuarioLogado = user;
+    try {
+        const snap = await getDoc(doc(db, 'usuarios', user.uid));
+        if (snap.exists()) {
+            const perfil = (snap.data().perfil || '').toUpperCase();
+            if (['ADMIN','ADMINISTRADOR','SEMED','RH','GESTOR','MASTER','DIRETOR'].includes(perfil)) {
+                acessoAutorizado = true;
+                formBusca.style.display = 'block';
+                ocultarErro();
+            } else {
+                acessoAutorizado = false;
+                mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
+                formBusca.style.display = 'none';
+                resultado.classList.add('hidden');
+            }
+        } else {
+            acessoAutorizado = false;
+            mostrarErro('Usuário não encontrado no sistema.');
+            formBusca.style.display = 'none';
+            resultado.classList.add('hidden');
+        }
+    } catch (e) {
+        console.error(e);
+        acessoAutorizado = false;
+        mostrarErro('Erro ao verificar permissões.');
+        formBusca.style.display = 'none';
+    }
+});
+
+/* ============================================================
+   MÁSCARA E INTERAÇÃO
+   ============================================================ */
+const inputBusca = $('termoBusca');
+
+inputBusca.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length > 9)      v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+    e.target.value = v;
+});
+
+inputBusca.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); buscarServidor(); }
+    if (e.key === 'Escape') { e.target.value = ''; }
+});
+
+$('btnBuscar').addEventListener('click', buscarServidor);
+
+/* ============================================================
+   DATAS
+   ============================================================ */
+function formatarData(s) {
+    if (!s) return '';
+    if (typeof s === 'object' && s.toDate) s = s.toDate().toISOString().split('T')[0];
+    s = s.toString().trim();
+    if (s.includes('-') && s.length >= 10) {
+        const p = s.substring(0, 10).split('-');
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    return s;
+}
+
+function parseDataParaDate(s) {
+    if (!s) return null;
+    if (typeof s === 'object' && s.toDate) return s.toDate();
+    s = s.toString().trim();
+    if (s.includes('/')) {
+        const p = s.split('/');
+        return new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+    if (s.includes('-')) {
+        const p = s.substring(0, 10).split('-');
+        return p[0].length === 4
+            ? new Date(+p[0], +p[1] - 1, +p[2])
+            : new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+    return null;
+}
+
+function verificarSeJaGozado(reg, hoje) {
+    const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+    if (!dt) return false;
+    return dt <= hoje;
+}
+
+/* ============================================================
+   REGRAS DE NEGÓCIO
+   ============================================================ */
+function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
+    const dtGozo = parseDataParaDate(dataGozo);
+    const dtNasc = parseDataParaDate(dataNascimento);
+    const dtAdm  = parseDataParaDate(dataAdmissao);
+    if (!dtGozo || !dtNasc || !dtAdm) return null;
+
+    const mes = dtNasc.getMonth();
+    const dia = dtNasc.getDate();
+    let ini = new Date(dtAdm);
+
+    for (let i = 0; i < 40; i++) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        let aniv = null;
+        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+            const c = new Date(a, mes, dia);
+            if (c >= ini && c <= fim) { aniv = c; break; }
+        }
+        const limite = aniv || fim;
+
+        if (dtGozo <= limite && dtGozo >= ini) return `${ini.getFullYear()}/${fim.getFullYear()}`;
+        if (dtGozo > limite && dtGozo <= fim) {
+            const pi = new Date(fim); pi.setDate(pi.getDate() + 1);
+            const pf = new Date(pi);  pf.setFullYear(pf.getFullYear() + 1); pf.setDate(pf.getDate() - 1);
+            return `${pi.getFullYear()}/${pf.getFullYear()}`;
+        }
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
+    }
+    return null;
+}
+
+function calcularDireitoFerias(dataAdmissao, ref = new Date()) {
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!adm) return null;
+    ref.setHours(0, 0, 0, 0);
+
+    let completos = 0;
+    const det = [];
+    let ini = new Date(adm);
+
+    while (completos < 40) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        const p = {
+            numero: completos + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            dataLimiteGozo: new Date(fim),
+            status: 'pendente'
+        };
+
+        if (fim <= ref) {
+            completos++;
+            det.push(p);
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+        } else {
+            p.status = 'atual';
+            det.push(p);
+            break;
+        }
+    }
+    return { periodosCompletos: completos, diasDireito: completos * 30, periodosDetalhados: det };
+}
+
+function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+    const nasc = parseDataParaDate(dataNascimento);
+    const adm  = parseDataParaDate(dataAdmissao);
+    if (!nasc || !adm) return null;
+    ref.setHours(0, 0, 0, 0);
+
+    const mes = nasc.getMonth();
+    const dia = nasc.getDate();
+    let adquiridas = 0, disponiveis = 0, perdidas = 0, proxima = null;
+    const det = [];
+    let ini = new Date(adm);
+
+    for (let i = 0; i < 40; i++) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        let aniv = null;
+        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+            const c = new Date(a, mes, dia);
+            if (c >= ini && c <= fim) { aniv = c; break; }
+        }
+        const limite = aniv ? new Date(aniv) : new Date(fim);
+
+        const p = {
+            numero: i + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            aniversarioNoPeriodo: aniv,
+            dataLimiteGozo: limite,
+            status: 'pendente'
+        };
+
+        if (fim <= ref) {
+            adquiridas++;
+            if (limite < ref) { p.status = 'perdido'; perdidas++; }
+            else              { p.status = 'disponivel'; disponiveis++; }
+            det.push(p);
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+        } else {
+            p.status = 'disponivel';
+            disponiveis++;
+            det.push(p);
+            break;
+        }
+    }
+
+    const anoBase = ref.getFullYear();
+    for (let a = anoBase; a <= anoBase + 2; a++) {
+        const c = new Date(a, mes, dia);
+        if (c > ref) { proxima = c; break; }
+    }
+
+    return {
+        folgasAdquiridas: adquiridas,
+        folgasDisponiveis: disponiveis,
+        folgasPerdidas: perdidas,
+        proximaAquisicao: proxima,
+        periodosDetalhados: det
+    };
+}
+
+function filtrarRegistrosPorMatricula(registros, vinculo) {
+    const m = vinculo.matricula.toString().trim().replace(/^0+/, '');
+    return registros.filter(r => {
+        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+        return !rm || rm === m || rm === vinculo.matricula.toString().trim();
+    });
+}
+
+/* ============================================================
+   CONSTRUÇÃO DAS LINHAS
+   ============================================================ */
+function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
+    const linhas = [];
+    totaisGlobais = { feriasAdquiridas: 0, folgasAdquiridas: 0 };
+
+    vinculos.forEach(vinculo => {
+        if (!vinculo.dataAdmissao) return;
+        const regsMat = filtrarRegistrosPorMatricula(registros, vinculo);
+
+        // FÉRIAS
+        const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje);
+        if (dirF) {
+            totaisGlobais.feriasAdquiridas += dirF.periodosCompletos;
+            const feriasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
+
+            dirF.periodosDetalhados.forEach(p => {
+                const lanc = feriasLanc.find(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                let status = p.status, gozo = '';
+
+                if (lanc) {
+                    const raw = lanc.data_inicio || lanc.dataInicio || lanc.data;
+                    gozo = formatarData(raw);
+                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                } else {
+                    if (p.status === 'atual') status = 'atual';
+                    else if (p.dataLimiteGozo < hoje) status = 'vencido';
+                    else status = 'pendente';
+                }
+
+                linhas.push({
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
+                    tipo: 'Férias',
+                    tipoKey: 'ferias',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status, gozo: gozo || '—',
+                    ordem: p.inicio.getTime()
+                });
+            });
+        }
+
+        // FOLGA ANIVERSÁRIO
+        const dirG = dataNascimento
+            ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
+            : null;
+
+        if (dirG) {
+            totaisGlobais.folgasAdquiridas += dirG.folgasAdquiridas;
+            const folgasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+
+            dirG.periodosDetalhados.forEach(p => {
+                const lanc = folgasLanc.find(r => {
+                    const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                    const per = identificarPeriodoFolgaAniversario(raw, dataNascimento, vinculo.dataAdmissao);
+                    return (per || r.ano_referencia || r.ano || '') === p.anoReferencia;
+                });
+
+                let status = p.status, gozo = '';
+                if (lanc) {
+                    const raw = lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio;
+                    gozo = formatarData(raw);
+                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                }
+
+                linhas.push({
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
+                    tipo: 'Folga Aniv.',
+                    tipoKey: 'folga',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status, gozo: gozo || '—',
+                    ordem: p.inicio.getTime()
+                });
+            });
+        }
+    });
+
+    linhas.sort((a, b) => b.ordem - a.ordem);
+    return linhas;
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+function badgeStatus(s) {
+    const m = {
+        gozado:     ['badge-gozado',     'check_circle',    'Gozado'],
+        programado: ['badge-programado', 'event_upcoming',  'Programado'],
+        disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
+        pendente:   ['badge-pendente',   'schedule',        'Pendente'],
+        vencido:    ['badge-vencido',    'error',           'Vencido'],
+        perdido:    ['badge-perdido',    'cancel',          'Perdido'],
+        atual:      ['badge-atual',      'hourglass_top',   'Em andamento']
+    };
+    const x = m[s];
+    if (!x) return '-';
+    return `<span class="badge-status ${x[0]}">
+        <span class="material-symbols-outlined" aria-hidden="true">${x[1]}</span> ${x[2]}
+    </span>`;
+}
+
+function badgeTipo(k) {
+    return k === 'ferias'
+        ? '<span class="tipo-badge">Férias</span>'
+        : '<span class="tipo-badge">Folga Aniv.</span>';
+}
+
+/* ============================================================
+   RENDERIZAÇÃO
+   ============================================================ */
+function renderizarResumoExecutivo() {
+    const container = $('resumoExecutivo');
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+
+    container.innerHTML = mats.map(mat => {
+        const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
+        const f = linhasMat.filter(l => l.tipoKey === 'ferias');
+        const g = linhasMat.filter(l => l.tipoKey === 'folga');
+        const c = (arr, s) => arr.filter(l => l.status === s).length;
+
+        return `
+            <div class="resumo-matricula">
+                <div class="resumo-matricula-header">
+                    <span class="resumo-matricula-badge">Matrícula ${mat}</span>
+                    <span class="resumo-matricula-nome">${nomeServidorAtual}</span>
+                </div>
+                <div class="resumo-cards-row">
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">Férias</div>
+                        <div class="resumo-chips">
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${f.length}</span></span>
+                            <span class="chip chip-verde">Gozadas <span class="num">${c(f,'gozado')}</span></span>
+                            <span class="chip">Programadas <span class="num">${c(f,'programado')}</span></span>
+                            <span class="chip chip-amarelo">Pendentes <span class="num">${c(f,'pendente')}</span></span>
+                            <span class="chip chip-vermelho">Vencidas <span class="num">${c(f,'vencido')}</span></span>
+                        </div>
+                    </div>
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">Folga Aniversário</div>
+                        <div class="resumo-chips">
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${g.length}</span></span>
+                            <span class="chip chip-verde">Gozadas <span class="num">${c(g,'gozado')}</span></span>
+                            <span class="chip">Programadas <span class="num">${c(g,'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
+                            <span class="chip chip-vermelho">Perdidas <span class="num">${c(g,'perdido')}</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function popularFiltroMatricula() {
+    const sel = $('filtroMatricula');
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+    sel.innerHTML = '<option value="">Todas</option>' +
+        mats.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function aplicarFiltros() {
+    const fm = $('filtroMatricula').value;
+    const ft = $('filtroTipo').value;
+    const fs = $('filtroStatus').value;
+
+    let linhas = linhasUnificadas;
+    if (fm) linhas = linhas.filter(l => l.matricula === fm);
+    if (ft) linhas = linhas.filter(l => l.tipoKey === ft);
+    if (fs) linhas = linhas.filter(l => l.status === fs);
+
+    renderizarTabelaUnica(linhas);
+}
+
+function renderizarTabelaUnica(linhas) {
+    const tbody = $('tabelaUnica');
+    const contador = $('contadorResultados');
+
+    if (linhas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="tabela-vazia">Nenhum período encontrado com os filtros selecionados.</td></tr>';
+        contador.textContent = 'Nenhum resultado encontrado.';
+        return;
+    }
+
+    tbody.innerHTML = linhas.map(l => `
+        <tr class="linha-${l.status}">
+            <td><strong>${l.servidor}</strong></td>
+            <td>${l.matricula}</td>
+            <td>${badgeTipo(l.tipoKey)}</td>
+            <td>${l.periodo}</td>
+            <td>${l.ciclo}</td>
+            <td>${l.prazo}</td>
+            <td>${badgeStatus(l.status)}</td>
+            <td>${l.gozo}</td>
+        </tr>
+    `).join('');
+
+    contador.textContent = `${linhas.length} ${linhas.length === 1 ? 'período exibido' : 'períodos exibidos'}.`;
+}
+
+['filtroMatricula', 'filtroTipo', 'filtroStatus'].forEach(id => {
+    $(id).addEventListener('change', aplicarFiltros);
+});
+
+/* ============================================================
+   BUSCA
+   ============================================================ */
+async function buscarServidor() {
+    if (!acessoAutorizado) { mostrarErro('Acesso negado.'); return; }
+
+    const termo = inputBusca.value.trim();
+    if (!termo) {
+        mostrarAlerta('Por favor, digite um CPF ou Matrícula.', 'aviso', 'Campo obrigatório');
+        inputBusca.focus();
+        return;
+    }
+
+    const termoLimpo = termo.replace(/\D/g, '');
+    const colRef = collection(db, 'servidores');
+    const encontrados = new Map();
+
+    setLoading(true);
+    try {
+        const s1 = await getDoc(doc(db, 'servidores', termo));
+        if (s1.exists()) encontrados.set(s1.id, s1);
+
+        const s2 = await getDoc(doc(db, 'servidores', termoLimpo));
+        if (s2.exists()) encontrados.set(s2.id, s2);
+
+        const qs = [
+            where('cpf', '==', termo),
+            where('cpf', '==', termoLimpo),
+            where('CPF', '==', termo),
+            where('CPF', '==', termoLimpo),
+            where('matricula', '==', termo),
+            where('matricula', '==', termoLimpo),
+            where('matricula_servidor', '==', termo)
+        ];
+
+        for (const q of qs) {
+            try {
+                const sn = await getDocs(query(colRef, q));
+                sn.forEach(d => encontrados.set(d.id, d));
+            } catch (_) {}
+        }
+
+        if (encontrados.size === 0 && /^\d+$/.test(termoLimpo)) {
+            const all = await getDocs(colRef);
+            all.forEach(d => {
+                const dt = d.data();
+                const m1 = dt.matricula1 && dt.matricula1.numeroMatricula
+                    ? String(dt.matricula1.numeroMatricula).replace(/^0+/, '') : '';
+                const m2 = dt.matricula2 && dt.matricula2.numeroMatricula
+                    ? String(dt.matricula2.numeroMatricula).replace(/^0+/, '') : '';
+                const bus = termoLimpo.replace(/^0+/, '');
+                if (m1 === bus || m2 === bus) encontrados.set(d.id, d);
+            });
+        }
+
+        if (encontrados.size === 0) {
+            mostrarAlerta('CPF não localizado no sistema.', 'erro', 'Servidor não encontrado');
+            $('resultadoContainer').classList.add('hidden');
+            return;
+        }
+
+        await processarServidores(Array.from(encontrados.values()));
+    } catch (e) {
+        console.error(e);
+        mostrarErro('Erro ao consultar o banco.');
+    } finally {
+        setLoading(false);
+    }
+}
+
+async function processarServidores(docs) {
+    const d0 = docs[0].data();
+    const nome = d0.nome || d0.Nome || 'Não informado';
+    nomeServidorAtual = nome;
+
+    const cpfLimpo = (d0.cpf || d0.CPF || '').toString().replace(/\D/g, '');
+    const cpfFmt   = (d0.cpf || d0.CPF || '').toString();
+    const nascimento = d0.data_nascimento || d0.dataNascimento;
+
+    const vinculosMap = new Map();
+    const servidorIds = docs.map(d => d.id);
+
+    docs.forEach(d => {
+        const dt = d.data();
+        const add = (mat, adm) => {
+            if (!mat) return;
+            const ms = mat.toString().trim();
+            if (vinculosMap.has(ms)) return;
+            vinculosMap.set(ms, { matricula: ms, dataAdmissao: adm || '' });
+        };
+        add(
+            dt.matricula || dt.Matricula || dt.matricula_servidor ||
+            (dt.matricula1 && dt.matricula1.numeroMatricula),
+            dt.data_admissao || dt.dataAdmissao ||
+            (dt.matricula1 && dt.matricula1.dataAdmissao)
+        );
+        add(
+            dt.matricula2 && (dt.matricula2.numeroMatricula || dt.matricula2.matricula),
+            dt.matricula2 && (dt.matricula2.dataAdmissao || dt.matricula2.data_admissao)
+        );
+    });
+
+    const vinculos = Array.from(vinculosMap.values());
+    if (vinculos.length === 0) vinculos.push({ matricula: 'Não informada', dataAdmissao: '' });
+
+    let registros = [];
+    const ids = new Set();
+    const colecaoReg = collection(db, 'registro_ferias_folgas');
+
+    const pushReg = (id, dados) => {
+        if (ids.has(id)) return;
+        registros.push({ id, ...dados });
+        ids.add(id);
+    };
+
+    try {
+        if (cpfLimpo) {
+            const sn = await getDocs(query(colecaoReg, where('cpf', '==', cpfLimpo)));
+            sn.forEach(x => pushReg(x.id, x.data()));
+        }
+        if (cpfFmt && cpfFmt !== cpfLimpo) {
+            const sn = await getDocs(query(colecaoReg, where('cpf', '==', cpfFmt)));
+            sn.forEach(x => pushReg(x.id, x.data()));
+        }
+        for (const sid of servidorIds) {
+            try {
+                const sn = await getDocs(query(colecaoReg, where('servidorId', '==', sid)));
+                sn.forEach(x => pushReg(x.id, x.data()));
+            } catch (_) {}
+        }
+
+        if (registros.length === 0) {
+            const all = await getDocs(colecaoReg);
+            all.forEach(x => {
+                const dt = x.data();
+                const rc = (dt.cpf || dt.CPF || '').toString().replace(/\D/g, '');
+                const rm = (dt.matricula || '').toString().trim().replace(/^0+/, '');
+                if (rc === cpfLimpo) { pushReg(x.id, dt); return; }
+                for (const v of vinculos) {
+                    const cm = v.matricula.toString().trim().replace(/^0+/, '');
+                    if (rm && (rm === cm || rm === v.matricula.toString().trim())) { pushReg(x.id, dt); return; }
+                }
+            });
+        }
+    } catch (e) { console.error(e); }
+
+    $('nomeServidor').textContent = nome;
+    $('cpfServidor').textContent = cpfLimpo
+        ? cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : '—';
+    $('nascimentoServidor').textContent = formatarData(nascimento) || '—';
+    $('matriculasServidor').textContent = vinculos
+        .map(v => `${v.matricula} (Adm ${formatarData(v.dataAdmissao) || '—'})`)
+        .join('  ·  ');
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
+
+    renderizarResumoExecutivo();
+    popularFiltroMatricula();
+    $('filtroTipo').value = '';
+    $('filtroStatus').value = '';
+    renderizarTabelaUnica(linhasUnificadas);
+
+    $('resultadoContainer').classList.remove('hidden');
+}
+
+/* ============================================================
+   ERROS
+   ============================================================ */
+function mostrarErro(t) {
+    $('textoErro').textContent = t;
+    $('mensagemErro').classList.add('ativo');
+    $('resultadoContainer').classList.add('hidden');
+}
+
+function ocultarErro() {
+    $('mensagemErro').classList.remove('ativo');
+}
+
+window.buscarServidor = buscarServidor;
+window.aplicarFiltros = aplicarFiltros;
+</script>
+
+</body>
+</html>
