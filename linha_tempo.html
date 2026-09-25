@@ -107,7 +107,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .btn-buscar:hover { background: var(--primary-hover); }
 
-/* 👇 CABEÇALHO COMPACTO */
 .cabecalho-compacto {
     display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
     padding: 16px 24px;
@@ -117,7 +116,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .cab-item strong { font-size: 14px; color: var(--text); }
 .cab-div { width: 1px; height: 32px; background: #e5e8eb; }
 
-/* 👇 RESUMO EXECUTIVO */
 .resumo-executivo { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .resumo-bloco {
     background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
@@ -141,7 +139,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .chip-azul { background: var(--blue-light); color: var(--blue); }
 .chip-cinza { background: #eef0f2; color: #454b52; }
 
-/* 👇 FILTROS */
 .filtros-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
 .filtro-group { display: flex; flex-direction: column; min-width: 150px; flex: 1; max-width: 220px; }
 .filtro-group label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
@@ -151,7 +148,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 }
 .filtro-select:focus { border-color: var(--primary); }
 
-/* 👇 TABELA ÚNICA */
 .periodos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .periodos-table th {
     background: #fafbfc; padding: 10px 12px; text-align: left;
@@ -195,11 +191,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .mensagem-erro.ativo { display: flex; }
 .hidden { display: none !important; }
 
-.empty-state { text-align: center; padding: 40px 24px; color: var(--text-secondary); }
-.empty-state .material-symbols-outlined { font-size: 44px; color: #cbd5e1; margin-bottom: 10px; }
-.empty-state strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
-
-/* Modal */
 .modal-alerta-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
     z-index: 9999; align-items: center; justify-content: center; padding: 20px;
@@ -285,7 +276,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 
     <div id="resultadoContainer" class="hidden">
 
-        <!-- 👇 BLOCO 1: CABEÇALHO COMPACTO -->
         <section class="form-card cabecalho-compacto">
             <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">-</strong></div>
             <div class="cab-div"></div>
@@ -296,10 +286,8 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
             <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">-</strong></div>
         </section>
 
-        <!-- 👇 BLOCO 2: RESUMO EXECUTIVO -->
         <div id="resumoExecutivo" class="resumo-executivo"></div>
 
-        <!-- 👇 BLOCO 3: TABELA ÚNICA COM FILTROS -->
         <section class="form-card">
             <div class="card-title">
                 <span class="material-symbols-outlined">table_view</span>
@@ -338,6 +326,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
                 <table class="periodos-table">
                     <thead>
                         <tr>
+                            <th>Servidor</th>
                             <th>Matrícula</th>
                             <th>Tipo</th>
                             <th>Período</th>
@@ -377,6 +366,7 @@ let usuarioLogado = null;
 let acessoAutorizado = false;
 let linhasUnificadas = [];
 let totaisGlobais = { feriasAdquiridas: 0, folgasAdquiridas: 0 };
+let nomeServidorAtual = '';
 
 function atualizarStatusConexao() {
     const statusDiv = document.getElementById("statusConexao");
@@ -537,7 +527,8 @@ function filtrarRegistrosPorMatricula(registros, vinculo){
 }
 
 /* =========================================================
-   👇 CONSTRÓI AS LINHAS UNIFICADAS (FÉRIAS + FOLGA, TODAS MATRÍCULAS)
+   CONSTRÓI AS LINHAS UNIFICADAS (com nome do servidor)
+   👇 ORDEM INVERTIDA: mais recentes primeiro
 ========================================================= */
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
@@ -564,7 +555,7 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     else if(p.dataLimiteGozo<hoje)status='vencido';
                     else status='pendente';
                 }
-                linhas.push({matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
+                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
@@ -589,7 +580,7 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     gozo=formatarData(raw);
                     status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 }
-                linhas.push({matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
+                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
@@ -598,7 +589,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
         }
     });
 
-    linhas.sort((a,b)=>a.ordem-b.ordem);
+    // 👇 ORDEM INVERTIDA: períodos mais recentes primeiro
+    linhas.sort((a,b)=>b.ordem-a.ordem);
     return linhas;
 }
 
@@ -667,12 +659,13 @@ window.aplicarFiltros=function(){
 function renderizarTabelaUnica(linhas){
     const tbody=document.getElementById('tabelaUnica');
     if(linhas.length===0){
-        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);padding:24px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
+        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-secondary);padding:24px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
         return;
     }
     tbody.innerHTML=linhas.map(l=>`
         <tr class="linha-${l.status}">
-            <td><strong>${l.matricula}</strong></td>
+            <td><strong>${l.servidor}</strong></td>
+            <td>${l.matricula}</td>
             <td>${badgeTipo(l.tipoKey)}</td>
             <td>${l.periodo}</td>
             <td>${l.ciclo}</td>
@@ -718,6 +711,7 @@ window.buscarServidor=async function(){
 async function processarServidores(docs){
     const d0=docs[0].data();
     const nome=d0.nome||d0.Nome||'Não informado';
+    nomeServidorAtual = nome;
     const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
     const cpfFmt=(d0.cpf||d0.CPF||'').toString();
     const nascimento=d0.data_nascimento||d0.dataNascimento;
@@ -763,7 +757,6 @@ async function processarServidores(docs){
         }
     }catch(e){console.error(e);}
 
-    // Preenche cabeçalho compacto
     document.getElementById('nomeServidor').innerText=nome;
     document.getElementById('cpfServidor').innerText=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
     document.getElementById('nascimentoServidor').innerText=formatarData(nascimento)||'—';
