@@ -93,17 +93,24 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .form-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
 .form-group label span { color: var(--red); }
 
+/* 👇 BUSCA COMPACTA */
+.form-card.busca-compacta { padding: 16px 20px; margin-bottom: 16px; }
+.busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
+.busca-linha .form-group label { font-size: 12px; margin-bottom: 5px; }
+
 .search-input {
-    height: 44px; padding: 0 13px; background: #fff;
+    height: 40px; padding: 0 12px; background: #fff;
     border: 1px solid var(--border); border-radius: 4px;
     outline: none; font-size: 14px; color: #263238; width: 100%;
 }
 .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
 
 .btn-buscar {
-    width: 100%; height: 44px; background: var(--primary); color: white;
+    width: auto; height: 40px; padding: 0 22px; background: var(--primary); color: white;
     border: none; border-radius: 4px; font-weight: 600; font-size: 14px;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    flex-shrink: 0;
 }
 .btn-buscar:hover { background: var(--primary-hover); }
 
@@ -219,6 +226,8 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     .cab-div { display: none; }
     .filtros-row { flex-direction: column; }
     .filtro-group { max-width: 100%; }
+    .busca-linha { flex-direction: column; align-items: stretch; }
+    .btn-buscar { width: 100%; }
 }
 </style>
 </head>
@@ -257,21 +266,18 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
-    <section class="form-card" id="formBuscaCard">
-        <div class="card-title">
-            <span class="material-symbols-outlined">search</span>
-            Localizar Servidor
-        </div>
-        <div class="form-grid">
+    <!-- 👇 BUSCA COMPACTA -->
+    <section class="form-card busca-compacta" id="formBuscaCard">
+        <div class="busca-linha">
             <div class="form-group">
                 <label for="termoBusca">CPF ou Matrícula do Servidor <span>*</span></label>
                 <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20">
             </div>
+            <button class="btn-buscar" onclick="buscarServidor()">
+                <span class="material-symbols-outlined">search</span>
+                Buscar
+            </button>
         </div>
-        <button class="btn-buscar" onclick="buscarServidor()">
-            <span class="material-symbols-outlined">search</span>
-            Buscar Servidor
-        </button>
     </section>
 
     <div id="resultadoContainer" class="hidden">
@@ -526,10 +532,6 @@ function filtrarRegistrosPorMatricula(registros, vinculo){
     });
 }
 
-/* =========================================================
-   CONSTRÓI AS LINHAS UNIFICADAS (com nome do servidor)
-   👇 ORDEM INVERTIDA: mais recentes primeiro
-========================================================= */
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
     totaisGlobais={feriasAdquiridas:0,folgasAdquiridas:0};
@@ -538,7 +540,6 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
         if(!vinculo.dataAdmissao)return;
         const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
 
-        // FÉRIAS
         const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje);
         if(dirF){
             totaisGlobais.feriasAdquiridas+=dirF.periodosCompletos;
@@ -563,7 +564,6 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
             });
         }
 
-        // FOLGA
         const dirG=dataNascimento?calcularDireitoFolgaAniversario(dataNascimento,vinculo.dataAdmissao,hoje):null;
         if(dirG){
             totaisGlobais.folgasAdquiridas+=dirG.folgasAdquiridas;
@@ -589,7 +589,6 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
         }
     });
 
-    // 👇 ORDEM INVERTIDA: períodos mais recentes primeiro
     linhas.sort((a,b)=>b.ordem-a.ordem);
     return linhas;
 }
