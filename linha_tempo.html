@@ -589,11 +589,6 @@ function verificarSeFeriasJaGozadas(reg, hoje) {
     return true;
 }
 
-/* =========================================================
-   IDENTIFICA O PERÍODO CORRETO DA FOLGA ANIVERSÁRIO
-   O divisor de períodos é o ANIVERSÁRIO DENTRO DO PERÍODO
-   AQUISITIVO (não o ano civil).
-========================================================= */
 function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
     const dtGozo = parseDataParaDate(dataGozo);
     const dtNascimento = parseDataParaDate(dataNascimento);
@@ -642,9 +637,6 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
     return null;
 }
 
-/* =========================================================
-   MOTOR DE CÁLCULO - FÉRIAS
-========================================================= */
 function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     const dtAdmissao = parseDataParaDate(dataAdmissao);
     if (!dtAdmissao) return null;
@@ -690,12 +682,6 @@ function calcularDireitoFerias(dataAdmissao, dataReferencia = new Date()) {
     };
 }
 
-/* =========================================================
-   MOTOR DE CÁLCULO - FOLGA ANIVERSÁRIO (POR PERÍODOS)
-   - Base em PERÍODOS AQUISITIVOS (igual férias)
-   - Prazo para gozo = aniversário dentro do período
-   - 👇 Próxima aquisição = próximo ANIVERSÁRIO
-========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataReferencia = new Date()) {
     const dtNascimento = parseDataParaDate(dataNascimento);
     const dtAdmissao = parseDataParaDate(dataAdmissao);
@@ -766,8 +752,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
         }
     }
     
-    // 👇 Próxima aquisição = próximo ANIVERSÁRIO
-    //    (é no aniversário que o servidor adquire a próxima folga)
     const anoBase = dataReferencia.getFullYear();
     for (let ano = anoBase; ano <= anoBase + 2; ano++) {
         const candidato = new Date(ano, mesNascimento, diaNascimento);
@@ -786,39 +770,47 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, dataRefer
     };
 }
 
-function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
-    const container = document.getElementById('motorCalculo');
-    container.innerHTML = '';
-    
-    if (vinculos.length === 0) return;
-    
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    
-    const vinculoPrincipal = vinculos[0];
-    const dataAdmissao = vinculoPrincipal.dataAdmissao;
+/* =========================================================
+   👇 FILTRA REGISTROS POR MATRÍCULA ESPECÍFICA
+========================================================= */
+function filtrarRegistrosPorMatricula(registros, vinculo) {
+    const matriculaVinculo = vinculo.matricula.toString().trim().replace(/^0+/, '');
+    return registros.filter(r => {
+        const regMat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+        return !regMat || regMat === matriculaVinculo || regMat === vinculo.matricula.toString().trim();
+    });
+}
+
+/* =========================================================
+   👇 GERA HTML DO MOTOR DE CÁLCULO PARA UM VÍNCULO
+========================================================= */
+function gerarHtmlMotorVinculo(vinculo, dataNascimento, registros, hoje) {
+    const dataAdmissao = vinculo.dataAdmissao;
+    const matricula = vinculo.matricula;
     
     if (!dataAdmissao) {
-        container.innerHTML = `
+        return `
             <div class="motor-section">
                 <div class="motor-title">
                     <span class="material-symbols-outlined">calculate</span>
-                    Motor de Cálculo - Direito do Servidor
+                    Motor de Cálculo - Matrícula ${matricula}
                 </div>
                 <div class="empty-state">
                     <span class="material-symbols-outlined">warning</span>
                     <strong>Data de admissão não informada</strong>
-                    <p>Não é possível calcular o direito a férias sem a data de admissão.</p>
+                    <p>Não é possível calcular os direitos sem a data de admissão desta matrícula.</p>
                 </div>
             </div>
         `;
-        return;
     }
+    
+    // Filtra os registros apenas desta matrícula
+    const registrosDaMatricula = filtrarRegistrosPorMatricula(registros, vinculo);
     
     const direitoFerias = calcularDireitoFerias(dataAdmissao, hoje);
     const direitoFolga = dataNascimento ? calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, hoje) : null;
     
-    const feriasLancadas = registros.filter(r => {
+    const feriasLancadas = registrosDaMatricula.filter(r => {
         const tipo = (r.tipo || '').toLowerCase();
         return tipo.includes('ferias') || tipo.includes('férias');
     });
@@ -843,21 +835,16 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     if (saldoDias >= 90) {
         statusClasse = 'status-critico';
         statusIcone = 'error';
-        statusTexto = `CRÍTICO: O servidor possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias). Risco de acúmulo ilegal.`;
+        statusTexto = `CRÍTICO: Possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias). Risco de acúmulo ilegal.`;
     } else if (saldoDias >= 60) {
         statusClasse = 'status-atencao';
         statusIcone = 'warning';
-        statusTexto = `ATENÇÃO: O servidor possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias).`;
+        statusTexto = `ATENÇÃO: Possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias).`;
     } else {
         statusClasse = 'status-regular';
         statusIcone = 'check_circle';
-        statusTexto = `Regular: O servidor possui ${saldoPeriodos} períodos de férias pendentes (${saldoDias} dias).`;
+        statusTexto = `Regular: Saldo de férias dentro dos conformes (${saldoDias} dias pendentes).`;
     }
-    
-    let periodosVencidos = 0;
-    let periodosGozados = 0;
-    let periodosPendentes = 0;
-    let periodosProgramados = 0;
     
     if (direitoFerias && direitoFerias.periodosDetalhados) {
         direitoFerias.periodosDetalhados.forEach(p => {
@@ -870,17 +857,13 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 const algumJaGozado = lancamentosDoPeriodo.some(r => verificarSeFeriasJaGozadas(r, hoje));
                 if (algumJaGozado) {
                     p.status = 'gozado';
-                    periodosGozados++;
                 } else {
                     p.status = 'programado';
-                    periodosProgramados++;
                 }
             } else if (p.status !== 'atual' && p.dataLimiteGozo < hoje) {
                 p.status = 'vencido';
-                periodosVencidos++;
             } else if (p.status !== 'atual') {
                 p.status = 'pendente';
-                periodosPendentes++;
             }
         });
     }
@@ -889,7 +872,7 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
         <div class="motor-section">
             <div class="motor-title">
                 <span class="material-symbols-outlined">calculate</span>
-                Motor de Cálculo - Direito do Servidor
+                Motor de Cálculo - Matrícula ${matricula}
             </div>
             
             <div class="status-servidor ${statusClasse}">
@@ -901,7 +884,7 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 <div class="motor-card destaque">
                     <label>Data de Admissão</label>
                     <div class="valor" style="font-size: 18px;">${formatarData(dataAdmissao)}</div>
-                    <div class="subvalor">Matrícula: ${vinculoPrincipal.matricula}</div>
+                    <div class="subvalor">Matrícula: ${matricula}</div>
                 </div>
                 
                 <div class="motor-card destaque-verde">
@@ -912,13 +895,13 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
                 
                 <div class="motor-card destaque-verde">
                     <label>Períodos Gozados</label>
-                    <div class="valor verde">${periodosGozados}</div>
+                    <div class="valor verde">${feriasLancadas.filter(r => verificarSeFeriasJaGozadas(r, hoje)).length}</div>
                     <div class="subvalor">${diasGozados} dias gozados</div>
                 </div>
                 
                 <div class="motor-card destaque-roxo">
                     <label>Programados</label>
-                    <div class="valor roxo">${periodosProgramados}</div>
+                    <div class="valor roxo">${feriasLancadas.filter(r => !verificarSeFeriasJaGozadas(r, hoje)).length}</div>
                     <div class="subvalor">${diasProgramados} dias futuros</div>
                 </div>
                 
@@ -931,7 +914,7 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     `;
     
     if (direitoFolga) {
-        const folgasLancadas = registros.filter(r => {
+        const folgasLancadas = registrosDaMatricula.filter(r => {
             const tipo = (r.tipo || '').toLowerCase();
             return tipo.includes('aniversario') || tipo.includes('aniversário') || tipo.includes('folga');
         });
@@ -1148,7 +1131,26 @@ function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
     }
     
     html += `</div>`;
-    container.innerHTML = html;
+    return html;
+}
+
+/* =========================================================
+   👇 RENDERIZA MOTOR DE CÁLCULO - AGORA COM LOOP PELOS VÍNCULOS
+========================================================= */
+function renderizarMotorCalculo(vinculos, dataNascimento, registros) {
+    const container = document.getElementById('motorCalculo');
+    container.innerHTML = '';
+    
+    if (vinculos.length === 0) return;
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    // 👇 Loop por TODOS os vínculos (matrícula 1 e matrícula 2)
+    vinculos.forEach(vinculo => {
+        const htmlVinculo = gerarHtmlMotorVinculo(vinculo, dataNascimento, registros, hoje);
+        container.innerHTML += htmlVinculo;
+    });
 }
 
 window.buscarServidor = async function() {
@@ -1518,10 +1520,16 @@ function renderizarTimeline(registros, vinculos, dataNascimento) {
         const escolaReg = reg.escola || 'Não informada';
         let anoRef = reg.ano_referencia || reg.ano || reg.anoReferencia || 'N/A';
 
-        // 👇 Para FOLGA ANIVERSÁRIO, recalcula o período pela REGRA DO ANIVERSÁRIO
         if (tipoExibicao === 'Folga Aniversário' && dataNascimento && vinculos.length > 0) {
+            // 👇 Tenta identificar o vínculo pela matrícula do registro
+            const regMat = matriculaReg.toString().trim().replace(/^0+/, '');
+            const vinculoDoRegistro = vinculos.find(v => {
+                const cleanVMat = v.matricula.toString().trim().replace(/^0+/, '');
+                return regMat === cleanVMat || matriculaReg === v.matricula.toString().trim();
+            }) || vinculos[0]; // fallback para o primeiro vínculo
+            
             const dataGozo = reg.data || reg.data_gozo || reg.data_inicio || reg.dataInicio;
-            const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, vinculos[0].dataAdmissao);
+            const periodoCorreto = identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, vinculoDoRegistro.dataAdmissao);
             if (periodoCorreto) {
                 anoRef = periodoCorreto;
             }
