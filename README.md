@@ -1,7 +1,7 @@
-versão 1.6
+versão 1.7
 Linha do tempo funcionando com modelos de cards.
 Resolvido o problema de remoção da segunda matricula.
-
+versão 1.6
 página cálculos atualizada
 Dias úteis por mês✅ Padrão global automático para meses futuros✅ Período de abertura/fechamento✅ Status calculado automaticamente✅ Congelamento manual✅ Exceções por escola (reabertura)🏫 Lançamentos das Escolas (escolas.html)✅ Autenticação por perfil✅ Bloqueio automático de meses anteriores✅ Respeita período configurado✅ Respeita exceções por escola✅ Salvamento automático ao sair do campo✅ Contador de sessão✅ Feedback visual completo📋 Lançamentos SEMED (lancamentos.html)✅ Autenticação admin✅ Férias, folgas, licenças✅ Data de término bloqueada para férias✅ Validação de conflitos.
 Criado botão limpa lotação 
