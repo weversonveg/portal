@@ -1,843 +1,302 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Linha do tempo do servidor — Semed. Consulte férias e folgas por período aquisitivo.">
-<meta name="theme-color" content="#4a3068">
-<title>Linha do Tempo do Servidor — Vale Transporte</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=home,search,error_outline,error,warning,info,check_circle,event_upcoming,event_available,schedule,cancel,hourglass_top,dark_mode,light_mode,beach_access,cake,table_view,history">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<script>
-(function () {
-    try {
-        var t = localStorage.getItem('tema-vt') || 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', t === 'dark' ? '#1a1a1c' : '#4a3068');
-    } catch (e) {}
-})();
-</script>
+<title>Linha do Tempo do Servidor - Vale Transporte</title>
 
 <style>
-/* ============================================================
-   TOKENS — TEMA CLARO (institucional)
-   ============================================================ */
-:root,
-:root[data-theme="light"] {
-    --brand: #4a3068;
-    --brand-hover: #3a2551;
-    --brand-soft: #ece7f2;
-    --brand-contrast: #ffffff;
-
-    --gray-50:  #fafafa;
-    --gray-100: #f4f4f5;
-    --gray-150: #ececee;
-    --gray-200: #e4e4e7;
-    --gray-300: #d4d4d8;
-    --gray-400: #a1a1aa;
-    --gray-500: #71717a;
-    --gray-600: #52525b;
-    --gray-700: #3f3f46;
-    --gray-800: #27272a;
-    --gray-900: #18181b;
-
-    --ok:        #166534;
-    --ok-bg:     #f0f7f2;
-    --ok-bd:     #b7cfbf;
-
-    --warn:      #854d0e;
-    --warn-bg:   #faf6ef;
-    --warn-bd:   #d9c9a3;
-
-    --danger:    #991b1b;
-    --danger-bg: #faf1f1;
-    --danger-bd: #d9b5b5;
-
-    --info:      #1e3a8a;
-    --info-bg:   #f0f4fa;
-    --info-bd:   #b7c4db;
-
-    --background: var(--gray-100);
-    --surface:    #ffffff;
-    --surface-2:  var(--gray-50);
-    --surface-3:  var(--gray-150);
-
-    --text:           var(--gray-900);
-    --text-secondary: var(--gray-600);
-    --text-muted:     var(--gray-500);
-
-    --border:         var(--gray-200);
-    --border-strong:  var(--gray-300);
-
-    --shadow-sm: 0 1px 2px rgba(24,24,27,.04);
-    --shadow-lg: 0 20px 50px rgba(24,24,27,.16);
-
-    --focus-ring: 0 0 0 3px rgba(74,48,104,.16);
-    --focus-border: #4a3068;
-
-    --overlay:       rgba(24,24,27,.28);
-    --overlay-modal: rgba(24,24,27,.5);
-}
-
-:root[data-theme="dark"] {
-    --brand: #b8a3d1;
-    --brand-hover: #cbb9df;
-    --brand-soft: #2a2334;
-    --brand-contrast: #1a1a1c;
-
-    --gray-50:  #18181b;
-    --gray-100: #1c1c1f;
-    --gray-150: #232327;
-    --gray-200: #2a2a2e;
-    --gray-300: #3f3f46;
-    --gray-400: #52525b;
-    --gray-500: #71717a;
-    --gray-600: #a1a1aa;
-    --gray-700: #d4d4d8;
-    --gray-800: #e4e4e7;
-    --gray-900: #f4f4f5;
-
-    --ok:        #86c79a;
-    --ok-bg:     #16281d;
-    --ok-bd:     #2f5c3f;
-
-    --warn:      #e4c56c;
-    --warn-bg:   #2a2416;
-    --warn-bd:   #5c4d2a;
-
-    --danger:    #f0a1a1;
-    --danger-bg: #2a1919;
-    --danger-bd: #5c3434;
-
-    --info:      #a3b8dd;
-    --info-bg:   #171e2e;
-    --info-bd:   #33405a;
-
-    --background: #141416;
-    --surface:    #1c1c1f;
-    --surface-2:  #232327;
-    --surface-3:  #2a2a2e;
-
-    --text:           var(--gray-900);
-    --text-secondary: var(--gray-600);
-    --text-muted:     var(--gray-500);
-
-    --border:         var(--gray-200);
-    --border-strong:  var(--gray-300);
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
-    --shadow-lg: 0 20px 50px rgba(0,0,0,.6);
-
-    --focus-ring: 0 0 0 3px rgba(184,163,209,.22);
-    --focus-border: #b8a3d1;
-
-    --overlay:       rgba(0,0,0,.5);
-    --overlay-modal: rgba(0,0,0,.65);
-}
-
 :root {
-    --radius-sm: 3px;
-    --radius:    5px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-    --radius-full: 999px;
-
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 24px;
-    --space-6: 32px;
-
-    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+    --green: #2e7d32;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+    --red: #c62828;
+    --red-light: #fff0f0;
+    --red-border: #efc5c5;
+    --yellow: #b45309;
+    --yellow-light: #fef3c7;
+    --yellow-border: #fde68a;
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --purple: #6a1b9a;
+    --purple-light: #f3e5f5;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-/* ============================================================
-   RESET / BASE
-   ============================================================ */
-*, *::before, *::after {
-    margin: 0; padding: 0; box-sizing: border-box;
-    font-family: var(--font);
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
 html, body { width: 100%; min-height: 100%; }
+body { min-height: 100vh; background: var(--background); color: var(--text); }
 
-body {
-    min-height: 100vh; min-height: 100dvh;
-    background: var(--background);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    transition: background-color .2s ease, color .2s ease;
-}
-
-button, input, select, textarea { font: inherit; color: inherit; }
-
-:focus-visible {
-    outline: 2px solid var(--focus-border);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-}
-
-.skip-link {
-    position: absolute; left: var(--space-4); top: -100px;
-    z-index: 10000; padding: 10px 16px;
-    background: var(--brand); color: var(--brand-contrast);
-    border-radius: var(--radius); text-decoration: none;
-    font-weight: 600; font-size: 13px; transition: top .2s ease;
-}
-.skip-link:focus { top: var(--space-4); }
-
-.hidden { display: none !important; }
-.visually-hidden {
-    position: absolute !important;
-    width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0);
-    white-space: nowrap; border: 0;
-}
-
-/* ============================================================
-   TOPBAR
-   ============================================================ */
+/*  TOPBAR COMPACTA */
 .topbar {
-    width: 100%;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
+    width: 100%; max-width: 1116px; height: 60px; margin: 8px auto 0;
+    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
+    box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 24px;
 }
-.topbar-content {
-    max-width: 1200px; margin: 0 auto;
-    height: 56px; display: flex; align-items: center;
-    gap: 14px; padding: 0 24px;
-}
-.logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
-.system-name { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -.005em; }
-.system-divider { width: 1px; height: 18px; background: var(--border-strong); margin: 0 4px; }
-.system-module { font-size: 13px; color: var(--text-muted); flex-grow: 1; }
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 14px; }
+.logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 20px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); flex-grow: 1; }
 
 .status-conexao {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 11.5px; font-weight: 600;
-    padding: 4px 10px; border-radius: var(--radius-full);
-    background: var(--surface-2); border: 1px solid var(--border);
-    color: var(--text-secondary); white-space: nowrap;
-    text-transform: uppercase; letter-spacing: .3px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: 20px;
+    background: #f1f3f5; border: 1px solid #e2e8f0; white-space: nowrap;
 }
-.status-conexao::before {
-    content: ""; width: 6px; height: 6px;
-    border-radius: 50%; background: currentColor; flex-shrink: 0;
-}
-.status-conexao.online  { color: var(--ok);     background: var(--ok-bg);     border-color: var(--ok-bd); }
-.status-conexao.offline { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-bd); }
-.status-conexao.offline::before { animation: pulsar 1.2s infinite ease-in-out; }
-@keyframes pulsar { 0%,100%{opacity:.35;} 50%{opacity:1;} }
+.signal-bars { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
+.signal-bars .bar { width: 3px; background-color: #cbd5e1; border-radius: 1px; }
+.signal-bars .bar-1 { height: 2px; }
+.signal-bars .bar-2 { height: 5px; }
+.signal-bars .bar-3 { height: 7px; }
+.signal-bars .bar-4 { height: 10px; }
+.status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
+.status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
+.status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
+.status-conexao.offline .signal-bars .bar { background-color: #ef4444; animation: pulsar 1.2s infinite ease-in-out; }
+@keyframes pulsar { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
-.btn-tema {
-    width: 34px; height: 34px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--text-secondary);
-    cursor: pointer; flex-shrink: 0;
-    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-}
-.btn-tema:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
-.btn-tema .material-symbols-outlined { font-size: 18px; }
-.btn-tema .icon-dark  { display: none; }
-.btn-tema .icon-light { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
+/* 👇 MAIN COMPACTO */
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 16px 16px; }
 
-/* ============================================================
-   MAIN / PAGE HEADER
-   ============================================================ */
-.main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px; }
-
-.page-header { margin-bottom: 20px; }
-.breadcrumb {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px; color: var(--text-muted); margin-bottom: 8px;
-}
-.breadcrumb .material-symbols-outlined { font-size: 14px; }
-.breadcrumb a { text-decoration: none; color: inherit; border-radius: var(--radius-sm); }
-.breadcrumb a:hover { color: var(--brand); }
-.page-header h1 {
-    font-size: 20px; font-weight: 600;
-    color: var(--text); letter-spacing: -.01em; margin-bottom: 4px;
-}
+/* 👇 PAGE-HEADER COMPACTO */
+.page-header { margin-bottom: 12px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7b858e; margin-bottom: 4px; }
+.breadcrumb .material-symbols-outlined { font-size: 15px; }
+.breadcrumb a { text-decoration: none; color: inherit; }
+.page-header h1 { font-size: 20px; font-weight: 700; color: #263238; margin-bottom: 2px; }
 .page-header p { font-size: 13px; color: var(--text-secondary); }
 
-/* ============================================================
-   CARDS
-   ============================================================ */
 .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 20px 24px;
-    margin-bottom: 16px;
-    transition: background-color .2s ease, border-color .2s ease;
+    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
+    box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
 }
 .card-title {
-    font-size: 13px; font-weight: 600; color: var(--text);
-    margin-bottom: 16px; padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 8px;
-    text-transform: uppercase; letter-spacing: .4px;
+    font-size: 15px; font-weight: 700; color: #37474f; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px; padding-bottom: 10px;
+    border-bottom: 1px solid #e5e8eb;
 }
-.card-title .material-symbols-outlined { color: var(--text-muted); font-size: 18px; }
+.card-title .material-symbols-outlined { color: var(--primary); font-size: 20px; }
 
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
 .form-group { display: flex; flex-direction: column; }
-.form-group label {
-    font-size: 12px; font-weight: 500;
-    color: var(--text-secondary); margin-bottom: 6px;
-}
-.form-group label span { color: var(--danger); }
+.form-group label { font-size: 12px; font-weight: 600; color: #455a64; margin-bottom: 4px; }
+.form-group label span { color: var(--red); }
 
-.form-card.busca-compacta { padding: 16px 24px; margin-bottom: 16px; }
+.form-card.busca-compacta { padding: 14px 18px; margin-bottom: 14px; }
 .busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
+.busca-linha .form-group label { font-size: 11px; margin-bottom: 4px; }
 
 .search-input {
-    height: 38px; padding: 0 12px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    outline: none; font-size: 13.5px; color: var(--text);
-    width: 100%;
-    transition: border-color .15s ease, box-shadow .15s ease;
+    height: 38px; padding: 0 12px; background: #fff;
+    border: 1px solid var(--border); border-radius: 4px;
+    outline: none; font-size: 13px; color: #263238; width: 100%;
 }
-.search-input::placeholder { color: var(--text-muted); }
-.search-input:hover { border-color: var(--gray-400); }
-.search-input:focus { border-color: var(--brand); box-shadow: var(--focus-ring); }
+.search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
 
 .btn-buscar {
-    height: 38px; padding: 0 20px;
-    background: var(--brand); color: var(--brand-contrast);
-    border: none; border-radius: var(--radius);
-    font-weight: 500; font-size: 13.5px; cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    width: auto; height: 38px; padding: 0 20px; background: var(--primary); color: white;
+    border: none; border-radius: 4px; font-weight: 600; font-size: 13px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
     flex-shrink: 0;
-    transition: background-color .15s ease;
 }
-.btn-buscar:hover { background: var(--brand-hover); }
-.btn-buscar:disabled { opacity: .6; cursor: not-allowed; }
-.btn-buscar .material-symbols-outlined { font-size: 16px; }
+.btn-buscar:hover { background: var(--primary-hover); }
+.btn-buscar .material-symbols-outlined { font-size: 18px; }
 
 .cabecalho-compacto {
-    display: flex; align-items: center; gap: 24px;
-    flex-wrap: wrap; padding: 16px 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 20px;
 }
-.cab-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.cab-label {
-    font-size: 10.5px; font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .6px;
-}
-.cab-item strong {
-    font-size: 13.5px; color: var(--text);
-    font-weight: 500; overflow-wrap: anywhere;
-}
-.cab-div { width: 1px; height: 28px; background: var(--border); }
+.cab-item { display: flex; flex-direction: column; gap: 1px; }
+.cab-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
+.cab-item strong { font-size: 13px; color: var(--text); }
+.cab-div { width: 1px; height: 28px; background: #e5e8eb; }
 
-/* ============================================================
-   RESUMO EXECUTIVO
-   ============================================================ */
 .resumo-executivo { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 .resumo-matricula {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 16px 24px;
+    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
+    padding: 14px 16px; box-shadow: var(--shadow);
 }
 .resumo-matricula-header {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 14px; padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid #eef0f2;
 }
 .resumo-matricula-badge {
-    font-size: 11px; font-weight: 600;
-    color: var(--brand); background: var(--brand-soft);
-    padding: 3px 10px; border-radius: var(--radius-sm);
-    letter-spacing: .3px; text-transform: uppercase;
+    font-size: 11px; font-weight: 700; color: var(--blue);
+    background: var(--blue-light); padding: 3px 9px; border-radius: 12px;
+    letter-spacing: .3px;
 }
-.resumo-matricula-nome { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
-.resumo-cards-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+.resumo-matricula-nome {
+    font-size: 12px; color: var(--text-secondary); font-weight: 500;
 }
-.resumo-bloco { border-left: 2px solid var(--border); padding-left: 16px; }
+.resumo-cards-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.resumo-bloco {
+    background: #fafbfc; border: 1px solid #e5e8eb; border-radius: 8px;
+    padding: 10px 14px; flex: 1; min-width: 240px;
+}
 .resumo-bloco-titulo {
-    font-size: 11px; font-weight: 600; color: var(--text-muted);
-    margin-bottom: 10px; text-transform: uppercase; letter-spacing: .6px;
-    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: var(--primary);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
 }
-.resumo-bloco-titulo .material-symbols-outlined { font-size: 14px; }
-.resumo-chips {
-    display: grid; grid-template-columns: repeat(2, 1fr);
-    gap: 6px 16px;
-}
+.resumo-bloco-titulo .material-symbols-outlined { font-size: 15px; }
+.resumo-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; font-size: 12.5px; color: var(--text-secondary);
-    padding: 2px 0;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 16px; font-size: 11px; font-weight: 600;
 }
-.chip .num { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-.chip-verde    .num { color: var(--ok); }
-.chip-vermelho .num { color: var(--danger); }
-.chip-amarelo  .num { color: var(--warn); }
+.chip .num { font-weight: 800; font-size: 12px; }
+.chip-verde { background: var(--green-light); color: var(--green); }
+.chip-amarelo { background: var(--yellow-light); color: var(--yellow); }
+.chip-vermelho { background: var(--red-light); color: var(--red); }
+.chip-roxo { background: var(--purple-light); color: var(--purple); }
+.chip-azul { background: var(--blue-light); color: var(--blue); }
+.chip-cinza { background: #eef0f2; color: #454b52; }
 
-/* ============================================================
-   FILTROS
-   ============================================================ */
-.filtros-row {
-    display: flex; gap: 12px; flex-wrap: wrap;
-    margin-bottom: 20px; padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-}
+.filtros-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .filtro-group { display: flex; flex-direction: column; min-width: 140px; flex: 1; max-width: 200px; }
-.filtro-group label {
-    font-size: 10.5px; font-weight: 600; color: var(--text-muted);
-    margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px;
-}
+.filtro-group label { font-size: 10px; font-weight: 600; color: var(--text-secondary); margin-bottom: 3px; text-transform: uppercase; }
 .filtro-select {
-    height: 34px; padding: 0 10px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    font-size: 12.5px; background: var(--surface); color: var(--text);
-    outline: none;
-    transition: border-color .15s ease, box-shadow .15s ease;
+    height: 36px; padding: 0 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 12px; background: #fff; color: var(--text); outline: none;
 }
-.filtro-select:hover { border-color: var(--gray-400); }
-.filtro-select:focus { border-color: var(--brand); box-shadow: var(--focus-ring); }
+.filtro-select:focus { border-color: var(--primary); }
 
-/* ============================================================
-   BLOCOS (Férias / Folga Aniversário)
-   ============================================================ */
-.bloco-tipo { margin-bottom: 32px; }
-.bloco-tipo:last-child { margin-bottom: 0; }
-
-.bloco-cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0 10px;
-    margin-bottom: 12px;
-    border-bottom: 2px solid var(--border);
-    flex-wrap: wrap;
-}
-.bloco-cabecalho-esq { display: flex; align-items: center; gap: 10px; }
-.bloco-icone {
-    width: 32px; height: 32px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: var(--radius);
-    background: var(--surface-3);
-    color: var(--text-secondary);
-    flex-shrink: 0;
-}
-.bloco-icone .material-symbols-outlined { font-size: 18px; }
-.bloco-tipo[data-tipo="ferias"] .bloco-icone { background: var(--brand-soft); color: var(--brand); }
-.bloco-tipo[data-tipo="folga"]  .bloco-icone { background: var(--info-bg);   color: var(--info); }
-
-.bloco-titulo-grupo { display: flex; flex-direction: column; gap: 1px; }
-.bloco-titulo {
-    font-size: 14px; font-weight: 600; color: var(--text);
-    letter-spacing: -.005em; line-height: 1.2;
-}
-.bloco-subtitulo { font-size: 11.5px; color: var(--text-muted); line-height: 1.3; }
-.bloco-contador {
-    font-size: 11.5px; font-weight: 600;
-    color: var(--text-secondary); background: var(--surface-3);
-    padding: 3px 10px; border-radius: var(--radius-full);
-    text-transform: uppercase; letter-spacing: .3px;
-    white-space: nowrap;
-}
-
-/* ============================================================
-   TABELA
-   ============================================================ */
-.tabela-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-}
-.periodos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
+.periodos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .periodos-table th {
-    background: var(--surface-2);
-    padding: 10px 14px;
-    text-align: left;
-    font-weight: 600;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    white-space: nowrap;
+    background: #fafbfc; padding: 8px 10px; text-align: left;
+    font-weight: 700; color: #455a64; border-bottom: 2px solid #e5e8eb;
+    font-size: 10px; text-transform: uppercase; white-space: nowrap;
 }
-.periodos-table th.th-num { text-align: right; width: 40px; }
-.periodos-table th .th-sub {
-    display: block;
-    font-size: 9.5px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: none;
-    letter-spacing: 0;
-    margin-top: 1px;
-}
+.periodos-table td { padding: 8px 10px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+.periodos-table tr:hover { background: #f8fafc; }
+.periodos-table tr.linha-vencido, .periodos-table tr.linha-perdido { background: var(--red-light); }
+.periodos-table tr.linha-pendente { background: var(--yellow-light); }
+.periodos-table tr.linha-gozado { background: var(--green-light); }
+.periodos-table tr.linha-programado { background: var(--purple-light); }
+.periodos-table tr.linha-disponivel { background: var(--green-light); }
+.periodos-table tr.linha-atual { background: var(--blue-light); }
 
-.periodos-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    color: var(--text);
-}
-.periodos-table td.td-num {
-    text-align: right;
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    font-size: 12px;
-}
-.periodos-table tbody tr:last-child td { border-bottom: none; }
-.periodos-table tbody tr:hover { background: var(--surface-2); }
-
-/* Coluna "Período aquisitivo" */
-.periodo-info { display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
-.periodo-info .periodo-ano {
-    font-weight: 600; color: var(--text);
-    font-variant-numeric: tabular-nums; letter-spacing: .2px;
-}
-.periodo-info .periodo-intervalo {
-    font-size: 11.5px; color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-/* Coluna "Lançado em" — nova */
-.lancamento-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 130px;
-}
-.lancamento-data {
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-    white-space: nowrap;
-    color: var(--text);
-}
-.lancamento-data.sem-info { color: var(--text-muted); font-weight: 400; font-style: italic; }
-.lancamento-responsavel {
-    font-size: 11px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 180px;
-}
-
-/* Coluna "Gozo" — agora com intervalo */
-.gozo-info { display: flex; flex-direction: column; gap: 2px; min-width: 160px; }
-.gozo-intervalo {
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-}
-.gozo-dias {
-    font-size: 11px;
-    color: var(--text-muted);
-}
-.gozo-vazio {
-    color: var(--text-muted);
-    font-style: italic;
-    font-size: 12.5px;
-}
-
-/* Coluna "Vence em" */
-.prazo-data {
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-    white-space: nowrap;
-}
-.prazo-aviso {
-    display: block; font-size: 11px;
-    color: var(--text-muted); margin-top: 2px; font-weight: 400;
-}
-.prazo-aviso.vencido { color: var(--danger); font-weight: 500; }
-.prazo-aviso.proximo { color: var(--warn); font-weight: 500; }
-
-/* Filete lateral por status */
-.periodos-table tbody tr {
-    border-left: 3px solid transparent;
-    transition: background-color .15s ease;
-}
-.periodos-table tbody tr.linha-gozado,
-.periodos-table tbody tr.linha-disponivel { border-left-color: var(--ok); }
-.periodos-table tbody tr.linha-programado  { border-left-color: var(--info); }
-.periodos-table tbody tr.linha-atual       { border-left-color: var(--brand); }
-.periodos-table tbody tr.linha-pendente    { border-left-color: var(--warn); }
-.periodos-table tbody tr.linha-vencido,
-.periodos-table tbody tr.linha-perdido     { border-left-color: var(--danger); }
-
-/* Badge de status */
 .badge-status {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 9px; border-radius: var(--radius-sm);
-    font-size: 11px; font-weight: 500; white-space: nowrap;
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    color: var(--text-secondary);
-    letter-spacing: .1px;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap;
 }
-.badge-status .material-symbols-outlined { font-size: 13px; }
-.badge-gozado,
-.badge-disponivel { color: var(--ok);     border-color: var(--ok-bd); }
-.badge-pendente   { color: var(--warn);   border-color: var(--warn-bd); }
-.badge-vencido,
-.badge-perdido    { color: var(--danger); border-color: var(--danger-bd); }
-.badge-atual      { color: var(--brand);  border-color: var(--brand-soft); }
-.badge-programado { color: var(--info);   border-color: var(--info-bd); }
+.badge-status .material-symbols-outlined { font-size: 12px; }
+.badge-gozado { background: var(--green-light); color: var(--green); }
+.badge-pendente { background: var(--yellow-light); color: var(--yellow); }
+.badge-vencido { background: var(--red-light); color: var(--red); }
+.badge-atual { background: var(--blue-light); color: var(--blue); }
+.badge-programado { background: var(--purple-light); color: var(--purple); }
+.badge-disponivel { background: var(--green-light); color: var(--green); }
+.badge-perdido { background: var(--red-light); color: var(--red); }
 
-/* Empty state interno de bloco */
-.bloco-vazio {
-    padding: 32px 16px; text-align: center;
-    background: var(--surface-2);
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-md);
-    color: var(--text-muted); font-size: 13px;
+.tipo-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; padding: 2px 7px; border-radius: 4px; white-space: nowrap;
 }
-.bloco-vazio .material-symbols-outlined {
-    font-size: 28px; color: var(--border-strong);
-    display: block; margin: 0 auto 8px;
-}
+.tipo-badge.ferias { background: var(--blue-light); color: var(--blue); }
+.tipo-badge.folga { background: var(--green-light); color: var(--green); }
 
-/* ============================================================
-   MENSAGEM DE ERRO
-   ============================================================ */
 .mensagem-erro {
-    background: var(--danger-bg);
-    border: 1px solid var(--danger-bd);
-    color: var(--danger);
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    font-size: 13px; font-weight: 500;
-    margin-bottom: 16px;
-    display: none; align-items: center; gap: 10px;
+    background: var(--red-light); border: 1px solid var(--red-border); color: var(--red);
+    padding: 12px 16px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    margin-bottom: 16px; display: none; align-items: center; gap: 10px;
 }
 .mensagem-erro.ativo { display: flex; }
-.mensagem-erro .material-symbols-outlined { font-size: 18px; }
+.hidden { display: none !important; }
 
-/* ============================================================
-   LOADING
-   ============================================================ */
-.loading-overlay {
-    position: fixed; inset: 0;
-    background: var(--overlay);
-    display: none; align-items: center; justify-content: center;
-    z-index: 9998;
-}
-.loading-overlay.ativo { display: flex; }
-.loading-box {
-    background: var(--surface);
-    padding: 18px 24px;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    display: flex; align-items: center; gap: 12px;
-    font-size: 13px; font-weight: 500; color: var(--text);
-    border: 1px solid var(--border);
-}
-.spinner {
-    width: 18px; height: 18px;
-    border: 2px solid var(--border-strong);
-    border-top-color: var(--brand);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ============================================================
-   MODAL
-   ============================================================ */
 .modal-alerta-overlay {
-    display: none; position: fixed; inset: 0;
-    background: var(--overlay-modal);
-    z-index: 9999; align-items: center; justify-content: center;
-    padding: 20px;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 9999; align-items: center; justify-content: center; padding: 20px;
 }
-.modal-alerta-overlay.ativo { display: flex; animation: fadeIn .18s ease; }
+.modal-alerta-overlay.ativo { display: flex; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-@keyframes slideDown { from{transform:translateY(-8px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+@keyframes slideDown { from{transform:translateY(-20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+.modal-alerta { background:#fff; border-radius:12px; max-width:420px; width:100%; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:slideDown .3s ease; }
+.modal-alerta-header { padding:24px 24px 16px; text-align:center; }
+.modal-alerta-icon { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+.modal-alerta-icon.info{background:var(--blue-light);color:var(--blue);}
+.modal-alerta-icon.erro{background:var(--red-light);color:var(--red);}
+.modal-alerta-icon.aviso{background:var(--yellow-light);color:var(--yellow);}
+.modal-alerta-icon .material-symbols-outlined{font-size:32px;}
+.modal-alerta-titulo{font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.modal-alerta-mensagem{font-size:14px;color:var(--text-secondary);line-height:1.5;}
+.modal-alerta-footer{padding:16px 24px 24px;display:flex;justify-content:center;}
+.modal-alerta-btn{height:40px;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:0 32px;font-size:14px;font-weight:600;cursor:pointer;min-width:120px;}
+.modal-alerta-btn:hover{background:var(--primary-hover);}
 
-.modal-alerta {
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    max-width: 420px; width: 100%; overflow: hidden;
-    box-shadow: var(--shadow-lg);
-    animation: slideDown .2s ease;
-    border: 1px solid var(--border);
-}
-.modal-alerta-header { padding: 24px 24px 16px; text-align: center; }
-.modal-alerta-icon {
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-}
-.modal-alerta-icon.info  { color: var(--info);   border-color: var(--info-bd); }
-.modal-alerta-icon.erro  { color: var(--danger); border-color: var(--danger-bd); }
-.modal-alerta-icon.aviso { color: var(--warn);   border-color: var(--warn-bd); }
-.modal-alerta-icon .material-symbols-outlined { font-size: 26px; }
-.modal-alerta-titulo { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-.modal-alerta-mensagem { font-size: 13.5px; color: var(--text-secondary); line-height: 1.55; }
-.modal-alerta-footer {
-    padding: 16px 24px 20px;
-    display: flex; justify-content: center;
-    border-top: 1px solid var(--border);
-    background: var(--surface-2);
-}
-.modal-alerta-btn {
-    height: 36px;
-    background: var(--brand); color: var(--brand-contrast);
-    border: none; border-radius: var(--radius);
-    padding: 0 28px; font-size: 13.5px; font-weight: 500;
-    cursor: pointer; min-width: 110px;
-    transition: background-color .15s ease;
-}
-.modal-alerta-btn:hover { background: var(--brand-hover); }
-
-/* ============================================================
-   RESPONSIVO
-   ============================================================ */
-@media (max-width: 1000px) {
-    .periodos-table th:nth-child(3),
-    .periodos-table td:nth-child(3) { display: none; }
-}
-@media (max-width: 820px) {
-    .periodos-table th:nth-child(5),
-    .periodos-table td:nth-child(5) { display: none; }
-}
 @media (max-width: 768px) {
-    .topbar-content { height: 52px; padding: 0 16px; gap: 10px; }
+    .topbar { margin: 8px 12px 0; width: calc(100% - 24px); padding: 0 12px; height: 56px; }
     .system-module, .system-divider { display: none; }
-    .main { padding: 16px; }
-    .form-card { padding: 16px 18px; }
-    .cabecalho-compacto { gap: 16px; padding: 14px 18px; }
+    .main { padding: 12px 12px; }
+    .cabecalho-compacto { gap: 10px; }
     .cab-div { display: none; }
     .filtros-row { flex-direction: column; }
     .filtro-group { max-width: 100%; }
     .busca-linha { flex-direction: column; align-items: stretch; }
     .btn-buscar { width: 100%; }
-    .resumo-cards-row { grid-template-columns: 1fr; gap: 16px; }
-    .resumo-chips { grid-template-columns: 1fr 1fr; }
-    .bloco-cabecalho { flex-direction: column; align-items: flex-start; }
-    .periodos-table th:nth-child(6),
-    .periodos-table td:nth-child(6) { display: none; }
-    .periodo-info, .lancamento-info, .gozo-info { min-width: auto; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-@media print {
-    @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; font-size: 9.5pt; }
-    .skip-link, .topbar, .busca-compacta, .filtros-row,
-    .modal-alerta-overlay, .loading-overlay, .btn-tema { display: none !important; }
-    .main { max-width: none; padding: 0; }
-    .form-card, .resumo-matricula {
-        box-shadow: none; border: 1px solid #999;
-        background: #fff !important; color: #000 !important;
-    }
-    .tabela-wrapper { border-color: #999; overflow: visible; }
-    .periodos-table { font-size: 8.5pt; }
-    .periodos-table th, .periodos-table td {
-        border-color: #999; background: #fff !important; color: #000 !important;
-        padding: 6px 8px;
-    }
-    .periodos-table tbody tr { border-left-color: #999 !important; }
-    .periodos-table tr { page-break-inside: avoid; }
-    .badge-status { background: #fff !important; color: #000 !important; border-color: #666 !important; }
-    .bloco-tipo { page-break-inside: avoid; }
-    .bloco-cabecalho { page-break-after: avoid; }
+    .resumo-cards-row { flex-direction: column; }
 }
 </style>
 </head>
 
 <body>
 
-<a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
-
 <header class="topbar">
     <div class="topbar-content">
-        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
         <span class="system-name">Vale Transporte</span>
-        <div class="system-divider" aria-hidden="true"></div>
-        <span class="system-module">Semed — Linha do Tempo do Servidor</span>
-
-        <div id="statusConexao" class="status-conexao online" role="status" aria-live="polite">
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Linha do Tempo do Servidor</span>
+        <div id="statusConexao" class="status-conexao online">
+            <div class="signal-bars">
+                <span class="bar bar-1"></span><span class="bar bar-2"></span>
+                <span class="bar bar-3"></span><span class="bar bar-4"></span>
+            </div>
             <span id="statusTexto">Online</span>
         </div>
-
-        <button type="button" class="btn-tema" id="btnTema"
-                aria-label="Alternar tema claro/escuro"
-                title="Alternar tema">
-            <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
-            <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-        </button>
     </div>
 </header>
 
-<main class="main" id="conteudo">
+<main class="main">
     <div class="page-header">
-        <nav class="breadcrumb" aria-label="Trilha de navegação">
-            <a href="index.html" aria-label="Início">
-                <span class="material-symbols-outlined" aria-hidden="true">home</span>
-            </a>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">Linha do Tempo</span>
-        </nav>
+        <div class="breadcrumb">
+            <a href="index.html"><span class="material-symbols-outlined">home</span></a>
+            <span>/</span>
+            <span>Linha do Tempo</span>
+        </div>
         <h1>Linha do Tempo do Servidor</h1>
         <p>Visão consolidada de férias e folgas por período aquisitivo.</p>
     </div>
 
-    <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="assertive">
-        <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
+    <div id="mensagemErro" class="mensagem-erro">
+        <span class="material-symbols-outlined">error_outline</span>
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
-    <section class="form-card busca-compacta" id="formBuscaCard" aria-labelledby="tituloBusca">
-        <h2 id="tituloBusca" class="visually-hidden">Buscar servidor</h2>
+    <section class="form-card busca-compacta" id="formBuscaCard">
         <div class="busca-linha">
             <div class="form-group">
-                <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
-                <input
-                    type="text"
-                    id="termoBusca"
-                    class="search-input"
-                    placeholder="000.000.000-00"
-                    maxlength="20"
-                    autocomplete="off"
-                    inputmode="numeric"
-                    aria-required="true">
+                <label for="termoBusca">CPF ou Matrícula do Servidor <span>*</span></label>
+                <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20">
             </div>
-            <button type="button" class="btn-buscar" id="btnBuscar">
-                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+            <button class="btn-buscar" onclick="buscarServidor()">
+                <span class="material-symbols-outlined">search</span>
                 Buscar
             </button>
         </div>
@@ -845,41 +304,41 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
     <div id="resultadoContainer" class="hidden">
 
-        <section class="form-card cabecalho-compacto" aria-label="Dados do servidor">
-            <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">—</strong></div>
-            <div class="cab-div" aria-hidden="true"></div>
-            <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">—</strong></div>
-            <div class="cab-div" aria-hidden="true"></div>
-            <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">—</strong></div>
-            <div class="cab-div" aria-hidden="true"></div>
-            <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
+        <section class="form-card cabecalho-compacto">
+            <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">-</strong></div>
+            <div class="cab-div"></div>
+            <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">-</strong></div>
+            <div class="cab-div"></div>
+            <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">-</strong></div>
+            <div class="cab-div"></div>
+            <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">-</strong></div>
         </section>
 
         <div id="resumoExecutivo" class="resumo-executivo"></div>
 
-        <section class="form-card" aria-labelledby="tituloTabela">
-            <div class="card-title" id="tituloTabela">
-                <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
-                Situação por Período Aquisitivo
+        <section class="form-card">
+            <div class="card-title">
+                <span class="material-symbols-outlined">table_view</span>
+                Situação de Férias e Folgas por Período
             </div>
 
-            <div class="filtros-row" role="group" aria-label="Filtros da tabela">
+            <div class="filtros-row">
                 <div class="filtro-group">
-                    <label for="filtroMatricula">Matrícula</label>
-                    <select id="filtroMatricula" class="filtro-select"></select>
+                    <label>Matrícula</label>
+                    <select id="filtroMatricula" class="filtro-select" onchange="aplicarFiltros()"></select>
                 </div>
                 <div class="filtro-group">
-                    <label for="filtroTipo">Tipo</label>
-                    <select id="filtroTipo" class="filtro-select">
+                    <label>Tipo</label>
+                    <select id="filtroTipo" class="filtro-select" onchange="aplicarFiltros()">
                         <option value="">Todos</option>
                         <option value="ferias">Férias</option>
                         <option value="folga">Folga Aniversário</option>
                     </select>
                 </div>
                 <div class="filtro-group">
-                    <label for="filtroStatus">Situação</label>
-                    <select id="filtroStatus" class="filtro-select">
-                        <option value="">Todas</option>
+                    <label>Status</label>
+                    <select id="filtroStatus" class="filtro-select" onchange="aplicarFiltros()">
+                        <option value="">Todos</option>
                         <option value="gozado">Gozado</option>
                         <option value="disponivel">Disponível</option>
                         <option value="pendente">Pendente</option>
@@ -891,33 +350,37 @@ button, input, select, textarea { font: inherit; color: inherit; }
                 </div>
             </div>
 
-            <div id="blocosTipos"></div>
-
-            <p id="contadorResultados" class="visually-hidden" role="status" aria-live="polite"></p>
+            <div style="overflow-x:auto;">
+                <table class="periodos-table">
+                    <thead>
+                        <tr>
+                            <th>Servidor</th>
+                            <th>Matrícula</th>
+                            <th>Tipo</th>
+                            <th>Período</th>
+                            <th>Ciclo Aquisitivo</th>
+                            <th>Prazo de Gozo</th>
+                            <th>Status</th>
+                            <th>Gozo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUnica"></tbody>
+                </table>
+            </div>
         </section>
 
     </div>
 </main>
 
-<div id="loading" class="loading-overlay" role="status" aria-live="polite" aria-label="Carregando">
-    <div class="loading-box">
-        <span class="spinner" aria-hidden="true"></span>
-        <span>Consultando…</span>
-    </div>
-</div>
-
-<div id="modalAlerta" class="modal-alerta-overlay" role="presentation">
-    <div class="modal-alerta" role="alertdialog" aria-modal="true"
-         aria-labelledby="modalAlertaTitulo" aria-describedby="modalAlertaMensagem">
+<div id="modalAlerta" class="modal-alerta-overlay">
+    <div class="modal-alerta">
         <div class="modal-alerta-header">
-            <div class="modal-alerta-icon" id="modalAlertaIcon" aria-hidden="true">
-                <span class="material-symbols-outlined">info</span>
-            </div>
+            <div class="modal-alerta-icon" id="modalAlertaIcon"><span class="material-symbols-outlined">info</span></div>
             <div class="modal-alerta-titulo" id="modalAlertaTitulo">Aviso</div>
             <div class="modal-alerta-mensagem" id="modalAlertaMensagem">Mensagem</div>
         </div>
         <div class="modal-alerta-footer">
-            <button type="button" class="modal-alerta-btn" id="btnFecharModal">OK</button>
+            <button class="modal-alerta-btn" onclick="fecharModalAlerta()">OK</button>
         </div>
     </div>
 </div>
@@ -927,558 +390,261 @@ import { db, auth } from "./firebase.js";
 import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* ============================================================
-   ESTADO
-   ============================================================ */
 let usuarioLogado = null;
 let acessoAutorizado = false;
 let linhasUnificadas = [];
+let totaisGlobais = { feriasAdquiridas: 0, folgasAdquiridas: 0 };
 let nomeServidorAtual = '';
-let ultimoFocoModal = null;
 
-/* ============================================================
-   HELPERS DOM
-   ============================================================ */
-const $  = (id) => document.getElementById(id);
-const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
-
-function setLoading(ativo) { $('loading').classList.toggle('ativo', !!ativo); }
-
-/* ============================================================
-   ALTERNAR TEMA
-   ============================================================ */
-const btnTema = $('btnTema');
-
-function aplicarTema(tema) {
-    document.documentElement.setAttribute('data-theme', tema);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', tema === 'dark' ? '#1a1a1c' : '#4a3068');
-    try { localStorage.setItem('tema-vt', tema); } catch (e) {}
-}
-
-btnTema.addEventListener('click', () => {
-    const atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    aplicarTema(atual === 'dark' ? 'light' : 'dark');
-});
-
-/* ============================================================
-   STATUS DE CONEXÃO
-   ============================================================ */
 function atualizarStatusConexao() {
-    const div = $('statusConexao');
-    const txt = $('statusTexto');
-    if (!navigator.onLine) {
-        div.className = 'status-conexao offline';
-        txt.textContent = 'Offline';
-    } else {
-        div.className = 'status-conexao online';
-        txt.textContent = 'Online';
-    }
+    const statusDiv = document.getElementById("statusConexao");
+    const statusTexto = document.getElementById("statusTexto");
+    if (!navigator.onLine) { statusDiv.className = "status-conexao offline"; statusTexto.textContent = "Sem Conexão"; }
+    else { statusDiv.className = "status-conexao online"; statusTexto.textContent = "Online"; }
 }
-window.addEventListener('online',  atualizarStatusConexao);
+window.addEventListener('online', atualizarStatusConexao);
 window.addEventListener('offline', atualizarStatusConexao);
 atualizarStatusConexao();
 
-/* ============================================================
-   MODAL
-   ============================================================ */
-function mostrarAlerta(mensagem, tipo = 'info', titulo = 'Aviso') {
-    const modal = $('modalAlerta');
-    const icon  = $('modalAlertaIcon');
+window.mostrarAlerta = function(mensagem, tipo = 'info', titulo = 'Aviso') {
+    const modal = document.getElementById('modalAlerta');
+    const icon = document.getElementById('modalAlertaIcon');
     icon.className = 'modal-alerta-icon ' + tipo;
-    const icones = { info: 'info', erro: 'error', aviso: 'warning' };
-    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo] || 'info'}</span>`;
-    $('modalAlertaTitulo').textContent   = titulo;
-    $('modalAlertaMensagem').textContent = mensagem;
-
-    ultimoFocoModal = document.activeElement;
+    const icones = { info:'info', erro:'error', aviso:'warning' };
+    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo]||'info'}</span>`;
+    document.getElementById('modalAlertaTitulo').textContent = titulo;
+    document.getElementById('modalAlertaMensagem').textContent = mensagem;
     modal.classList.add('ativo');
-    requestAnimationFrame(() => $('btnFecharModal').focus());
-}
+};
+window.fecharModalAlerta = function(){ document.getElementById('modalAlerta').classList.remove('ativo'); };
+document.getElementById('modalAlerta').addEventListener('click', function(e){ if(e.target===this) fecharModalAlerta(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') fecharModalAlerta(); });
 
-function fecharModalAlerta() {
-    $('modalAlerta').classList.remove('ativo');
-    if (ultimoFocoModal && typeof ultimoFocoModal.focus === 'function') {
-        ultimoFocoModal.focus();
-    }
-}
-
-$('btnFecharModal').addEventListener('click', fecharModalAlerta);
-$('modalAlerta').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) fecharModalAlerta();
-});
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && $('modalAlerta').classList.contains('ativo')) fecharModalAlerta();
-    if (e.key === 'Tab' && $('modalAlerta').classList.contains('ativo')) {
-        const foco = Array.from(
-            $$('.modal-alerta button, .modal-alerta [href], .modal-alerta input, .modal-alerta select, .modal-alerta textarea, .modal-alerta [tabindex]:not([tabindex="-1"])', $('modalAlerta'))
-        ).filter(el => !el.disabled && el.offsetParent !== null);
-        if (foco.length === 0) return;
-        const primeiro = foco[0];
-        const ultimo = foco[foco.length - 1];
-        if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
-        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
-    }
-});
-
-window.mostrarAlerta = mostrarAlerta;
-window.fecharModalAlerta = fecharModalAlerta;
-
-/* ============================================================
-   AUTENTICAÇÃO
-   ============================================================ */
-onAuthStateChanged(auth, async (user) => {
-    const formBusca = $('formBuscaCard');
-    const resultado = $('resultadoContainer');
-
+onAuthStateChanged(auth, async function(user) {
+    const formBusca = document.getElementById('formBuscaCard');
+    const resultadoContainer = document.getElementById('resultadoContainer');
     if (!user) {
-        mostrarErro('Sua sessão expirou. Faça login novamente.');
-        formBusca.style.display = 'none';
-        resultado.classList.add('hidden');
-        acessoAutorizado = false;
-        return;
+        mostrarErro("Sua sessão expirou. Faça login novamente.");
+        formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
+        acessoAutorizado=false; return;
     }
     usuarioLogado = user;
     try {
-        const snap = await getDoc(doc(db, 'usuarios', user.uid));
+        const snap = await getDoc(doc(db,"usuarios",user.uid));
         if (snap.exists()) {
-            const perfil = (snap.data().perfil || '').toUpperCase();
-            if (['ADMIN','ADMINISTRADOR','SEMED','RH','GESTOR','MASTER','DIRETOR'].includes(perfil)) {
-                acessoAutorizado = true;
-                formBusca.style.display = 'block';
-                ocultarErro();
+            const perfil = (snap.data().perfil||"").toUpperCase();
+            if (["ADMIN","ADMINISTRADOR","SEMED","RH","GESTOR","MASTER","DIRETOR"].includes(perfil)) {
+                acessoAutorizado=true; formBusca.style.display='block'; ocultarErro();
             } else {
-                acessoAutorizado = false;
+                acessoAutorizado=false;
                 mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
-                formBusca.style.display = 'none';
-                resultado.classList.add('hidden');
+                formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
             }
         } else {
-            acessoAutorizado = false;
-            mostrarErro('Usuário não encontrado no sistema.');
-            formBusca.style.display = 'none';
-            resultado.classList.add('hidden');
+            acessoAutorizado=false; mostrarErro("Usuário não encontrado no sistema.");
+            formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
         }
-    } catch (e) {
-        console.error(e);
-        acessoAutorizado = false;
-        mostrarErro('Erro ao verificar permissões.');
-        formBusca.style.display = 'none';
-    }
+    } catch(e){ acessoAutorizado=false; mostrarErro("Erro ao verificar permissões."); formBusca.style.display='none'; }
 });
 
-/* ============================================================
-   MÁSCARA E INTERAÇÃO
-   ============================================================ */
-const inputBusca = $('termoBusca');
-
-inputBusca.addEventListener('input', (e) => {
-    let v = e.target.value.replace(/\D/g, '');
-    if (v.length > 11) v = v.slice(0, 11);
-    if (v.length > 9)      v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-    else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
-    else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
-    e.target.value = v;
+document.getElementById('termoBusca').addEventListener('input', function(e){
+    let v=e.target.value.replace(/\D/g,''); if(v.length>11)v=v.slice(0,11);
+    if(v.length>9)v=v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
+    else if(v.length>6)v=v.replace(/^(\d{3})(\d{3})(\d{1,3})$/,'$1.$2.$3');
+    else if(v.length>3)v=v.replace(/^(\d{3})(\d{1,3})$/,'$1.$2');
+    e.target.value=v;
 });
+document.getElementById('termoBusca').addEventListener('keypress', e=>{ if(e.key==='Enter'){e.preventDefault();buscarServidor();} });
 
-inputBusca.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); buscarServidor(); }
-    if (e.key === 'Escape') { e.target.value = ''; }
-});
-
-$('btnBuscar').addEventListener('click', buscarServidor);
-
-/* ============================================================
-   DATAS
-   ============================================================ */
-function formatarData(s) {
-    if (!s) return '';
-    if (typeof s === 'object' && s.toDate) s = s.toDate().toISOString().split('T')[0];
-    s = s.toString().trim();
-    if (s.includes('-') && s.length >= 10) {
-        const p = s.substring(0, 10).split('-');
-        return `${p[2]}/${p[1]}/${p[0]}`;
-    }
+function formatarData(s){
+    if(!s)return '';
+    if(typeof s==='object'&&s.toDate)s=s.toDate().toISOString().split('T')[0];
+    s=s.toString().trim();
+    if(s.includes('-')&&s.length>=10){const p=s.substring(0,10).split('-');return `${p[2]}/${p[1]}/${p[0]}`;}
     return s;
 }
-
-function parseDataParaDate(s) {
-    if (!s) return null;
-    if (typeof s === 'object' && s.toDate) return s.toDate();
-    s = s.toString().trim();
-    if (s.includes('/')) {
-        const p = s.split('/');
-        return new Date(+p[2], +p[1] - 1, +p[0]);
-    }
-    if (s.includes('-')) {
-        const p = s.substring(0, 10).split('-');
-        return p[0].length === 4
-            ? new Date(+p[0], +p[1] - 1, +p[2])
-            : new Date(+p[2], +p[1] - 1, +p[0]);
-    }
+function parseDataParaDate(s){
+    if(!s)return null;
+    if(typeof s==='object'&&s.toDate)return s.toDate();
+    s=s.toString().trim();
+    if(s.includes('/')){const p=s.split('/');return new Date(+p[2],+p[1]-1,+p[0]);}
+    if(s.includes('-')){const p=s.substring(0,10).split('-');return p[0].length===4?new Date(+p[0],+p[1]-1,+p[2]):new Date(+p[2],+p[1]-1,+p[0]);}
     return null;
 }
-
-/**
- * Procura, em um registro de lançamento, o primeiro campo que contém
- * uma data válida, considerando vários nomes possíveis usados no Firestore.
- */
-function extrairDataPorCampos(reg, campos) {
-    for (const c of campos) {
-        const v = reg[c];
-        if (v) {
-            const d = parseDataParaDate(v);
-            if (d) return d;
+function verificarSeJaGozado(reg, hoje){
+    const dt=parseDataParaDate(reg.data_inicio||reg.dataInicio||reg.data||reg.data_gozo);
+    if(!dt)return false;
+    return dt<=hoje;
+}
+function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao){
+    const dtGozo=parseDataParaDate(dataGozo), dtNasc=parseDataParaDate(dataNascimento), dtAdm=parseDataParaDate(dataAdmissao);
+    if(!dtGozo||!dtNasc||!dtAdm)return null;
+    const mes=dtNasc.getMonth(), dia=dtNasc.getDate();
+    let ini=new Date(dtAdm);
+    for(let i=0;i<40;i++){
+        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+        let aniv=null;
+        for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
+            const c=new Date(a,mes,dia);
+            if(c>=ini&&c<=fim){aniv=c;break;}
         }
-    }
-    return null;
-}
-
-/** Data de lançamento (quando o RH cadastrou). */
-function dataLancamento(reg) {
-    return extrairDataPorCampos(reg, [
-        'data_lancamento', 'dataLancamento',
-        'data_cadastro', 'dataCadastro',
-        'criado_em', 'criadoEm',
-        'createdAt', 'created_at',
-        'timestamp', 'registrado_em', 'registradoEm'
-    ]);
-}
-
-/** Início do gozo efetivo. */
-function dataInicioGozo(reg) {
-    return extrairDataPorCampos(reg, [
-        'data_inicio', 'dataInicio',
-        'data_gozo_inicio', 'dataGozoInicio',
-        'data', 'data_gozo', 'dataGozo'
-    ]);
-}
-
-/** Fim do gozo efetivo (se houver). Se não houver, retorna null. */
-function dataFimGozo(reg) {
-    return extrairDataPorCampos(reg, [
-        'data_fim', 'dataFim',
-        'data_gozo_fim', 'dataGozoFim',
-        'data_retorno', 'dataRetorno'
-    ]);
-}
-
-/** Quem lançou (nome ou e-mail do responsável). */
-function responsavelLancamento(reg) {
-    const v = reg.responsavel || reg.usuario || reg.lancado_por || reg.lancadoPor ||
-              reg.criado_por || reg.criadoPor || reg.autor || reg.email_responsavel;
-    return v ? v.toString().trim() : '';
-}
-
-function verificarSeJaGozado(reg, hoje) {
-    const dt = dataInicioGozo(reg);
-    if (!dt) return false;
-    return dt <= hoje;
-}
-
-function diasEntre(a, b) {
-    if (!a || !b) return null;
-    const MS = 1000 * 60 * 60 * 24;
-    return Math.round((b - a) / MS);
-}
-
-/* ============================================================
-   REGRAS DE NEGÓCIO
-   ============================================================ */
-function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
-    const dtGozo = parseDataParaDate(dataGozo);
-    const dtNasc = parseDataParaDate(dataNascimento);
-    const dtAdm  = parseDataParaDate(dataAdmissao);
-    if (!dtGozo || !dtNasc || !dtAdm) return null;
-
-    const mes = dtNasc.getMonth();
-    const dia = dtNasc.getDate();
-    let ini = new Date(dtAdm);
-
-    for (let i = 0; i < 40; i++) {
-        const fim = new Date(ini);
-        fim.setFullYear(fim.getFullYear() + 1);
-        fim.setDate(fim.getDate() - 1);
-
-        let aniv = null;
-        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
-            const c = new Date(a, mes, dia);
-            if (c >= ini && c <= fim) { aniv = c; break; }
-        }
-        const limite = aniv || fim;
-
-        if (dtGozo <= limite && dtGozo >= ini) return `${ini.getFullYear()}/${fim.getFullYear()}`;
-        if (dtGozo > limite && dtGozo <= fim) {
-            const pi = new Date(fim); pi.setDate(pi.getDate() + 1);
-            const pf = new Date(pi);  pf.setFullYear(pf.getFullYear() + 1); pf.setDate(pf.getDate() - 1);
+        const limite=aniv||fim;
+        if(dtGozo<=limite&&dtGozo>=ini)return `${ini.getFullYear()}/${fim.getFullYear()}`;
+        if(dtGozo>limite&&dtGozo<=fim){
+            const pi=new Date(fim); pi.setDate(pi.getDate()+1);
+            const pf=new Date(pi); pf.setFullYear(pf.getFullYear()+1); pf.setDate(pf.getDate()-1);
             return `${pi.getFullYear()}/${pf.getFullYear()}`;
         }
-        ini = new Date(fim);
-        ini.setDate(ini.getDate() + 1);
+        ini=new Date(fim); ini.setDate(ini.getDate()+1);
     }
     return null;
 }
-
-function calcularDireitoFerias(dataAdmissao, ref = new Date()) {
-    const adm = parseDataParaDate(dataAdmissao);
-    if (!adm) return null;
-    ref.setHours(0, 0, 0, 0);
-
-    let completos = 0;
-    const det = [];
-    let ini = new Date(adm);
-
-    while (completos < 40) {
-        const fim = new Date(ini);
-        fim.setFullYear(fim.getFullYear() + 1);
-        fim.setDate(fim.getDate() - 1);
-
-        const p = {
-            numero: completos + 1,
-            inicio: new Date(ini),
-            fim: new Date(fim),
-            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-            dataLimiteGozo: new Date(fim),
-            status: 'pendente'
-        };
-
-        if (fim <= ref) {
-            completos++;
-            det.push(p);
-            ini = new Date(fim);
-            ini.setDate(ini.getDate() + 1);
-        } else {
-            p.status = 'atual';
-            det.push(p);
-            break;
-        }
+function calcularDireitoFerias(dataAdmissao, ref=new Date()){
+    const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
+    ref.setHours(0,0,0,0);
+    let completos=0, det=[], ini=new Date(adm);
+    while(completos<40){
+        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+        const p={numero:completos+1,inicio:new Date(ini),fim:new Date(fim),
+            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
+            dataLimiteGozo:new Date(fim),status:'pendente'};
+        if(fim<=ref){completos++;det.push(p);ini=new Date(fim);ini.setDate(ini.getDate()+1);}
+        else{p.status='atual';det.push(p);break;}
     }
-    return { periodosCompletos: completos, diasDireito: completos * 30, periodosDetalhados: det };
+    return {periodosCompletos:completos,diasDireito:completos*30,periodosDetalhados:det};
 }
-
-function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
-    const nasc = parseDataParaDate(dataNascimento);
-    const adm  = parseDataParaDate(dataAdmissao);
-    if (!nasc || !adm) return null;
-    ref.setHours(0, 0, 0, 0);
-
-    const mes = nasc.getMonth();
-    const dia = nasc.getDate();
-    let adquiridas = 0, disponiveis = 0, perdidas = 0, proxima = null;
-    const det = [];
-    let ini = new Date(adm);
-
-    for (let i = 0; i < 40; i++) {
-        const fim = new Date(ini);
-        fim.setFullYear(fim.getFullYear() + 1);
-        fim.setDate(fim.getDate() - 1);
-
-        let aniv = null;
-        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
-            const c = new Date(a, mes, dia);
-            if (c >= ini && c <= fim) { aniv = c; break; }
+function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
+    const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
+    if(!nasc||!adm)return null;
+    ref.setHours(0,0,0,0);
+    const mes=nasc.getMonth(), dia=nasc.getDate();
+    let adquiridas=0, disponiveis=0, perdidas=0, proxima=null, det=[], ini=new Date(adm);
+    for(let i=0;i<40;i++){
+        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+        let aniv=null;
+        for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
+            const c=new Date(a,mes,dia);
+            if(c>=ini&&c<=fim){aniv=c;break;}
         }
-        const limite = aniv ? new Date(aniv) : new Date(fim);
-
-        const p = {
-            numero: i + 1,
-            inicio: new Date(ini),
-            fim: new Date(fim),
-            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-            aniversarioNoPeriodo: aniv,
-            dataLimiteGozo: limite,
-            status: 'pendente'
-        };
-
-        if (fim <= ref) {
+        const limite=aniv?new Date(aniv):new Date(fim);
+        const p={numero:i+1,inicio:new Date(ini),fim:new Date(fim),
+            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
+            aniversarioNoPeriodo:aniv,dataLimiteGozo:limite,status:'pendente'};
+        if(fim<=ref){
             adquiridas++;
-            if (limite < ref) { p.status = 'perdido'; perdidas++; }
-            else              { p.status = 'disponivel'; disponiveis++; }
-            det.push(p);
-            ini = new Date(fim);
-            ini.setDate(ini.getDate() + 1);
+            if(limite<ref){p.status='perdido';perdidas++;}
+            else{p.status='disponivel';disponiveis++;}
+            det.push(p); ini=new Date(fim); ini.setDate(ini.getDate()+1);
         } else {
-            p.status = 'disponivel';
-            disponiveis++;
-            det.push(p);
-            break;
+            p.status='disponivel'; disponiveis++; det.push(p); break;
         }
     }
-
-    const anoBase = ref.getFullYear();
-    for (let a = anoBase; a <= anoBase + 2; a++) {
-        const c = new Date(a, mes, dia);
-        if (c > ref) { proxima = c; break; }
+    const anoBase=ref.getFullYear();
+    for(let a=anoBase;a<=anoBase+2;a++){
+        const c=new Date(a,mes,dia);
+        if(c>ref){proxima=c;break;}
     }
-
-    return {
-        folgasAdquiridas: adquiridas,
-        folgasDisponiveis: disponiveis,
-        folgasPerdidas: perdidas,
-        proximaAquisicao: proxima,
-        periodosDetalhados: det
-    };
+    return {folgasAdquiridas:adquiridas,folgasDisponiveis:disponiveis,folgasPerdidas:perdidas,proximaAquisicao:proxima,periodosDetalhados:det};
 }
-
-function filtrarRegistrosPorMatricula(registros, vinculo) {
-    const m = vinculo.matricula.toString().trim().replace(/^0+/, '');
-    return registros.filter(r => {
-        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-        return !rm || rm === m || rm === vinculo.matricula.toString().trim();
+function filtrarRegistrosPorMatricula(registros, vinculo){
+    const m=vinculo.matricula.toString().trim().replace(/^0+/,'');
+    return registros.filter(r=>{
+        const rm=(r.matricula||r.Matricula||r.servidor_matricula||'').toString().trim().replace(/^0+/,'');
+        return !rm||rm===m||rm===vinculo.matricula.toString().trim();
     });
 }
 
-/* ============================================================
-   CONSTRUÇÃO DAS LINHAS
-   ============================================================ */
-function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
-    const linhas = [];
+function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
+    const linhas=[];
+    totaisGlobais={feriasAdquiridas:0,folgasAdquiridas:0};
 
-    vinculos.forEach(vinculo => {
-        if (!vinculo.dataAdmissao) return;
-        const regsMat = filtrarRegistrosPorMatricula(registros, vinculo);
+    vinculos.forEach(vinculo=>{
+        if(!vinculo.dataAdmissao)return;
+        const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
 
-        // FÉRIAS
-        const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje);
-        if (dirF) {
-            const feriasLanc = regsMat.filter(r => {
-                const t = (r.tipo || '').toLowerCase();
-                return t.includes('ferias') || t.includes('férias');
-            });
-
-            dirF.periodosDetalhados.forEach(p => {
-                const lanc = feriasLanc.find(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
-                let status = p.status;
-                let gozoIni = null, gozoFim = null, lancamento = null, responsavel = '';
-
-                if (lanc) {
-                    gozoIni = dataInicioGozo(lanc);
-                    gozoFim = dataFimGozo(lanc);
-                    lancamento = dataLancamento(lanc);
-                    responsavel = responsavelLancamento(lanc);
-                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+        const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje);
+        if(dirF){
+            totaisGlobais.feriasAdquiridas+=dirF.periodosCompletos;
+            const feriasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('ferias')||t.includes('férias');});
+            dirF.periodosDetalhados.forEach(p=>{
+                const lanc=feriasLanc.find(r=>(r.ano_referencia||r.ano||'')===p.anoReferencia);
+                let status=p.status, gozo='';
+                if(lanc){
+                    const raw=lanc.data_inicio||lanc.dataInicio||lanc.data;
+                    gozo=formatarData(raw);
+                    status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 } else {
-                    if (p.status === 'atual') status = 'atual';
-                    else if (p.dataLimiteGozo < hoje) status = 'vencido';
-                    else status = 'pendente';
+                    if(p.status==='atual')status='atual';
+                    else if(p.dataLimiteGozo<hoje)status='vencido';
+                    else status='pendente';
                 }
-
-                linhas.push({
-                    servidor: nomeServidorAtual,
-                    matricula: vinculo.matricula,
-                    tipoKey: 'ferias',
-                    periodo: p.anoReferencia,
-                    inicio: new Date(p.inicio),
-                    fim: new Date(p.fim),
-                    prazoDate: new Date(p.dataLimiteGozo),
-                    status,
-                    gozoIni, gozoFim,
-                    lancamento,
-                    responsavel,
-                    ordem: p.inicio.getTime()
-                });
+                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
+                    periodo:p.anoReferencia,
+                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
             });
         }
 
-        // FOLGA ANIVERSÁRIO
-        const dirG = dataNascimento
-            ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
-            : null;
-
-        if (dirG) {
-            const folgasLanc = regsMat.filter(r => {
-                const t = (r.tipo || '').toLowerCase();
-                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
-            });
-
-            dirG.periodosDetalhados.forEach(p => {
-                const lanc = folgasLanc.find(r => {
-                    const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
-                    const per = identificarPeriodoFolgaAniversario(raw, dataNascimento, vinculo.dataAdmissao);
-                    return (per || r.ano_referencia || r.ano || '') === p.anoReferencia;
+        const dirG=dataNascimento?calcularDireitoFolgaAniversario(dataNascimento,vinculo.dataAdmissao,hoje):null;
+        if(dirG){
+            totaisGlobais.folgasAdquiridas+=dirG.folgasAdquiridas;
+            const folgasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('aniversario')||t.includes('aniversário')||t.includes('folga');});
+            dirG.periodosDetalhados.forEach(p=>{
+                const lanc=folgasLanc.find(r=>{
+                    const raw=r.data||r.data_gozo||r.data_inicio||r.dataInicio;
+                    const per=identificarPeriodoFolgaAniversario(raw,dataNascimento,vinculo.dataAdmissao);
+                    return (per||r.ano_referencia||r.ano||'')===p.anoReferencia;
                 });
-
-                let status = p.status;
-                let gozoIni = null, gozoFim = null, lancamento = null, responsavel = '';
-
-                if (lanc) {
-                    gozoIni = dataInicioGozo(lanc);
-                    gozoFim = dataFimGozo(lanc);
-                    lancamento = dataLancamento(lanc);
-                    responsavel = responsavelLancamento(lanc);
-                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                let status=p.status, gozo='';
+                if(lanc){
+                    const raw=lanc.data||lanc.data_gozo||lanc.data_inicio||lanc.dataInicio;
+                    gozo=formatarData(raw);
+                    status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 }
-
-                linhas.push({
-                    servidor: nomeServidorAtual,
-                    matricula: vinculo.matricula,
-                    tipoKey: 'folga',
-                    periodo: p.anoReferencia,
-                    inicio: new Date(p.inicio),
-                    fim: new Date(p.fim),
-                    prazoDate: new Date(p.dataLimiteGozo),
-                    status,
-                    gozoIni, gozoFim,
-                    lancamento,
-                    responsavel,
-                    ordem: p.inicio.getTime()
-                });
+                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
+                    periodo:p.anoReferencia,
+                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
             });
         }
     });
 
-    linhas.sort((a, b) => b.ordem - a.ordem);
+    linhas.sort((a,b)=>b.ordem-a.ordem);
     return linhas;
 }
 
-/* ============================================================
-   BADGES
-   ============================================================ */
-function badgeStatus(s) {
-    const m = {
-        gozado:     ['badge-gozado',     'check_circle',    'Gozado'],
-        programado: ['badge-programado', 'event_upcoming',  'Programado'],
-        disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
-        pendente:   ['badge-pendente',   'schedule',        'Pendente'],
-        vencido:    ['badge-vencido',    'error',           'Vencido'],
-        perdido:    ['badge-perdido',    'cancel',          'Perdido'],
-        atual:      ['badge-atual',      'hourglass_top',   'Em andamento']
+function badgeStatus(s){
+    const m={
+        gozado:['badge-gozado','check_circle','Gozado'],
+        programado:['badge-programado','event_upcoming','Programado'],
+        disponivel:['badge-disponivel','event_available','Disponível'],
+        pendente:['badge-pendente','schedule','Pendente'],
+        vencido:['badge-vencido','error','Vencido'],
+        perdido:['badge-perdido','cancel','Perdido'],
+        atual:['badge-atual','hourglass_top','Em andamento']
     };
-    const x = m[s];
-    if (!x) return '-';
-    return `<span class="badge-status ${x[0]}">
-        <span class="material-symbols-outlined" aria-hidden="true">${x[1]}</span> ${x[2]}
-    </span>`;
+    const x=m[s]; if(!x)return '-';
+    return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+}
+function badgeTipo(k){
+    return k==='ferias'?'<span class="tipo-badge ferias">Férias</span>':'<span class="tipo-badge folga">Folga Aniv.</span>';
 }
 
-function avisoPrazo(prazoDate, status, hoje) {
-    if (status === 'gozado') return '';
-    const d = diasEntre(hoje, prazoDate);
-    if (d === null) return '';
-    if (d < 0) {
-        const abs = Math.abs(d);
-        return `<span class="prazo-aviso vencido">Vencido há ${abs} ${abs === 1 ? 'dia' : 'dias'}</span>`;
-    }
-    if (d === 0) return `<span class="prazo-aviso proximo">Vence hoje</span>`;
-    if (d <= 90) return `<span class="prazo-aviso proximo">Faltam ${d} ${d === 1 ? 'dia' : 'dias'}</span>`;
-    return '';
-}
-
-/* ============================================================
-   RENDERIZAÇÃO DO RESUMO
-   ============================================================ */
-function renderizarResumoExecutivo() {
-    const container = $('resumoExecutivo');
+function renderizarResumoExecutivo(){
+    const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
-
-    container.innerHTML = mats.map(mat => {
+    
+    let html = '';
+    
+    mats.forEach(mat => {
         const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
-        const c = (arr, s) => arr.filter(l => l.status === s).length;
-        const lanc = arr => arr.filter(l => l.lancamento).length;
-
-        return `
+        const c = (a, s) => a.filter(l => l.status === s).length;
+        
+        html += `
             <div class="resumo-matricula">
                 <div class="resumo-matricula-header">
                     <span class="resumo-matricula-badge">Matrícula ${mat}</span>
@@ -1487,407 +653,178 @@ function renderizarResumoExecutivo() {
                 <div class="resumo-cards-row">
                     <div class="resumo-bloco">
                         <div class="resumo-bloco-titulo">
-                            <span class="material-symbols-outlined" aria-hidden="true">beach_access</span>
-                            Férias
+                            <span class="material-symbols-outlined">beach_access</span> Férias
                         </div>
                         <div class="resumo-chips">
-                            <span class="chip chip-cinza">Períodos <span class="num">${f.length}</span></span>
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${f.length}</span></span>
                             <span class="chip chip-verde">Gozadas <span class="num">${c(f,'gozado')}</span></span>
-                            <span class="chip">Programadas <span class="num">${c(f,'programado')}</span></span>
+                            <span class="chip chip-roxo">Programadas <span class="num">${c(f,'programado')}</span></span>
                             <span class="chip chip-amarelo">Pendentes <span class="num">${c(f,'pendente')}</span></span>
                             <span class="chip chip-vermelho">Vencidas <span class="num">${c(f,'vencido')}</span></span>
-                            <span class="chip">Com lançamento <span class="num">${lanc(f)}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
                         <div class="resumo-bloco-titulo">
-                            <span class="material-symbols-outlined" aria-hidden="true">cake</span>
-                            Folga Aniversário
+                            <span class="material-symbols-outlined">cake</span> Folga Aniversário
                         </div>
                         <div class="resumo-chips">
-                            <span class="chip chip-cinza">Períodos <span class="num">${g.length}</span></span>
+                            <span class="chip chip-cinza">Adquiridas <span class="num">${g.length}</span></span>
                             <span class="chip chip-verde">Gozadas <span class="num">${c(g,'gozado')}</span></span>
-                            <span class="chip">Programadas <span class="num">${c(g,'programado')}</span></span>
-                            <span class="chip">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
+                            <span class="chip chip-roxo">Programadas <span class="num">${c(g,'programado')}</span></span>
+                            <span class="chip chip-azul">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
                             <span class="chip chip-vermelho">Perdidas <span class="num">${c(g,'perdido')}</span></span>
-                            <span class="chip">Com lançamento <span class="num">${lanc(g)}</span></span>
                         </div>
                     </div>
                 </div>
             </div>
         `;
-    }).join('');
-}
-
-/* ============================================================
-   RENDERIZAÇÃO DOS BLOCOS
-   ============================================================ */
-function renderizarBloco(tipoKey, linhas, meta) {
-    const vazio = linhas.length === 0;
-    const { titulo, subtitulo, icone } = meta;
-
-    let corpo;
-    if (vazio) {
-        corpo = `
-            <div class="bloco-vazio">
-                <span class="material-symbols-outlined" aria-hidden="true">${icone}</span>
-                Nenhum período de <strong>${titulo.toLowerCase()}</strong> encontrado com os filtros atuais.
-            </div>
-        `;
-    } else {
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-
-        const rows = linhas.map(l => {
-            const prazo = formatarData(l.prazoDate.toISOString().split('T')[0]);
-            const ciclo = `${formatarData(l.inicio.toISOString().split('T')[0])} — ${formatarData(l.fim.toISOString().split('T')[0])}`;
-            const aviso = avisoPrazo(l.prazoDate, l.status, hoje);
-
-            // Lançamento
-            let lancCell;
-            if (l.lancamento) {
-                const dataLanc = formatarData(l.lancamento.toISOString().split('T')[0]);
-                const resp = l.responsavel
-                    ? `<span class="lancamento-responsavel" title="${l.responsavel}">${l.responsavel}</span>`
-                    : '';
-                lancCell = `
-                    <div class="lancamento-info">
-                        <span class="lancamento-data">${dataLanc}</span>
-                        ${resp}
-                    </div>
-                `;
-            } else {
-                lancCell = `<span class="lancamento-data sem-info">não informado</span>`;
-            }
-
-            // Gozo (intervalo)
-            let gozoCell;
-            if (l.gozoIni && l.gozoFim) {
-                const ini = formatarData(l.gozoIni.toISOString().split('T')[0]);
-                const fim = formatarData(l.gozoFim.toISOString().split('T')[0]);
-                const dias = diasEntre(l.gozoIni, l.gozoFim) + 1;
-                gozoCell = `
-                    <div class="gozo-info">
-                        <span class="gozo-intervalo">${ini} → ${fim}</span>
-                        <span class="gozo-dias">${dias} ${dias === 1 ? 'dia' : 'dias'}</span>
-                    </div>
-                `;
-            } else if (l.gozoIni) {
-                const ini = formatarData(l.gozoIni.toISOString().split('T')[0]);
-                gozoCell = `
-                    <div class="gozo-info">
-                        <span class="gozo-intervalo">${ini}</span>
-                        <span class="gozo-dias">1 dia</span>
-                    </div>
-                `;
-            } else {
-                gozoCell = `<span class="gozo-vazio">não registrado</span>`;
-            }
-
-            return `
-                <tr class="linha-${l.status}">
-                    <td class="td-num">${l.matricula}</td>
-                    <td>
-                        <div class="periodo-info">
-                            <span class="periodo-ano">${l.periodo}</span>
-                            <span class="periodo-intervalo">${ciclo}</span>
-                        </div>
-                    </td>
-                    <td>${lancCell}</td>
-                    <td>${gozoCell}</td>
-                    <td>
-                        <span class="prazo-data">${prazo}</span>
-                        ${aviso}
-                    </td>
-                    <td>${badgeStatus(l.status)}</td>
-                </tr>
-            `;
-        }).join('');
-
-        corpo = `
-            <div class="tabela-wrapper">
-                <table class="periodos-table">
-                    <caption class="visually-hidden">${titulo} — períodos aquisitivos, lançamentos e gozos</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col" class="th-num">Mat.</th>
-                            <th scope="col">
-                                Período aquisitivo
-                                <span class="th-sub">ciclo que gerou o direito</span>
-                            </th>
-                            <th scope="col">
-                                Lançado em
-                                <span class="th-sub">quando o RH cadastrou</span>
-                            </th>
-                            <th scope="col">
-                                Gozo
-                                <span class="th-sub">quando o servidor usou</span>
-                            </th>
-                            <th scope="col">
-                                Vence em
-                                <span class="th-sub">limite para gozar</span>
-                            </th>
-                            <th scope="col">Situação</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    return `
-        <div class="bloco-tipo" data-tipo="${tipoKey}">
-            <div class="bloco-cabecalho">
-                <div class="bloco-cabecalho-esq">
-                    <span class="bloco-icone" aria-hidden="true">
-                        <span class="material-symbols-outlined">${icone}</span>
-                    </span>
-                    <div class="bloco-titulo-grupo">
-                        <span class="bloco-titulo">${titulo}</span>
-                        <span class="bloco-subtitulo">${subtitulo}</span>
-                    </div>
-                </div>
-                <span class="bloco-contador">${linhas.length} ${linhas.length === 1 ? 'período' : 'períodos'}</span>
-            </div>
-            ${corpo}
-        </div>
-    `;
-}
-
-function renderizarBlocos(linhas) {
-    const container = $('blocosTipos');
-
-    const ferias = linhas.filter(l => l.tipoKey === 'ferias');
-    const folgas = linhas.filter(l => l.tipoKey === 'folga');
-
-    const html = [
-        renderizarBloco('ferias', ferias, {
-            titulo: 'Férias',
-            subtitulo: 'Descanso anual remunerado por período aquisitivo de 12 meses',
-            icone: 'beach_access'
-        }),
-        renderizarBloco('folga', folgas, {
-            titulo: 'Folga Aniversário',
-            subtitulo: 'Folga concedida no mês de aniversário do servidor',
-            icone: 'cake'
-        })
-    ].join('');
-
+    });
+    
     container.innerHTML = html;
 }
 
-/* ============================================================
-   FILTROS
-   ============================================================ */
-function popularFiltroMatricula() {
-    const sel = $('filtroMatricula');
-    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
-    sel.innerHTML = '<option value="">Todas</option>' +
-        mats.map(m => `<option value="${m}">${m}</option>`).join('');
+function popularFiltroMatricula(){
+    const sel=document.getElementById('filtroMatricula');
+    const mats=[...new Set(linhasUnificadas.map(l=>l.matricula))];
+    sel.innerHTML='<option value="">Todas</option>'+mats.map(m=>`<option value="${m}">${m}</option>`).join('');
 }
 
-function aplicarFiltros() {
-    const fm = $('filtroMatricula').value;
-    const ft = $('filtroTipo').value;
-    const fs = $('filtroStatus').value;
+window.aplicarFiltros=function(){
+    const fm=document.getElementById('filtroMatricula').value;
+    const ft=document.getElementById('filtroTipo').value;
+    const fs=document.getElementById('filtroStatus').value;
+    let linhas=linhasUnificadas;
+    if(fm)linhas=linhas.filter(l=>l.matricula===fm);
+    if(ft)linhas=linhas.filter(l=>l.tipoKey===ft);
+    if(fs)linhas=linhas.filter(l=>l.status===fs);
+    renderizarTabelaUnica(linhas);
+};
 
-    let linhas = linhasUnificadas;
-    if (fm) linhas = linhas.filter(l => l.matricula === fm);
-    if (ft) linhas = linhas.filter(l => l.tipoKey === ft);
-    if (fs) linhas = linhas.filter(l => l.status === fs);
-
-    renderizarBlocos(linhas);
-
-    const contador = $('contadorResultados');
-    contador.textContent = linhas.length === 0
-        ? 'Nenhum resultado encontrado.'
-        : `${linhas.length} ${linhas.length === 1 ? 'período exibido' : 'períodos exibidos'}.`;
-}
-
-['filtroMatricula', 'filtroTipo', 'filtroStatus'].forEach(id => {
-    $(id).addEventListener('change', aplicarFiltros);
-});
-
-/* ============================================================
-   BUSCA
-   ============================================================ */
-async function buscarServidor() {
-    if (!acessoAutorizado) { mostrarErro('Acesso negado.'); return; }
-
-    const termo = inputBusca.value.trim();
-    if (!termo) {
-        mostrarAlerta('Por favor, digite um CPF ou Matrícula.', 'aviso', 'Campo obrigatório');
-        inputBusca.focus();
+function renderizarTabelaUnica(linhas){
+    const tbody=document.getElementById('tabelaUnica');
+    if(linhas.length===0){
+        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-secondary);padding:24px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
         return;
     }
-
-    const termoLimpo = termo.replace(/\D/g, '');
-    const colRef = collection(db, 'servidores');
-    const encontrados = new Map();
-
-    setLoading(true);
-    try {
-        const s1 = await getDoc(doc(db, 'servidores', termo));
-        if (s1.exists()) encontrados.set(s1.id, s1);
-
-        const s2 = await getDoc(doc(db, 'servidores', termoLimpo));
-        if (s2.exists()) encontrados.set(s2.id, s2);
-
-        const qs = [
-            where('cpf', '==', termo),
-            where('cpf', '==', termoLimpo),
-            where('CPF', '==', termo),
-            where('CPF', '==', termoLimpo),
-            where('matricula', '==', termo),
-            where('matricula', '==', termoLimpo),
-            where('matricula_servidor', '==', termo)
-        ];
-
-        for (const q of qs) {
-            try {
-                const sn = await getDocs(query(colRef, q));
-                sn.forEach(d => encontrados.set(d.id, d));
-            } catch (_) {}
-        }
-
-        if (encontrados.size === 0 && /^\d+$/.test(termoLimpo)) {
-            const all = await getDocs(colRef);
-            all.forEach(d => {
-                const dt = d.data();
-                const m1 = dt.matricula1 && dt.matricula1.numeroMatricula
-                    ? String(dt.matricula1.numeroMatricula).replace(/^0+/, '') : '';
-                const m2 = dt.matricula2 && dt.matricula2.numeroMatricula
-                    ? String(dt.matricula2.numeroMatricula).replace(/^0+/, '') : '';
-                const bus = termoLimpo.replace(/^0+/, '');
-                if (m1 === bus || m2 === bus) encontrados.set(d.id, d);
-            });
-        }
-
-        if (encontrados.size === 0) {
-            mostrarAlerta('CPF não localizado no sistema.', 'erro', 'Servidor não encontrado');
-            $('resultadoContainer').classList.add('hidden');
-            return;
-        }
-
-        await processarServidores(Array.from(encontrados.values()));
-    } catch (e) {
-        console.error(e);
-        mostrarErro('Erro ao consultar o banco.');
-    } finally {
-        setLoading(false);
-    }
+    tbody.innerHTML=linhas.map(l=>`
+        <tr class="linha-${l.status}">
+            <td><strong>${l.servidor}</strong></td>
+            <td>${l.matricula}</td>
+            <td>${badgeTipo(l.tipoKey)}</td>
+            <td>${l.periodo}</td>
+            <td>${l.ciclo}</td>
+            <td>${l.prazo}</td>
+            <td>${badgeStatus(l.status)}</td>
+            <td>${l.gozo}</td>
+        </tr>
+    `).join('');
 }
 
-async function processarServidores(docs) {
-    const d0 = docs[0].data();
-    const nome = d0.nome || d0.Nome || 'Não informado';
+window.buscarServidor=async function(){
+    if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
+    const termo=document.getElementById('termoBusca').value.trim();
+    if(!termo){mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');return;}
+    const termoLimpo=termo.replace(/\D/g,'');
+    const colRef=collection(db,'servidores');
+    const encontrados=new Map();
+    try{
+        const s1=await getDoc(doc(db,'servidores',termo)); if(s1.exists())encontrados.set(s1.id,s1);
+        const s2=await getDoc(doc(db,'servidores',termoLimpo)); if(s2.exists())encontrados.set(s2.id,s2);
+        const qs=[where('cpf','==',termo),where('cpf','==',termoLimpo),where('CPF','==',termo),where('CPF','==',termoLimpo),
+                  where('matricula','==',termo),where('matricula','==',termoLimpo),where('matricula_servidor','==',termo)];
+        for(const q of qs){try{const sn=await getDocs(query(colRef,q));sn.forEach(d=>encontrados.set(d.id,d));}catch(e){}}
+        if(encontrados.size===0&&/^\d+$/.test(termoLimpo)){
+            const all=await getDocs(colRef);
+            all.forEach(d=>{
+                const dt=d.data();
+                const m1=(dt.matricula1&&dt.matricula1.numeroMatricula)?String(dt.matricula1.numeroMatricula).replace(/^0+/,''):'';
+                const m2=(dt.matricula2&&dt.matricula2.numeroMatricula)?String(dt.matricula2.numeroMatricula).replace(/^0+/,''):'';
+                const bus=termoLimpo.replace(/^0+/,'');
+                if(m1===bus||m2===bus)encontrados.set(d.id,d);
+            });
+        }
+        if(encontrados.size===0){
+            mostrarAlerta('CPF não localizado no sistema.','erro','Servidor não encontrado');
+            document.getElementById('resultadoContainer').classList.add('hidden');
+            return;
+        }
+        await processarServidores(Array.from(encontrados.values()));
+    }catch(e){console.error(e);mostrarErro("Erro ao consultar o banco.");}
+};
+
+async function processarServidores(docs){
+    const d0=docs[0].data();
+    const nome=d0.nome||d0.Nome||'Não informado';
     nomeServidorAtual = nome;
+    const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
+    const cpfFmt=(d0.cpf||d0.CPF||'').toString();
+    const nascimento=d0.data_nascimento||d0.dataNascimento;
 
-    const cpfLimpo = (d0.cpf || d0.CPF || '').toString().replace(/\D/g, '');
-    const cpfFmt   = (d0.cpf || d0.CPF || '').toString();
-    const nascimento = d0.data_nascimento || d0.dataNascimento;
-
-    const vinculosMap = new Map();
-    const servidorIds = docs.map(d => d.id);
-
-    docs.forEach(d => {
-        const dt = d.data();
-        const add = (mat, adm) => {
-            if (!mat) return;
-            const ms = mat.toString().trim();
-            if (vinculosMap.has(ms)) return;
-            vinculosMap.set(ms, { matricula: ms, dataAdmissao: adm || '' });
+    const vinculosMap=new Map();
+    const servidorIds=docs.map(d=>d.id);
+    docs.forEach(d=>{
+        const dt=d.data();
+        const add=(mat,adm)=>{
+            if(!mat)return;
+            const ms=mat.toString().trim();
+            if(vinculosMap.has(ms))return;
+            vinculosMap.set(ms,{matricula:ms,dataAdmissao:adm||''});
         };
-        add(
-            dt.matricula || dt.Matricula || dt.matricula_servidor ||
-            (dt.matricula1 && dt.matricula1.numeroMatricula),
-            dt.data_admissao || dt.dataAdmissao ||
-            (dt.matricula1 && dt.matricula1.dataAdmissao)
-        );
-        add(
-            dt.matricula2 && (dt.matricula2.numeroMatricula || dt.matricula2.matricula),
-            dt.matricula2 && (dt.matricula2.dataAdmissao || dt.matricula2.data_admissao)
-        );
+        add(dt.matricula||dt.Matricula||dt.matricula_servidor||(dt.matricula1&&dt.matricula1.numeroMatricula),
+            dt.data_admissao||dt.dataAdmissao||(dt.matricula1&&dt.matricula1.dataAdmissao));
+        add(dt.matricula2&&(dt.matricula2.numeroMatricula||dt.matricula2.matricula),
+            dt.matricula2&&(dt.matricula2.dataAdmissao||dt.matricula2.data_admissao));
     });
+    const vinculos=Array.from(vinculosMap.values());
+    if(vinculos.length===0)vinculos.push({matricula:'Não informada',dataAdmissao:''});
 
-    const vinculos = Array.from(vinculosMap.values());
-    if (vinculos.length === 0) vinculos.push({ matricula: 'Não informada', dataAdmissao: '' });
-
-    let registros = [];
-    const ids = new Set();
-    const colecaoReg = collection(db, 'registro_ferias_folgas');
-
-    const pushReg = (id, dados) => {
-        if (ids.has(id)) return;
-        registros.push({ id, ...dados });
-        ids.add(id);
-    };
-
-    try {
-        if (cpfLimpo) {
-            const sn = await getDocs(query(colecaoReg, where('cpf', '==', cpfLimpo)));
-            sn.forEach(x => pushReg(x.id, x.data()));
-        }
-        if (cpfFmt && cpfFmt !== cpfLimpo) {
-            const sn = await getDocs(query(colecaoReg, where('cpf', '==', cpfFmt)));
-            sn.forEach(x => pushReg(x.id, x.data()));
-        }
-        for (const sid of servidorIds) {
-            try {
-                const sn = await getDocs(query(colecaoReg, where('servidorId', '==', sid)));
-                sn.forEach(x => pushReg(x.id, x.data()));
-            } catch (_) {}
-        }
-
-        if (registros.length === 0) {
-            const all = await getDocs(colecaoReg);
-            all.forEach(x => {
-                const dt = x.data();
-                const rc = (dt.cpf || dt.CPF || '').toString().replace(/\D/g, '');
-                const rm = (dt.matricula || '').toString().trim().replace(/^0+/, '');
-                if (rc === cpfLimpo) { pushReg(x.id, dt); return; }
-                for (const v of vinculos) {
-                    const cm = v.matricula.toString().trim().replace(/^0+/, '');
-                    if (rm && (rm === cm || rm === v.matricula.toString().trim())) { pushReg(x.id, dt); return; }
+    let registros=[];const ids=new Set();
+    try{
+        if(cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfLimpo)));
+            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
+        if(cpfFmt&&cpfFmt!==cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfFmt)));
+            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
+        for(const sid of servidorIds){try{const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('servidorId','==',sid)));
+            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}catch(e){}}
+        if(registros.length===0){
+            const all=await getDocs(collection(db,'registro_ferias_folgas'));
+            all.forEach(x=>{
+                const dt=x.data();
+                const rc=(dt.cpf||dt.CPF||'').toString().replace(/\D/g,'');
+                const rm=(dt.matricula||'').toString().trim().replace(/^0+/,'');
+                if(rc===cpfLimpo){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
+                for(const v of vinculos){
+                    const cm=v.matricula.toString().trim().replace(/^0+/,'');
+                    if(rm&&(rm===cm||rm===v.matricula.toString().trim())){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
                 }
             });
         }
-    } catch (e) { console.error(e); }
+    }catch(e){console.error(e);}
 
-    $('nomeServidor').textContent = nome;
-    $('cpfServidor').textContent = cpfLimpo
-        ? cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-        : '—';
-    $('nascimentoServidor').textContent = formatarData(nascimento) || '—';
-    $('matriculasServidor').textContent = vinculos
-        .map(v => `${v.matricula} (Adm ${formatarData(v.dataAdmissao) || '—'})`)
-        .join('  ·  ');
+    document.getElementById('nomeServidor').innerText=nome;
+    document.getElementById('cpfServidor').innerText=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
+    document.getElementById('nascimentoServidor').innerText=formatarData(nascimento)||'—';
+    document.getElementById('matriculasServidor').innerText=vinculos.map(v=>`${v.matricula} (Adm ${formatarData(v.dataAdmissao)||'—'})`).join('  ·  ');
 
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
 
     renderizarResumoExecutivo();
     popularFiltroMatricula();
-    $('filtroTipo').value = '';
-    $('filtroStatus').value = '';
-    aplicarFiltros();
+    document.getElementById('filtroTipo').value='';
+    document.getElementById('filtroStatus').value='';
+    renderizarTabelaUnica(linhasUnificadas);
 
-    $('resultadoContainer').classList.remove('hidden');
+    document.getElementById('resultadoContainer').classList.remove('hidden');
 }
 
-/* ============================================================
-   ERROS
-   ============================================================ */
-function mostrarErro(t) {
-    $('textoErro').textContent = t;
-    $('mensagemErro').classList.add('ativo');
-    $('resultadoContainer').classList.add('hidden');
+function mostrarErro(t){
+    const el=document.getElementById('mensagemErro');
+    document.getElementById('textoErro').innerText=t;
+    el.classList.add('ativo');
+    document.getElementById('resultadoContainer').classList.add('hidden');
 }
-function ocultarErro() { $('mensagemErro').classList.remove('ativo'); }
-
-window.buscarServidor = buscarServidor;
-window.aplicarFiltros = aplicarFiltros;
+function ocultarErro(){document.getElementById('mensagemErro').classList.remove('ativo');}
 </script>
 
 </body>
