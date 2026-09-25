@@ -1,250 +1,564 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Linha do tempo do servidor — Semed. Consulte férias e folgas por período aquisitivo.">
+<meta name="theme-color" content="#5b2a86">
+<title>Linha do Tempo do Servidor — Vale Transporte</title>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
-
-<title>Linha do Tempo do Servidor - Vale Transporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block&text=home,search,error_outline,error,warning,info,table_view,beach_access,cake,check_circle,event_upcoming,event_available,schedule,cancel,hourglass_top">
 
 <style>
+/* ============================================================
+   TOKENS — PALETA CORPORATIVA CLARA
+   ============================================================ */
 :root {
+    /* Marca institucional */
     --primary: #5b2a86;
     --primary-hover: #47206b;
-    --primary-light: #f1ebf6;
-    --green: #2e7d32;
-    --green-light: #eaf6ec;
-    --green-border: #72b879;
-    --red: #c62828;
-    --red-light: #fff0f0;
-    --red-border: #efc5c5;
-    --yellow: #b45309;
-    --yellow-light: #fef3c7;
-    --yellow-border: #fde68a;
-    --blue: #1565c0;
-    --blue-light: #e3f2fd;
-    --purple: #6a1b9a;
-    --purple-light: #f3e5f5;
-    --text: #263238;
-    --text-secondary: #68737d;
+    --primary-light: #f3eef8;
+    --primary-contrast: #ffffff;
+
+    /* Estados */
+    --green: #1b6b2f;
+    --green-light: #e8f4ea;
+    --green-border: #b7ddbf;
+
+    --red: #b3261e;
+    --red-light: #fdeceb;
+    --red-border: #f2c2be;
+
+    --yellow: #8a4b00;
+    --yellow-light: #fdf3d9;
+    --yellow-border: #f0d99a;
+
+    --blue: #0d47a1;
+    --blue-light: #e7f0fb;
+    --blue-border: #bcd4f2;
+
+    --purple: #5b1a8a;
+    --purple-light: #f3e8fb;
+    --purple-border: #d9bff0;
+
+    /* Superfícies */
+    --text: #1f2733;
+    --text-secondary: #55606e;
+    --text-muted: #7b8694;
+
+    --background: #f4f6f8;      /* fundo da página — cinza corporativo suave */
+    --surface: #ffffff;          /* cards */
+    --surface-2: #f8fafb;        /* linhas alternadas / blocos internos */
+    --surface-3: #eef1f4;        /* chips neutros */
+
     --border: #d9dee3;
-    --background: #f4f6f8;
-    --white: #ffffff;
-    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --border-strong: #c2cad1;
+
+    /* Layout */
+    --radius-sm: 4px;
+    --radius: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04);
+    --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 1px 2px rgba(15, 23, 42, .04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, .08);
+    --shadow-lg: 0 20px 60px rgba(15, 23, 42, .18);
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+
+    --focus-ring: 0 0 0 3px rgba(91, 42, 134, .18);
+    --focus-border: #5b2a86;
+
+    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
-html, body { width: 100%; min-height: 100%; }
-body { min-height: 100vh; background: var(--background); color: var(--text); }
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font);
+}
 
-/*  TOPBAR COMPACTA */
+html, body { width: 100%; min-height: 100%; }
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--background);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.skip-link {
+    position: absolute;
+    left: var(--space-4);
+    top: -100px;
+    z-index: 10000;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    transition: top .2s ease;
+}
+.skip-link:focus { top: var(--space-4); }
+
+.hidden { display: none !important; }
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
 .topbar {
-    width: 100%; max-width: 1116px; height: 60px; margin: 8px auto 0;
-    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
-    box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 24px;
+    width: 100%;
+    max-width: 1116px;
+    height: 60px;
+    margin: 8px auto 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
 }
 .topbar-content { width: 100%; display: flex; align-items: center; gap: 14px; }
 .logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
-.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
-.system-divider { width: 1px; height: 20px; background: #dfe3e6; margin: 0 2px; }
+.system-name { font-size: 15px; font-weight: 700; color: var(--primary); letter-spacing: -.01em; }
+.system-divider { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
 .system-module { font-size: 13px; color: var(--text-secondary); flex-grow: 1; }
 
 .status-conexao {
     display: flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 600;
-    padding: 5px 10px; border-radius: 20px;
-    background: #f1f3f5; border: 1px solid #e2e8f0; white-space: nowrap;
+    padding: 5px 10px; border-radius: var(--radius-full);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    white-space: nowrap;
 }
 .signal-bars { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
-.signal-bars .bar { width: 3px; background-color: #cbd5e1; border-radius: 1px; }
+.signal-bars .bar { width: 3px; background-color: var(--border-strong); border-radius: 1px; }
 .signal-bars .bar-1 { height: 2px; }
 .signal-bars .bar-2 { height: 5px; }
 .signal-bars .bar-3 { height: 7px; }
 .signal-bars .bar-4 { height: 10px; }
-.status-conexao.online { color: #2e7d32; background: #edf7ee; border-color: #c8e6c9; }
-.status-conexao.online .signal-bars .bar { background-color: #2e7d32; }
-.status-conexao.offline { color: #c62828; background: #fff0f0; border-color: #efc5c5; }
-.status-conexao.offline .signal-bars .bar { background-color: #ef4444; animation: pulsar 1.2s infinite ease-in-out; }
+.status-conexao.online { color: var(--green); background: var(--green-light); border-color: var(--green-border); }
+.status-conexao.online .signal-bars .bar { background-color: var(--green); }
+.status-conexao.offline { color: var(--red); background: var(--red-light); border-color: var(--red-border); }
+.status-conexao.offline .signal-bars .bar { background-color: var(--red); animation: pulsar 1.2s infinite ease-in-out; }
 @keyframes pulsar { 0%,100%{opacity:.3;} 50%{opacity:1;} }
 
-/* 👇 MAIN COMPACTO */
-.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 16px 16px; }
+/* ============================================================
+   MAIN / PAGE HEADER
+   ============================================================ */
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 16px; }
 
-/* 👇 PAGE-HEADER COMPACTO */
-.page-header { margin-bottom: 12px; }
-.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7b858e; margin-bottom: 4px; }
+.page-header { margin-bottom: 16px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
 .breadcrumb .material-symbols-outlined { font-size: 15px; }
-.breadcrumb a { text-decoration: none; color: inherit; }
-.page-header h1 { font-size: 20px; font-weight: 700; color: #263238; margin-bottom: 2px; }
+.breadcrumb a { text-decoration: none; color: inherit; border-radius: var(--radius-sm); }
+.breadcrumb a:hover { color: var(--primary); }
+.page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.015em;
+    margin-bottom: 4px;
+}
 .page-header p { font-size: 13px; color: var(--text-secondary); }
 
+/* ============================================================
+   CARDS
+   ============================================================ */
 .form-card {
-    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
-    box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
 }
 .card-title {
-    font-size: 15px; font-weight: 700; color: #37474f; margin-bottom: 12px;
-    display: flex; align-items: center; gap: 8px; padding-bottom: 10px;
-    border-bottom: 1px solid #e5e8eb;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -.005em;
 }
 .card-title .material-symbols-outlined { color: var(--primary); font-size: 20px; }
 
-.form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
 .form-group { display: flex; flex-direction: column; }
-.form-group label { font-size: 12px; font-weight: 600; color: #455a64; margin-bottom: 4px; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
 .form-group label span { color: var(--red); }
 
-.form-card.busca-compacta { padding: 14px 18px; margin-bottom: 14px; }
+.form-card.busca-compacta { padding: 16px 20px; margin-bottom: 16px; }
 .busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
-.busca-linha .form-group label { font-size: 11px; margin-bottom: 4px; }
+.busca-linha .form-group label { font-size: 12px; margin-bottom: 4px; }
 
 .search-input {
-    height: 38px; padding: 0 12px; background: #fff;
-    border: 1px solid var(--border); border-radius: 4px;
-    outline: none; font-size: 13px; color: #263238; width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    font-size: 13.5px;
+    color: var(--text);
+    width: 100%;
+    transition: border-color .15s ease, box-shadow .15s ease;
 }
-.search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:hover { border-color: var(--border-strong); }
+.search-input:focus { border-color: var(--primary); box-shadow: var(--focus-ring); }
 
 .btn-buscar {
-    width: auto; height: 38px; padding: 0 20px; background: var(--primary); color: white;
-    border: none; border-radius: 4px; font-weight: 600; font-size: 13px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    height: 40px;
+    padding: 0 22px;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
     flex-shrink: 0;
+    transition: background .15s ease, box-shadow .15s ease;
+    box-shadow: var(--shadow-sm);
 }
 .btn-buscar:hover { background: var(--primary-hover); }
+.btn-buscar:active { transform: translateY(1px); }
+.btn-buscar:disabled { opacity: .65; cursor: not-allowed; }
 .btn-buscar .material-symbols-outlined { font-size: 18px; }
 
-.cabecalho-compacto {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    padding: 12px 20px;
+/* Cabeçalho do servidor */
+.cabecalho-compacto { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 20px; }
+.cab-item { display: flex; flex-direction: column; gap: 2px; }
+.cab-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
 }
-.cab-item { display: flex; flex-direction: column; gap: 1px; }
-.cab-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
-.cab-item strong { font-size: 13px; color: var(--text); }
-.cab-div { width: 1px; height: 28px; background: #e5e8eb; }
+.cab-item strong { font-size: 13.5px; color: var(--text); font-weight: 600; }
+.cab-div { width: 1px; height: 30px; background: var(--border); }
 
+/* ============================================================
+   RESUMO EXECUTIVO
+   ============================================================ */
 .resumo-executivo { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 .resumo-matricula {
-    background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px;
-    padding: 14px 16px; box-shadow: var(--shadow);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
 }
 .resumo-matricula-header {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 10px; padding-bottom: 8px;
-    border-bottom: 1px solid #eef0f2;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
 }
 .resumo-matricula-badge {
-    font-size: 11px; font-weight: 700; color: var(--blue);
-    background: var(--blue-light); padding: 3px 9px; border-radius: 12px;
+    font-size: 11px; font-weight: 700;
+    color: var(--blue);
+    background: var(--blue-light);
+    border: 1px solid var(--blue-border);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
     letter-spacing: .3px;
 }
-.resumo-matricula-nome {
-    font-size: 12px; color: var(--text-secondary); font-weight: 500;
-}
+.resumo-matricula-nome { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
 .resumo-cards-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .resumo-bloco {
-    background: #fafbfc; border: 1px solid #e5e8eb; border-radius: 8px;
-    padding: 10px 14px; flex: 1; min-width: 240px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 240px;
 }
 .resumo-bloco-titulo {
-    font-size: 12px; font-weight: 700; color: var(--primary);
-    margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
 }
-.resumo-bloco-titulo .material-symbols-outlined { font-size: 15px; }
+.resumo-bloco-titulo .material-symbols-outlined { font-size: 16px; }
 .resumo-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
 .chip {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 9px; border-radius: 16px; font-size: 11px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11.5px; font-weight: 600;
+    border: 1px solid transparent;
 }
-.chip .num { font-weight: 800; font-size: 12px; }
-.chip-verde { background: var(--green-light); color: var(--green); }
-.chip-amarelo { background: var(--yellow-light); color: var(--yellow); }
-.chip-vermelho { background: var(--red-light); color: var(--red); }
-.chip-roxo { background: var(--purple-light); color: var(--purple); }
-.chip-azul { background: var(--blue-light); color: var(--blue); }
-.chip-cinza { background: #eef0f2; color: #454b52; }
+.chip .num { font-weight: 800; font-size: 12.5px; }
+.chip-verde    { background: var(--green-light);  color: var(--green);  border-color: var(--green-border); }
+.chip-amarelo  { background: var(--yellow-light); color: var(--yellow); border-color: var(--yellow-border); }
+.chip-vermelho { background: var(--red-light);    color: var(--red);    border-color: var(--red-border); }
+.chip-roxo     { background: var(--purple-light); color: var(--purple); border-color: var(--purple-border); }
+.chip-azul     { background: var(--blue-light);   color: var(--blue);   border-color: var(--blue-border); }
+.chip-cinza    { background: var(--surface-3);    color: var(--text-secondary); border-color: var(--border); }
 
-.filtros-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+/* ============================================================
+   FILTROS
+   ============================================================ */
+.filtros-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .filtro-group { display: flex; flex-direction: column; min-width: 140px; flex: 1; max-width: 200px; }
-.filtro-group label { font-size: 10px; font-weight: 600; color: var(--text-secondary); margin-bottom: 3px; text-transform: uppercase; }
+.filtro-group label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
 .filtro-select {
-    height: 36px; padding: 0 10px; border: 1px solid var(--border);
-    border-radius: 6px; font-size: 12px; background: #fff; color: var(--text); outline: none;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
 }
-.filtro-select:focus { border-color: var(--primary); }
+.filtro-select:hover { border-color: var(--border-strong); }
+.filtro-select:focus { border-color: var(--primary); box-shadow: var(--focus-ring); }
 
-.periodos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.periodos-table th {
-    background: #fafbfc; padding: 8px 10px; text-align: left;
-    font-weight: 700; color: #455a64; border-bottom: 2px solid #e5e8eb;
-    font-size: 10px; text-transform: uppercase; white-space: nowrap;
+/* ============================================================
+   TABELA
+   ============================================================ */
+.tabela-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
 }
-.periodos-table td { padding: 8px 10px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
-.periodos-table tr:hover { background: #f8fafc; }
-.periodos-table tr.linha-vencido, .periodos-table tr.linha-perdido { background: var(--red-light); }
-.periodos-table tr.linha-pendente { background: var(--yellow-light); }
-.periodos-table tr.linha-gozado { background: var(--green-light); }
-.periodos-table tr.linha-programado { background: var(--purple-light); }
-.periodos-table tr.linha-disponivel { background: var(--green-light); }
-.periodos-table tr.linha-atual { background: var(--blue-light); }
+.periodos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.periodos-table th {
+    background: var(--surface-2);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+}
+.periodos-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: var(--text);
+}
+.periodos-table tbody tr:last-child td { border-bottom: none; }
+.periodos-table tbody tr:hover { background: var(--surface-2); }
+.periodos-table time { font-variant-numeric: tabular-nums; }
+
+.periodos-table tr.linha-vencido,
+.periodos-table tr.linha-perdido   { background: var(--red-light); }
+.periodos-table tr.linha-pendente  { background: var(--yellow-light); }
+.periodos-table tr.linha-gozado,
+.periodos-table tr.linha-disponivel{ background: var(--green-light); }
+.periodos-table tr.linha-programado{ background: var(--purple-light); }
+.periodos-table tr.linha-atual     { background: var(--blue-light); }
 
 .badge-status {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid transparent;
 }
-.badge-status .material-symbols-outlined { font-size: 12px; }
-.badge-gozado { background: var(--green-light); color: var(--green); }
-.badge-pendente { background: var(--yellow-light); color: var(--yellow); }
-.badge-vencido { background: var(--red-light); color: var(--red); }
-.badge-atual { background: var(--blue-light); color: var(--blue); }
-.badge-programado { background: var(--purple-light); color: var(--purple); }
-.badge-disponivel { background: var(--green-light); color: var(--green); }
-.badge-perdido { background: var(--red-light); color: var(--red); }
+.badge-status .material-symbols-outlined { font-size: 13px; }
+.badge-gozado     { background: var(--green-light);  color: var(--green);  border-color: var(--green-border); }
+.badge-pendente   { background: var(--yellow-light); color: var(--yellow); border-color: var(--yellow-border); }
+.badge-vencido    { background: var(--red-light);    color: var(--red);    border-color: var(--red-border); }
+.badge-atual      { background: var(--blue-light);   color: var(--blue);   border-color: var(--blue-border); }
+.badge-programado { background: var(--purple-light); color: var(--purple); border-color: var(--purple-border); }
+.badge-disponivel { background: var(--green-light);  color: var(--green);  border-color: var(--green-border); }
+.badge-perdido    { background: var(--red-light);    color: var(--red);    border-color: var(--red-border); }
 
 .tipo-badge {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .5px; padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    border: 1px solid transparent;
 }
-.tipo-badge.ferias { background: var(--blue-light); color: var(--blue); }
-.tipo-badge.folga { background: var(--green-light); color: var(--green); }
+.tipo-badge.ferias { background: var(--blue-light);   color: var(--blue);   border-color: var(--blue-border); }
+.tipo-badge.folga  { background: var(--green-light);  color: var(--green);  border-color: var(--green-border); }
 
+.tabela-vazia {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 32px 16px !important;
+    font-size: 13px;
+}
+
+/* ============================================================
+   MENSAGEM DE ERRO
+   ============================================================ */
 .mensagem-erro {
-    background: var(--red-light); border: 1px solid var(--red-border); color: var(--red);
-    padding: 12px 16px; border-radius: 6px; font-size: 12px; font-weight: 500;
-    margin-bottom: 16px; display: none; align-items: center; gap: 10px;
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    gap: 10px;
 }
 .mensagem-erro.ativo { display: flex; }
-.hidden { display: none !important; }
+.mensagem-erro .material-symbols-outlined { font-size: 18px; }
 
-.modal-alerta-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
-    z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+/* ============================================================
+   LOADING
+   ============================================================ */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 39, 51, .28);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
 }
-.modal-alerta-overlay.ativo { display: flex; animation: fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-@keyframes slideDown { from{transform:translateY(-20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-.modal-alerta { background:#fff; border-radius:12px; max-width:420px; width:100%; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:slideDown .3s ease; }
-.modal-alerta-header { padding:24px 24px 16px; text-align:center; }
-.modal-alerta-icon { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
-.modal-alerta-icon.info{background:var(--blue-light);color:var(--blue);}
-.modal-alerta-icon.erro{background:var(--red-light);color:var(--red);}
-.modal-alerta-icon.aviso{background:var(--yellow-light);color:var(--yellow);}
-.modal-alerta-icon .material-symbols-outlined{font-size:32px;}
-.modal-alerta-titulo{font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px;}
-.modal-alerta-mensagem{font-size:14px;color:var(--text-secondary);line-height:1.5;}
-.modal-alerta-footer{padding:16px 24px 24px;display:flex;justify-content:center;}
-.modal-alerta-btn{height:40px;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:0 32px;font-size:14px;font-weight:600;cursor:pointer;min-width:120px;}
-.modal-alerta-btn:hover{background:var(--primary-hover);}
+.loading-overlay.ativo { display: flex; }
+.loading-box {
+    background: var(--surface);
+    padding: 20px 28px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+}
+.spinner {
+    width: 20px; height: 20px;
+    border: 2.5px solid var(--primary-light);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-alerta-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 39, 51, .5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-alerta-overlay.ativo { display: flex; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes slideDown { from{transform:translateY(-12px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+
+.modal-alerta {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    max-width: 420px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    animation: slideDown .22s ease;
+    border: 1px solid var(--border);
+}
+.modal-alerta-header { padding: 24px 24px 16px; text-align: center; }
+.modal-alerta-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+}
+.modal-alerta-icon.info  { background: var(--blue-light);   color: var(--blue); }
+.modal-alerta-icon.erro  { background: var(--red-light);    color: var(--red); }
+.modal-alerta-icon.aviso { background: var(--yellow-light); color: var(--yellow); }
+.modal-alerta-icon .material-symbols-outlined { font-size: 32px; }
+.modal-alerta-titulo { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.modal-alerta-mensagem { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.modal-alerta-footer { padding: 16px 24px 24px; display: flex; justify-content: center; }
+.modal-alerta-btn {
+    height: 40px;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 32px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 120px;
+    transition: background .15s ease;
+}
+.modal-alerta-btn:hover { background: var(--primary-hover); }
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
 @media (max-width: 768px) {
     .topbar { margin: 8px 12px 0; width: calc(100% - 24px); padding: 0 12px; height: 56px; }
     .system-module, .system-divider { display: none; }
-    .main { padding: 12px 12px; }
-    .cabecalho-compacto { gap: 10px; }
+    .main { padding: 12px; }
+    .cabecalho-compacto { gap: 12px; }
     .cab-div { display: none; }
     .filtros-row { flex-direction: column; }
     .filtro-group { max-width: 100%; }
@@ -252,19 +566,67 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     .btn-buscar { width: 100%; }
     .resumo-cards-row { flex-direction: column; }
 }
+
+/* ============================================================
+   PREFERÊNCIAS DO USUÁRIO
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================
+   IMPRESSÃO
+   ============================================================ */
+@media print {
+    @page { margin: 1.5cm; }
+
+    body { background: #fff; color: #000; font-size: 10pt; }
+
+    .skip-link,
+    .topbar,
+    .busca-compacta,
+    .filtros-row,
+    .modal-alerta-overlay,
+    .loading-overlay { display: none !important; }
+
+    .main { max-width: none; padding: 0; }
+    .form-card,
+    .resumo-matricula { box-shadow: none; border: 1px solid #999; }
+
+    .tabela-wrapper { border-color: #999; }
+    .periodos-table { font-size: 9pt; }
+    .periodos-table th,
+    .periodos-table td { border-color: #999; }
+    .periodos-table tr { page-break-inside: avoid; }
+
+    .periodos-table tr,
+    .badge-status,
+    .tipo-badge,
+    .chip {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
 </style>
 </head>
 
 <body>
 
+<a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+
 <header class="topbar">
     <div class="topbar-content">
-        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
         <span class="system-name">Vale Transporte</span>
-        <div class="system-divider"></div>
-        <span class="system-module">Semed - Linha do Tempo do Servidor</span>
-        <div id="statusConexao" class="status-conexao online">
-            <div class="signal-bars">
+        <div class="system-divider" aria-hidden="true"></div>
+        <span class="system-module">Semed — Linha do Tempo do Servidor</span>
+        <div id="statusConexao" class="status-conexao online" role="status" aria-live="polite">
+            <div class="signal-bars" aria-hidden="true">
                 <span class="bar bar-1"></span><span class="bar bar-2"></span>
                 <span class="bar bar-3"></span><span class="bar bar-4"></span>
             </div>
@@ -273,30 +635,41 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
     </div>
 </header>
 
-<main class="main">
+<main class="main" id="conteudo">
     <div class="page-header">
-        <div class="breadcrumb">
-            <a href="index.html"><span class="material-symbols-outlined">home</span></a>
-            <span>/</span>
-            <span>Linha do Tempo</span>
-        </div>
+        <nav class="breadcrumb" aria-label="Trilha de navegação">
+            <a href="index.html" aria-label="Início">
+                <span class="material-symbols-outlined" aria-hidden="true">home</span>
+            </a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Linha do Tempo</span>
+        </nav>
         <h1>Linha do Tempo do Servidor</h1>
         <p>Visão consolidada de férias e folgas por período aquisitivo.</p>
     </div>
 
-    <div id="mensagemErro" class="mensagem-erro">
-        <span class="material-symbols-outlined">error_outline</span>
+    <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="assertive">
+        <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
         <span id="textoErro">Erro ao carregar dados.</span>
     </div>
 
-    <section class="form-card busca-compacta" id="formBuscaCard">
+    <section class="form-card busca-compacta" id="formBuscaCard" aria-labelledby="tituloBusca">
+        <h2 id="tituloBusca" class="visually-hidden">Buscar servidor</h2>
         <div class="busca-linha">
             <div class="form-group">
-                <label for="termoBusca">CPF ou Matrícula do Servidor <span>*</span></label>
-                <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20">
+                <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
+                <input
+                    type="text"
+                    id="termoBusca"
+                    class="search-input"
+                    placeholder="000.000.000-00"
+                    maxlength="20"
+                    autocomplete="off"
+                    inputmode="numeric"
+                    aria-required="true">
             </div>
-            <button class="btn-buscar" onclick="buscarServidor()">
-                <span class="material-symbols-outlined">search</span>
+            <button type="button" class="btn-buscar" id="btnBuscar">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
                 Buscar
             </button>
         </div>
@@ -304,40 +677,40 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 
     <div id="resultadoContainer" class="hidden">
 
-        <section class="form-card cabecalho-compacto">
-            <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">-</strong></div>
-            <div class="cab-div"></div>
-            <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">-</strong></div>
-            <div class="cab-div"></div>
-            <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">-</strong></div>
-            <div class="cab-div"></div>
-            <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">-</strong></div>
+        <section class="form-card cabecalho-compacto" aria-label="Dados do servidor">
+            <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">—</strong></div>
+            <div class="cab-div" aria-hidden="true"></div>
+            <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
         </section>
 
         <div id="resumoExecutivo" class="resumo-executivo"></div>
 
-        <section class="form-card">
-            <div class="card-title">
-                <span class="material-symbols-outlined">table_view</span>
+        <section class="form-card" aria-labelledby="tituloTabela">
+            <div class="card-title" id="tituloTabela">
+                <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
                 Situação de Férias e Folgas por Período
             </div>
 
-            <div class="filtros-row">
+            <div class="filtros-row" role="group" aria-label="Filtros da tabela">
                 <div class="filtro-group">
-                    <label>Matrícula</label>
-                    <select id="filtroMatricula" class="filtro-select" onchange="aplicarFiltros()"></select>
+                    <label for="filtroMatricula">Matrícula</label>
+                    <select id="filtroMatricula" class="filtro-select"></select>
                 </div>
                 <div class="filtro-group">
-                    <label>Tipo</label>
-                    <select id="filtroTipo" class="filtro-select" onchange="aplicarFiltros()">
+                    <label for="filtroTipo">Tipo</label>
+                    <select id="filtroTipo" class="filtro-select">
                         <option value="">Todos</option>
                         <option value="ferias">Férias</option>
                         <option value="folga">Folga Aniversário</option>
                     </select>
                 </div>
                 <div class="filtro-group">
-                    <label>Status</label>
-                    <select id="filtroStatus" class="filtro-select" onchange="aplicarFiltros()">
+                    <label for="filtroStatus">Status</label>
+                    <select id="filtroStatus" class="filtro-select">
                         <option value="">Todos</option>
                         <option value="gozado">Gozado</option>
                         <option value="disponivel">Disponível</option>
@@ -350,482 +723,32 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
                 </div>
             </div>
 
-            <div style="overflow-x:auto;">
-                <table class="periodos-table">
+            <div class="tabela-wrapper">
+                <table class="periodos-table" aria-describedby="tituloTabela">
+                    <caption class="visually-hidden">Férias e folgas por período aquisitivo do servidor</caption>
                     <thead>
                         <tr>
-                            <th>Servidor</th>
-                            <th>Matrícula</th>
-                            <th>Tipo</th>
-                            <th>Período</th>
-                            <th>Ciclo Aquisitivo</th>
-                            <th>Prazo de Gozo</th>
-                            <th>Status</th>
-                            <th>Gozo</th>
+                            <th scope="col">Servidor</th>
+                            <th scope="col">Matrícula</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Período</th>
+                            <th scope="col">Ciclo Aquisitivo</th>
+                            <th scope="col">Prazo de Gozo</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Gozo</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaUnica"></tbody>
                 </table>
             </div>
+
+            <p id="contadorResultados" class="visually-hidden" role="status" aria-live="polite"></p>
         </section>
 
     </div>
 </main>
 
-<div id="modalAlerta" class="modal-alerta-overlay">
-    <div class="modal-alerta">
-        <div class="modal-alerta-header">
-            <div class="modal-alerta-icon" id="modalAlertaIcon"><span class="material-symbols-outlined">info</span></div>
-            <div class="modal-alerta-titulo" id="modalAlertaTitulo">Aviso</div>
-            <div class="modal-alerta-mensagem" id="modalAlertaMensagem">Mensagem</div>
-        </div>
-        <div class="modal-alerta-footer">
-            <button class="modal-alerta-btn" onclick="fecharModalAlerta()">OK</button>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-import { db, auth } from "./firebase.js";
-import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-let usuarioLogado = null;
-let acessoAutorizado = false;
-let linhasUnificadas = [];
-let totaisGlobais = { feriasAdquiridas: 0, folgasAdquiridas: 0 };
-let nomeServidorAtual = '';
-
-function atualizarStatusConexao() {
-    const statusDiv = document.getElementById("statusConexao");
-    const statusTexto = document.getElementById("statusTexto");
-    if (!navigator.onLine) { statusDiv.className = "status-conexao offline"; statusTexto.textContent = "Sem Conexão"; }
-    else { statusDiv.className = "status-conexao online"; statusTexto.textContent = "Online"; }
-}
-window.addEventListener('online', atualizarStatusConexao);
-window.addEventListener('offline', atualizarStatusConexao);
-atualizarStatusConexao();
-
-window.mostrarAlerta = function(mensagem, tipo = 'info', titulo = 'Aviso') {
-    const modal = document.getElementById('modalAlerta');
-    const icon = document.getElementById('modalAlertaIcon');
-    icon.className = 'modal-alerta-icon ' + tipo;
-    const icones = { info:'info', erro:'error', aviso:'warning' };
-    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo]||'info'}</span>`;
-    document.getElementById('modalAlertaTitulo').textContent = titulo;
-    document.getElementById('modalAlertaMensagem').textContent = mensagem;
-    modal.classList.add('ativo');
-};
-window.fecharModalAlerta = function(){ document.getElementById('modalAlerta').classList.remove('ativo'); };
-document.getElementById('modalAlerta').addEventListener('click', function(e){ if(e.target===this) fecharModalAlerta(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') fecharModalAlerta(); });
-
-onAuthStateChanged(auth, async function(user) {
-    const formBusca = document.getElementById('formBuscaCard');
-    const resultadoContainer = document.getElementById('resultadoContainer');
-    if (!user) {
-        mostrarErro("Sua sessão expirou. Faça login novamente.");
-        formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
-        acessoAutorizado=false; return;
-    }
-    usuarioLogado = user;
-    try {
-        const snap = await getDoc(doc(db,"usuarios",user.uid));
-        if (snap.exists()) {
-            const perfil = (snap.data().perfil||"").toUpperCase();
-            if (["ADMIN","ADMINISTRADOR","SEMED","RH","GESTOR","MASTER","DIRETOR"].includes(perfil)) {
-                acessoAutorizado=true; formBusca.style.display='block'; ocultarErro();
-            } else {
-                acessoAutorizado=false;
-                mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
-                formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
-            }
-        } else {
-            acessoAutorizado=false; mostrarErro("Usuário não encontrado no sistema.");
-            formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
-        }
-    } catch(e){ acessoAutorizado=false; mostrarErro("Erro ao verificar permissões."); formBusca.style.display='none'; }
-});
-
-document.getElementById('termoBusca').addEventListener('input', function(e){
-    let v=e.target.value.replace(/\D/g,''); if(v.length>11)v=v.slice(0,11);
-    if(v.length>9)v=v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
-    else if(v.length>6)v=v.replace(/^(\d{3})(\d{3})(\d{1,3})$/,'$1.$2.$3');
-    else if(v.length>3)v=v.replace(/^(\d{3})(\d{1,3})$/,'$1.$2');
-    e.target.value=v;
-});
-document.getElementById('termoBusca').addEventListener('keypress', e=>{ if(e.key==='Enter'){e.preventDefault();buscarServidor();} });
-
-function formatarData(s){
-    if(!s)return '';
-    if(typeof s==='object'&&s.toDate)s=s.toDate().toISOString().split('T')[0];
-    s=s.toString().trim();
-    if(s.includes('-')&&s.length>=10){const p=s.substring(0,10).split('-');return `${p[2]}/${p[1]}/${p[0]}`;}
-    return s;
-}
-function parseDataParaDate(s){
-    if(!s)return null;
-    if(typeof s==='object'&&s.toDate)return s.toDate();
-    s=s.toString().trim();
-    if(s.includes('/')){const p=s.split('/');return new Date(+p[2],+p[1]-1,+p[0]);}
-    if(s.includes('-')){const p=s.substring(0,10).split('-');return p[0].length===4?new Date(+p[0],+p[1]-1,+p[2]):new Date(+p[2],+p[1]-1,+p[0]);}
-    return null;
-}
-function verificarSeJaGozado(reg, hoje){
-    const dt=parseDataParaDate(reg.data_inicio||reg.dataInicio||reg.data||reg.data_gozo);
-    if(!dt)return false;
-    return dt<=hoje;
-}
-function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao){
-    const dtGozo=parseDataParaDate(dataGozo), dtNasc=parseDataParaDate(dataNascimento), dtAdm=parseDataParaDate(dataAdmissao);
-    if(!dtGozo||!dtNasc||!dtAdm)return null;
-    const mes=dtNasc.getMonth(), dia=dtNasc.getDate();
-    let ini=new Date(dtAdm);
-    for(let i=0;i<40;i++){
-        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
-        let aniv=null;
-        for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
-            const c=new Date(a,mes,dia);
-            if(c>=ini&&c<=fim){aniv=c;break;}
-        }
-        const limite=aniv||fim;
-        if(dtGozo<=limite&&dtGozo>=ini)return `${ini.getFullYear()}/${fim.getFullYear()}`;
-        if(dtGozo>limite&&dtGozo<=fim){
-            const pi=new Date(fim); pi.setDate(pi.getDate()+1);
-            const pf=new Date(pi); pf.setFullYear(pf.getFullYear()+1); pf.setDate(pf.getDate()-1);
-            return `${pi.getFullYear()}/${pf.getFullYear()}`;
-        }
-        ini=new Date(fim); ini.setDate(ini.getDate()+1);
-    }
-    return null;
-}
-function calcularDireitoFerias(dataAdmissao, ref=new Date()){
-    const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
-    ref.setHours(0,0,0,0);
-    let completos=0, det=[], ini=new Date(adm);
-    while(completos<40){
-        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
-        const p={numero:completos+1,inicio:new Date(ini),fim:new Date(fim),
-            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            dataLimiteGozo:new Date(fim),status:'pendente'};
-        if(fim<=ref){completos++;det.push(p);ini=new Date(fim);ini.setDate(ini.getDate()+1);}
-        else{p.status='atual';det.push(p);break;}
-    }
-    return {periodosCompletos:completos,diasDireito:completos*30,periodosDetalhados:det};
-}
-function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
-    const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
-    if(!nasc||!adm)return null;
-    ref.setHours(0,0,0,0);
-    const mes=nasc.getMonth(), dia=nasc.getDate();
-    let adquiridas=0, disponiveis=0, perdidas=0, proxima=null, det=[], ini=new Date(adm);
-    for(let i=0;i<40;i++){
-        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
-        let aniv=null;
-        for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
-            const c=new Date(a,mes,dia);
-            if(c>=ini&&c<=fim){aniv=c;break;}
-        }
-        const limite=aniv?new Date(aniv):new Date(fim);
-        const p={numero:i+1,inicio:new Date(ini),fim:new Date(fim),
-            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            aniversarioNoPeriodo:aniv,dataLimiteGozo:limite,status:'pendente'};
-        if(fim<=ref){
-            adquiridas++;
-            if(limite<ref){p.status='perdido';perdidas++;}
-            else{p.status='disponivel';disponiveis++;}
-            det.push(p); ini=new Date(fim); ini.setDate(ini.getDate()+1);
-        } else {
-            p.status='disponivel'; disponiveis++; det.push(p); break;
-        }
-    }
-    const anoBase=ref.getFullYear();
-    for(let a=anoBase;a<=anoBase+2;a++){
-        const c=new Date(a,mes,dia);
-        if(c>ref){proxima=c;break;}
-    }
-    return {folgasAdquiridas:adquiridas,folgasDisponiveis:disponiveis,folgasPerdidas:perdidas,proximaAquisicao:proxima,periodosDetalhados:det};
-}
-function filtrarRegistrosPorMatricula(registros, vinculo){
-    const m=vinculo.matricula.toString().trim().replace(/^0+/,'');
-    return registros.filter(r=>{
-        const rm=(r.matricula||r.Matricula||r.servidor_matricula||'').toString().trim().replace(/^0+/,'');
-        return !rm||rm===m||rm===vinculo.matricula.toString().trim();
-    });
-}
-
-function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
-    const linhas=[];
-    totaisGlobais={feriasAdquiridas:0,folgasAdquiridas:0};
-
-    vinculos.forEach(vinculo=>{
-        if(!vinculo.dataAdmissao)return;
-        const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
-
-        const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje);
-        if(dirF){
-            totaisGlobais.feriasAdquiridas+=dirF.periodosCompletos;
-            const feriasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('ferias')||t.includes('férias');});
-            dirF.periodosDetalhados.forEach(p=>{
-                const lanc=feriasLanc.find(r=>(r.ano_referencia||r.ano||'')===p.anoReferencia);
-                let status=p.status, gozo='';
-                if(lanc){
-                    const raw=lanc.data_inicio||lanc.dataInicio||lanc.data;
-                    gozo=formatarData(raw);
-                    status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
-                } else {
-                    if(p.status==='atual')status='atual';
-                    else if(p.dataLimiteGozo<hoje)status='vencido';
-                    else status='pendente';
-                }
-                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
-                    periodo:p.anoReferencia,
-                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
-                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
-            });
-        }
-
-        const dirG=dataNascimento?calcularDireitoFolgaAniversario(dataNascimento,vinculo.dataAdmissao,hoje):null;
-        if(dirG){
-            totaisGlobais.folgasAdquiridas+=dirG.folgasAdquiridas;
-            const folgasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('aniversario')||t.includes('aniversário')||t.includes('folga');});
-            dirG.periodosDetalhados.forEach(p=>{
-                const lanc=folgasLanc.find(r=>{
-                    const raw=r.data||r.data_gozo||r.data_inicio||r.dataInicio;
-                    const per=identificarPeriodoFolgaAniversario(raw,dataNascimento,vinculo.dataAdmissao);
-                    return (per||r.ano_referencia||r.ano||'')===p.anoReferencia;
-                });
-                let status=p.status, gozo='';
-                if(lanc){
-                    const raw=lanc.data||lanc.data_gozo||lanc.data_inicio||lanc.dataInicio;
-                    gozo=formatarData(raw);
-                    status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
-                }
-                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
-                    periodo:p.anoReferencia,
-                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
-                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
-            });
-        }
-    });
-
-    linhas.sort((a,b)=>b.ordem-a.ordem);
-    return linhas;
-}
-
-function badgeStatus(s){
-    const m={
-        gozado:['badge-gozado','check_circle','Gozado'],
-        programado:['badge-programado','event_upcoming','Programado'],
-        disponivel:['badge-disponivel','event_available','Disponível'],
-        pendente:['badge-pendente','schedule','Pendente'],
-        vencido:['badge-vencido','error','Vencido'],
-        perdido:['badge-perdido','cancel','Perdido'],
-        atual:['badge-atual','hourglass_top','Em andamento']
-    };
-    const x=m[s]; if(!x)return '-';
-    return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
-}
-function badgeTipo(k){
-    return k==='ferias'?'<span class="tipo-badge ferias">Férias</span>':'<span class="tipo-badge folga">Folga Aniv.</span>';
-}
-
-function renderizarResumoExecutivo(){
-    const container = document.getElementById('resumoExecutivo');
-    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
-    
-    let html = '';
-    
-    mats.forEach(mat => {
-        const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
-        const f = linhasMat.filter(l => l.tipoKey === 'ferias');
-        const g = linhasMat.filter(l => l.tipoKey === 'folga');
-        const c = (a, s) => a.filter(l => l.status === s).length;
-        
-        html += `
-            <div class="resumo-matricula">
-                <div class="resumo-matricula-header">
-                    <span class="resumo-matricula-badge">Matrícula ${mat}</span>
-                    <span class="resumo-matricula-nome">${nomeServidorAtual}</span>
-                </div>
-                <div class="resumo-cards-row">
-                    <div class="resumo-bloco">
-                        <div class="resumo-bloco-titulo">
-                            <span class="material-symbols-outlined">beach_access</span> Férias
-                        </div>
-                        <div class="resumo-chips">
-                            <span class="chip chip-cinza">Adquiridas <span class="num">${f.length}</span></span>
-                            <span class="chip chip-verde">Gozadas <span class="num">${c(f,'gozado')}</span></span>
-                            <span class="chip chip-roxo">Programadas <span class="num">${c(f,'programado')}</span></span>
-                            <span class="chip chip-amarelo">Pendentes <span class="num">${c(f,'pendente')}</span></span>
-                            <span class="chip chip-vermelho">Vencidas <span class="num">${c(f,'vencido')}</span></span>
-                        </div>
-                    </div>
-                    <div class="resumo-bloco">
-                        <div class="resumo-bloco-titulo">
-                            <span class="material-symbols-outlined">cake</span> Folga Aniversário
-                        </div>
-                        <div class="resumo-chips">
-                            <span class="chip chip-cinza">Adquiridas <span class="num">${g.length}</span></span>
-                            <span class="chip chip-verde">Gozadas <span class="num">${c(g,'gozado')}</span></span>
-                            <span class="chip chip-roxo">Programadas <span class="num">${c(g,'programado')}</span></span>
-                            <span class="chip chip-azul">Disponíveis <span class="num">${c(g,'disponivel')+c(g,'atual')}</span></span>
-                            <span class="chip chip-vermelho">Perdidas <span class="num">${c(g,'perdido')}</span></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-function popularFiltroMatricula(){
-    const sel=document.getElementById('filtroMatricula');
-    const mats=[...new Set(linhasUnificadas.map(l=>l.matricula))];
-    sel.innerHTML='<option value="">Todas</option>'+mats.map(m=>`<option value="${m}">${m}</option>`).join('');
-}
-
-window.aplicarFiltros=function(){
-    const fm=document.getElementById('filtroMatricula').value;
-    const ft=document.getElementById('filtroTipo').value;
-    const fs=document.getElementById('filtroStatus').value;
-    let linhas=linhasUnificadas;
-    if(fm)linhas=linhas.filter(l=>l.matricula===fm);
-    if(ft)linhas=linhas.filter(l=>l.tipoKey===ft);
-    if(fs)linhas=linhas.filter(l=>l.status===fs);
-    renderizarTabelaUnica(linhas);
-};
-
-function renderizarTabelaUnica(linhas){
-    const tbody=document.getElementById('tabelaUnica');
-    if(linhas.length===0){
-        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-secondary);padding:24px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
-        return;
-    }
-    tbody.innerHTML=linhas.map(l=>`
-        <tr class="linha-${l.status}">
-            <td><strong>${l.servidor}</strong></td>
-            <td>${l.matricula}</td>
-            <td>${badgeTipo(l.tipoKey)}</td>
-            <td>${l.periodo}</td>
-            <td>${l.ciclo}</td>
-            <td>${l.prazo}</td>
-            <td>${badgeStatus(l.status)}</td>
-            <td>${l.gozo}</td>
-        </tr>
-    `).join('');
-}
-
-window.buscarServidor=async function(){
-    if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
-    const termo=document.getElementById('termoBusca').value.trim();
-    if(!termo){mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');return;}
-    const termoLimpo=termo.replace(/\D/g,'');
-    const colRef=collection(db,'servidores');
-    const encontrados=new Map();
-    try{
-        const s1=await getDoc(doc(db,'servidores',termo)); if(s1.exists())encontrados.set(s1.id,s1);
-        const s2=await getDoc(doc(db,'servidores',termoLimpo)); if(s2.exists())encontrados.set(s2.id,s2);
-        const qs=[where('cpf','==',termo),where('cpf','==',termoLimpo),where('CPF','==',termo),where('CPF','==',termoLimpo),
-                  where('matricula','==',termo),where('matricula','==',termoLimpo),where('matricula_servidor','==',termo)];
-        for(const q of qs){try{const sn=await getDocs(query(colRef,q));sn.forEach(d=>encontrados.set(d.id,d));}catch(e){}}
-        if(encontrados.size===0&&/^\d+$/.test(termoLimpo)){
-            const all=await getDocs(colRef);
-            all.forEach(d=>{
-                const dt=d.data();
-                const m1=(dt.matricula1&&dt.matricula1.numeroMatricula)?String(dt.matricula1.numeroMatricula).replace(/^0+/,''):'';
-                const m2=(dt.matricula2&&dt.matricula2.numeroMatricula)?String(dt.matricula2.numeroMatricula).replace(/^0+/,''):'';
-                const bus=termoLimpo.replace(/^0+/,'');
-                if(m1===bus||m2===bus)encontrados.set(d.id,d);
-            });
-        }
-        if(encontrados.size===0){
-            mostrarAlerta('CPF não localizado no sistema.','erro','Servidor não encontrado');
-            document.getElementById('resultadoContainer').classList.add('hidden');
-            return;
-        }
-        await processarServidores(Array.from(encontrados.values()));
-    }catch(e){console.error(e);mostrarErro("Erro ao consultar o banco.");}
-};
-
-async function processarServidores(docs){
-    const d0=docs[0].data();
-    const nome=d0.nome||d0.Nome||'Não informado';
-    nomeServidorAtual = nome;
-    const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
-    const cpfFmt=(d0.cpf||d0.CPF||'').toString();
-    const nascimento=d0.data_nascimento||d0.dataNascimento;
-
-    const vinculosMap=new Map();
-    const servidorIds=docs.map(d=>d.id);
-    docs.forEach(d=>{
-        const dt=d.data();
-        const add=(mat,adm)=>{
-            if(!mat)return;
-            const ms=mat.toString().trim();
-            if(vinculosMap.has(ms))return;
-            vinculosMap.set(ms,{matricula:ms,dataAdmissao:adm||''});
-        };
-        add(dt.matricula||dt.Matricula||dt.matricula_servidor||(dt.matricula1&&dt.matricula1.numeroMatricula),
-            dt.data_admissao||dt.dataAdmissao||(dt.matricula1&&dt.matricula1.dataAdmissao));
-        add(dt.matricula2&&(dt.matricula2.numeroMatricula||dt.matricula2.matricula),
-            dt.matricula2&&(dt.matricula2.dataAdmissao||dt.matricula2.data_admissao));
-    });
-    const vinculos=Array.from(vinculosMap.values());
-    if(vinculos.length===0)vinculos.push({matricula:'Não informada',dataAdmissao:''});
-
-    let registros=[];const ids=new Set();
-    try{
-        if(cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfLimpo)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
-        if(cpfFmt&&cpfFmt!==cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfFmt)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
-        for(const sid of servidorIds){try{const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('servidorId','==',sid)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}catch(e){}}
-        if(registros.length===0){
-            const all=await getDocs(collection(db,'registro_ferias_folgas'));
-            all.forEach(x=>{
-                const dt=x.data();
-                const rc=(dt.cpf||dt.CPF||'').toString().replace(/\D/g,'');
-                const rm=(dt.matricula||'').toString().trim().replace(/^0+/,'');
-                if(rc===cpfLimpo){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
-                for(const v of vinculos){
-                    const cm=v.matricula.toString().trim().replace(/^0+/,'');
-                    if(rm&&(rm===cm||rm===v.matricula.toString().trim())){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
-                }
-            });
-        }
-    }catch(e){console.error(e);}
-
-    document.getElementById('nomeServidor').innerText=nome;
-    document.getElementById('cpfServidor').innerText=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
-    document.getElementById('nascimentoServidor').innerText=formatarData(nascimento)||'—';
-    document.getElementById('matriculasServidor').innerText=vinculos.map(v=>`${v.matricula} (Adm ${formatarData(v.dataAdmissao)||'—'})`).join('  ·  ');
-
-    const hoje=new Date();hoje.setHours(0,0,0,0);
-    linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
-
-    renderizarResumoExecutivo();
-    popularFiltroMatricula();
-    document.getElementById('filtroTipo').value='';
-    document.getElementById('filtroStatus').value='';
-    renderizarTabelaUnica(linhasUnificadas);
-
-    document.getElementById('resultadoContainer').classList.remove('hidden');
-}
-
-function mostrarErro(t){
-    const el=document.getElementById('mensagemErro');
-    document.getElementById('textoErro').innerText=t;
-    el.classList.add('ativo');
-    document.getElementById('resultadoContainer').classList.add('hidden');
-}
-function ocultarErro(){document.getElementById('mensagemErro').classList.remove('ativo');}
-</script>
-
-</body>
-</html>
+<div id="loading" class="loading-overlay" role="status" aria-live="polite" aria-label="Carregando">
+    <div class="loading-box">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Consultando
