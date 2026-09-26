@@ -1,46 +1,138 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Painel de controle do sistema de gestão de Vale Transporte — SEMED.">
+<meta name="theme-color" content="#4a3068">
+<title>Início — Gestão de Vale Transporte</title>
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=menu,menu_open,dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,chevron_left">
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<!-- Aplica preferências ANTES do render para evitar flash -->
+<script>
+(function () {
+    try {
+        var tema = localStorage.getItem('tema-vt') || 'light';
+        document.documentElement.setAttribute('data-theme', tema);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', tema === 'dark' ? '#1a1a1c' : '#4a3068');
 
-<title>Início - Gestão de Vale Transporte</title>
+        var menuFechado = localStorage.getItem('menu-vt-fechado');
+        // Padrão: fechado (a menos que o usuário tenha aberto de propósito)
+        var aplicarFechado = menuFechado === null ? true : menuFechado === '1';
+        if (aplicarFechado) {
+            document.documentElement.classList.add('menu-inicial-fechado');
+        }
+    } catch (e) {}
+})();
+</script>
 
 <style>
+/* ============================================================
+   TOKENS — TEMA CLARO (institucional)
+   ============================================================ */
+:root,
+:root[data-theme="light"] {
+    --brand: #4a3068;
+    --brand-hover: #3a2551;
+    --brand-soft: #ece7f2;
+    --brand-contrast: #ffffff;
 
-:root {
-    --primary: #5b2a86;
-    --primary-hover: #47206b;
-    --primary-light: #f1ebf6;
+    --gray-50:  #fafafa;
+    --gray-100: #f4f4f5;
+    --gray-150: #ececee;
+    --gray-200: #e4e4e7;
+    --gray-300: #d4d4d8;
+    --gray-400: #a1a1aa;
+    --gray-500: #71717a;
+    --gray-600: #52525b;
+    --gray-700: #3f3f46;
+    --gray-800: #27272a;
+    --gray-900: #18181b;
 
-    --green: #2e7d32;
-    --green-hover: #1b5e20;
-    --green-light: #eaf6ec;
+    --ok: #166534;
+    --ok-bg: #f0f7f2;
+    --ok-bd: #b7cfbf;
 
-    --text: #263238;
-    --text-secondary: #68737d;
+    --background: var(--gray-100);
+    --surface: #ffffff;
+    --surface-2: var(--gray-50);
+    --surface-3: var(--gray-150);
 
-    --border: #d9dee3;
-    --background: #f4f6f8;
-    --white: #ffffff;
+    --text: var(--gray-900);
+    --text-secondary: var(--gray-600);
+    --text-muted: var(--gray-500);
 
-    --sidebar-width: 280px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --border: var(--gray-200);
+    --border-strong: var(--gray-300);
+
+    --shadow-sm: 0 1px 2px rgba(24,24,27,.04);
+    --shadow: 0 1px 3px rgba(24,24,27,.06), 0 1px 2px rgba(24,24,27,.03);
+    --shadow-lg: 0 20px 50px rgba(24,24,27,.16);
+
+    --focus-ring: 0 0 0 3px rgba(74,48,104,.16);
+    --focus-border: #4a3068;
+
+    --sidebar-width: 268px;
+    --topbar-height: 56px;
+
+    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-* {
+:root[data-theme="dark"] {
+    --brand: #b8a3d1;
+    --brand-hover: #cbb9df;
+    --brand-soft: #2a2334;
+    --brand-contrast: #1a1a1c;
+
+    --gray-50:  #18181b;
+    --gray-100: #1c1c1f;
+    --gray-150: #232327;
+    --gray-200: #2a2a2e;
+    --gray-300: #3f3f46;
+    --gray-400: #52525b;
+    --gray-500: #71717a;
+    --gray-600: #a1a1aa;
+    --gray-700: #d4d4d8;
+    --gray-800: #e4e4e7;
+    --gray-900: #f4f4f5;
+
+    --ok: #86c79a;
+    --ok-bg: #16281d;
+    --ok-bd: #2f5c3f;
+
+    --background: #141416;
+    --surface: #1c1c1f;
+    --surface-2: #232327;
+    --surface-3: #2a2a2e;
+
+    --text: var(--gray-900);
+    --text-secondary: var(--gray-600);
+    --text-muted: var(--gray-500);
+
+    --border: var(--gray-200);
+    --border-strong: var(--gray-300);
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+    --shadow: 0 1px 3px rgba(0,0,0,.5);
+    --shadow-lg: 0 20px 50px rgba(0,0,0,.6);
+
+    --focus-ring: 0 0 0 3px rgba(184,163,209,.22);
+    --focus-border: #b8a3d1;
+}
+
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    font-family: var(--font);
 }
 
 html, body {
@@ -49,30 +141,65 @@ html, body {
     background: var(--background);
     color: var(--text);
     overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
 .layout-wrapper {
     display: flex;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
-/* MENU LATERAL (SIDEBAR) */
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 .sidebar {
     width: var(--sidebar-width);
     min-width: var(--sidebar-width);
     height: 100%;
-    background: var(--white);
+    background: var(--surface);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, min-width 0.3s ease, opacity 0.2s ease;
+    transition: width .25s ease, min-width .25s ease, opacity .2s ease;
     overflow: hidden;
     z-index: 100;
+    flex-shrink: 0;
 }
 
 .sidebar.fechado {
+    width: 0;
+    min-width: 0;
+    border-right: none;
+    opacity: 0;
+}
+
+/* Aplica fechado antes do JS rodar — evita o "flash" de sidebar aberta */
+:root.menu-inicial-fechado .sidebar {
     width: 0;
     min-width: 0;
     border-right: none;
@@ -87,34 +214,45 @@ html, body {
 }
 
 .sidebar-header {
-    height: 70px;
-    padding: 0 24px;
+    height: var(--topbar-height);
+    padding: 0 20px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .sidebar-logo {
-    width: 38px;
-    height: 38px;
+    width: 30px;
+    height: 30px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
 .sidebar-brand {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--primary);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.005em;
+}
+
+.sidebar-section {
+    padding: 20px 16px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
 }
 
 .sidebar-menu {
     list-style: none;
-    padding: 20px 14px;
+    padding: 0 12px 20px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
     flex-grow: 1;
     overflow-y: auto;
     white-space: nowrap;
@@ -123,35 +261,42 @@ html, body {
 .menu-item a {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 16px;
-    border-radius: 8px;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 5px;
     text-decoration: none;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: background-color .12s ease, color .12s ease;
 }
 
 .menu-item a:hover {
-    background: var(--primary-light);
-    color: var(--primary);
+    background: var(--surface-2);
+    color: var(--text);
 }
 
 .menu-item.ativo a {
-    background: var(--primary);
-    color: var(--white);
+    background: var(--brand-soft);
+    color: var(--brand);
     font-weight: 600;
 }
 
 .menu-item .material-symbols-outlined {
-    font-size: 22px;
+    font-size: 20px;
     flex-shrink: 0;
+    color: inherit;
+    opacity: .85;
 }
 
-/* CONTEÚDO PRINCIPAL */
+.menu-item.ativo .material-symbols-outlined { opacity: 1; }
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
 .main-content {
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -159,146 +304,223 @@ html, body {
     background: var(--background);
 }
 
-/* TOOBAR SUPERIOR */
+/* ============================================================
+   TOPBAR
+   ============================================================ */
 .topbar {
-    height: 70px;
-    background: var(--white);
+    height: var(--topbar-height);
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 32px;
+    padding: 0 20px;
     flex-shrink: 0;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    z-index: 50;
 }
 
 .topbar-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
+/* Botão de menu SEMPRE no canto esquerdo, ANTES do título */
 .btn-menu-toggle {
-    background: none;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: var(--surface);
     border: 1px solid var(--border);
-    cursor: pointer;
-    color: var(--text);
-    display: flex;
+    border-radius: 5px;
+    color: var(--text-secondary);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: var(--white);
-    transition: all 0.15s;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
 }
 
 .btn-menu-toggle:hover {
-    background: var(--primary-light);
-    color: var(--primary);
-    border-color: var(--primary);
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border-strong);
 }
 
+.btn-menu-toggle .material-symbols-outlined { font-size: 20px; }
+
 .topbar-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #3d2450;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.005em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .user-badge {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    background: #f8fafc;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-2);
     border: 1px solid var(--border);
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    max-width: 260px;
+    overflow: hidden;
 }
 
-/* ÁREA DE TRABALHO / DASHBOARD */
+.user-badge span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-badge .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand);
+    flex-shrink: 0;
+}
+
+.btn-tema {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+
+.btn-tema:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border-strong);
+}
+
+.btn-tema .material-symbols-outlined { font-size: 18px; }
+.btn-tema .icon-dark  { display: none; }
+.btn-tema .icon-light { display: inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
 .dashboard-body {
-    flex-grow: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
-    padding: 36px;
+    padding: 32px;
 }
 
 .hero-banner {
-    background: linear-gradient(135deg, var(--primary) 0%, #47206b 100%);
-    color: var(--white);
-    padding: 36px 40px;
-    border-radius: 12px;
-    margin-bottom: 32px;
-    box-shadow: var(--shadow);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--brand);
+    color: var(--text);
+    padding: 24px 28px;
+    border-radius: 6px;
+    margin-bottom: 28px;
 }
 
 .hero-banner h1 {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+    margin-bottom: 6px;
 }
 
 .hero-banner p {
-    font-size: 14px;
-    opacity: 0.9;
-    max-width: 700px;
-    line-height: 1.5;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    max-width: 760px;
+    line-height: 1.55;
 }
 
 .section-heading {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 14px;
 }
 
-/* GRID DE MÓDULOS */
+/* ============================================================
+   GRID DE MÓDULOS
+   ============================================================ */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 22px;
+    gap: 16px;
 }
 
 .nav-card {
-    background: var(--white);
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 28px;
+    border-radius: 6px;
+    padding: 20px;
     text-decoration: none;
     color: var(--text);
-    box-shadow: var(--shadow);
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 
 .nav-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--primary);
-    box-shadow: 0 6px 16px rgba(91,42,134,0.08);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow);
+}
+
+.nav-card:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 2px;
 }
 
 .card-icon-box {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
-    background: var(--primary-light);
-    color: var(--primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    background: var(--brand-soft);
+    color: var(--brand);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.card-icon-box .material-symbols-outlined {
-    font-size: 28px;
+.card-icon-box .material-symbols-outlined { font-size: 22px; }
+
+.card-icon-box.verde {
+    background: var(--ok-bg);
+    color: var(--ok);
 }
 
 .nav-card h3 {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 14.5px;
+    font-weight: 600;
     color: var(--text);
+    letter-spacing: -.005em;
 }
 
 .nav-card p {
@@ -307,70 +529,110 @@ html, body {
     line-height: 1.5;
 }
 
-@media (max-width: 768px) {
-    .topbar {
-        padding: 0 16px;
-    }
-    .dashboard-body {
-        padding: 20px;
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+@media (max-width: 900px) {
+    .topbar-title { display: none; }
+    .dashboard-body { padding: 20px; }
+    .hero-banner { padding: 20px; }
+    .hero-banner h1 { font-size: 16px; }
+}
+
+@media (max-width: 640px) {
+    .user-badge { max-width: 160px; }
+    .user-badge span:last-child { font-size: 12px; }
+    .dashboard-body { padding: 16px; }
+    .cards-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   PREFERÊNCIAS
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 
+/* ============================================================
+   IMPRESSÃO
+   ============================================================ */
+@media print {
+    @page { margin: 1.5cm; }
+    body { background: #fff !important; color: #000 !important; }
+    .sidebar, .topbar, .btn-tema, .user-badge { display: none !important; }
+    .dashboard-body { padding: 0; overflow: visible; }
+    .layout-wrapper { display: block; height: auto; overflow: visible; }
+    .main-content { overflow: visible; }
+    .hero-banner, .nav-card {
+        box-shadow: none;
+        border: 1px solid #999;
+        background: #fff !important;
+        color: #000 !important;
+        page-break-inside: avoid;
+    }
+}
 </style>
 </head>
 
 <body>
 
 <div class="layout-wrapper">
-    
+
     <!-- MENU LATERAL -->
-    <aside class="sidebar" id="sidebarMenu">
+    <aside class="sidebar" id="sidebarMenu" aria-label="Menu principal">
         <div class="sidebar-inner">
             <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
                 <span class="sidebar-brand">Portal Recursos Humanos</span>
             </div>
 
+            <div class="sidebar-section">Navegação</div>
+
             <ul class="sidebar-menu">
                 <li class="menu-item ativo">
-                    <a href="inicial.html">
-                        <span class="material-symbols-outlined">dashboard</span>
+                    <a href="inicial.html" aria-current="page">
+                        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
                         <span>Painel Inicial</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="servidores.html">
-                        <span class="material-symbols-outlined">badge</span>
-                        <span>Servidores & Vínculos</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                        <span>Servidores &amp; Vínculos</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="configuracao.html">
-                        <span class="material-symbols-outlined">calendar_month</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                         <span>Dias Úteis (SEMED)</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="escola.html">
-                        <span class="material-symbols-outlined">edit_note</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
                         <span>Lançamentos da Unidade</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="linha_tempo.html">
-                        <span class="material-symbols-outlined">event_note</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
                         <span>Férias, Folgas e Licenças</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="calculo.html">
-                        <span class="material-symbols-outlined">calculate</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
                         <span>Cálculo e Vales</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="relatorios.html">
-                        <span class="material-symbols-outlined">description</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">description</span>
                         <span>Relatórios</span>
                     </a>
                 </li>
@@ -380,43 +642,65 @@ html, body {
 
     <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-content">
-        
+
         <!-- BARRA SUPERIOR -->
         <header class="topbar">
             <div class="topbar-left">
-                <button type="button" class="btn-menu-toggle" onclick="alternarMenu()" title="Abrir/Fechar Menu">
-                    <span class="material-symbols-outlined">menu</span>
+                <button type="button"
+                        class="btn-menu-toggle"
+                        id="btnMenuToggle"
+                        aria-label="Abrir ou fechar menu lateral"
+                        aria-controls="sidebarMenu"
+                        aria-expanded="false"
+                        title="Abrir / fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
-                <span class="topbar-title">SEMED - Secretaria Municipal de Educação</span>
+                <span class="topbar-title">SEMED — Secretaria Municipal de Educação</span>
             </div>
-            <div class="user-badge">
-                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--primary);">account_circle</span>
-                <span id="userEmailText">Carregando...</span>
+
+            <div class="topbar-right">
+                <div class="user-badge" role="status" aria-live="polite">
+                    <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+                    <span id="userEmailText">Carregando…</span>
+                </div>
+
+                <button type="button"
+                        class="btn-tema"
+                        id="btnTema"
+                        aria-label="Alternar tema claro/escuro"
+                        title="Alternar tema">
+                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
+                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
+                </button>
             </div>
         </header>
 
         <!-- DASHBOARD -->
         <main class="dashboard-body">
-            <div class="hero-banner">
-                <h1>Painel de Controle - Vale Transporte</h1>
-                <p>Gerencie o cadastro de professores, calendários oficiais da SEMED, os ajustes descentralizados por escola, o controle rigoroso de férias/licenças e o motor de cálculo financeiro.</p>
-            </div>
+            <section class="hero-banner" aria-labelledby="heroTitulo">
+                <h1 id="heroTitulo">Painel de Controle — Vale Transporte</h1>
+                <p>
+                    Gerencie o cadastro de professores, calendários oficiais da SEMED,
+                    os ajustes descentralizados por escola, o controle rigoroso de
+                    férias/licenças e o motor de cálculo financeiro.
+                </p>
+            </section>
 
-            <h2 class="section-heading">Acesso Rápido aos Módulos</h2>
+            <h2 class="section-heading">Acesso rápido aos módulos</h2>
 
             <div class="cards-grid">
-                
+
                 <a href="servidores.html" class="nav-card">
                     <div class="card-icon-box">
-                        <span class="material-symbols-outlined">badge</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">badge</span>
                     </div>
                     <h3>Cadastro de Servidores</h3>
                     <p>Gerencie os dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
                 </a>
 
-                <a href="dias.html" class="nav-card">
+                <a href="configuracao.html" class="nav-card">
                     <div class="card-icon-box">
-                        <span class="material-symbols-outlined">calendar_month</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                     </div>
                     <h3>Configuração SEMED</h3>
                     <p>Defina a quantidade de dias úteis letivos de referência oficial para cada mês da rede de ensino.</p>
@@ -424,23 +708,23 @@ html, body {
 
                 <a href="escola.html" class="nav-card">
                     <div class="card-icon-box">
-                        <span class="material-symbols-outlined">edit_note</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
                     </div>
                     <h3>Lançamentos da Escola</h3>
                     <p>Ajuste o calendário específico da unidade (como semanas comemorativas) e registre faltas e afastamentos.</p>
                 </a>
 
-                <a href="lancamentos.html" class="nav-card">
+                <a href="linha_tempo.html" class="nav-card">
                     <div class="card-icon-box">
-                        <span class="material-symbols-outlined">event_note</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
                     </div>
                     <h3>Férias, Folgas e Licenças</h3>
                     <p>Registre e controle o usufruto de férias regulamentares, folgas de aniversário e afastamentos médicos dos servidores.</p>
                 </a>
 
                 <a href="calculo.html" class="nav-card">
-                    <div class="card-icon-box" style="background: var(--green-light); color: var(--green);">
-                        <span class="material-symbols-outlined">calculate</span>
+                    <div class="card-icon-box verde">
+                        <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
                     </div>
                     <h3>Cálculo de Vales</h3>
                     <p>Gere o fechamento financeiro completo cruzando os dias ajustados da escola e os afastamentos por CPF.</p>
@@ -448,7 +732,7 @@ html, body {
 
                 <a href="relatorios.html" class="nav-card">
                     <div class="card-icon-box">
-                        <span class="material-symbols-outlined">description</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">description</span>
                     </div>
                     <h3>Relatórios Gerais</h3>
                     <p>Consulte e exporte consolidados detalhados de pagamentos, frequências e ausências de toda a rede municipal.</p>
@@ -462,25 +746,81 @@ html, body {
 </div>
 
 <script>
-    function alternarMenu() {
-        const sidebar = document.getElementById("sidebarMenu");
-        sidebar.classList.toggle("fechado");
+/* ============================================================
+   TEMA CLARO / ESCURO
+   ============================================================ */
+(function () {
+    var btn = document.getElementById('btnTema');
+    btn.addEventListener('click', function () {
+        var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        var novo  = atual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', novo);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', novo === 'dark' ? '#1a1a1c' : '#4a3068');
+        try { localStorage.setItem('tema-vt', novo); } catch (e) {}
+    });
+})();
+
+/* ============================================================
+   MENU LATERAL — abre/fecha, persiste e acessível
+   ============================================================ */
+(function () {
+    var sidebar   = document.getElementById('sidebarMenu');
+    var btn       = document.getElementById('btnMenuToggle');
+    var CHAVE     = 'menu-vt-fechado';
+
+    // Estado inicial: fechado, a menos que o usuário já tenha aberto de propósito
+    var salvo = null;
+    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
+    var iniciarFechado = salvo === null ? true : salvo === '1';
+
+    aplicarEstado(iniciarFechado, /*animar=*/false);
+
+    btn.addEventListener('click', function () {
+        var estaFechado = sidebar.classList.contains('fechado');
+        aplicarEstado(!estaFechado, /*animar=*/true);
+    });
+
+    // Atalho: tecla "m" alterna o menu (opcional, ajuda quem usa muito)
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'm' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            btn.click();
+        }
+    });
+
+    function aplicarEstado(fechado, animar) {
+        if (!animar) {
+            // Desliga transição por um instante pra não "deslizar" no load
+            sidebar.style.transition = 'none';
+        }
+        sidebar.classList.toggle('fechado', fechado);
+        document.documentElement.classList.remove('menu-inicial-fechado');
+
+        if (!animar) {
+            // Força reflow, então reativa a transição
+            void sidebar.offsetWidth;
+            sidebar.style.transition = '';
+        }
+
+        btn.setAttribute('aria-expanded', String(!fechado));
+
+        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
     }
+})();
 </script>
 
 <script type="module">
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Monitora o estado de autenticação para preencher o e-mail no cabeçalho
 onAuthStateChanged(auth, (user) => {
-    const userEmailSpan = document.getElementById("userEmailText");
+    const userEmailSpan = document.getElementById('userEmailText');
     if (user) {
-        // Se estiver logado, coloca o e-mail no elemento
         userEmailSpan.textContent = user.email;
+        userEmailSpan.title = user.email;
     } else {
-        // Se não estiver logado, redireciona para a página de login
-        window.location.href = "index.html"; // ou o nome da sua página de login
+        window.location.href = 'index.html';
     }
 });
 </script>
