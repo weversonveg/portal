@@ -216,7 +216,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); -we
 .hidden { display: none !important; }
 
 /* =========================================================
-   👇 MODAL DE CARREGAMENTO (sem blur)
+    MODAL DE CARREGAMENTO (sem blur)
 ========================================================= */
 .loading-overlay {
     display: none;
@@ -442,6 +442,7 @@ let usuarioLogado = null;
 let acessoAutorizado = false;
 let linhasUnificadas = [];
 let nomeServidorAtual = '';
+let ultimoTermoBuscado = ''; // 👈 Guarda o último termo buscado
 
 function atualizarStatusConexao() {
     const statusDiv = document.getElementById("statusConexao");
@@ -779,12 +780,18 @@ function renderizarTabelaUnica(linhas){
 }
 
 /* =========================================================
-   👇 BUSCA COM LOADING
+   👇 BUSCA COM LOADING - EVITA BUSCAS DUPLICADAS
 ========================================================= */
 window.buscarServidor=async function(){
     if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
     const termo=document.getElementById('termoBusca').value.trim();
     if(!termo){mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');return;}
+
+    // 👈 Verifica se é o mesmo termo que já foi buscado
+    if(termo === ultimoTermoBuscado && document.getElementById('resultadoContainer').classList.contains('hidden') === false){
+        // Dados já estão na tela, não precisa buscar novamente
+        return;
+    }
 
     mostrarLoading('Buscando servidor...');
 
@@ -814,6 +821,7 @@ window.buscarServidor=async function(){
             return;
         }
         await processarServidores(Array.from(encontrados.values()));
+        ultimoTermoBuscado = termo; // 👈 Guarda o termo buscado com sucesso
     }catch(e){
         console.error(e);
         mostrarErro("Erro ao consultar o banco.");
