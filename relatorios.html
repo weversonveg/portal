@@ -198,6 +198,7 @@ tr:hover td { background: #f8fafc; }
                 </select>
             </div>
 
+            <!-- Filtros específicos de VALES -->
             <div id="filtrosVales" style="display: contents;">
                 <div class="filter-group">
                     <label for="tipoPeriodo">Tipo de Período</label>
@@ -226,29 +227,13 @@ tr:hover td { background: #f8fafc; }
                     <label for="filtroEmpresa">Empresa / Concessionária</label>
                     <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
                 </div>
-                <div class="filter-group full-width">
-                    <label>Escolas / Unidades de Ensino</label>
-                    <div class="custom-dropdown" id="dropdownEscolasContainer">
-                        <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
-                            <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
-                            <span class="material-symbols-outlined">arrow_drop_down</span>
-                        </div>
-                        <div class="dropdown-options-panel" id="dropdownPanel">
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
-                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
-                        </div>
-                    </div>
-                </div>
                 <div class="filter-checkbox-group">
                     <input type="checkbox" id="filtroApenasFalta">
                     <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
                 </div>
             </div>
 
+            <!-- Filtros específicos de FÉRIAS E FOLGAS -->
             <div id="filtrosFerias" style="display: none;">
                 <div class="filter-group">
                     <label for="filtroTipoBeneficio">Tipo de Benefício</label>
@@ -277,6 +262,25 @@ tr:hover td { background: #f8fafc; }
                 <div class="filter-group">
                     <label for="filtroNomeServidor">Nome do Servidor</label>
                     <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
+                </div>
+            </div>
+
+            <!-- 👇 ESCOLAS: AGORA COMUM AOS DOIS RELATÓRIOS -->
+            <div class="filter-group full-width">
+                <label>Escolas / Unidades de Ensino</label>
+                <div class="custom-dropdown" id="dropdownEscolasContainer">
+                    <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
+                        <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
+                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                    </div>
+                    <div class="dropdown-options-panel" id="dropdownPanel">
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -358,6 +362,15 @@ tr:hover td { background: #f8fafc; }
         document.getElementById('loadingOverlay').classList.remove('ativo');
         const btn = document.getElementById('btnGerar');
         if (btn) btn.disabled = false;
+    }
+
+    // 👇 Lê a seleção de escolas (comum aos dois relatórios)
+    function lerSelecaoEscolas() {
+        const checkboxesEscola = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"]):checked');
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const todasEscolasMarcadas = master ? master.checked : false;
+        const escolasSelecionadas = Array.from(checkboxesEscola).map(cb => cb.value);
+        return { todasEscolasMarcadas, escolasSelecionadas };
     }
 
     function formatarMesAnoPTBR(valor) {
@@ -473,11 +486,8 @@ tr:hover td { background: #f8fafc; }
             const fim = new Date(ini);
             fim.setFullYear(fim.getFullYear() + 1);
             fim.setDate(fim.getDate() - 1);
-            
-            // 👇 PRAZO DE GOZO: 12 meses após o fim do período aquisitivo
             const prazoGozo = new Date(fim);
             prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
-            
             const p = {
                 numero: completos + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
@@ -515,11 +525,8 @@ tr:hover td { background: #f8fafc; }
                 if (c >= ini && c <= fim) { aniv = c; break; }
             }
             const limite = aniv ? new Date(aniv) : new Date(fim);
-            
-            // 👇 PRAZO DE GOZO: aniversário + 12 meses
             const prazoGozo = new Date(limite);
             prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
-            
             const p = {
                 numero: i + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
@@ -580,11 +587,17 @@ tr:hover td { background: #f8fafc; }
         }
     }
 
+    /* =========================================================
+       RELATÓRIO DE FÉRIAS E FOLGAS (AGORA COM FILTRO DE ESCOLA)
+    ========================================================= */
     async function gerarRelatorioFerias() {
         const tipoBeneficioFiltro = document.getElementById("filtroTipoBeneficio").value;
         const statusFiltro = document.getElementById("filtroStatus").value;
         const matriculaFiltro = document.getElementById("filtroMatriculaFerias").value.trim();
         const nomeFiltro = document.getElementById("filtroNomeServidor").value.trim().toLowerCase();
+
+        // 👇 Lê seleção de escolas (campo comum)
+        const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
 
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnPdf");
@@ -593,6 +606,12 @@ tr:hover td { background: #f8fafc; }
 
         msgDiv.className = "mensagem"; msgDiv.textContent = "";
         btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
+
+        // 👇 Valida escolas
+        if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
+            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
+            return;
+        }
 
         mostrarLoading('Gerando relatório de férias e folgas...');
 
@@ -642,6 +661,9 @@ tr:hover td { background: #f8fafc; }
                     if (matriculaFiltro && !v.matricula.toString().includes(matriculaFiltro)) return;
                     if (!v.dataAdmissao) return;
 
+                    // 👇 FILTRO DE ESCOLA APLICADO AQUI
+                    if (!todasEscolasMarcadas && !escolasSelecionadas.includes(v.escola)) return;
+
                     const regsMat = registros.filter(r => {
                         const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
                         const vm = v.matricula.toString().trim().replace(/^0+/, '');
@@ -672,17 +694,12 @@ tr:hover td { background: #f8fafc; }
                                 if (statusFiltro !== 'todos' && statusFiltro !== status) return;
 
                                 linhasFinais.push({
-                                    nome: nome,
-                                    cpf: cpf,
-                                    matricula: v.matricula,
-                                    cargo: v.cargo,
-                                    escola: v.escola,
-                                    tipo: 'Férias',
+                                    nome: nome, cpf: cpf, matricula: v.matricula,
+                                    cargo: v.cargo, escola: v.escola, tipo: 'Férias',
                                     periodo: p.anoReferencia,
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                                    status: status,
-                                    gozo: gozo || '—',
+                                    status: status, gozo: gozo || '—',
                                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
@@ -714,17 +731,12 @@ tr:hover td { background: #f8fafc; }
                                 if (statusFiltro !== 'todos' && statusFiltro !== status) return;
 
                                 linhasFinais.push({
-                                    nome: nome,
-                                    cpf: cpf,
-                                    matricula: v.matricula,
-                                    cargo: v.cargo,
-                                    escola: v.escola,
-                                    tipo: 'Folga Aniv.',
+                                    nome: nome, cpf: cpf, matricula: v.matricula,
+                                    cargo: v.cargo, escola: v.escola, tipo: 'Folga Aniv.',
                                     periodo: p.anoReferencia,
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                                    status: status,
-                                    gozo: gozo || '—',
+                                    status: status, gozo: gozo || '—',
                                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
@@ -774,7 +786,8 @@ tr:hover td { background: #f8fafc; }
                 </tr>
             `;
 
-            document.getElementById("printSubtitulo").textContent = "Relatório de Situação de Férias e Folgas";
+            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            document.getElementById("printSubtitulo").textContent = `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}`;
             document.getElementById("labelSumPeriodo").textContent = "Situação";
             document.getElementById("sumPeriodo").textContent = "Atual";
             document.getElementById("labelSumVinculos").textContent = "Total de Registros";
@@ -799,16 +812,16 @@ tr:hover td { background: #f8fafc; }
         }
     }
 
+    /* =========================================================
+       RELATÓRIO DE VALES
+    ========================================================= */
     async function gerarRelatorioVales() {
         const tipoPeriodo = document.getElementById("tipoPeriodo").value;
         const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
         const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
         const apenasFalta = document.getElementById("filtroApenasFalta").checked;
 
-        const checkboxesEscola = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"]):checked');
-        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
-        const todasEscolasMarcadas = master ? master.checked : false;
-        const escolasSelecionadas = Array.from(checkboxesEscola).map(cb => cb.value);
+        const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
 
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnPdf");
