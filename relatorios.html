@@ -5,498 +5,113 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-
-<link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
 <title>Relatórios Avançados e Exportação - Vale Transporte</title>
 
 <style>
-
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
     --primary-light: #f1ebf6;
-
     --green: #2e7d32;
     --green-hover: #1b5e20;
     --green-light: #eaf6ec;
-
     --blue: #0277bd;
     --blue-hover: #01579b;
-
     --red: #c62828;
     --red-hover: #a01f1f;
-
     --text: #263238;
     --text-secondary: #68737d;
-
     --border: #d9dee3;
     --background: #f4f6f8;
     --white: #ffffff;
-
     --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; min-height: 100%; }
+body { min-height: 100vh; background: var(--background); color: var(--text); }
 
-html, body {
-    width: 100%;
-    min-height: 100%;
-}
+.topbar { width: 100%; max-width: 1116px; height: 68px; margin: 16px auto 0; background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 20px; }
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 12px; }
+.logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 22px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); }
 
-body {
-    min-height: 100vh;
-    background: var(--background);
-    color: var(--text);
-}
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 24px 16px; }
 
-.topbar {
-    width: 100%;
-    max-width: 1116px;
-    height: 68px;
-    margin: 16px auto 0;
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-}
+.page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b858e; margin-bottom: 8px; }
+.breadcrumb .material-symbols-outlined { font-size: 17px; }
+.page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--text-secondary); }
 
-.topbar-content {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.logo {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
+.filter-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.filter-group { display: flex; flex-direction: column; }
+.filter-group.full-width { grid-column: 1 / -1; }
+.filter-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
+.filter-group input, .filter-group select { height: 42px; padding: 0 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; color: #263238; }
+.filter-group input:focus, .filter-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
 
-.system-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #3d2450;
-}
+.custom-dropdown { position: relative; width: 100%; }
+.dropdown-select-box { height: 42px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 14px; color: #263238; user-select: none; transition: border-color 0.15s; }
+.dropdown-select-box:hover { border-color: var(--primary); }
+.dropdown-options-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: var(--white); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; padding: 8px; }
+.dropdown-options-panel.ativo { display: block; }
+.dropdown-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; border-radius: 4px; transition: background 0.1s; }
+.dropdown-option:hover { background: var(--primary-light); }
+.dropdown-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
 
-.system-divider {
-    width: 1px;
-    height: 22px;
-    background: #dfe3e6;
-    margin: 0 2px;
-}
+.filter-checkbox-group { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: #455a64; cursor: pointer; margin-top: 4px; }
+.filter-checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
-.system-module {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
+.filter-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e5e8eb; padding-top: 16px; }
 
-.main {
-    width: 100%;
-    max-width: 1116px;
-    margin: 0 auto;
-    padding: 24px 16px;
-}
+.btn-gerar { height: 42px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: background 0.15s; }
+.btn-gerar:hover { background: var(--primary-hover); }
+.btn-gerar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.page-header {
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: #7b858e;
-    margin-bottom: 8px;
-}
-
-.breadcrumb .material-symbols-outlined {
-    font-size: 17px;
-}
-
-.page-header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #263238;
-    margin-bottom: 4px;
-}
-
-.page-header p {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.export-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.filter-card {
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.filter-group.full-width {
-    grid-column: 1 / -1;
-}
-
-.filter-group label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #455a64;
-    margin-bottom: 6px;
-}
-
-.filter-group input,
-.filter-group select {
-    height: 42px;
-    padding: 0 12px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    outline: none;
-    font-size: 14px;
-    color: #263238;
-}
-
-.filter-group input:focus,
-.filter-group select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
-}
-
-.custom-dropdown {
-    position: relative;
-    width: 100%;
-}
-
-.dropdown-select-box {
-    height: 42px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    font-size: 14px;
-    color: #263238;
-    user-select: none;
-    transition: border-color 0.15s;
-}
-
-.dropdown-select-box:hover {
-    border-color: var(--primary);
-}
-
-.dropdown-options-panel {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 100%;
-    max-height: 220px;
-    overflow-y: auto;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    z-index: 100;
-    padding: 8px;
-}
-
-.dropdown-options-panel.ativo {
-    display: block;
-}
-
-.dropdown-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.1s;
-}
-
-.dropdown-option:hover {
-    background: var(--primary-light);
-}
-
-.dropdown-option input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--primary);
-    cursor: pointer;
-}
-
-.filter-checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    grid-column: 1 / -1;
-    font-size: 13px;
-    font-weight: 600;
-    color: #455a64;
-    cursor: pointer;
-    margin-top: 4px;
-}
-
-.filter-checkbox-group input {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--primary);
-    cursor: pointer;
-}
-
-.filter-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    border-top: 1px solid #e5e8eb;
-    padding-top: 16px;
-}
-
-.btn-gerar {
-    height: 42px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0 20px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    transition: background 0.15s;
-}
-
-.btn-gerar:hover {
-    background: var(--primary-hover);
-}
-
-.btn-gerar:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-export {
-    height: 40px;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 13px;
-    transition: background 0.15s;
-}
-
+.btn-export { height: 40px; color: white; border: none; border-radius: 6px; padding: 0 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; transition: background 0.15s; }
 .btn-pdf { background: var(--red); }
 .btn-pdf:hover { background: var(--red-hover); }
-
 .btn-csv { background: var(--blue); }
 .btn-csv:hover { background: var(--blue-hover); }
-
 .btn-xls { background: #1f7238; }
 .btn-xls:hover { background: #154c25; }
+.btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-export:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
+.summary-container { display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-container.ativo { display: grid; }
+.summary-box { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 16px 18px; }
+.summary-box label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+.summary-box p { font-size: 18px; font-weight: 700; color: #263238; margin-top: 4px; }
 
-.summary-container {
-    display: none;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
+.table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; display: none; }
+.table-card.ativo { display: block; }
 
-.summary-container.ativo {
-    display: grid;
-}
+.print-report-header { display: none; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #3d2450; }
+.print-logo { display: none; height: 56px; width: auto; object-fit: contain; margin: 0; }
+.print-report-text { text-align: left; }
+.print-report-header h2 { font-size: 16px; font-weight: 700; color: #3d2450; }
+.print-report-header p { font-size: 12px; color: #555; margin-top: 4px; }
 
-.summary-box {
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    padding: 16px 18px;
-}
+table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+th { background: #fafbfc; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #455a64; border-bottom: 1px solid #e5e8eb; text-transform: uppercase; }
+td { padding: 12px 16px; font-size: 13px; color: #263238; border-bottom: 1px solid #edf2f7; }
+tr:hover td { background: #f8fafc; }
 
-.summary-box label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-}
+.mensagem { display: none; padding: 12px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
+.mensagem.erro { display: block; background: #fff0f0; border: 1px solid #efc5c5; color: #c62828; }
+.mensagem.info { display: block; background: #eef2f7; border: 1px solid #cbd5e1; color: #334155; }
+.mensagem.sucesso { display: block; background: #edf7ee; border: 1px solid #c8e6c9; color: #2e7d32; }
 
-.summary-box p {
-    font-size: 18px;
-    font-weight: 700;
-    color: #263238;
-    margin-top: 4px;
-}
-
-.table-card {
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    overflow-x: auto;
-    display: none;
-}
-
-.table-card.ativo {
-    display: block;
-}
-
-.print-report-header {
-    display: none;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #3d2450;
-}
-
-.print-logo {
-    display: none;
-    height: 56px;
-    width: auto;
-    object-fit: contain;
-    margin: 0;
-}
-
-.print-report-text {
-    text-align: left;
-}
-
-.print-report-header h2 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #3d2450;
-}
-
-.print-report-header p {
-    font-size: 12px;
-    color: #555;
-    margin-top: 4px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    white-space: nowrap;
-}
-
-th {
-    background: #fafbfc;
-    padding: 12px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #455a64;
-    border-bottom: 1px solid #e5e8eb;
-    text-transform: uppercase;
-}
-
-td {
-    padding: 12px 16px;
-    font-size: 13px;
-    color: #263238;
-    border-bottom: 1px solid #edf2f7;
-}
-
-tr:hover td {
-    background: #f8fafc;
-}
-
-.mensagem {
-    display: none;
-    padding: 12px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 16px;
-}
-
-.mensagem.erro {
-    display: block;
-    background: #fff0f0;
-    border: 1px solid #efc5c5;
-    color: #c62828;
-}
-
-.mensagem.info {
-    display: block;
-    background: #eef2f7;
-    border: 1px solid #cbd5e1;
-    color: #334155;
-}
-
-.mensagem.sucesso {
-    display: block;
-    background: #edf7ee;
-    border: 1px solid #c8e6c9;
-    color: #2e7d32;
-}
-
-.badge-status {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-}
+.badge-status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .badge-gozado { background: #e8f5e9; color: #2e7d32; }
 .badge-pendente { background: #fff8e1; color: #f57c00; }
 .badge-vencido { background: #ffebee; color: #c62828; }
@@ -504,59 +119,19 @@ tr:hover td {
 .badge-programado { background: #f3e5f5; color: #6a1b9a; }
 .badge-atual { background: #e8eaf6; color: #283593; }
 .badge-perdido { background: #fce4ec; color: #ad1457; }
+.badge-extemporaneo { background: #fff8e1; color: #f57c00; }
 
-/* =========================================================
-   MODAL DE CARREGAMENTO (SEM BLUR)
-========================================================= */
-.loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.15);
-    z-index: 9998;
-    align-items: center;
-    justify-content: center;
-}
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.15); z-index: 9998; align-items: center; justify-content: center; }
 .loading-overlay.ativo { display: flex; }
-
-.loading-box {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    padding: 26px 36px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    animation: loadingIn 0.2s ease;
-}
-@keyframes loadingIn {
-    from { transform: scale(0.92); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.spinner {
-    width: 38px;
-    height: 38px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: girar 0.8s linear infinite;
-}
+.loading-box { background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 26px 36px; display: flex; flex-direction: column; align-items: center; gap: 14px; animation: loadingIn 0.2s ease; }
+@keyframes loadingIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: girar 0.8s linear infinite; }
 @keyframes girar { to { transform: rotate(360deg); } }
-
-.loading-text {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
+.loading-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
 @media print {
     body { background: white; }
-    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container, .loading-overlay {
-        display: none !important;
-    }
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container, .loading-overlay { display: none !important; }
     .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
     .print-report-header { display: flex !important; align-items: center; gap: 16px; }
     .print-logo { display: block !important; margin: 0 !important; }
@@ -574,7 +149,6 @@ tr:hover td {
     .filter-actions { flex-direction: column; }
     .btn-gerar { width: 100%; justify-content: center; }
 }
-
 </style>
 </head>
 
@@ -614,10 +188,8 @@ tr:hover td {
         </div>
     </div>
 
-    <!-- CARD DE FILTROS -->
     <section class="filter-card">
         <div class="filter-grid">
-
             <div class="filter-group">
                 <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
                 <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
@@ -626,7 +198,6 @@ tr:hover td {
                 </select>
             </div>
 
-            <!-- Filtros específicos de VALES -->
             <div id="filtrosVales" style="display: contents;">
                 <div class="filter-group">
                     <label for="tipoPeriodo">Tipo de Período</label>
@@ -635,12 +206,10 @@ tr:hover td {
                         <option value="anual">Anual (Ano Inteiro)</option>
                     </select>
                 </div>
-
                 <div class="filter-group" id="grupoMes">
                     <label for="mesReferencia">Mês de Referência <span>*</span></label>
                     <input type="month" id="mesReferencia" lang="pt-BR">
                 </div>
-
                 <div class="filter-group" id="grupoAno" style="display: none;">
                     <label for="anoReferencia">Ano de Referência <span>*</span></label>
                     <select id="anoReferencia">
@@ -649,17 +218,14 @@ tr:hover td {
                         <option value="2024">2024</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label for="filtroCargo">Cargo / Função</label>
                     <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
                 </div>
-
                 <div class="filter-group">
                     <label for="filtroEmpresa">Empresa / Concessionária</label>
                     <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
                 </div>
-
                 <div class="filter-group full-width">
                     <label>Escolas / Unidades de Ensino</label>
                     <div class="custom-dropdown" id="dropdownEscolasContainer">
@@ -668,35 +234,21 @@ tr:hover td {
                             <span class="material-symbols-outlined">arrow_drop_down</span>
                         </div>
                         <div class="dropdown-options-panel" id="dropdownPanel">
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>
-                            </label>
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE
-                            </label>
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE
-                            </label>
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ
-                            </label>
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO
-                            </label>
-                            <label class="dropdown-option">
-                                <input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA
-                            </label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
+                            <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
                         </div>
                     </div>
                 </div>
-
                 <div class="filter-checkbox-group">
                     <input type="checkbox" id="filtroApenasFalta">
                     <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
                 </div>
             </div>
 
-            <!-- Filtros específicos de FÉRIAS E FOLGAS -->
             <div id="filtrosFerias" style="display: none;">
                 <div class="filter-group">
                     <label for="filtroTipoBeneficio">Tipo de Benefício</label>
@@ -706,7 +258,6 @@ tr:hover td {
                         <option value="folga">Folga Aniversário</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label for="filtroStatus">Status</label>
                     <select id="filtroStatus">
@@ -719,18 +270,15 @@ tr:hover td {
                         <option value="perdido">Perdido</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label for="filtroMatriculaFerias">Matrícula</label>
                     <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
                 </div>
-
                 <div class="filter-group">
                     <label for="filtroNomeServidor">Nome do Servidor</label>
                     <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
                 </div>
             </div>
-
         </div>
 
         <div class="filter-actions">
@@ -743,7 +291,6 @@ tr:hover td {
 
     <div id="mensagem" class="mensagem"></div>
 
-    <!-- RESUMO DO RELATÓRIO -->
     <section id="summaryContainer" class="summary-container">
         <div class="summary-box">
             <label id="labelSumPeriodo">Período Analisado</label>
@@ -759,7 +306,6 @@ tr:hover td {
         </div>
     </section>
 
-    <!-- TABELA DE RELATÓRIO -->
     <section id="tableCard" class="table-card">
         <div class="print-report-header">
             <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
@@ -788,7 +334,6 @@ tr:hover td {
     </section>
 </main>
 
-<!-- 👇 MODAL DE CARREGAMENTO -->
 <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-box">
         <div class="spinner"></div>
@@ -803,9 +348,6 @@ tr:hover td {
     let dadosRelatorioGlobal = [];
     let tipoRelatorioAtual = 'vales';
 
-    /* =========================================================
-       LOADING
-    ========================================================= */
     function mostrarLoading(texto = 'Carregando...') {
         document.getElementById('loadingTexto').textContent = texto;
         document.getElementById('loadingOverlay').classList.add('ativo');
@@ -851,6 +393,12 @@ tr:hover td {
         return null;
     }
 
+    function verificarExtemporaneo(status, gozoStr, dataLimite) {
+        if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
+        const dg = parseDataParaDate(gozoStr);
+        return dg ? dg > dataLimite : false;
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         const hoje = new Date();
         const ano = hoje.getFullYear();
@@ -872,7 +420,6 @@ tr:hover td {
         tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
         const filtrosVales = document.getElementById("filtrosVales");
         const filtrosFerias = document.getElementById("filtrosFerias");
-        
         if (tipoRelatorioAtual === "vales") {
             filtrosVales.style.display = "contents";
             filtrosFerias.style.display = "none";
@@ -1123,7 +670,8 @@ tr:hover td {
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                                     status: status,
-                                    gozo: gozo || '—'
+                                    gozo: gozo || '—',
+                                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
                         }
@@ -1164,7 +712,8 @@ tr:hover td {
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                                     status: status,
-                                    gozo: gozo || '—'
+                                    gozo: gozo || '—',
+                                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
                         }
@@ -1194,7 +743,7 @@ tr:hover td {
                         <td>${item.tipo}</td>
                         <td>${item.periodo}</td>
                         <td>${item.prazo}</td>
-                        <td><span class="badge-status ${badgeClass}">${item.status}</span></td>
+                        <td><span class="badge-status ${badgeClass}">${item.status}</span>${item.extemporaneo ? ' <span class="badge-status badge-extemporaneo">Fora do prazo</span>' : ''}</td>
                         <td>${item.gozo}</td>
                     </tr>`;
             });
