@@ -41,7 +41,7 @@ html, body { width: 100%; min-height: 100%; }
 body { min-height: 100vh; background: var(--background); color: var(--text); -webkit-font-smoothing: antialiased; }
 
 .topbar {
-    width: 100%; max-width: 1116px; height: 56px; margin: 8px auto 0;
+    width: 100%; max-width: 1116px; height: 60px; margin: 8px auto 0;
     background: var(--white); border: 1px solid var(--border); border-radius: 6px;
     box-shadow: var(--shadow-sm); display: flex; align-items: center; padding: 0 20px;
 }
@@ -89,15 +89,14 @@ body { min-height: 100vh; background: var(--background); color: var(--text); -we
 }
 .card-title .material-symbols-outlined { color: var(--primary); font-size: 18px; }
 
-.form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
-.form-group label span { color: var(--red); }
-
 .form-card.busca-compacta { padding: 12px 16px; margin-bottom: 12px; }
 .busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
 .busca-linha .form-group label { font-size: 10px; margin-bottom: 3px; }
+
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+.form-group label span { color: var(--red); }
 
 .search-input {
     height: 36px; padding: 0 10px; background: #fff;
@@ -200,6 +199,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); -we
 .badge-programado { color: var(--purple); border-color: #e1bee7; background: var(--purple-soft); }
 .badge-disponivel { color: var(--green); border-color: #c8e6c9; background: var(--green-soft); }
 .badge-perdido { color: var(--red); border-color: #efc5c5; background: var(--red-soft); }
+.badge-extemporaneo { color: var(--yellow); border-color: #fde68a; background: var(--yellow-soft); }
 
 .tipo-badge {
     font-size: 10px; font-weight: 600; text-transform: uppercase;
@@ -215,54 +215,31 @@ body { min-height: 100vh; background: var(--background); color: var(--text); -we
 .mensagem-erro.ativo { display: flex; }
 .hidden { display: none !important; }
 
-/* =========================================================
-    MODAL DE CARREGAMENTO (sem blur)
-========================================================= */
 .loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
+    display: none; position: fixed; inset: 0;
     background: rgba(0, 0, 0, 0.15);
-    z-index: 9998;
-    align-items: center;
-    justify-content: center;
+    z-index: 9998; align-items: center; justify-content: center;
 }
 .loading-overlay.ativo { display: flex; }
 
 .loading-box {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    padding: 26px 36px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 26px 36px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
     animation: loadingIn 0.2s ease;
 }
 @keyframes loadingIn {
     from { transform: scale(0.92); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
-
 .spinner {
-    width: 38px;
-    height: 38px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: girar 0.8s linear infinite;
+    width: 38px; height: 38px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: girar 0.8s linear infinite;
 }
 @keyframes girar { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
-.loading-text {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-/* Modal de alerta */
 .modal-alerta-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
     z-index: 9999; align-items: center; justify-content: center; padding: 20px;
@@ -412,7 +389,6 @@ body { min-height: 100vh; background: var(--background); color: var(--text); -we
     </div>
 </main>
 
-<!-- 👇 MODAL DE CARREGAMENTO (SEM BLUR) -->
 <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-box">
         <div class="spinner"></div>
@@ -442,7 +418,7 @@ let usuarioLogado = null;
 let acessoAutorizado = false;
 let linhasUnificadas = [];
 let nomeServidorAtual = '';
-let ultimoTermoBuscado = ''; // 👈 Guarda o último termo buscado
+let ultimoTermoBuscado = '';
 
 function atualizarStatusConexao() {
     const statusDiv = document.getElementById("statusConexao");
@@ -454,9 +430,6 @@ window.addEventListener('online', atualizarStatusConexao);
 window.addEventListener('offline', atualizarStatusConexao);
 atualizarStatusConexao();
 
-/* =========================================================
-   👇 LOADING (spinner)
-========================================================= */
 function mostrarLoading(texto = 'Carregando...') {
     document.getElementById('loadingTexto').textContent = texto;
     document.getElementById('loadingOverlay').classList.add('ativo');
@@ -542,6 +515,14 @@ function verificarSeJaGozado(reg, hoje){
     if(!dt)return false;
     return dt<=hoje;
 }
+
+// 👇 DETECÇÃO DE EXTEMPORÂNEO (gozo fora do prazo)
+function verificarExtemporaneo(status, gozoStr, dataLimite) {
+    if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
+    const dg = parseDataParaDate(gozoStr);
+    return dg ? dg > dataLimite : false;
+}
+
 function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao){
     const dtGozo=parseDataParaDate(dataGozo), dtNasc=parseDataParaDate(dataNascimento), dtAdm=parseDataParaDate(dataAdmissao);
     if(!dtGozo||!dtNasc||!dtAdm)return null;
@@ -646,7 +627,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
+                    status,gozo:gozo||'—',ordem:p.inicio.getTime(),
+                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)});
             });
         }
 
@@ -669,7 +651,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime()});
+                    status,gozo:gozo||'—',ordem:p.inicio.getTime(),
+                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)});
             });
         }
     });
@@ -773,23 +756,18 @@ function renderizarTabelaUnica(linhas){
             <td>${l.periodo}</td>
             <td>${l.ciclo}</td>
             <td>${l.prazo}</td>
-            <td>${badgeStatus(l.status)}</td>
+            <td>${badgeStatus(l.status)}${l.extemporaneo ? ' <span class="badge-status badge-extemporaneo"><span class="material-symbols-outlined">warning</span> Fora do prazo</span>' : ''}</td>
             <td>${l.gozo}</td>
         </tr>
     `).join('');
 }
 
-/* =========================================================
-   👇 BUSCA COM LOADING - EVITA BUSCAS DUPLICADAS
-========================================================= */
 window.buscarServidor=async function(){
     if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
     const termo=document.getElementById('termoBusca').value.trim();
     if(!termo){mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');return;}
 
-    // 👈 Verifica se é o mesmo termo que já foi buscado
-    if(termo === ultimoTermoBuscado && document.getElementById('resultadoContainer').classList.contains('hidden') === false){
-        // Dados já estão na tela, não precisa buscar novamente
+    if(termo === ultimoTermoBuscado && !document.getElementById('resultadoContainer').classList.contains('hidden')){
         return;
     }
 
@@ -821,7 +799,7 @@ window.buscarServidor=async function(){
             return;
         }
         await processarServidores(Array.from(encontrados.values()));
-        ultimoTermoBuscado = termo; // 👈 Guarda o termo buscado com sucesso
+        ultimoTermoBuscado = termo;
     }catch(e){
         console.error(e);
         mostrarErro("Erro ao consultar o banco.");
