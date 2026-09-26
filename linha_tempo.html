@@ -516,7 +516,6 @@ function verificarSeJaGozado(reg, hoje){
     return dt<=hoje;
 }
 
-// 👇 DETECÇÃO DE EXTEMPORÂNEO (gozo fora do prazo)
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
     const dg = parseDataParaDate(gozoStr);
@@ -546,20 +545,31 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
     }
     return null;
 }
+
+// 👇 CÁLCULO CORRIGIDO: Prazo de gozo = fim do período + 12 meses
 function calcularDireitoFerias(dataAdmissao, ref=new Date()){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
     let completos=0, det=[], ini=new Date(adm);
     while(completos<40){
-        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+        const fim=new Date(ini); 
+        fim.setFullYear(fim.getFullYear()+1); 
+        fim.setDate(fim.getDate()-1);
+        
+        // 👇 PRAZO DE GOZO: 12 meses após o fim do período aquisitivo
+        const prazoGozo = new Date(fim);
+        prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+        
         const p={numero:completos+1,inicio:new Date(ini),fim:new Date(fim),
             anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            dataLimiteGozo:new Date(fim),status:'pendente'};
+            dataLimiteGozo:prazoGozo,status:'pendente'};
         if(fim<=ref){completos++;det.push(p);ini=new Date(fim);ini.setDate(ini.getDate()+1);}
         else{p.status='atual';det.push(p);break;}
     }
     return {periodosCompletos:completos,diasDireito:completos*30,periodosDetalhados:det};
 }
+
+// 👇 CÁLCULO CORRIGIDO: Prazo de gozo = aniversário + 12 meses
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
@@ -574,12 +584,17 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
             if(c>=ini&&c<=fim){aniv=c;break;}
         }
         const limite=aniv?new Date(aniv):new Date(fim);
+        
+        // 👇 PRAZO DE GOZO: aniversário + 12 meses
+        const prazoGozo = new Date(limite);
+        prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+        
         const p={numero:i+1,inicio:new Date(ini),fim:new Date(fim),
             anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            aniversarioNoPeriodo:aniv,dataLimiteGozo:limite,status:'pendente'};
+            aniversarioNoPeriodo:aniv,dataLimiteGozo:prazoGozo,status:'pendente'};
         if(fim<=ref){
             adquiridas++;
-            if(limite<ref){p.status='perdido';perdidas++;}
+            if(prazoGozo<ref){p.status='perdido';perdidas++;}
             else{p.status='disponivel';disponiveis++;}
             det.push(p); ini=new Date(fim); ini.setDate(ini.getDate()+1);
         } else {
@@ -593,6 +608,7 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
     }
     return {folgasAdquiridas:adquiridas,folgasDisponiveis:disponiveis,folgasPerdidas:perdidas,proximaAquisicao:proxima,periodosDetalhados:det};
 }
+
 function filtrarRegistrosPorMatricula(registros, vinculo){
     const m=vinculo.matricula.toString().trim().replace(/^0+/,'');
     return registros.filter(r=>{
