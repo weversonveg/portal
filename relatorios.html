@@ -491,6 +491,24 @@ tr:hover td {
     color: #2e7d32;
 }
 
+/* BADGES DE STATUS */
+.badge-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-gozado { background: #e8f5e9; color: #2e7d32; }
+.badge-pendente { background: #fff8e1; color: #f57c00; }
+.badge-vencido { background: #ffebee; color: #c62828; }
+.badge-disponivel { background: #e3f2fd; color: #0277bd; }
+.badge-programado { background: #f3e5f5; color: #6a1b9a; }
+.badge-atual { background: #e8eaf6; color: #283593; }
+.badge-perdido { background: #fce4ec; color: #ad1457; }
+
 /* IMPRESSÃO / PDF */
 @media print {
     body {
@@ -598,74 +616,121 @@ tr:hover td {
     <section class="filter-card">
         <div class="filter-grid">
             
+            <!-- 👇 NOVO: Tipo de Relatório -->
             <div class="filter-group">
-                <label for="tipoPeriodo">Tipo de Período</label>
-                <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
-                    <option value="mensal">Mensal (Mês Específico)</option>
-                    <option value="anual">Anual (Ano Inteiro)</option>
+                <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
+                <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
+                    <option value="vales">Vales Transporte (Passes Mensais)</option>
+                    <option value="ferias">Situação de Férias e Folgas</option>
                 </select>
             </div>
 
-            <!-- Campo Mês -->
-            <div class="filter-group" id="grupoMes">
-                <label for="mesReferencia">Mês de Referência <span>*</span></label>
-                <input type="month" id="mesReferencia" lang="pt-BR">
-            </div>
+            <!-- Filtros específicos de VALES -->
+            <div id="filtrosVales" style="display: contents;">
+                <div class="filter-group">
+                    <label for="tipoPeriodo">Tipo de Período</label>
+                    <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
+                        <option value="mensal">Mensal (Mês Específico)</option>
+                        <option value="anual">Anual (Ano Inteiro)</option>
+                    </select>
+                </div>
 
-            <!-- Campo Ano -->
-            <div class="filter-group" id="grupoAno" style="display: none;">
-                <label for="anoReferencia">Ano de Referência <span>*</span></label>
-                <select id="anoReferencia">
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                </select>
-            </div>
+                <!-- Campo Mês -->
+                <div class="filter-group" id="grupoMes">
+                    <label for="mesReferencia">Mês de Referência <span>*</span></label>
+                    <input type="month" id="mesReferencia" lang="pt-BR">
+                </div>
 
-            <div class="filter-group">
-                <label for="filtroCargo">Cargo / Função</label>
-                <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
-            </div>
+                <!-- Campo Ano -->
+                <div class="filter-group" id="grupoAno" style="display: none;">
+                    <label for="anoReferencia">Ano de Referência <span>*</span></label>
+                    <select id="anoReferencia">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
 
-            <div class="filter-group">
-                <label for="filtroEmpresa">Empresa / Concessionária</label>
-                <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
-            </div>
+                <div class="filter-group">
+                    <label for="filtroCargo">Cargo / Função</label>
+                    <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
+                </div>
 
-            <!-- SELECT CUSTOMIZADO COM CHECKBOXES OCULTOS PARA ESCOLAS -->
-            <div class="filter-group full-width">
-                <label>Escolas / Unidades de Ensino</label>
-                <div class="custom-dropdown" id="dropdownEscolasContainer">
-                    <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
-                        <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
-                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                <div class="filter-group">
+                    <label for="filtroEmpresa">Empresa / Concessionária</label>
+                    <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
+                </div>
+
+                <!-- SELECT CUSTOMIZADO COM CHECKBOXES OCULTOS PARA ESCOLAS -->
+                <div class="filter-group full-width">
+                    <label>Escolas / Unidades de Ensino</label>
+                    <div class="custom-dropdown" id="dropdownEscolasContainer">
+                        <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
+                            <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
+                            <span class="material-symbols-outlined">arrow_drop_down</span>
+                        </div>
+                        <div class="dropdown-options-panel" id="dropdownPanel">
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>
+                            </label>
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE
+                            </label>
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE
+                            </label>
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ
+                            </label>
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO
+                            </label>
+                            <label class="dropdown-option">
+                                <input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA
+                            </label>
+                        </div>
                     </div>
-                    <div class="dropdown-options-panel" id="dropdownPanel">
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>
-                        </label>
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE
-                        </label>
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE
-                        </label>
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ
-                        </label>
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO
-                        </label>
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA
-                        </label>
-                    </div>
+                </div>
+
+                <div class="filter-checkbox-group">
+                    <input type="checkbox" id="filtroApenasFalta">
+                    <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
                 </div>
             </div>
 
-            <div class="filter-checkbox-group">
-                <input type="checkbox" id="filtroApenasFalta">
-                <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
+            <!-- Filtros específicos de FÉRIAS E FOLGAS -->
+            <div id="filtrosFerias" style="display: none;">
+                <div class="filter-group">
+                    <label for="filtroTipoBeneficio">Tipo de Benefício</label>
+                    <select id="filtroTipoBeneficio">
+                        <option value="todos">Todos</option>
+                        <option value="ferias">Férias</option>
+                        <option value="folga">Folga Aniversário</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filtroStatus">Status</label>
+                    <select id="filtroStatus">
+                        <option value="todos">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="gozado">Gozado</option>
+                        <option value="programado">Programado</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filtroMatriculaFerias">Matrícula</label>
+                    <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filtroNomeServidor">Nome do Servidor</label>
+                    <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
+                </div>
             </div>
 
         </div>
@@ -709,7 +774,7 @@ tr:hover td {
         </div>
 
         <table>
-            <thead>
+            <thead id="tabelaCabecalho">
                 <tr>
                     <th>Servidor</th>
                     <th>CPF / Matrícula</th>
@@ -735,6 +800,7 @@ tr:hover td {
 
     // 👇 Variável global para armazenar os dados do relatório (usada pelo XLSX/CSV)
     let dadosRelatorioGlobal = [];
+    let tipoRelatorioAtual = 'vales';
 
     // 👇 Função para converter "2026-09" para "09/2026"
     function formatarMesAnoPTBR(valor) {
@@ -744,6 +810,32 @@ tr:hover td {
         const ano = partes[0];
         const mes = partes[1];
         return `${mes}/${ano}`;
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '';
+        if (typeof dataStr === 'object' && dataStr.toDate) dataStr = dataStr.toDate().toISOString().split('T')[0];
+        dataStr = dataStr.toString().trim();
+        if (dataStr.includes('-') && dataStr.length >= 10) {
+            const partes = dataStr.substring(0, 10).split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        return dataStr;
+    }
+
+    function parseDataParaDate(dataStr) {
+        if (!dataStr) return null;
+        if (typeof dataStr === 'object' && dataStr.toDate) return dataStr.toDate();
+        dataStr = dataStr.toString().trim();
+        if (dataStr.includes('/')) {
+            const partes = dataStr.split('/');
+            return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        } else if (dataStr.includes('-')) {
+            const partes = dataStr.substring(0, 10).split('-');
+            if (partes[0].length === 4) return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+            else return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        }
+        return null;
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -762,6 +854,20 @@ tr:hover td {
             }
         });
     });
+
+    window.alternarTipoRelatorio = function() {
+        tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
+        const filtrosVales = document.getElementById("filtrosVales");
+        const filtrosFerias = document.getElementById("filtrosFerias");
+        
+        if (tipoRelatorioAtual === "vales") {
+            filtrosVales.style.display = "contents";
+            filtrosFerias.style.display = "none";
+        } else {
+            filtrosVales.style.display = "none";
+            filtrosFerias.style.display = "contents";
+        }
+    }
 
     window.alternarTipoPeriodo = function() {
         const tipo = document.getElementById("tipoPeriodo").value;
@@ -796,7 +902,321 @@ tr:hover td {
         else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
     }
 
+    // 👇 FUNÇÕES AUXILIARES PARA FÉRIAS E FOLGAS
+    function calcularDireitoFerias(dataAdmissao, ref = new Date()) {
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        let completos = 0, det = [], ini = new Date(adm);
+        while (completos < 40) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+            const p = {
+                numero: completos + 1, inicio: new Date(ini), fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                dataLimiteGozo: new Date(fim), status: 'pendente'
+            };
+            if (fim <= ref) {
+                completos++;
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'atual';
+                det.push(p);
+                break;
+            }
+        }
+        return { periodosCompletos: completos, periodosDetalhados: det };
+    }
+
+    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+        const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
+        if (!nasc || !adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        const mes = nasc.getMonth(), dia = nasc.getDate();
+        let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            const limite = aniv ? new Date(aniv) : new Date(fim);
+            const p = {
+                numero: i + 1, inicio: new Date(ini), fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                aniversarioNoPeriodo: aniv, dataLimiteGozo: limite, status: 'pendente'
+            };
+            if (fim <= ref) {
+                adquiridas++;
+                if (limite < ref) { p.status = 'perdido'; perdidas++; }
+                else { p.status = 'disponivel'; disponiveis++; }
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'disponivel';
+                disponiveis++;
+                det.push(p);
+                break;
+            }
+        }
+        return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
+    }
+
+    function verificarSeJaGozado(reg, hoje) {
+        const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+        if (!dt) return false;
+        return dt <= hoje;
+    }
+
     window.gerarRelatorio = async function() {
+        if (tipoRelatorioAtual === "ferias") {
+            await gerarRelatorioFerias();
+        } else {
+            await gerarRelatorioVales();
+        }
+    }
+
+    async function gerarRelatorioFerias() {
+        const tipoBeneficioFiltro = document.getElementById("filtroTipoBeneficio").value;
+        const statusFiltro = document.getElementById("filtroStatus").value;
+        const matriculaFiltro = document.getElementById("filtroMatriculaFerias").value.trim();
+        const nomeFiltro = document.getElementById("filtroNomeServidor").value.trim().toLowerCase();
+
+        const msgDiv = document.getElementById("mensagem");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnCsv = document.getElementById("btnCsv");
+        const btnXls = document.getElementById("btnXls");
+
+        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
+
+        try {
+            const servidoresSnap = await getDocs(collection(db, "servidores"));
+            if (servidoresSnap.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                return;
+            }
+
+            const registrosSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+            const registros = [];
+            registrosSnap.forEach(d => registros.push({ id: d.id, ...d.data() }));
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            let linhasFinais = [];
+
+            servidoresSnap.forEach(docServidor => {
+                const s = docServidor.data();
+                const nome = s.nome || 'Não informado';
+                const cpf = s.cpf || '';
+                const cpfLimpo = cpf.replace(/\D/g, '');
+                const nascimento = s.data_nascimento || s.dataNascimento;
+
+                if (nomeFiltro && !nome.toLowerCase().includes(nomeFiltro)) return;
+
+                const vinculos = [];
+                if (s.matricula1 && s.matricula1.numeroMatricula) {
+                    vinculos.push({
+                        matricula: s.matricula1.numeroMatricula,
+                        dataAdmissao: s.matricula1.dataAdmissao || s.data_admissao || '',
+                        cargo: s.matricula1.cargo || '-',
+                        escola: s.matricula1.escola1?.nomeEscola || s.matricula1.escola2?.nomeEscola || '-'
+                    });
+                }
+                if (s.matricula2 && s.matricula2.numeroMatricula) {
+                    vinculos.push({
+                        matricula: s.matricula2.numeroMatricula,
+                        dataAdmissao: s.matricula2.dataAdmissao || s.data_admissao || '',
+                        cargo: s.matricula2.cargo || '-',
+                        escola: s.matricula2.escola1?.nomeEscola || s.matricula2.escola2?.nomeEscola || '-'
+                    });
+                }
+
+                vinculos.forEach(v => {
+                    if (matriculaFiltro && !v.matricula.toString().includes(matriculaFiltro)) return;
+                    if (!v.dataAdmissao) return;
+
+                    const regsMat = registros.filter(r => {
+                        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+                        const vm = v.matricula.toString().trim().replace(/^0+/, '');
+                        return !rm || rm === vm || rm === v.matricula.toString().trim();
+                    });
+
+                    // FÉRIAS
+                    if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'ferias') {
+                        const dirF = calcularDireitoFerias(v.dataAdmissao, hoje);
+                        if (dirF) {
+                            const feriasLanc = regsMat.filter(r => {
+                                const t = (r.tipo || '').toLowerCase();
+                                return t.includes('ferias') || t.includes('férias');
+                            });
+
+                            dirF.periodosDetalhados.forEach(p => {
+                                const lanc = feriasLanc.find(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                                let status = p.status, gozo = '';
+                                if (lanc) {
+                                    const raw = lanc.data_inicio || lanc.dataInicio || lanc.data;
+                                    gozo = formatarData(raw);
+                                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                                } else {
+                                    if (p.status === 'atual') status = 'atual';
+                                    else if (p.dataLimiteGozo < hoje) status = 'vencido';
+                                    else status = 'pendente';
+                                }
+
+                                if (statusFiltro !== 'todos' && statusFiltro !== status) return;
+
+                                linhasFinais.push({
+                                    nome: nome,
+                                    cpf: cpf,
+                                    matricula: v.matricula,
+                                    cargo: v.cargo,
+                                    escola: v.escola,
+                                    tipo: 'Férias',
+                                    periodo: p.anoReferencia,
+                                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                                    status: status,
+                                    gozo: gozo || '—'
+                                });
+                            });
+                        }
+                    }
+
+                    // FOLGA ANIVERSÁRIO
+                    if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'folga') {
+                        const dirG = nascimento ? calcularDireitoFolgaAniversario(nascimento, v.dataAdmissao, hoje) : null;
+                        if (dirG) {
+                            const folgasLanc = regsMat.filter(r => {
+                                const t = (r.tipo || '').toLowerCase();
+                                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+                            });
+
+                            dirG.periodosDetalhados.forEach(p => {
+                                const lanc = folgasLanc.find(r => {
+                                    const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                                    const dataGozo = parseDataParaDate(raw);
+                                    const dtNasc = parseDataParaDate(nascimento);
+                                    if (!dataGozo || !dtNasc) return false;
+                                    
+                                    let ini = new Date(parseDataParaDate(v.dataAdmissao));
+                                    for (let i = 0; i < 40; i++) {
+                                        const fim = new Date(ini);
+                                        fim.setFullYear(fim.getFullYear() + 1);
+                                        fim.setDate(fim.getDate() - 1);
+                                        let aniv = null;
+                                        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                                            const c = new Date(a, dtNasc.getMonth(), dtNasc.getDate());
+                                            if (c >= ini && c <= fim) { aniv = c; break; }
+                                        }
+                                        const limite = aniv || fim;
+                                        if (dataGozo <= limite && dataGozo >= ini) {
+                                            return `${ini.getFullYear()}/${fim.getFullYear()}` === p.anoReferencia;
+                                        }
+                                        ini = new Date(fim);
+                                        ini.setDate(ini.getDate() + 1);
+                                    }
+                                    return false;
+                                });
+
+                                let status = p.status, gozo = '';
+                                if (lanc) {
+                                    const raw = lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio;
+                                    gozo = formatarData(raw);
+                                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                                }
+
+                                if (statusFiltro !== 'todos' && statusFiltro !== status) return;
+
+                                linhasFinais.push({
+                                    nome: nome,
+                                    cpf: cpf,
+                                    matricula: v.matricula,
+                                    cargo: v.cargo,
+                                    escola: v.escola,
+                                    tipo: 'Folga Aniv.',
+                                    periodo: p.anoReferencia,
+                                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                                    status: status,
+                                    gozo: gozo || '—'
+                                });
+                            });
+                        }
+                    }
+                });
+            });
+
+            if (linhasFinais.length === 0) {
+                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                dadosRelatorioGlobal = [];
+                return;
+            }
+
+            dadosRelatorioGlobal = linhasFinais;
+
+            // Monta tabela
+            let linhasTabela = "";
+            linhasFinais.forEach(item => {
+                const badgeClass = `badge-${item.status}`;
+                linhasTabela += `
+                    <tr>
+                        <td><b>${item.nome}</b></td>
+                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                        <td>${item.cargo}</td>
+                        <td>${item.escola}</td>
+                        <td><span class="badge-status ${badgeClass}">${item.status}</span></td>
+                        <td>${item.tipo}</td>
+                        <td>${item.periodo}</td>
+                        <td>${item.prazo}</td>
+                        <td>${item.gozo}</td>
+                    </tr>`;
+            });
+
+            // Atualiza cabeçalho da tabela
+            document.getElementById("tabelaCabecalho").innerHTML = `
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola</th>
+                    <th>Status</th>
+                    <th>Tipo</th>
+                    <th>Período</th>
+                    <th>Prazo Gozo</th>
+                    <th>Data Gozo</th>
+                </tr>
+            `;
+
+            document.getElementById("printSubtitulo").textContent = "Relatório de Situação de Férias e Folgas";
+            document.getElementById("sumPeriodo").textContent = "Atual";
+            document.getElementById("sumVinculos").textContent = linhasFinais.length;
+            document.getElementById("sumTotalPasses").textContent = `${linhasFinais.length} períodos`;
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            document.getElementById("summaryContainer").classList.add("ativo");
+            document.getElementById("tableCard").classList.add("ativo");
+
+            btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
+            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
+
+        } catch (erro) {
+            console.error("Erro ao gerar relatório de férias:", erro);
+            mostrarMensagem("Erro ao processar os dados.", "erro");
+        }
+    }
+
+    async function gerarRelatorioVales() {
         const tipoPeriodo = document.getElementById("tipoPeriodo").value;
         const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
         const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
@@ -816,253 +1236,4 @@ tr:hover td {
         btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
 
         if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
-            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
-            return;
-        }
-
-        try {
-            let mesesParaProcessar = [];
-            if (tipoPeriodo === "mensal") {
-                const mesAno = document.getElementById("mesReferencia").value;
-                if (!mesAno) { mostrarMensagem("Selecione o mês de referência.", "erro"); return; }
-                mesesParaProcessar.push(mesAno);
-            } else {
-                const anoSelecionado = document.getElementById("anoReferencia").value;
-                for (let m = 1; m <= 12; m++) {
-                    mesesParaProcessar.push(`${anoSelecionado}-${String(m).padStart(2, '0')}`);
-                }
-            }
-
-            const servidoresSnap = await getDocs(collection(db, "servidores"));
-            if (servidoresSnap.empty) { mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info"); return; }
-
-            let resultadosConsolidados = {};
-
-            for (const mesAno of mesesParaProcessar) {
-                const configSnap = await getDoc(doc(db, "configuracoes", mesAno));
-                if (!configSnap.exists()) continue;
-                const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
-
-                const diasEscolaMap = {};
-                try {
-                    const escolaConfigsSnap = await getDocs(query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno)));
-                    escolaConfigsSnap.forEach(d => {
-                        const data = d.data();
-                        if (data.escola) diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
-                    });
-                } catch (e) {}
-
-                const afastamentosMap = {};
-                try {
-                    const lancSnap = await getDocs(query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno)));
-                    lancSnap.forEach(d => {
-                        const data = d.data();
-                        const dias = Number(data.diasAfastamento) || 0;
-                        if (data.cpf) {
-                            const cpfLimpo = data.cpf.replace(/\D/g, "");
-                            if (data.escola) afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
-                            afastamentosMap[cpfLimpo] = dias;
-                        }
-                    });
-                } catch (e) {}
-
-                servidoresSnap.forEach((docServidor) => {
-                    const s = docServidor.data();
-                    const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
-
-                    function processarVinculo(matriculaNum, cargo, escolaObj) {
-                        if (!escolaObj || !escolaObj.nomeEscola) return;
-                        const nomeEscola = escolaObj.nomeEscola;
-                        if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
-                        if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
-                        const empresa = escolaObj.empresa || "";
-                        if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
-
-                        const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
-                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
-                        const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
-                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
-                        const totalMes = passesDiarios * diasEfetivos;
-
-                        const chaveUnica = `${cpfLimpo}_${nomeEscola}_${matriculaNum}`;
-                        if (!resultadosConsolidados[chaveUnica]) {
-                            resultadosConsolidados[chaveUnica] = {
-                                nome: s.nome, cpf: s.cpf, matricula: matriculaNum,
-                                cargo: cargo || '-', escola: nomeEscola, empresa: empresa || '-',
-                                passesDiarios: passesDiarios, diasEfetivosTotal: 0,
-                                afastamentosTotal: 0, passesTotal: 0
-                            };
-                        }
-                        resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
-                        resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
-                        resultadosConsolidados[chaveUnica].passesTotal += totalMes;
-                    }
-
-                    if (s.matricula1) {
-                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
-                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
-                    }
-                    if (s.matricula2) {
-                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
-                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
-                    }
-                });
-            }
-
-            // 👇 Filtra e salva globalmente (para XLSX e CSV)
-            const listaFinal = Object.values(resultadosConsolidados).filter(item => !(apenasFalta && item.afastamentosTotal <= 0));
-
-            let linhasTabela = "";
-            let totalVinculos = 0;
-            let totalGeralPasses = 0;
-
-            listaFinal.forEach(item => {
-                totalVinculos++;
-                totalGeralPasses += item.passesTotal;
-                linhasTabela += `
-                    <tr>
-                        <td><b>${item.nome}</b></td>
-                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
-                        <td>${item.cargo}</td>
-                        <td>${item.escola}</td>
-                        <td>${item.empresa}</td>
-                        <td>${item.passesDiarios}</td>
-                        <td><b>${item.diasEfetivosTotal} dias</b></td>
-                        <td><span style="color:${item.afastamentosTotal > 0 ? '#c62828' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
-                        <td><b>${item.passesTotal}</b></td>
-                    </tr>`;
-            });
-
-            if (totalVinculos === 0) {
-                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
-                document.getElementById("summaryContainer").classList.remove("ativo");
-                document.getElementById("tableCard").classList.remove("ativo");
-                dadosRelatorioGlobal = [];
-                return;
-            }
-
-            dadosRelatorioGlobal = listaFinal; // 👈 salva os dados para exportação
-
-            // 👇 Agora usando padrão brasileiro MM/AAAA
-            const mesAnoFormatado = formatarMesAnoPTBR(document.getElementById("mesReferencia").value);
-            const rotuloPeriodo = tipoPeriodo === "mensal"
-                ? `Mês: ${mesAnoFormatado}`
-                : `Ano: ${document.getElementById("anoReferencia").value}`;
-
-            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
-            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
-
-            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal"
-                ? mesAnoFormatado
-                : `Ano ${document.getElementById("anoReferencia").value}`;
-
-            document.getElementById("sumVinculos").textContent = totalVinculos;
-            document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
-
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
-            document.getElementById("summaryContainer").classList.add("ativo");
-            document.getElementById("tableCard").classList.add("ativo");
-
-            btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
-            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
-
-        } catch (erro) {
-            console.error("Erro ao gerar relatório:", erro);
-            mostrarMensagem("Erro ao processar os dados.", "erro");
-        }
-    }
-
-    window.exportarPDF = function() {
-        window.print();
-    }
-
-    // 👇 CSV agora usa os dados globais (muito mais confiável que parsear o DOM)
-    window.exportarCSV = function() {
-        if (dadosRelatorioGlobal.length === 0) {
-            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
-            return;
-        }
-        const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
-        const linhas = [header.join(";")];
-
-        dadosRelatorioGlobal.forEach(item => {
-            linhas.push([
-                `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
-                `"${item.cargo}"`, `"${item.escola}"`, `"${item.empresa}"`,
-                item.passesDiarios, item.diasEfetivosTotal,
-                item.afastamentosTotal, item.passesTotal
-            ].join(";"));
-        });
-
-        const blob = new Blob(["\ufeff" + linhas.join("\n")], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const tipo = document.getElementById("tipoPeriodo").value;
-        link.href = URL.createObjectURL(blob);
-        link.download = `relatorio_vales_${tipo}.csv`;
-        link.click();
-    }
-
-    // 👇 NOVO XLSX: gera um arquivo Excel REAL usando SheetJS (CDN)
-    window.exportarXLS = async function() {
-        if (dadosRelatorioGlobal.length === 0) {
-            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
-            return;
-        }
-
-        // Carrega SheetJS sob demanda
-        if (typeof XLSX === 'undefined') {
-            mostrarMensagem("Preparando arquivo Excel...", "info");
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
-                script.onload = resolve;
-                script.onerror = () => reject(new Error("Falha ao carregar biblioteca de Excel"));
-                document.head.appendChild(script);
-            });
-        }
-
-        try {
-            const dados = dadosRelatorioGlobal.map(item => ({
-                "Servidor": item.nome,
-                "CPF": item.cpf,
-                "Matrícula": item.matricula,
-                "Cargo": item.cargo,
-                "Escola / Lotação": item.escola,
-                "Concessionária": item.empresa,
-                "Passes/Dia": item.passesDiarios,
-                "Dias Efetivos": item.diasEfetivosTotal,
-                "Afastamentos": item.afastamentosTotal,
-                "Total Passes": item.passesTotal
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(dados);
-
-            // Define larguras de coluna
-            ws['!cols'] = [
-                { wch: 30 }, { wch: 16 }, { wch: 14 }, { wch: 22 },
-                { wch: 25 }, { wch: 22 }, { wch: 12 }, { wch: 14 },
-                { wch: 14 }, { wch: 14 }
-            ];
-
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Relatório");
-
-            const tipo = document.getElementById("tipoPeriodo").value;
-            XLSX.writeFile(wb, `relatorio_vales_${tipo}.xlsx`);
-            mostrarMensagem("Arquivo Excel exportado com sucesso!", "sucesso");
-        } catch (e) {
-            console.error(e);
-            mostrarMensagem("Erro ao gerar o arquivo Excel.", "erro");
-        }
-    }
-
-    function mostrarMensagem(texto, tipo) {
-        const msg = document.getElementById("mensagem");
-        msg.textContent = texto;
-        msg.className = "mensagem " + tipo;
-    }
-</script>
-
-</body>
-</html>
+            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "
