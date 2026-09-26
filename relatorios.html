@@ -320,6 +320,11 @@ body {
     background: var(--primary-hover);
 }
 
+.btn-gerar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .btn-export {
     height: 40px;
     color: white;
@@ -484,7 +489,6 @@ tr:hover td {
     color: #2e7d32;
 }
 
-/* 👇 BADGES DE STATUS (Férias e Folgas) */
 .badge-status {
     display: inline-block;
     padding: 4px 10px;
@@ -501,9 +505,56 @@ tr:hover td {
 .badge-atual { background: #e8eaf6; color: #283593; }
 .badge-perdido { background: #fce4ec; color: #ad1457; }
 
+/* =========================================================
+   MODAL DE CARREGAMENTO (SEM BLUR)
+========================================================= */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
+.loading-overlay.ativo { display: flex; }
+
+.loading-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 26px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: loadingIn 0.2s ease;
+}
+@keyframes loadingIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.loading-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
 @media print {
     body { background: white; }
-    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container {
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container, .loading-overlay {
         display: none !important;
     }
     .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -567,7 +618,6 @@ tr:hover td {
     <section class="filter-card">
         <div class="filter-grid">
 
-            <!-- 👇 NOVO: Tipo de Relatório -->
             <div class="filter-group">
                 <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
                 <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
@@ -684,7 +734,7 @@ tr:hover td {
         </div>
 
         <div class="filter-actions">
-            <button type="button" class="btn-gerar" onclick="gerarRelatorio()">
+            <button type="button" id="btnGerar" class="btn-gerar" onclick="gerarRelatorio()">
                 <span class="material-symbols-outlined">description</span>
                 Gerar Relatório Consolidado
             </button>
@@ -738,12 +788,35 @@ tr:hover td {
     </section>
 </main>
 
+<!-- 👇 MODAL DE CARREGAMENTO -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <span class="loading-text" id="loadingTexto">Carregando...</span>
+    </div>
+</div>
+
 <script type="module">
     import { db } from "./firebase.js";
     import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let dadosRelatorioGlobal = [];
     let tipoRelatorioAtual = 'vales';
+
+    /* =========================================================
+       LOADING
+    ========================================================= */
+    function mostrarLoading(texto = 'Carregando...') {
+        document.getElementById('loadingTexto').textContent = texto;
+        document.getElementById('loadingOverlay').classList.add('ativo');
+        const btn = document.getElementById('btnGerar');
+        if (btn) btn.disabled = true;
+    }
+    function ocultarLoading() {
+        document.getElementById('loadingOverlay').classList.remove('ativo');
+        const btn = document.getElementById('btnGerar');
+        if (btn) btn.disabled = false;
+    }
 
     function formatarMesAnoPTBR(valor) {
         if (!valor) return "";
@@ -842,9 +915,6 @@ tr:hover td {
         else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
     }
 
-    /* =========================================================
-       FUNÇÕES AUXILIARES PARA FÉRIAS E FOLGAS
-    ========================================================= */
     function calcularDireitoFerias(dataAdmissao, ref) {
         const adm = parseDataParaDate(dataAdmissao);
         if (!adm) return null;
@@ -943,9 +1013,6 @@ tr:hover td {
         return null;
     }
 
-    /* =========================================================
-       DISPATCHER PRINCIPAL
-    ========================================================= */
     window.gerarRelatorio = async function() {
         if (tipoRelatorioAtual === "ferias") {
             await gerarRelatorioFerias();
@@ -954,9 +1021,6 @@ tr:hover td {
         }
     }
 
-    /* =========================================================
-       RELATÓRIO DE FÉRIAS E FOLGAS
-    ========================================================= */
     async function gerarRelatorioFerias() {
         const tipoBeneficioFiltro = document.getElementById("filtroTipoBeneficio").value;
         const statusFiltro = document.getElementById("filtroStatus").value;
@@ -970,6 +1034,8 @@ tr:hover td {
 
         msgDiv.className = "mensagem"; msgDiv.textContent = "";
         btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
+
+        mostrarLoading('Gerando relatório de férias e folgas...');
 
         try {
             const servidoresSnap = await getDocs(collection(db, "servidores"));
@@ -1023,7 +1089,6 @@ tr:hover td {
                         return !rm || rm === vm || rm === v.matricula.toString().trim();
                     });
 
-                    // FÉRIAS
                     if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'ferias') {
                         const dirF = calcularDireitoFerias(v.dataAdmissao, hoje);
                         if (dirF) {
@@ -1064,7 +1129,6 @@ tr:hover td {
                         }
                     }
 
-                    // FOLGA ANIVERSÁRIO
                     if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'folga') {
                         const dirG = nascimento ? calcularDireitoFolgaAniversario(nascimento, v.dataAdmissao, hoje) : null;
                         if (dirG) {
@@ -1169,12 +1233,11 @@ tr:hover td {
         } catch (erro) {
             console.error("Erro ao gerar relatório de férias:", erro);
             mostrarMensagem("Erro ao processar os dados.", "erro");
+        } finally {
+            ocultarLoading();
         }
     }
 
-    /* =========================================================
-       RELATÓRIO DE VALES (CÓDIGO ORIGINAL)
-    ========================================================= */
     async function gerarRelatorioVales() {
         const tipoPeriodo = document.getElementById("tipoPeriodo").value;
         const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
@@ -1198,6 +1261,8 @@ tr:hover td {
             mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
             return;
         }
+
+        mostrarLoading('Gerando relatório de vales...');
 
         try {
             let mesesParaProcessar = [];
@@ -1322,7 +1387,6 @@ tr:hover td {
 
             dadosRelatorioGlobal = listaFinal;
 
-            // Restaura cabeçalho padrão de VALES
             document.getElementById("tabelaCabecalho").innerHTML = `
                 <tr>
                     <th>Servidor</th>
@@ -1367,12 +1431,11 @@ tr:hover td {
         } catch (erro) {
             console.error("Erro ao gerar relatório:", erro);
             mostrarMensagem("Erro ao processar os dados.", "erro");
+        } finally {
+            ocultarLoading();
         }
     }
 
-    /* =========================================================
-       EXPORTAÇÕES
-    ========================================================= */
     window.exportarPDF = function() {
         window.print();
     }
