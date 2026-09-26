@@ -167,7 +167,7 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    overflow-x: hidden;   /* impede rolagem lateral em mobile */
+    overflow-x: hidden;
     transition: background-color .2s ease, color .2s ease;
 }
 
@@ -188,7 +188,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   TOPBAR — responsiva com wrap
+   TOPBAR
    ============================================================ */
 .topbar {
     width: calc(100% - 32px);
@@ -245,36 +245,67 @@ button, input, select, textarea { font: inherit; color: inherit; }
     white-space: nowrap;
 }
 
+/* ============================================================
+   STATUS DE CONEXÃO — com barrinhas de sinal
+   ============================================================ */
 .status-conexao {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 11.5px;
     font-weight: 600;
-    padding: 4px 10px;
+    padding: 5px 11px;
     border-radius: 999px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     white-space: nowrap;
     flex-shrink: 0;
-    text-transform: uppercase;
-    letter-spacing: .3px;
 }
 
-.status-conexao::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 11px;
     flex-shrink: 0;
 }
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: var(--border-strong);
+    border-radius: 1px;
+}
+
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 8px; }
+.signal-bars .bar-4 { height: 11px; }
 
 .status-conexao.online {
     color: var(--ok);
     background: var(--ok-bg);
     border-color: var(--ok-bd);
+}
+
+.status-conexao.online .signal-bars .bar {
+    background-color: var(--ok);
+}
+
+.status-conexao.offline {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: var(--danger-bd);
+}
+
+.status-conexao.offline .signal-bars .bar {
+    background-color: var(--danger);
+    animation: pulsar 1.2s infinite ease-in-out;
+}
+
+@keyframes pulsar {
+    0%, 100% { opacity: .35; }
+    50%      { opacity: 1; }
 }
 
 /* ============================================================
@@ -422,7 +453,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   BLOCOS DENTRO DO FORM (padrão / período / reabertura)
+   BLOCOS DENTRO DO FORM
    ============================================================ */
 .padrao-section,
 .periodo-section {
@@ -689,7 +720,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 
 /* ============================================================
-   TRIGGER DE REABERTURA (compacto, abre modal)
+   TRIGGER DE REABERTURA — com texto responsivo
    ============================================================ */
 .reabertura-trigger {
     grid-column: 1 / -1;
@@ -709,7 +740,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .reabertura-trigger-info {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     flex: 1 1 220px;
     min-width: 0;
@@ -719,27 +750,30 @@ input:checked + .slider:before { transform: translateX(20px); }
     font-size: 20px;
     color: var(--warn);
     flex-shrink: 0;
+    margin-top: 1px;
 }
 
 .reabertura-trigger-text {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    flex: 1;
 }
 
 .reabertura-trigger-text strong {
     font-size: 13px;
     font-weight: 600;
     color: var(--warn);
+    line-height: 1.35;
 }
 
 .reabertura-trigger-text span {
     font-size: 12px;
     color: var(--text-secondary);
     margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .btn-abrir-modal {
@@ -807,7 +841,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 
 /* ============================================================
-   TABELA — responsiva com scroll horizontal
+   TABELA
    ============================================================ */
 .table-scroll {
     width: 100%;
@@ -819,7 +853,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    min-width: 780px;   /* força scroll em telas pequenas em vez de esmagar */
+    min-width: 780px;
 }
 
 th {
@@ -1123,7 +1157,6 @@ tbody tr:hover td { background: var(--surface-2); }
    RESPONSIVO
    ============================================================ */
 
-/* Tablet */
 @media (max-width: 900px) {
     .topbar { width: calc(100% - 24px); padding: 10px 16px; }
     .main   { width: calc(100% - 24px); padding: 20px 0 32px; }
@@ -1133,7 +1166,6 @@ tbody tr:hover td { background: var(--surface-2); }
     .mensagem { margin: 0 16px 16px; }
 }
 
-/* Mobile grande */
 @media (max-width: 640px) {
     .topbar {
         width: calc(100% - 16px);
@@ -1168,7 +1200,17 @@ tbody tr:hover td { background: var(--surface-2); }
     .toggle-container { gap: 12px; }
     .toggle-info { min-width: 0; flex-basis: 100%; }
 
-    .reabertura-trigger { flex-direction: column; align-items: stretch; }
+    .reabertura-trigger {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding: 14px 16px;
+    }
+    .reabertura-trigger-text strong,
+    .reabertura-trigger-text span {
+        display: block;
+        width: 100%;
+    }
     .btn-abrir-modal { width: 100%; }
 
     .form-footer {
@@ -1186,7 +1228,6 @@ tbody tr:hover td { background: var(--surface-2); }
     .acoes-grupo { flex-direction: column; }
     .acoes-grupo .btn-acao { width: 100%; }
 
-    /* Modal vira "bottom sheet" no celular */
     .modal-overlay {
         padding: 0;
         align-items: flex-end;
@@ -1204,7 +1245,6 @@ tbody tr:hover td { background: var(--surface-2); }
     .escolas-checkbox-grid { grid-template-columns: 1fr; }
 }
 
-/* Mobile pequeno */
 @media (max-width: 400px) {
     .system-name { font-size: 13.5px; }
     .logo { width: 26px; height: 26px; }
@@ -1213,9 +1253,6 @@ tbody tr:hover td { background: var(--surface-2); }
     .page-header h1 { font-size: 17px; }
 }
 
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1225,9 +1262,6 @@ tbody tr:hover td { background: var(--surface-2); }
     }
 }
 
-/* ============================================================
-   IMPRESSÃO
-   ============================================================ */
 @media print {
     @page { margin: 1.5cm; }
     body { background: #fff !important; color: #000 !important; font-size: 10pt; }
@@ -1252,6 +1286,12 @@ tbody tr:hover td { background: var(--surface-2); }
         <div class="system-divider" aria-hidden="true"></div>
         <span class="system-module">Semed — Configuração de Meses</span>
         <div class="status-conexao online" role="status" aria-live="polite">
+            <div class="signal-bars" aria-hidden="true">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+            </div>
             <span id="statusTexto">Online</span>
         </div>
     </div>
@@ -1284,7 +1324,6 @@ tbody tr:hover td { background: var(--surface-2); }
             <div class="form-body">
                 <div class="form-grid">
 
-                    <!-- PADRÃO GLOBAL -->
                     <div class="padrao-section">
                         <div class="padrao-header">
                             <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-secondary);">settings</span>
@@ -1324,14 +1363,12 @@ tbody tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- MÊS DE REFERÊNCIA -->
                     <div class="form-group">
                         <label for="mesReferencia">Mês de Referência <span aria-hidden="true">*</span></label>
                         <input type="month" id="mesReferencia" name="mesReferencia" required
                                onchange="carregarConfiguracao(this.value)">
                     </div>
 
-                    <!-- DIAS ÚTEIS -->
                     <div class="form-group">
                         <label for="diasUteis">Dias Úteis Letivos <span aria-hidden="true">*</span></label>
                         <input type="number" id="diasUteis" name="diasUteis" placeholder="Ex: 22"
@@ -1339,7 +1376,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                oninput="atualizarCorCampo(this)">
                     </div>
 
-                    <!-- PERÍODO DE LANÇAMENTOS -->
                     <div class="periodo-section">
                         <div class="periodo-title">
                             <span class="material-symbols-outlined" aria-hidden="true">date_range</span>
@@ -1363,7 +1399,6 @@ tbody tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- STATUS CALCULADO -->
                     <div class="status-calculado status-indefinido-calc" id="statusCalculado" role="status" aria-live="polite">
                         <span class="material-symbols-outlined" id="iconeStatus" aria-hidden="true">info</span>
                         <div class="status-info">
@@ -1373,7 +1408,6 @@ tbody tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- CONGELAMENTO MANUAL -->
                     <div class="form-group full">
                         <label>Congelamento Manual</label>
                         <div class="toggle-container">
@@ -1390,7 +1424,6 @@ tbody tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- TRIGGER DE REABERTURA -->
                     <div class="reabertura-trigger" id="reaberturaTrigger">
                         <div class="reabertura-trigger-info">
                             <span class="material-symbols-outlined" aria-hidden="true">lock_open_right</span>
@@ -1405,7 +1438,6 @@ tbody tr:hover td { background: var(--surface-2); }
                         </button>
                     </div>
 
-                    <!-- OBSERVAÇÕES -->
                     <div class="form-group full">
                         <label for="observacoes">Observações (Opcional)</label>
                         <input type="text" id="observacoes" name="observacoes"
@@ -1432,7 +1464,6 @@ tbody tr:hover td { background: var(--surface-2); }
         </form>
     </section>
 
-    <!-- TABELA -->
     <section class="table-card">
         <div class="card-header">
             <div class="card-icon gray">
@@ -1468,7 +1499,6 @@ tbody tr:hover td { background: var(--surface-2); }
     </section>
 </main>
 
-<!-- MODAL DE REABERTURA -->
 <div class="modal-overlay" id="modalReabertura" role="presentation">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="tituloModalReabertura">
         <div class="modal-header">
