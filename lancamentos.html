@@ -22,6 +22,8 @@
     --red-hover: #a51f1f;
     --red-light: #fff0f0;
     --red-border: #efc5c5;
+    --yellow: #b45309;
+    --yellow-light: #fef3c7;
     --text: #263238;
     --text-secondary: #68737d;
     --border: #d9dee3;
@@ -77,11 +79,48 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .info-campo-automatico { display: none; font-size: 11px; color: var(--primary); margin-top: 4px; font-weight: 500; }
 .info-campo-automatico.visivel { display: block; }
 
+/* 👇 PERÍODO INFO BOX */
+.periodo-info-box {
+    display: none;
+    background: #f5f2f8;
+    border: 1px solid #e0d5ec;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text);
+}
+.periodo-info-box.visivel { display: block; }
+.periodo-info-box strong { color: var(--primary); }
+.periodo-info-box.vencido { background: var(--red-light); border-color: var(--red-border); }
+.periodo-info-box.vencido strong { color: var(--red); }
+
+/* 👇 SELECT COM OPÇÕES COLORIDAS */
+select option.vencido { color: var(--red); font-weight: 600; }
+select option.atual { color: var(--primary); font-weight: 700; }
+
+.alerta-periodo-vencido {
+    display: none;
+    background: var(--yellow-light);
+    border: 1px solid #fde68a;
+    color: var(--yellow);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 8px;
+    align-items: flex-start;
+    gap: 8px;
+}
+.alerta-periodo-vencido.visivel { display: flex; }
+.alerta-periodo-vencido .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+
 .cpf-search-wrapper { display: flex; gap: 8px; width: 100%; }
 .btn-acao { height: 42px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; transition: background 0.15s; flex-shrink: 0; }
 .btn-acao:hover { background: var(--primary-hover); }
 .btn-salvar { background: var(--green); width: 100%; }
 .btn-salvar:hover { background: var(--green-hover); }
+.btn-salvar:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
 .table-header-actions { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid #e5e8eb; flex-wrap: wrap; background: #fafbfc; }
@@ -140,7 +179,7 @@ tr:hover td { background: #f8fafc; }
             <span>Controle de Ausências</span>
         </div>
         <h1>Lançamento de Férias, Folga e Licenças</h1>
-        <p>Busque por CPF, selecione a matrícula/escola afetada, escolha o tipo de ausência e registre.</p>
+        <p>Busque por CPF, selecione a matrícula/escola, escolha o período aquisitivo e registre.</p>
     </div>
 
     <div class="acesso-negado-banner" id="acessoNegadoBanner">
@@ -175,7 +214,7 @@ tr:hover td { background: #f8fafc; }
 
                     <div class="form-group full-width" id="grupoVinculo" style="display:none;">
                         <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
-                        <select id="selectVinculo" required>
+                        <select id="selectVinculo" required onchange="carregarPeriodosAbertos()">
                             <option value="">Selecione o vínculo...</option>
                         </select>
                     </div>
@@ -188,6 +227,24 @@ tr:hover td { background: #f8fafc; }
                             <option value="LICENCA_MEDICA">Licença Médica</option>
                             <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
                         </select>
+                    </div>
+
+                    <!-- 👇 NOVO CAMPO: PERÍODO AQUISITIVO -->
+                    <div class="form-group full-width" id="grupoPeriodoAquisitivo" style="display:none;">
+                        <label for="selectPeriodo">
+                            <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">date_range</span>
+                            Período Aquisitivo (Referência) <span>*</span>
+                        </label>
+                        <select id="selectPeriodo" required onchange="atualizarInfoPeriodo()">
+                            <option value="">Selecione o vínculo primeiro...</option>
+                        </select>
+                        <div class="periodo-info-box" id="periodoInfoBox"></div>
+                        <div class="alerta-periodo-vencido" id="alertaPeriodoVencido">
+                            <span class="material-symbols-outlined">warning</span>
+                            <div>
+                                <strong>Atenção:</strong> Este período está vencido. O gozo será registrado como <b>extemporâneo</b> (fora do prazo legal).
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group" id="grupoDuracaoFerias">
@@ -212,7 +269,7 @@ tr:hover td { background: #f8fafc; }
 
                 <div id="mensagem" class="mensagem"></div>
 
-                <button type="submit" class="btn-acao btn-salvar">
+                <button type="submit" class="btn-acao btn-salvar" id="btnSalvar">
                     <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
                     Salvar Lançamento
                 </button>
@@ -264,11 +321,227 @@ tr:hover td { background: #f8fafc; }
     let acessoAutorizado = false;
     let servidorCache = null; 
     let registrosCache = [];
+    let periodosAbertos = []; // 👈 Cache dos períodos em aberto
 
     function normalizarTexto(valor) {
         if (valor === null || valor === undefined) return "";
         return String(valor).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").toUpperCase();
     }
+
+    function parseData(str) {
+        if (!str) return null;
+        if (str.includes('/')) {
+            const p = str.split('/');
+            return new Date(+p[2], +p[1]-1, +p[0]);
+        }
+        if (str.includes('-')) {
+            const p = str.substring(0,10).split('-');
+            if (p[0].length === 4) return new Date(+p[0], +p[1]-1, +p[2]);
+            return new Date(+p[2], +p[1]-1, +p[0]);
+        }
+        return null;
+    }
+
+    function formatarDataBr(str) {
+        if (!str) return '-';
+        if (str.includes('-')) {
+            const p = str.split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return str;
+    }
+
+    /* =========================================================
+       👇 CÁLCULO DE PERÍODOS ABERTOS (PENDENTE/VENCIDO)
+    ========================================================= */
+    function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
+        const dtAdm = parseData(dataAdmissao);
+        if (!dtAdm) return [];
+
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const periodos = [];
+        let ini = new Date(dtAdm);
+
+        // Para folga aniversário: usar nascimento
+        const dtNasc = tipo === 'FOLGA_ANIVERSARIO' && servidorCache
+            ? parseData(servidorCache.data_nascimento || servidorCache.dataNascimento)
+            : null;
+
+        for (let i = 0; i < 15; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            const anoRef = `${ini.getFullYear()}/${fim.getFullYear()}`;
+
+            // Prazo limite para gozar
+            let dataLimite = new Date(fim);
+            let aniversarioNoPeriodo = null;
+
+            if (tipo === 'FOLGA_ANIVERSARIO' && dtNasc) {
+                const mes = dtNasc.getMonth();
+                const dia = dtNasc.getDate();
+                for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                    const c = new Date(a, mes, dia);
+                    if (c >= ini && c <= fim) {
+                        aniversarioNoPeriodo = c;
+                        dataLimite = new Date(c);
+                        break;
+                    }
+                }
+            }
+
+            // Verifica se já foi gozado
+            const jaGozado = registrosCache.some(r => {
+                const mesmoTipo = tipo === 'FOLGA_ANIVERSARIO' 
+                    ? (r.tipo === 'FOLGA_ANIVERSARIO')
+                    : (r.tipo === tipo);
+                const mesmaMat = (r.matricula || '').toString() === matricula.toString();
+                const mesmoPeriodo = (r.ano_referencia || '') === anoRef;
+                return mesmoTipo && mesmaMat && mesmoPeriodo;
+            });
+
+            // Só adiciona períodos em aberto (não gozados)
+            if (!jaGozado) {
+                let status = 'pendente';
+                if (fim < hoje) {
+                    status = dataLimite < hoje ? 'vencido' : 'pendente';
+                } else if (ini <= hoje && hoje <= fim) {
+                    status = 'atual';
+                } else if (fim > hoje) {
+                    status = 'atual';
+                }
+
+                periodos.push({
+                    anoReferencia: anoRef,
+                    inicio: new Date(ini),
+                    fim: new Date(fim),
+                    dataLimite: dataLimite,
+                    aniversarioNoPeriodo: aniversarioNoPeriodo,
+                    status: status
+                });
+            }
+
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+
+            // Para após o período atual + 1 futuro
+            if (fim > hoje && status !== 'pendente') break;
+        }
+
+        // Ordena: vencidos primeiro, depois pendentes, depois atual
+        periodos.sort((a,b) => {
+            const ordem = { vencido: 0, pendente: 1, atual: 2 };
+            return ordem[a.status] - ordem[b.status];
+        });
+
+        return periodos;
+    }
+
+    /* =========================================================
+       👇 CARREGA PERÍODOS ABERTOS NO DROPDOWN
+    ========================================================= */
+    window.carregarPeriodosAbertos = function() {
+        const vinculoSelect = document.getElementById("selectVinculo").value;
+        const grupoPeriodo = document.getElementById("grupoPeriodoAquisitivo");
+        const selectPeriodo = document.getElementById("selectPeriodo");
+        const tipo = document.getElementById("tipoAusencia").value;
+
+        if (!vinculoSelect || tipo === 'LICENCA_MEDICA' || tipo === 'LICENCA_OUTRAS') {
+            grupoPeriodo.style.display = "none";
+            return;
+        }
+
+        const [matricula, escola] = vinculoSelect.split("|");
+
+        // Busca a admissão do vínculo
+        let dataAdmissao = null;
+        if (servidorCache) {
+            if (servidorCache.matricula1 && servidorCache.matricula1.numeroMatricula === matricula) {
+                dataAdmissao = servidorCache.matricula1.dataAdmissao || servidorCache.matricula1.data_admissao;
+            } else if (servidorCache.matricula2 && servidorCache.matricula2.numeroMatricula === matricula) {
+                dataAdmissao = servidorCache.matricula2.dataAdmissao || servidorCache.matricula2.data_admissao;
+            }
+        }
+
+        if (!dataAdmissao) {
+            selectPeriodo.innerHTML = `<option value="">⚠️ Data de admissão não informada nesta matrícula</option>`;
+            grupoPeriodo.style.display = "flex";
+            return;
+        }
+
+        periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo);
+
+        if (periodosAbertos.length === 0) {
+            selectPeriodo.innerHTML = `<option value="">✓ Não há períodos em aberto (todos gozados)</option>`;
+            grupoPeriodo.style.display = "flex";
+            document.getElementById('btnSalvar').disabled = true;
+            return;
+        }
+
+        document.getElementById('btnSalvar').disabled = false;
+
+        let options = `<option value="">Selecione o período aquisitivo...</option>`;
+        periodosAbertos.forEach(p => {
+            let label = `${p.anoReferencia}`;
+            let classe = '';
+            
+            if (p.status === 'vencido') {
+                label += ` 🔴 VENCIDO (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
+                classe = 'vencido';
+            } else if (p.status === 'pendente') {
+                label += ` 🟡 Pendente (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
+                classe = 'pendente';
+            } else if (p.status === 'atual') {
+                label += ` 🔵 Em andamento`;
+                classe = 'atual';
+            }
+
+            options += `<option value="${p.anoReferencia}" class="${classe}" data-inicio="${p.inicio.toISOString().split('T')[0]}" data-fim="${p.fim.toISOString().split('T')[0]}" data-limite="${p.dataLimite.toISOString().split('T')[0]}" data-status="${p.status}">${label}</option>`;
+        });
+
+        selectPeriodo.innerHTML = options;
+        grupoPeriodo.style.display = "flex";
+        document.getElementById('periodoInfoBox').classList.remove('visivel');
+        document.getElementById('alertaPeriodoVencido').classList.remove('visivel');
+    };
+
+    /* =========================================================
+       👇 ATUALIZA INFO DO PERÍODO SELECIONADO
+    ========================================================= */
+    window.atualizarInfoPeriodo = function() {
+        const select = document.getElementById('selectPeriodo');
+        const infoBox = document.getElementById('periodoInfoBox');
+        const alertaVencido = document.getElementById('alertaPeriodoVencido');
+        const opt = select.options[select.selectedIndex];
+
+        if (!opt || !opt.value) {
+            infoBox.classList.remove('visivel');
+            alertaVencido.classList.remove('visivel');
+            return;
+        }
+
+        const inicio = opt.getAttribute('data-inicio');
+        const fim = opt.getAttribute('data-fim');
+        const limite = opt.getAttribute('data-limite');
+        const status = opt.getAttribute('data-status');
+
+        infoBox.innerHTML = `
+            <strong>Ciclo aquisitivo:</strong> ${formatarDataBr(inicio)} a ${formatarDataBr(fim)}<br>
+            <strong>Prazo para gozar:</strong> até ${formatarDataBr(limite)}<br>
+            <strong>Status:</strong> ${status === 'vencido' ? '🔴 Vencido' : status === 'pendente' ? '🟡 Pendente' : '🔵 Em andamento'}
+        `;
+        infoBox.classList.add('visivel');
+
+        if (status === 'vencido') {
+            infoBox.classList.add('vencido');
+            alertaVencido.classList.add('visivel');
+        } else {
+            infoBox.classList.remove('vencido');
+            alertaVencido.classList.remove('visivel');
+        }
+    };
 
     onAuthStateChanged(auth, async function(user) {
         const loadingAuth = document.getElementById("loadingAuth");
@@ -347,6 +620,7 @@ tr:hover td { background: #f8fafc; }
         const tipo = document.getElementById("tipoAusencia").value;
         const grupoFim = document.getElementById("grupoDataFim");
         const grupoDuracao = document.getElementById("grupoDuracaoFerias");
+        const grupoPeriodo = document.getElementById("grupoPeriodoAquisitivo");
         const lblInicio = document.getElementById("labelDataInicio");
         const inputFim = document.getElementById("dataFim");
         const infoAuto = document.getElementById("infoDataFimAuto");
@@ -372,11 +646,17 @@ tr:hover td { background: #f8fafc; }
         } else {
             grupoFim.style.display = "flex";
             grupoDuracao.style.display = "none";
+            grupoPeriodo.style.display = "none"; // 👈 Licenças não têm período aquisitivo
             inputFim.disabled = false;
             inputFim.setAttribute("required", "true");
             inputFim.classList.remove("campo-automatico");
             infoAuto.classList.remove("visivel");
             lblInicio.innerHTML = "Data de Início <span>*</span>";
+        }
+
+        // Recarrega períodos se já tem vínculo selecionado
+        if (document.getElementById("selectVinculo").value) {
+            carregarPeriodosAbertos();
         }
     };
 
@@ -407,10 +687,12 @@ tr:hover td { background: #f8fafc; }
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
         const lblNome = document.getElementById("nomeServidorEncontrado");
         const grupoVinculo = document.getElementById("grupoVinculo");
+        const grupoPeriodo = document.getElementById("grupoPeriodoAquisitivo");
         const selectVinculo = document.getElementById("selectVinculo");
 
         servidorCache = null;
         grupoVinculo.style.display = "none";
+        grupoPeriodo.style.display = "none";
         selectVinculo.innerHTML = `<option value="">Selecione o vínculo...</option>`;
 
         if (!cpfDigitado) { alert("Digite um CPF para buscar."); return; }
@@ -443,8 +725,9 @@ tr:hover td { background: #f8fafc; }
                     if (!matObj) return;
                     const numMat = matObj.numeroMatricula || 'S/N';
                     const cargo = matObj.cargo || 'Cargo não informado';
-                    if (matObj.escola1?.nomeEscola) options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola}</option>`;
-                    if (matObj.escola2?.nomeEscola) options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola}</option>`;
+                    const admissao = matObj.dataAdmissao || matObj.data_admissao || '';
+                    if (matObj.escola1?.nomeEscola) options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
+                    if (matObj.escola2?.nomeEscola) options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
                 }
 
                 adicionarEscolasDaMatricula(encontrado.matricula1);
@@ -464,8 +747,8 @@ tr:hover td { background: #f8fafc; }
     };
 
     /* =========================================================
-       👇 SALVAR REGISTRO (COM CPF LIMPO E PERÍODO CORRIGIDO)
-       ========================================================= */
+       👇 SALVAR REGISTRO (COM PERÍODO MANUAL + DETECÇÃO EXTEMPORÂNEO)
+    ========================================================= */
     window.salvarRegistro = async function(event) {
         event.preventDefault();
 
@@ -507,11 +790,40 @@ tr:hover td { background: #f8fafc; }
             return;
         }
 
+        // 👇 VALIDAÇÃO: PERÍODO AQUISITIVO (só para férias e folga)
+        let anoReferencia = null;
+        let gozoExtemporaneo = false;
+        const tipoComPeriodo = tipo === 'FERIAS' || tipo === 'FOLGA_ANIVERSARIO';
+
+        if (tipoComPeriodo) {
+            const selectPeriodo = document.getElementById('selectPeriodo');
+            const periodoSelecionado = selectPeriodo.value;
+            
+            if (!periodoSelecionado) {
+                mostrarMensagem("Selecione o período aquisitivo (referência) do lançamento.", "erro");
+                return;
+            }
+
+            anoReferencia = periodoSelecionado;
+
+            // Detecta se o gozo é extemporâneo (fora do prazo)
+            const opt = selectPeriodo.options[selectPeriodo.selectedIndex];
+            const statusPeriodo = opt.getAttribute('data-status');
+            const dataLimite = opt.getAttribute('data-limite');
+            
+            if (statusPeriodo === 'vencido' && dataLimite) {
+                const dtInicio = new Date(dataInicio);
+                const dtLimite = new Date(dataLimite);
+                if (dtInicio > dtLimite) {
+                    gozoExtemporaneo = true;
+                }
+            }
+        }
+
         try {
-            // 👇 LIMPA O CPF (remove pontos e traços) ANTES DE SALVAR
             const cpfLimpo = servidorCache.cpf ? servidorCache.cpf.replace(/\D/g, '') : '';
             
-            // Verifica conflito de datas usando o CPF limpo
+            // Verifica conflito de datas
             const qExistente = query(
                 collection(db, "registro_ferias_folgas"), 
                 where("cpf", "==", cpfLimpo),
@@ -532,13 +844,24 @@ tr:hover td { background: #f8fafc; }
                 return;
             }
 
-            // 👇 PERÍODO AQUISITIVO CORRIGIDO: ano anterior / ano atual
-            // Ex: férias em maio/2026 → período aquisitivo 2025/2026
-            const anoInicio = new Date(dataInicio).getFullYear();
-            const anoReferencia = `${anoInicio - 1}/${anoInicio}`;
+            // 👇 VALIDAÇÃO DE DUPLICIDADE: não permitir lançar o mesmo período 2x
+            if (anoReferencia) {
+                const duplicado = registrosCache.some(r => {
+                    return (r.cpf || '').replace(/\D/g,'') === cpfLimpo &&
+                           r.matricula === matriculaEscolhida &&
+                           r.ano_referencia === anoReferencia &&
+                           ((r.tipo === 'FERIAS' && tipo === 'FERIAS') ||
+                            (r.tipo === 'FOLGA_ANIVERSARIO' && tipo === 'FOLGA_ANIVERSARIO'));
+                });
 
-            // 👇 SALVA COM CPF LIMPO E PERÍODO CORRIGIDO
-            await addDoc(collection(db, "registro_ferias_folgas"), {
+                if (duplicado) {
+                    mostrarMensagem(`⚠️ Já existe um lançamento para o período ${anoReferencia} nesta matrícula. Exclua o anterior ou escolha outro período.`, "erro");
+                    return;
+                }
+            }
+
+            // 👇 MONTA O DOCUMENTO PARA SALVAR
+            const docParaSalvar = {
                 cpf: cpfLimpo,
                 nome: servidorCache.nome,
                 matricula: matriculaEscolhida,
@@ -546,14 +869,28 @@ tr:hover td { background: #f8fafc; }
                 tipo: tipo,
                 dataInicio: dataInicio,
                 dataFim: dataFim,
-                ano_referencia: anoReferencia,
                 dataRegistro: new Date().toISOString()
-            });
+            };
 
-            mostrarMensagem("Período registrado com sucesso!", "sucesso");
+            if (anoReferencia) {
+                docParaSalvar.ano_referencia = anoReferencia;
+                docParaSalvar.gozo_extemporaneo = gozoExtemporaneo;
+            }
+
+            await addDoc(collection(db, "registro_ferias_folgas"), docParaSalvar);
+
+            const msgSucesso = gozoExtemporaneo 
+                ? "✓ Lançamento salvo com sucesso. ⚠️ ATENÇÃO: gozo registrado FORA do prazo (extemporâneo)."
+                : "✓ Período registrado com sucesso!";
+            
+            mostrarMensagem(msgSucesso, "sucesso");
+            
             document.getElementById("formFerias").reset();
             document.getElementById("nomeServidorEncontrado").textContent = "";
             document.getElementById("grupoVinculo").style.display = "none";
+            document.getElementById("grupoPeriodoAquisitivo").style.display = "none";
+            document.getElementById("periodoInfoBox").classList.remove('visivel');
+            document.getElementById("alertaPeriodoVencido").classList.remove('visivel');
             servidorCache = null;
             mudarTipoAusencia();
             carregarRegistros();
@@ -619,6 +956,11 @@ tr:hover td { background: #f8fafc; }
             const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
             const inicioFormatado = r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-';
             const periodoRef = r.ano_referencia || '-';
+            
+            // 👇 BADGE EXTEMPORÂNEO
+            const badgeExt = r.gozo_extemporaneo 
+                ? `<span style="background:#fff8e1; color:#f57c00; font-weight:600; padding:2px 6px; border-radius:3px; font-size:10px; margin-left:4px;">⚠ Fora do prazo</span>` 
+                : '';
 
             linhas += `
                 <tr>
@@ -626,7 +968,7 @@ tr:hover td { background: #f8fafc; }
                     <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
                     <td>${r.escola || '-'}</td>
                     <td><span style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
-                    <td><b>${periodoRef}</b></td>
+                    <td><b>${periodoRef}</b>${badgeExt}</td>
                     <td>${inicioFormatado}</td>
                     <td>${terminoFormatado}</td>
                     <td><button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')"><span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir</button></td>
