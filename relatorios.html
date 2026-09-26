@@ -462,6 +462,7 @@ tr:hover td { background: #f8fafc; }
         else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
     }
 
+    // 👇 CORRIGIDO: Prazo de gozo = fim do período + 12 meses (CLT)
     function calcularDireitoFerias(dataAdmissao, ref) {
         const adm = parseDataParaDate(dataAdmissao);
         if (!adm) return null;
@@ -472,10 +473,15 @@ tr:hover td { background: #f8fafc; }
             const fim = new Date(ini);
             fim.setFullYear(fim.getFullYear() + 1);
             fim.setDate(fim.getDate() - 1);
+            
+            // 👇 PRAZO DE GOZO: 12 meses após o fim do período aquisitivo
+            const prazoGozo = new Date(fim);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+            
             const p = {
                 numero: completos + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-                dataLimiteGozo: new Date(fim), status: 'pendente'
+                dataLimiteGozo: prazoGozo, status: 'pendente'
             };
             if (fim <= refClean) {
                 completos++;
@@ -491,6 +497,7 @@ tr:hover td { background: #f8fafc; }
         return { periodosCompletos: completos, periodosDetalhados: det };
     }
 
+    // 👇 CORRIGIDO: Prazo de gozo = aniversário + 12 meses
     function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref) {
         const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
         if (!nasc || !adm) return null;
@@ -508,13 +515,18 @@ tr:hover td { background: #f8fafc; }
                 if (c >= ini && c <= fim) { aniv = c; break; }
             }
             const limite = aniv ? new Date(aniv) : new Date(fim);
+            
+            // 👇 PRAZO DE GOZO: aniversário + 12 meses
+            const prazoGozo = new Date(limite);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+            
             const p = {
                 numero: i + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-                aniversarioNoPeriodo: aniv, dataLimiteGozo: limite, status: 'pendente'
+                aniversarioNoPeriodo: aniv, dataLimiteGozo: prazoGozo, status: 'pendente'
             };
             if (fim <= refClean) {
-                if (limite < refClean) { p.status = 'perdido'; }
+                if (prazoGozo < refClean) { p.status = 'perdido'; }
                 else { p.status = 'disponivel'; }
                 det.push(p);
                 ini = new Date(fim);
