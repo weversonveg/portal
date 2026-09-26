@@ -1,3 +1,8 @@
+Versão atual 
+linha do tempo sem cards
+Férias e folgas adicionados na página de relatórios 
+Regra de cálculo de vencimento de férias alterado para 12 meses após completar ciclo 
+
 versão 1.7
 Linha do tempo funcionando com modelos de cards.
 Resolvido o problema de remoção da segunda matricula.
