@@ -79,16 +79,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .info-campo-automatico { display: none; font-size: 11px; color: var(--primary); margin-top: 4px; font-weight: 500; }
 .info-campo-automatico.visivel { display: block; }
 
-.periodo-info-box {
-    display: none;
-    background: #f5f2f8;
-    border: 1px solid #e0d5ec;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-top: 6px;
-    font-size: 12px;
-    color: var(--text);
-}
+.periodo-info-box { display: none; background: #f5f2f8; border: 1px solid #e0d5ec; border-radius: 6px; padding: 10px 14px; margin-top: 6px; font-size: 12px; color: var(--text); }
 .periodo-info-box.visivel { display: block; }
 .periodo-info-box strong { color: var(--primary); }
 .periodo-info-box.vencido { background: var(--red-light); border-color: var(--red-border); }
@@ -97,19 +88,7 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 select option.vencido { color: var(--red); font-weight: 600; }
 select option.atual { color: var(--primary); font-weight: 700; }
 
-.alerta-periodo-vencido {
-    display: none;
-    background: var(--yellow-light);
-    border: 1px solid #fde68a;
-    color: var(--yellow);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 8px;
-    align-items: flex-start;
-    gap: 8px;
-}
+.alerta-periodo-vencido { display: none; background: var(--yellow-light); border: 1px solid #fde68a; color: var(--yellow); padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; margin-top: 8px; align-items: flex-start; gap: 8px; }
 .alerta-periodo-vencido.visivel { display: flex; }
 .alerta-periodo-vencido .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
 
@@ -316,7 +295,7 @@ tr:hover td { background: #f8fafc; }
     let perfilUsuario = "";
     let autenticacaoPronta = false;
     let acessoAutorizado = false;
-    let servidorCache = null; 
+    let servidorCache = null;
     let registrosCache = [];
     let periodosAbertos = [];
 
@@ -349,7 +328,7 @@ tr:hover td { background: #f8fafc; }
     }
 
     /* =========================================================
-       👇 CÁLCULO DE PERÍODOS ABERTOS (CORRIGIDO: +12 MESES)
+       CÁLCULO DE PERÍODOS ABERTOS (CORRIGIDO: +12 MESES CLT)
     ========================================================= */
     function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
@@ -360,7 +339,7 @@ tr:hover td { background: #f8fafc; }
         const periodos = [];
         let ini = new Date(dtAdm);
 
-        const dtNasc = tipo === 'FOLGA_ANIVERSARIO' && servidorCache
+        const dtNasc = (tipo === 'FOLGA_ANIVERSARIO' && servidorCache)
             ? parseData(servidorCache.data_nascimento || servidorCache.dataNascimento)
             : null;
 
@@ -371,7 +350,6 @@ tr:hover td { background: #f8fafc; }
 
             const anoRef = `${ini.getFullYear()}/${fim.getFullYear()}`;
 
-            // Prazo limite para gozar
             let dataLimite = new Date(fim);
             let aniversarioNoPeriodo = null;
 
@@ -388,13 +366,12 @@ tr:hover td { background: #f8fafc; }
                 }
             }
 
-            // 👇 CORRIGIDO: Prazo de gozo = dataLimite + 12 meses (CLT)
+            // 👇 Prazo de gozo = dataLimite + 12 meses (CLT)
             const prazoGozo = new Date(dataLimite);
             prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-            // Verifica se já foi gozado
             const jaGozado = registrosCache.some(r => {
-                const mesmoTipo = tipo === 'FOLGA_ANIVERSARIO' 
+                const mesmoTipo = (tipo === 'FOLGA_ANIVERSARIO')
                     ? (r.tipo === 'FOLGA_ANIVERSARIO')
                     : (r.tipo === tipo);
                 const mesmaMat = (r.matricula || '').toString() === matricula.toString();
@@ -402,14 +379,11 @@ tr:hover td { background: #f8fafc; }
                 return mesmoTipo && mesmaMat && mesmoPeriodo;
             });
 
-            // Só adiciona períodos em aberto (não gozados)
             if (!jaGozado) {
                 let status = 'pendente';
                 if (fim < hoje) {
                     status = prazoGozo < hoje ? 'vencido' : 'pendente';
-                } else if (ini <= hoje && hoje <= fim) {
-                    status = 'atual';
-                } else if (fim > hoje) {
+                } else {
                     status = 'atual';
                 }
 
@@ -426,7 +400,7 @@ tr:hover td { background: #f8fafc; }
             ini = new Date(fim);
             ini.setDate(ini.getDate() + 1);
 
-            if (fim > hoje && status !== 'pendente') break;
+            if (fim > hoje) break;
         }
 
         periodos.sort((a,b) => {
@@ -480,14 +454,14 @@ tr:hover td { background: #f8fafc; }
         periodosAbertos.forEach(p => {
             let label = `${p.anoReferencia}`;
             let classe = '';
-            
+
             if (p.status === 'vencido') {
                 label += ` 🔴 VENCIDO (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
                 classe = 'vencido';
             } else if (p.status === 'pendente') {
                 label += ` 🟡 Pendente (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
                 classe = 'pendente';
-            } else if (p.status === 'atual') {
+            } else {
                 label += ` 🔵 Em andamento`;
                 classe = 'atual';
             }
@@ -710,14 +684,14 @@ tr:hover td { background: #f8fafc; }
                 lblNome.style.color = "var(--green)";
 
                 let options = `<option value="">Selecione a matrícula e escola...</option>`;
-                
+
                 function adicionarEscolasDaMatricula(matObj) {
                     if (!matObj) return;
                     const numMat = matObj.numeroMatricula || 'S/N';
                     const cargo = matObj.cargo || 'Cargo não informado';
                     const admissao = matObj.dataAdmissao || matObj.data_admissao || '';
-                    if (matObj.escola1?.nomeEscola) options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
-                    if (matObj.escola2?.nomeEscola) options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
+                    if (matObj.escola1 && matObj.escola1.nomeEscola) options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
+                    if (matObj.escola2 && matObj.escola2.nomeEscola) options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}</option>`;
                 }
 
                 adicionarEscolasDaMatricula(encontrado.matricula1);
@@ -732,4 +706,256 @@ tr:hover td { background: #f8fafc; }
         } catch (e) {
             console.error("Erro na busca:", e);
             lblNome.textContent = "Erro ao buscar servidor.";
-            lblNome.style.color = "var(--red)
+            lblNome.style.color = "var(--red)";
+        }
+    };
+
+    window.salvarRegistro = async function(event) {
+        event.preventDefault();
+
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro");
+            return;
+        }
+
+        if (!servidorCache) {
+            mostrarMensagem("Por favor, busque e valide o CPF do servidor antes de salvar.", "erro");
+            return;
+        }
+
+        const vinculoSelect = document.getElementById("selectVinculo").value;
+        if (!vinculoSelect) {
+            mostrarMensagem("Selecione a matrícula e a escola afetada.", "erro");
+            return;
+        }
+
+        const [matriculaEscolhida, escolaEscolhida] = vinculoSelect.split("|");
+        const tipo = document.getElementById("tipoAusencia").value;
+        const dataInicio = document.getElementById("dataInicio").value;
+        let dataFim = document.getElementById("dataFim").value;
+
+        if (!tipo || !dataInicio) {
+            mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+            return;
+        }
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            dataFim = dataInicio;
+        } else if (!dataFim) {
+            mostrarMensagem("Preencha a data de término.", "erro");
+            return;
+        }
+
+        if (dataInicio > dataFim) {
+            mostrarMensagem("A data de início não pode ser posterior à data de término.", "erro");
+            return;
+        }
+
+        let anoReferencia = null;
+        let gozoExtemporaneo = false;
+        const tipoComPeriodo = (tipo === 'FERIAS' || tipo === 'FOLGA_ANIVERSARIO');
+
+        if (tipoComPeriodo) {
+            const selectPeriodo = document.getElementById('selectPeriodo');
+            const periodoSelecionado = selectPeriodo.value;
+
+            if (!periodoSelecionado) {
+                mostrarMensagem("Selecione o período aquisitivo (referência) do lançamento.", "erro");
+                return;
+            }
+
+            anoReferencia = periodoSelecionado;
+
+            const opt = selectPeriodo.options[selectPeriodo.selectedIndex];
+            const statusPeriodo = opt.getAttribute('data-status');
+            const dataLimite = opt.getAttribute('data-limite');
+
+            if (statusPeriodo === 'vencido' && dataLimite) {
+                const dtInicio = new Date(dataInicio);
+                const dtLimite = new Date(dataLimite);
+                if (dtInicio > dtLimite) {
+                    gozoExtemporaneo = true;
+                }
+            }
+        }
+
+        try {
+            const cpfLimpo = servidorCache.cpf ? servidorCache.cpf.replace(/\D/g, '') : '';
+
+            const qExistente = query(
+                collection(db, "registro_ferias_folgas"),
+                where("cpf", "==", cpfLimpo),
+                where("matricula", "==", matriculaEscolhida)
+            );
+            const existentesSnap = await getDocs(qExistente);
+
+            let temConflito = false;
+            existentesSnap.forEach(docSnap => {
+                const r = docSnap.data();
+                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) {
+                    temConflito = true;
+                }
+            });
+
+            if (temConflito) {
+                mostrarMensagem("Já existe um registro de ausência para esta mesma matrícula que conflita com as datas informadas.", "erro");
+                return;
+            }
+
+            if (anoReferencia) {
+                const duplicado = registrosCache.some(r => {
+                    return (r.cpf || '').replace(/\D/g,'') === cpfLimpo &&
+                           r.matricula === matriculaEscolhida &&
+                           r.ano_referencia === anoReferencia &&
+                           ((r.tipo === 'FERIAS' && tipo === 'FERIAS') ||
+                            (r.tipo === 'FOLGA_ANIVERSARIO' && tipo === 'FOLGA_ANIVERSARIO'));
+                });
+
+                if (duplicado) {
+                    mostrarMensagem(`⚠️ Já existe um lançamento para o período ${anoReferencia} nesta matrícula. Exclua o anterior ou escolha outro período.`, "erro");
+                    return;
+                }
+            }
+
+            const docParaSalvar = {
+                cpf: cpfLimpo,
+                nome: servidorCache.nome,
+                matricula: matriculaEscolhida,
+                escola: escolaEscolhida,
+                tipo: tipo,
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                dataRegistro: new Date().toISOString()
+            };
+
+            if (anoReferencia) {
+                docParaSalvar.ano_referencia = anoReferencia;
+                docParaSalvar.gozo_extemporaneo = gozoExtemporaneo;
+            }
+
+            await addDoc(collection(db, "registro_ferias_folgas"), docParaSalvar);
+
+            const msgSucesso = gozoExtemporaneo
+                ? "✓ Lançamento salvo com sucesso. ⚠️ ATENÇÃO: gozo registrado FORA do prazo (extemporâneo)."
+                : "✓ Período registrado com sucesso!";
+
+            mostrarMensagem(msgSucesso, "sucesso");
+
+            document.getElementById("formFerias").reset();
+            document.getElementById("nomeServidorEncontrado").textContent = "";
+            document.getElementById("grupoVinculo").style.display = "none";
+            document.getElementById("grupoPeriodoAquisitivo").style.display = "none";
+            document.getElementById("periodoInfoBox").classList.remove('visivel');
+            document.getElementById("alertaPeriodoVencido").classList.remove('visivel');
+            servidorCache = null;
+            mudarTipoAusencia();
+            carregarRegistros();
+        } catch (e) {
+            console.error("Erro ao salvar:", e);
+            mostrarMensagem("Erro ao salvar o registro no banco.", "erro");
+        }
+    };
+
+    async function carregarRegistros() {
+        if (!acessoAutorizado) return;
+        const tbody = document.getElementById("tabelaRegistros");
+        try {
+            const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+            registrosCache = [];
+            regSnap.forEach(d => registrosCache.push({ id: d.id, ...d.data() }));
+            renderizarTabela(registrosCache);
+        } catch (e) {
+            console.error("Erro ao carregar registros:", e);
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--red);">Erro ao carregar dados.</td></tr>`;
+        }
+    }
+
+    window.filtrarTabela = function() {
+        const termo = document.getElementById("filtroTabela").value.toLowerCase().trim();
+        if (!termo) { renderizarTabela(registrosCache); return; }
+        const filtrados = registrosCache.filter(r => {
+            const nome = (r.nome || "").toLowerCase();
+            const cpf = (r.cpf || "").toLowerCase();
+            const matricula = (r.matricula || "").toLowerCase();
+            const escola = (r.escola || "").toLowerCase();
+            const tipo = (r.tipo || "").toLowerCase();
+            const periodo = (r.ano_referencia || "").toLowerCase();
+            return nome.includes(termo) || cpf.includes(termo) || matricula.includes(termo) || escola.includes(termo) || tipo.includes(termo) || periodo.includes(termo);
+        });
+        renderizarTabela(filtrados);
+    };
+
+    function renderizarTabela(dados) {
+        const tbody = document.getElementById("tabelaRegistros");
+        if (dados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Nenhum registro encontrado.</td></tr>`;
+            return;
+        }
+
+        dados.sort((a, b) => {
+            const dataA = a.dataRegistro || '';
+            const dataB = b.dataRegistro || '';
+            return dataB.localeCompare(dataA);
+        });
+
+        let linhas = "";
+        dados.forEach(r => {
+            const nomeServidor = r.nome || "Servidor não identificado";
+            let tipoLabel = "Férias Regulamentares";
+            let badgeColor = "var(--green)";
+            let badgeBg = "var(--green-light)";
+
+            if (r.tipo === "FOLGA_ANIVERSARIO") { tipoLabel = "Folga Aniversário"; badgeColor = "#e65100"; badgeBg = "#fff3e0"; }
+            else if (r.tipo === "LICENCA_MEDICA") { tipoLabel = "Licença Médica"; badgeColor = "#0277bd"; badgeBg = "#e1f5fe"; }
+            else if (r.tipo === "LICENCA_OUTRAS") { tipoLabel = "Outras Licenças"; badgeColor = "#6a1b9a"; badgeBg = "#f3e5f5"; }
+
+            const terminoFormatado = r.tipo === "FOLGA_ANIVERSARIO" ? "-" : (r.dataFim ? r.dataFim.split('-').reverse().join('/') : '-');
+            const inicioFormatado = r.dataInicio ? r.dataInicio.split('-').reverse().join('/') : '-';
+            const periodoRef = r.ano_referencia || '-';
+
+            const badgeExt = r.gozo_extemporaneo
+                ? `<span style="background:#fff8e1; color:#f57c00; font-weight:600; padding:2px 6px; border-radius:3px; font-size:10px; margin-left:4px;">⚠ Fora do prazo</span>`
+                : '';
+
+            linhas += `
+                <tr>
+                    <td><b>${nomeServidor}</b></td>
+                    <td>${r.cpf || '-'}<br><small style="color:var(--text-secondary)">Mat: ${r.matricula || '-'}</small></td>
+                    <td>${r.escola || '-'}</td>
+                    <td><span style="background:${badgeBg}; color:${badgeColor}; font-weight:600; padding:4px 8px; border-radius:4px; font-size:11px;">${tipoLabel}</span></td>
+                    <td><b>${periodoRef}</b>${badgeExt}</td>
+                    <td>${inicioFormatado}</td>
+                    <td>${terminoFormatado}</td>
+                    <td><button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')"><span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Excluir</button></td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = linhas;
+    }
+
+    window.excluirRegistro = async function(id) {
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para excluir registros.", "erro");
+            return;
+        }
+        if (confirm("Deseja realmente excluir este registro de ausência?")) {
+            try {
+                await deleteDoc(doc(db, "registro_ferias_folgas", id));
+                mostrarMensagem("Registro excluído com sucesso.", "sucesso");
+                carregarRegistros();
+            } catch (e) {
+                console.error("Erro ao excluir:", e);
+                mostrarMensagem("Erro ao excluir o registro.", "erro");
+            }
+        }
+    };
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+</script>
+
+</body>
+</html>
