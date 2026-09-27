@@ -5,25 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Painel de controle do sistema de gestão de Vale Transporte — SEMED.">
 <meta name="theme-color" content="#4a3068">
-<title>Início — Gestão de Vale Transporte</title>
+<title>Painel Inicial — Gestão de Vale Transporte</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=menu,menu_open,dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,chevron_left">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=menu,dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,settings,arrow_forward,check_circle,history,bar_chart,trending_up,event,description,home">
 
-<!-- Aplica preferências ANTES do render para evitar flash -->
 <script>
 (function () {
     try {
-        var tema = localStorage.getItem('tema-vt') || 'light';
-        document.documentElement.setAttribute('data-theme', tema);
+        var t = localStorage.getItem('tema-vt') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', tema === 'dark' ? '#1a1a1c' : '#4a3068');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#1a1a1c' : '#4a3068');
 
         var menuFechado = localStorage.getItem('menu-vt-fechado');
-        // Padrão: fechado (a menos que o usuário tenha aberto de propósito)
-        var aplicarFechado = menuFechado === null ? true : menuFechado === '1';
+        // Padrão: aberto (dashboard inicial precisa mostrar os módulos)
+        var aplicarFechado = menuFechado === '1';
         if (aplicarFechado) {
             document.documentElement.classList.add('menu-inicial-fechado');
         }
@@ -33,7 +32,7 @@
 
 <style>
 /* ============================================================
-   TOKENS — TEMA CLARO (institucional)
+   TOKENS — consistente com as demais páginas
    ============================================================ */
 :root,
 :root[data-theme="light"] {
@@ -58,6 +57,18 @@
     --ok-bg: #f0f7f2;
     --ok-bd: #b7cfbf;
 
+    --warn: #854d0e;
+    --warn-bg: #faf6ef;
+    --warn-bd: #d9c9a3;
+
+    --danger: #991b1b;
+    --danger-bg: #faf1f1;
+    --danger-bd: #d9b5b5;
+
+    --info: #1e3a8a;
+    --info-bg: #f0f4fa;
+    --info-bd: #b7c4db;
+
     --background: var(--gray-100);
     --surface: #ffffff;
     --surface-2: var(--gray-50);
@@ -71,13 +82,12 @@
     --border-strong: var(--gray-300);
 
     --shadow-sm: 0 1px 2px rgba(24,24,27,.04);
-    --shadow: 0 1px 3px rgba(24,24,27,.06), 0 1px 2px rgba(24,24,27,.03);
     --shadow-lg: 0 20px 50px rgba(24,24,27,.16);
 
     --focus-ring: 0 0 0 3px rgba(74,48,104,.16);
     --focus-border: #4a3068;
 
-    --sidebar-width: 268px;
+    --sidebar-width: 260px;
     --topbar-height: 56px;
 
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -105,6 +115,18 @@
     --ok-bg: #16281d;
     --ok-bd: #2f5c3f;
 
+    --warn: #e4c56c;
+    --warn-bg: #2a2416;
+    --warn-bd: #5c4d2a;
+
+    --danger: #f0a1a1;
+    --danger-bg: #2a1919;
+    --danger-bd: #5c3434;
+
+    --info: #a3b8dd;
+    --info-bg: #171e2e;
+    --info-bd: #33405a;
+
     --background: #141416;
     --surface: #1c1c1f;
     --surface-2: #232327;
@@ -118,7 +140,6 @@
     --border-strong: var(--gray-300);
 
     --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
-    --shadow: 0 1px 3px rgba(0,0,0,.5);
     --shadow-lg: 0 20px 50px rgba(0,0,0,.6);
 
     --focus-ring: 0 0 0 3px rgba(184,163,209,.22);
@@ -133,6 +154,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -140,11 +162,15 @@ html, body {
     height: 100%;
     background: var(--background);
     color: var(--text);
-    overflow: hidden;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+body {
+    overflow: hidden;
+    transition: background-color .2s ease, color .2s ease;
 }
 
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -164,7 +190,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   LAYOUT
+   LAYOUT — Sidebar + Conteúdo
    ============================================================ */
 .layout-wrapper {
     display: flex;
@@ -198,7 +224,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     opacity: 0;
 }
 
-/* Aplica fechado antes do JS rodar — evita o "flash" de sidebar aberta */
 :root.menu-inicial-fechado .sidebar {
     width: 0;
     min-width: 0;
@@ -285,14 +310,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .menu-item .material-symbols-outlined {
     font-size: 20px;
     flex-shrink: 0;
-    color: inherit;
     opacity: .85;
 }
 
 .menu-item.ativo .material-symbols-outlined { opacity: 1; }
 
 /* ============================================================
-   MAIN CONTENT
+   ÁREA PRINCIPAL
    ============================================================ */
 .main-content {
     flex: 1 1 auto;
@@ -329,7 +353,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     flex: 1 1 auto;
 }
 
-/* Botão de menu SEMPRE no canto esquerdo, ANTES do título */
 .btn-menu-toggle {
     width: 36px;
     height: 36px;
@@ -368,6 +391,47 @@ button { font: inherit; color: inherit; cursor: pointer; }
     gap: 10px;
     flex-shrink: 0;
 }
+
+.status-conexao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 11px;
+    flex-shrink: 0;
+}
+
+.signal-bars .bar {
+    width: 3px;
+    background-color: var(--border-strong);
+    border-radius: 1px;
+}
+
+.signal-bars .bar-1 { height: 3px; }
+.signal-bars .bar-2 { height: 6px; }
+.signal-bars .bar-3 { height: 8px; }
+.signal-bars .bar-4 { height: 11px; }
+
+.status-conexao.online {
+    color: var(--ok);
+    background: var(--ok-bg);
+    border-color: var(--ok-bd);
+}
+.status-conexao.online .signal-bars .bar { background-color: var(--ok); }
 
 .user-badge {
     display: flex;
@@ -423,40 +487,145 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :root[data-theme="dark"] .btn-tema .icon-light { display: none; }
 
 /* ============================================================
-   DASHBOARD
+   DASHBOARD (área com scroll)
    ============================================================ */
-.dashboard-body {
+.dashboard {
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 32px;
+    padding: 24px;
 }
 
-.hero-banner {
+.dashboard-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ---------- Cabeçalho de boas-vindas ---------- */
+.welcome-header {
     background: var(--surface);
     border: 1px solid var(--border);
     border-left: 4px solid var(--brand);
-    color: var(--text);
-    padding: 24px 28px;
     border-radius: 6px;
-    margin-bottom: 28px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-.hero-banner h1 {
+.welcome-text h1 {
     font-size: 18px;
     font-weight: 600;
     color: var(--text);
     letter-spacing: -.01em;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
-.hero-banner p {
-    font-size: 13.5px;
+.welcome-text p {
+    font-size: 13px;
     color: var(--text-secondary);
-    max-width: 760px;
-    line-height: 1.55;
 }
 
-.section-heading {
+.welcome-data {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.welcome-data .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand);
+}
+
+/* ---------- KPIs ---------- */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.kpi-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+.kpi-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 5px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-icon .material-symbols-outlined { font-size: 20px; }
+
+.kpi-icon.ok { background: var(--ok-bg); color: var(--ok); }
+.kpi-icon.warn { background: var(--warn-bg); color: var(--warn); }
+.kpi-icon.info { background: var(--info-bg); color: var(--info); }
+
+.kpi-content { min-width: 0; flex: 1; }
+
+.kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+}
+
+.kpi-value {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-hint {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+/* ---------- Layout em 2 colunas ---------- */
+.dashboard-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+/* ---------- Seção de módulos ---------- */
+.section-title {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-muted);
@@ -465,31 +634,30 @@ button { font: inherit; color: inherit; cursor: pointer; }
     margin-bottom: 14px;
 }
 
-/* ============================================================
-   GRID DE MÓDULOS
-   ============================================================ */
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
 }
 
 .nav-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 20px;
+    padding: 18px;
     text-decoration: none;
     color: var(--text);
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    position: relative;
 }
 
 .nav-card:hover {
     border-color: var(--border-strong);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
 }
 
 .nav-card:focus-visible {
@@ -511,11 +679,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .card-icon-box .material-symbols-outlined { font-size: 22px; }
 
-.card-icon-box.verde {
-    background: var(--ok-bg);
-    color: var(--ok);
-}
-
 .nav-card h3 {
     font-size: 14.5px;
     font-weight: 600;
@@ -524,26 +687,223 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .nav-card p {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-secondary);
     line-height: 1.5;
+    flex: 1;
+}
+
+.card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand);
+    margin-top: 4px;
+}
+
+.card-cta .material-symbols-outlined {
+    font-size: 15px;
+    transition: transform .15s ease;
+}
+
+.nav-card:hover .card-cta .material-symbols-outlined {
+    transform: translateX(2px);
+}
+
+/* ---------- Coluna lateral ---------- */
+.side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+}
+
+.panel-header .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+.panel-header h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.panel-body {
+    padding: 12px 18px 16px;
+}
+
+/* Atalhos */
+.shortcut-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+}
+
+.shortcut-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.shortcut-link:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.shortcut-link .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.shortcut-link .shortcut-arrow {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity .12s ease, transform .15s ease;
+}
+
+.shortcut-link:hover .shortcut-arrow {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+/* Feed de últimos meses */
+.feed-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.feed-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 12.5px;
+}
+
+.feed-item:last-child { border-bottom: none; }
+
+.feed-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.feed-dot.ok     { background: var(--ok); }
+.feed-dot.warn   { background: var(--warn); }
+.feed-dot.danger { background: var(--danger); }
+
+.feed-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.feed-titulo {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.feed-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.feed-vazio {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ---------- Rodapé ---------- */
+.footer-mini {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
 }
 
 /* ============================================================
    RESPONSIVO
    ============================================================ */
+@media (max-width: 1024px) {
+    .dashboard-columns {
+        grid-template-columns: 1fr;
+    }
+    .side-column {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .side-column > .panel {
+        flex: 1 1 300px;
+        min-width: 0;
+    }
+}
+
 @media (max-width: 900px) {
     .topbar-title { display: none; }
-    .dashboard-body { padding: 20px; }
-    .hero-banner { padding: 20px; }
-    .hero-banner h1 { font-size: 16px; }
+    .dashboard { padding: 20px; }
+    .user-badge { max-width: 180px; }
 }
 
 @media (max-width: 640px) {
-    .user-badge { max-width: 160px; }
-    .user-badge span:last-child { font-size: 12px; }
-    .dashboard-body { padding: 16px; }
+    .dashboard { padding: 16px; }
+    .welcome-header { padding: 16px 18px; }
+    .welcome-text h1 { font-size: 16px; }
+    .welcome-text p { font-size: 12.5px; }
+    .kpi-grid { grid-template-columns: 1fr; gap: 10px; }
+    .kpi-value { font-size: 20px; }
     .cards-grid { grid-template-columns: 1fr; }
+    .side-column { flex-direction: column; }
+    .user-badge { max-width: 130px; font-size: 12px; }
+    .user-badge .material-symbols-outlined { display: none; }
+}
+
+@media (max-width: 480px) {
+    .topbar { padding: 0 14px; gap: 8px; }
+    .dashboard { padding: 14px; }
+    .welcome-header { flex-direction: column; align-items: flex-start; }
+    .welcome-data { width: 100%; justify-content: center; }
 }
 
 /* ============================================================
@@ -558,18 +918,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
     }
 }
 
-/* ============================================================
-   IMPRESSÃO
-   ============================================================ */
 @media print {
     @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; }
-    .sidebar, .topbar, .btn-tema, .user-badge { display: none !important; }
-    .dashboard-body { padding: 0; overflow: visible; }
+    body { background: #fff !important; color: #000 !important; overflow: visible !important; }
     .layout-wrapper { display: block; height: auto; overflow: visible; }
+    .sidebar, .topbar .btn-menu-toggle, .btn-tema, .user-badge, .status-conexao { display: none !important; }
     .main-content { overflow: visible; }
-    .hero-banner, .nav-card {
-        box-shadow: none;
+    .dashboard { overflow: visible; padding: 0; }
+    .kpi-card, .nav-card, .panel, .welcome-header {
+        box-shadow: none !important;
         border: 1px solid #999;
         background: #fff !important;
         color: #000 !important;
@@ -583,12 +940,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 <div class="layout-wrapper">
 
-    <!-- MENU LATERAL -->
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebarMenu" aria-label="Menu principal">
         <div class="sidebar-inner">
             <div class="sidebar-header">
                 <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
-                <span class="sidebar-brand">Portal Recursos Humanos</span>
+                <span class="sidebar-brand">Portal RH</span>
             </div>
 
             <div class="sidebar-section">Navegação</div>
@@ -643,7 +1000,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-content">
 
-        <!-- BARRA SUPERIOR -->
+        <!-- TOPBAR -->
         <header class="topbar">
             <div class="topbar-left">
                 <button type="button"
@@ -651,7 +1008,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                         id="btnMenuToggle"
                         aria-label="Abrir ou fechar menu lateral"
                         aria-controls="sidebarMenu"
-                        aria-expanded="false"
+                        aria-expanded="true"
                         title="Abrir / fechar menu">
                     <span class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
@@ -659,6 +1016,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
             </div>
 
             <div class="topbar-right">
+                <div class="status-conexao online" role="status" aria-live="polite">
+                    <div class="signal-bars" aria-hidden="true">
+                        <span class="bar bar-1"></span>
+                        <span class="bar bar-2"></span>
+                        <span class="bar bar-3"></span>
+                        <span class="bar bar-4"></span>
+                    </div>
+                    <span id="statusTexto">Online</span>
+                </div>
+
                 <div class="user-badge" role="status" aria-live="polite">
                     <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
                     <span id="userEmailText">Carregando…</span>
@@ -676,67 +1043,217 @@ button { font: inherit; color: inherit; cursor: pointer; }
         </header>
 
         <!-- DASHBOARD -->
-        <main class="dashboard-body">
-            <section class="hero-banner" aria-labelledby="heroTitulo">
-                <h1 id="heroTitulo">Painel de Controle — Vale Transporte</h1>
-                <p>
-                    Gerencie o cadastro de professores, calendários oficiais da SEMED,
-                    os ajustes descentralizados por escola, o controle rigoroso de
-                    férias/licenças e o motor de cálculo financeiro.
-                </p>
-            </section>
+        <main class="dashboard">
+            <div class="dashboard-inner">
 
-            <h2 class="section-heading">Acesso rápido aos módulos</h2>
-
-            <div class="cards-grid">
-
-                <a href="servidores.html" class="nav-card">
-                    <div class="card-icon-box">
-                        <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                <!-- CABEÇALHO DE BOAS-VINDAS -->
+                <section class="welcome-header" aria-labelledby="welcomeTitle">
+                    <div class="welcome-text">
+                        <h1 id="welcomeTitle">Bem-vindo ao painel de controle</h1>
+                        <p>Gerencie servidores, calendários, férias e o cálculo mensal de vales de transporte.</p>
                     </div>
-                    <h3>Cadastro de Servidores</h3>
-                    <p>Gerencie os dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
-                </a>
-
-                <a href="configuracao.html" class="nav-card">
-                    <div class="card-icon-box">
-                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                    <div class="welcome-data">
+                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                        <span id="dataAtual">—</span>
                     </div>
-                    <h3>Configuração SEMED</h3>
-                    <p>Defina a quantidade de dias úteis letivos de referência oficial para cada mês da rede de ensino.</p>
-                </a>
+                </section>
 
-                <a href="escola.html" class="nav-card">
-                    <div class="card-icon-box">
-                        <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                    </div>
-                    <h3>Lançamentos da Escola</h3>
-                    <p>Ajuste o calendário específico da unidade (como semanas comemorativas) e registre faltas e afastamentos.</p>
-                </a>
+                <!-- KPIs -->
+                <section aria-labelledby="kpiTitle">
+                    <h2 id="kpiTitle" class="visually-hidden">Indicadores</h2>
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon info" aria-hidden="true">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                            </div>
+                            <div class="kpi-content">
+                                <div class="kpi-label">Meses configurados</div>
+                                <div class="kpi-value" id="kpiMeses">—</div>
+                                <div class="kpi-hint">Períodos com dias úteis definidos</div>
+                            </div>
+                        </div>
 
-                <a href="linha_tempo.html" class="nav-card">
-                    <div class="card-icon-box">
-                        <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                    </div>
-                    <h3>Férias, Folgas e Licenças</h3>
-                    <p>Registre e controle o usufruto de férias regulamentares, folgas de aniversário e afastamentos médicos dos servidores.</p>
-                </a>
+                        <div class="kpi-card">
+                            <div class="kpi-icon" aria-hidden="true">
+                                <span class="material-symbols-outlined">badge</span>
+                            </div>
+                            <div class="kpi-content">
+                                <div class="kpi-label">Servidores ativos</div>
+                                <div class="kpi-value" id="kpiServidores">—</div>
+                                <div class="kpi-hint">Cadastros com vínculo vigente</div>
+                            </div>
+                        </div>
 
-                <a href="calculo.html" class="nav-card">
-                    <div class="card-icon-box verde">
-                        <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                    </div>
-                    <h3>Cálculo de Vales</h3>
-                    <p>Gere o fechamento financeiro completo cruzando os dias ajustados da escola e os afastamentos por CPF.</p>
-                </a>
+                        <div class="kpi-card">
+                            <div class="kpi-icon ok" aria-hidden="true">
+                                <span class="material-symbols-outlined">check_circle</span>
+                            </div>
+                            <div class="kpi-content">
+                                <div class="kpi-label">Mês atual</div>
+                                <div class="kpi-value" id="kpiMesAtual">—</div>
+                                <div class="kpi-hint" id="kpiMesAtualStatus">—</div>
+                            </div>
+                        </div>
 
-                <a href="relatorios.html" class="nav-card">
-                    <div class="card-icon-box">
-                        <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                        <div class="kpi-card">
+                            <div class="kpi-icon warn" aria-hidden="true">
+                                <span class="material-symbols-outlined">hourglass_top</span>
+                            </div>
+                            <div class="kpi-content">
+                                <div class="kpi-label">Exceções ativas</div>
+                                <div class="kpi-value" id="kpiExcecoes">—</div>
+                                <div class="kpi-hint">Reaberturas de escola em andamento</div>
+                            </div>
+                        </div>
                     </div>
-                    <h3>Relatórios Gerais</h3>
-                    <p>Consulte e exporte consolidados detalhados de pagamentos, frequências e ausências de toda a rede municipal.</p>
-                </a>
+                </section>
+
+                <!-- DUAS COLUNAS -->
+                <div class="dashboard-columns">
+
+                    <!-- Coluna principal: Módulos -->
+                    <section aria-labelledby="modulosTitle">
+                        <h2 id="modulosTitle" class="section-title">Acesso rápido aos módulos</h2>
+
+                        <div class="cards-grid">
+                            <a href="servidores.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                                </div>
+                                <h3>Cadastro de Servidores</h3>
+                                <p>Gerencie dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+
+                            <a href="configuracao.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                                </div>
+                                <h3>Configuração de Meses</h3>
+                                <p>Defina dias úteis letivos oficiais, período de lançamento e exceções por escola.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+
+                            <a href="escola.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+                                </div>
+                                <h3>Lançamentos da Escola</h3>
+                                <p>Ajuste o calendário específico da unidade e registre faltas e afastamentos.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+
+                            <a href="linha_tempo.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
+                                </div>
+                                <h3>Férias, Folgas e Licenças</h3>
+                                <p>Registre e controle o usufruto de férias, folgas de aniversário e afastamentos médicos.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+
+                            <a href="calculo.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                                </div>
+                                <h3>Cálculo de Vales</h3>
+                                <p>Fechamento financeiro cruzando dias ajustados da escola e afastamentos por servidor.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+
+                            <a href="relatorios.html" class="nav-card">
+                                <div class="card-icon-box">
+                                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                </div>
+                                <h3>Relatórios Gerais</h3>
+                                <p>Consulte e exporte consolidados detalhados de pagamentos, frequências e ausências.</p>
+                                <span class="card-cta">
+                                    Acessar
+                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                                </span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Coluna lateral -->
+                    <aside class="side-column">
+
+                        <!-- Atalhos -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+                                <h3>Atalhos rápidos</h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="shortcut-list">
+                                    <li>
+                                        <a class="shortcut-link" href="configuracao.html">
+                                            <span class="material-symbols-outlined">calendar_month</span>
+                                            <span>Configurar mês atual</span>
+                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="shortcut-link" href="linha_tempo.html">
+                                            <span class="material-symbols-outlined">history</span>
+                                            <span>Consultar linha do tempo</span>
+                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="shortcut-link" href="calculo.html">
+                                            <span class="material-symbols-outlined">calculate</span>
+                                            <span>Gerar cálculo mensal</span>
+                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="shortcut-link" href="relatorios.html">
+                                            <span class="material-symbols-outlined">description</span>
+                                            <span>Exportar relatórios</span>
+                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Últimos meses -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                                <h3>Últimos meses</h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="feed-list" id="feedMeses">
+                                    <li class="feed-vazio">Carregando…</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </aside>
+
+                </div>
+
+                <!-- RODAPÉ -->
+                <footer class="footer-mini">
+                    SEMED — Sistema de Gestão de Vale Transporte · v1.0
+                </footer>
 
             </div>
         </main>
@@ -762,26 +1279,25 @@ button { font: inherit; color: inherit; cursor: pointer; }
 })();
 
 /* ============================================================
-   MENU LATERAL — abre/fecha, persiste e acessível
+   MENU LATERAL — persistência + acessibilidade
    ============================================================ */
 (function () {
-    var sidebar   = document.getElementById('sidebarMenu');
-    var btn       = document.getElementById('btnMenuToggle');
-    var CHAVE     = 'menu-vt-fechado';
+    var sidebar = document.getElementById('sidebarMenu');
+    var btn     = document.getElementById('btnMenuToggle');
+    var CHAVE   = 'menu-vt-fechado';
 
-    // Estado inicial: fechado, a menos que o usuário já tenha aberto de propósito
     var salvo = null;
     try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    var iniciarFechado = salvo === null ? true : salvo === '1';
+    // Padrão: aberto (é a página inicial)
+    var iniciarFechado = salvo === '1';
 
-    aplicarEstado(iniciarFechado, /*animar=*/false);
+    aplicarEstado(iniciarFechado, false);
 
     btn.addEventListener('click', function () {
         var estaFechado = sidebar.classList.contains('fechado');
-        aplicarEstado(!estaFechado, /*animar=*/true);
+        aplicarEstado(!estaFechado, true);
     });
 
-    // Atalho: tecla "m" alterna o menu (opcional, ajuda quem usa muito)
     document.addEventListener('keydown', function (e) {
         if (e.key === 'm' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
@@ -790,38 +1306,157 @@ button { font: inherit; color: inherit; cursor: pointer; }
     });
 
     function aplicarEstado(fechado, animar) {
-        if (!animar) {
-            // Desliga transição por um instante pra não "deslizar" no load
-            sidebar.style.transition = 'none';
-        }
+        if (!animar) sidebar.style.transition = 'none';
         sidebar.classList.toggle('fechado', fechado);
         document.documentElement.classList.remove('menu-inicial-fechado');
-
         if (!animar) {
-            // Força reflow, então reativa a transição
             void sidebar.offsetWidth;
             sidebar.style.transition = '';
         }
-
         btn.setAttribute('aria-expanded', String(!fechado));
-
         try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
     }
+})();
+
+/* ============================================================
+   DATA ATUAL — cabeçalho
+   ============================================================ */
+(function () {
+    var el = document.getElementById('dataAtual');
+    if (!el) return;
+    var hoje = new Date();
+    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    el.textContent = `${dias[hoje.getDay()]}, ${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
 })();
 </script>
 
 <script type="module">
-import { auth } from "./firebase.js";
+import { db, auth } from "./firebase.js";
+import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-onAuthStateChanged(auth, (user) => {
-    const userEmailSpan = document.getElementById('userEmailText');
+/* ============================================================
+   AUTENTICAÇÃO + e-mail no topo
+   ============================================================ */
+onAuthStateChanged(auth, function (user) {
+    var userEmailSpan = document.getElementById('userEmailText');
     if (user) {
         userEmailSpan.textContent = user.email;
         userEmailSpan.title = user.email;
     } else {
         window.location.href = 'index.html';
     }
+});
+
+/* ============================================================
+   KPIs + FEED (dados reais do Firestore)
+   ============================================================ */
+function formatarMesAno(str) {
+    if (!str) return "";
+    const [ano, mes] = str.split("-");
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
+    return `${nomeMes} / ${ano}`;
+}
+
+function formatarData(dataStr) {
+    if (!dataStr) return "-";
+    const partes = dataStr.split("-");
+    if (partes.length !== 3) return dataStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+async function carregarDados() {
+    try {
+        /* -------- Meses configurados -------- */
+        const snapConfig = await getDocs(collection(db, "configuracoes"));
+        const mesesConfig = [];
+        snapConfig.forEach(d => {
+            if (d.id !== "_padraoGlobal") mesesConfig.push(d.data());
+        });
+
+        document.getElementById('kpiMeses').textContent = mesesConfig.length;
+
+        /* -------- Mês atual -------- */
+        const hoje = new Date();
+        const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        const mesAtual = mesesConfig.find(m => m.mesReferencia === mesAtualStr);
+
+        document.getElementById('kpiMesAtual').textContent = formatarMesAno(mesAtualStr);
+
+        let statusTexto = 'Ainda não configurado';
+        if (mesAtual) {
+            if (mesAtual.congelado) statusTexto = 'Fechado manualmente';
+            else if (!mesAtual.dataAbertura && !mesAtual.dataFechamento) statusTexto = 'Sempre aberto';
+            else if (mesAtual.dataFechamento && new Date(mesAtual.dataFechamento + "T23:59:59") < hoje) statusTexto = 'Período encerrado';
+            else if (mesAtual.dataAbertura && new Date(mesAtual.dataAbertura + "T00:00:00") > hoje) statusTexto = `Abre em ${formatarData(mesAtual.dataAbertura)}`;
+            else statusTexto = `Aberto até ${formatarData(mesAtual.dataFechamento) || '—'}`;
+        }
+        document.getElementById('kpiMesAtualStatus').textContent = statusTexto;
+
+        /* -------- Exceções ativas -------- */
+        let totalExcecoesAtivas = 0;
+        mesesConfig.forEach(m => {
+            (m.escolasReabertas || []).forEach(e => {
+                if (typeof e === 'object' && e.dataExpiracao) {
+                    if (new Date(e.dataExpiracao + "T23:59:59") >= hoje) totalExcecoesAtivas++;
+                } else {
+                    totalExcecoesAtivas++;
+                }
+            });
+        });
+        document.getElementById('kpiExcecoes').textContent = totalExcecoesAtivas;
+
+        /* -------- Servidores ativos -------- */
+        try {
+            const snapServ = await getDocs(collection(db, "servidores"));
+            document.getElementById('kpiServidores').textContent = snapServ.size;
+        } catch (e) {
+            document.getElementById('kpiServidores').textContent = '—';
+        }
+
+        /* -------- Feed: últimos 5 meses configurados -------- */
+        const feed = document.getElementById('feedMeses');
+
+        if (mesesConfig.length === 0) {
+            feed.innerHTML = '<li class="feed-vazio">Nenhum mês configurado ainda.</li>';
+            return;
+        }
+
+        mesesConfig.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
+        const ultimos = mesesConfig.slice(0, 5);
+
+        feed.innerHTML = ultimos.map(m => {
+            let dotClass = 'ok';
+            let statusTxt = 'Aberto';
+            if (m.congelado) { dotClass = 'danger'; statusTxt = 'Congelado'; }
+            else if (!m.dataAbertura && !m.dataFechamento) { dotClass = 'warn'; statusTxt = 'Sempre aberto'; }
+            else if (m.dataFechamento && new Date(m.dataFechamento + "T23:59:59") < hoje) { dotClass = 'danger'; statusTxt = 'Encerrado'; }
+            else if (m.dataAbertura && new Date(m.dataAbertura + "T00:00:00") > hoje) { dotClass = 'warn'; statusTxt = 'Aguardando'; }
+
+            const qtdEscolas = (m.escolasReabertas || []).length;
+            const extraEscolas = qtdEscolas > 0 ? ` · ${qtdEscolas} exceç${qtdEscolas === 1 ? 'ão' : 'ões'}` : '';
+
+            return `
+                <li class="feed-item">
+                    <span class="feed-dot ${dotClass}" aria-hidden="true"></span>
+                    <div class="feed-content">
+                        <div class="feed-titulo">${formatarMesAno(m.mesReferencia)}</div>
+                        <div class="feed-meta">${statusTxt} · ${m.diasUteis || '—'} dias úteis${extraEscolas}</div>
+                    </div>
+                </li>
+            `;
+        }).join('');
+
+    } catch (erro) {
+        console.error("Erro ao carregar dados do painel:", erro);
+    }
+}
+
+/* Roda quando o usuário estiver autenticado */
+onAuthStateChanged(auth, function (user) {
+    if (user) carregarDados();
 });
 </script>
 
