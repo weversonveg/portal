@@ -31,7 +31,7 @@
 
 <style>
 /* ============================================================
-   LAYOUT — TOKENS (padrão servidores.html)
+   LAYOUT — TOKENS
    ============================================================ */
 :root,
 :root[data-theme="light"] {
@@ -550,7 +550,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     margin-bottom: 20px;
 }
 
-/* Seções âncora */
 .secao {
     scroll-margin-top: 16px;
     transition: box-shadow .25s ease, border-color .25s ease;
@@ -1226,7 +1225,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <span>Dias úteis e meses</span>
                             </a>
 
-                            <!-- Submenu de âncoras desta página -->
                             <ul class="submenu">
                                 <li class="submenu-item">
                                     <a href="#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
@@ -1493,6 +1491,20 @@ tbody tr:hover td { background: var(--surface-2); }
                             </div>
                         </div>
 
+                        <!-- Espelho do mês de referência -->
+                        <div class="campos-grid" style="margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label for="mesReferenciaEspelho3">
+                                    Mês de referência
+                                    <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">
+                                        (mesmo mês da seção 2)
+                                    </span>
+                                </label>
+                                <input type="month" id="mesReferenciaEspelho3" class="espelho-mes">
+                                <span class="ajuda">Alterar aqui também altera o mês na seção 2 — é ele que será salvo.</span>
+                            </div>
+                        </div>
+
                         <div class="campos-grid">
                             <div class="form-group">
                                 <label for="dataAbertura">Data de abertura</label>
@@ -1558,6 +1570,20 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <strong>Exceção por escola.</strong>
                                 Use quando o mês estiver fechado e apenas algumas escolas precisarem continuar lançando.
                                 Cada escola terá um prazo próprio, contado a partir de hoje.
+                            </div>
+                        </div>
+
+                        <!-- Espelho do mês de referência -->
+                        <div class="campos-grid" style="margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label for="mesReferenciaEspelho4">
+                                    Mês de referência
+                                    <span style="color: var(--text-muted); font-weight: 500; font-size: 11px;">
+                                        (mesmo mês da seção 2)
+                                    </span>
+                                </label>
+                                <input type="month" id="mesReferenciaEspelho4" class="espelho-mes">
+                                <span class="ajuda">Alterar aqui também altera o mês na seção 2 — é ele que será salvo.</span>
                             </div>
                         </div>
 
@@ -1995,6 +2021,67 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             }, 150);
         }
     }
+})();
+</script>
+
+<!-- ============================================================
+     SCRIPT DE SINCRONIZAÇÃO DO MÊS (espelhos 3 e 4 <-> original)
+     ============================================================ -->
+<script>
+(function () {
+    var original = document.getElementById('mesReferencia');
+    var espelhos = [
+        document.getElementById('mesReferenciaEspelho3'),
+        document.getElementById('mesReferenciaEspelho4')
+    ].filter(Boolean);
+
+    if (!original) return;
+
+    function aplicarCor(campo) {
+        if (!campo) return;
+        if (campo.value && campo.value.trim() !== '') campo.classList.add('preenchido');
+        else campo.classList.remove('preenchido');
+    }
+
+    function atualizarEspelhos(valor) {
+        espelhos.forEach(function (e) {
+            if (e.value !== valor) e.value = valor;
+            aplicarCor(e);
+        });
+    }
+
+    // 1) Original (seção 2) mudou → reflete nos espelhos
+    original.addEventListener('change', function () {
+        atualizarEspelhos(original.value);
+    });
+
+    // 2) Um espelho (seção 3 ou 4) mudou → escreve no original e dispara o change dele
+    espelhos.forEach(function (e) {
+        e.addEventListener('change', function () {
+            if (original.value !== e.value) {
+                original.value = e.value;
+                original.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            atualizarEspelhos(e.value);
+        });
+    });
+
+    // 3) Valor do original alterado por código (ex.: clique em "Editar" na tabela
+    //    chama selecionarMes(), que faz .value = ... sem disparar change)
+    var ultimoValor = original.value;
+    setInterval(function () {
+        if (original.value !== ultimoValor) {
+            ultimoValor = original.value;
+            atualizarEspelhos(original.value);
+            aplicarCor(original);
+        }
+    }, 300);
+
+    // 4) Sincronização inicial (após o script principal rodar)
+    window.addEventListener('load', function () {
+        atualizarEspelhos(original.value);
+        aplicarCor(original);
+    });
 })();
 </script>
 
