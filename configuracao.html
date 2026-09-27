@@ -303,13 +303,69 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sidebar-info { padding: 16px 22px 22px; font-size: 10.5px; color: var(--text-muted); line-height: 1.5; }
 .sidebar-info strong { color: var(--text-secondary); font-weight: 600; display: block; font-size: 11px; margin-bottom: 2px; }
 
-.sidebar-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .45);
-    z-index: 150; opacity: 0; transition: opacity .2s ease;
+/* ============================================================
+   INDICADOR DE REDE (sidebar)
+   ============================================================ */
+.rede-indicador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    user-select: none;
+    flex-shrink: 0;
+    background: var(--surface);
 }
-.sidebar-backdrop.ativo { display: block; opacity: 1; }
-@media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
+
+.rede-barras {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 14px;
+    flex-shrink: 0;
+}
+.rede-barras span {
+    display: inline-block;
+    width: 3px;
+    background: var(--gray-300);
+    border-radius: 1px;
+    transition: background-color .25s ease, opacity .25s ease;
+}
+.rede-barras span:nth-child(1) { height: 4px; }
+.rede-barras span:nth-child(2) { height: 7px; }
+.rede-barras span:nth-child(3) { height: 10px; }
+.rede-barras span:nth-child(4) { height: 14px; }
+
+.rede-indicador.online .rede-barras span { background: var(--ok); }
+
+.rede-indicador.estavel .rede-barras span:nth-child(1),
+.rede-indicador.estavel .rede-barras span:nth-child(2) { background: var(--warn); }
+.rede-indicador.estavel .rede-barras span:nth-child(3),
+.rede-indicador.estavel .rede-barras span:nth-child(4) { background: var(--gray-300); }
+
+.rede-indicador.offline .rede-barras span { background: var(--gray-300); opacity: .4; }
+.rede-indicador.offline .rede-barras span:nth-child(1) { background: var(--danger); opacity: 1; }
+
+.rede-indicador.verificando .rede-barras span {
+    background: var(--gray-400);
+    animation: pulsoRede 1s ease-in-out infinite;
+}
+@keyframes pulsoRede {
+    0%, 100% { opacity: .35; }
+    50%      { opacity: 1; }
+}
+
+.rede-texto {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rede-indicador.online  .rede-texto { color: var(--ok); }
+.rede-indicador.estavel .rede-texto { color: var(--warn); }
+.rede-indicador.offline .rede-texto { color: var(--danger); }
 
 /* ============================================================
    SUBMENU DE ÂNCORAS NA SIDEBAR
@@ -1314,6 +1370,15 @@ tbody tr:hover td { background: var(--surface-2); }
                     Sistema de gestão de vale transporte
                 </div>
             </div>
+
+            <!-- Indicador de rede -->
+            <div class="rede-indicador verificando" id="redeIndicador" role="status" aria-live="polite" title="Verificando conexão…">
+                <span class="rede-barras" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </span>
+                <span class="rede-texto" id="redeTexto">Verificando…</span>
+            </div>
+
         </div>
     </aside>
 
@@ -1959,6 +2024,84 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 </script>
 
 <!-- ============================================================
+     SCRIPT DO INDICADOR DE REDE
+     ============================================================ -->
+<script>
+(function () {
+    var el      = document.getElementById('redeIndicador');
+    var texto   = document.getElementById('redeTexto');
+    if (!el || !texto) return;
+
+    var URL_PING       = 'https://www.gstatic.com/generate_204';
+    var INTERVALO_MS   = 30000;      // verifica a cada 30s
+    var TIMEOUT_MS     = 4000;       // considera falha se demorar > 4s
+    var LIMITE_OK_MS   = 1500;       // abaixo disso = online forte
+    var LIMITE_ESTAVEL = 3000;       // entre isso e 1.5s = estável
+
+    function aplicarEstado(estado, msg) {
+        el.classList.remove('online', 'estavel', 'offline', 'verificando');
+        el.classList.add(estado);
+        texto.textContent = msg;
+        el.title = msg;
+    }
+
+    async function medirLatencia() {
+        var inicio = performance.now();
+        var ctrl = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
+
+        try {
+            await fetch(URL_PING + '?_=' + Date.now(), {
+                method: 'GET',
+                mode: 'no-cors',
+                cache: 'no-store',
+                signal: ctrl.signal
+            });
+            clearTimeout(timer);
+            return performance.now() - inicio;
+        } catch (e) {
+            clearTimeout(timer);
+            return null; // falhou / timeout
+        }
+    }
+
+    async function verificar() {
+        if (!navigator.onLine) {
+            aplicarEstado('offline', 'Offline');
+            return;
+        }
+
+        aplicarEstado('verificando', 'Verificando…');
+
+        var latencia = await medirLatencia();
+
+        if (latencia === null) {
+            aplicarEstado('offline', 'Offline');
+            return;
+        }
+
+        if (latencia <= LIMITE_OK_MS) {
+            aplicarEstado('online', 'Online · ' + Math.round(latencia) + 'ms');
+        } else if (latencia <= LIMITE_ESTAVEL) {
+            aplicarEstado('estavel', 'Conexão instável · ' + Math.round(latencia) + 'ms');
+        } else {
+            aplicarEstado('estavel', 'Conexão fraca · ' + Math.round(latencia) + 'ms');
+        }
+    }
+
+    window.addEventListener('online',  verificar);
+    window.addEventListener('offline', function () { aplicarEstado('offline', 'Offline'); });
+
+    verificar();
+    setInterval(verificar, INTERVALO_MS);
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) verificar();
+    });
+})();
+</script>
+
+<!-- ============================================================
      SCRIPT DE ROLAGEM / DESTAQUE DAS SEÇÕES
      ============================================================ -->
 <script>
@@ -2066,8 +2209,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         });
     });
 
-    // 3) Valor do original alterado por código (ex.: clique em "Editar" na tabela
-    //    chama selecionarMes(), que faz .value = ... sem disparar change)
+    // 3) Valor do original alterado por código (ex.: clique em "Editar" na tabela)
     var ultimoValor = original.value;
     setInterval(function () {
         if (original.value !== ultimoValor) {
@@ -2077,7 +2219,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     }, 300);
 
-    // 4) Sincronização inicial (após o script principal rodar)
+    // 4) Sincronização inicial
     window.addEventListener('load', function () {
         atualizarEspelhos(original.value);
         aplicarCor(original);
