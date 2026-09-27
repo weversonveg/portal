@@ -342,15 +342,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
     margin-bottom: 20px;
 }
 
-/* Bloco = seção com cabeçalho próprio */
 .bloco {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
 }
 
-.bloco:last-of-type {
-    border-bottom: none;
-}
+.bloco:last-of-type { border-bottom: none; }
 
 .bloco-cabecalho {
     display: flex;
@@ -396,15 +393,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
     line-height: 1.5;
 }
 
-/* Grid de campos dentro de um bloco */
 .campos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-}
-
-.campos-grid.cols-2 {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .form-group { display: flex; flex-direction: column; min-width: 0; }
@@ -455,7 +447,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-color: var(--ok-bd) !important;
 }
 
-/* Caixa de destaque dentro do bloco */
 .caixa-info {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -479,7 +470,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .caixa-info strong { color: var(--text); font-weight: 600; }
 
-/* Ações do bloco (botões) */
 .bloco-acoes {
     display: flex;
     gap: 10px;
@@ -547,7 +537,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
     align-items: center;
     gap: 12px;
     border: 1px solid;
-    margin-top: 4px;
+    margin-top: 16px;
 }
 
 .status-calculado .material-symbols-outlined { font-size: 24px; flex-shrink: 0; }
@@ -650,7 +640,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 16px;
 }
 
 .reabertura-trigger.visivel { display: flex; }
@@ -1207,7 +1197,7 @@ tbody tr:hover td { background: var(--surface-2); }
             <span aria-current="page">Dias Úteis</span>
         </nav>
         <h1>Dias Úteis Letivos</h1>
-        <p>Defina o padrão global, o período de lançamentos de cada mês e as exceções por escola.</p>
+        <p>Defina o padrão global, identifique o mês e controle sua abertura, fechamento e exceções.</p>
     </div>
 
     <section class="form-card">
@@ -1232,7 +1222,7 @@ tbody tr:hover td { background: var(--surface-2); }
                     <div>
                         Defina aqui apenas o <strong>comportamento padrão</strong> — por exemplo:
                         abertura no dia 5 e fechamento no dia 20. Esse padrão será pré-preenchido
-                        quando um novo mês for aberto no sistema. <strong>Não afeta</strong> meses já salvos.
+                        quando um novo mês for aberto. <strong>Não afeta</strong> meses já salvos.
                     </div>
                 </div>
 
@@ -1241,7 +1231,7 @@ tbody tr:hover td { background: var(--surface-2); }
                     <span id="textoPadraoAtual">Carregando padrão…</span>
                 </div>
 
-                <div class="campos-grid cols-2">
+                <div class="campos-grid">
                     <div class="form-group">
                         <label for="padraoDiaAbertura">Dia de abertura</label>
                         <input type="number" id="padraoDiaAbertura" placeholder="Ex: 1" min="1" max="28" inputmode="numeric">
@@ -1267,20 +1257,20 @@ tbody tr:hover td { background: var(--surface-2); }
             </div>
 
             <!-- ============================================================
-                 BLOCO 2 — CONFIGURAÇÃO DO MÊS
+                 BLOCO 2 — IDENTIFICAÇÃO DO MÊS
                  ============================================================ -->
             <div class="bloco">
                 <div class="bloco-cabecalho">
                     <span class="bloco-numero" aria-hidden="true">2</span>
                     <div class="bloco-titulo-grupo">
-                        <span class="bloco-titulo">Configuração do Mês</span>
+                        <span class="bloco-titulo">Identificação do Mês</span>
                         <span class="bloco-subtitulo">
-                            Identificação do mês, quantidade de dias letivos e janela de lançamentos.
+                            Qual mês está sendo configurado e quantos dias letivos ele tem.
                         </span>
                     </div>
                 </div>
 
-                <div class="campos-grid cols-2">
+                <div class="campos-grid">
                     <div class="form-group">
                         <label for="mesReferencia">Mês de referência <span aria-hidden="true">*</span></label>
                         <input type="month" id="mesReferencia" required
@@ -1297,16 +1287,40 @@ tbody tr:hover td { background: var(--surface-2); }
                     </div>
                 </div>
 
-                <div class="caixa-info" style="margin-top: 16px;">
-                    <span class="material-symbols-outlined" aria-hidden="true">date_range</span>
-                    <div>
-                        <strong>Período de lançamentos deste mês.</strong>
-                        Deixe em branco para o mês permanecer <strong>sempre aberto</strong>.
-                        Preencha apenas se quiser abrir e fechar em datas específicas.
+                <div class="campos-grid" style="margin-top: 16px;">
+                    <div class="form-group full">
+                        <label for="observacoes">Observações (opcional)</label>
+                        <input type="text" id="observacoes"
+                               placeholder="Ex: Mês com recesso escolar na última semana">
+                        <span class="ajuda">Aparece na listagem de meses configurados.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================
+                 BLOCO 3 — CONTROLE DE ABERTURA E FECHAMENTO
+                 ============================================================ -->
+            <div class="bloco">
+                <div class="bloco-cabecalho">
+                    <span class="bloco-numero" aria-hidden="true">3</span>
+                    <div class="bloco-titulo-grupo">
+                        <span class="bloco-titulo">Controle de Abertura e Fechamento</span>
+                        <span class="bloco-subtitulo">
+                            Defina as datas manuais, veja o status calculado e configure exceções por escola.
+                        </span>
                     </div>
                 </div>
 
-                <div class="campos-grid cols-2">
+                <div class="caixa-info">
+                    <span class="material-symbols-outlined" aria-hidden="true">date_range</span>
+                    <div>
+                        <strong>Abertura e fechamento manuais do mês.</strong>
+                        Deixe os dois em branco para o mês permanecer <strong>sempre aberto</strong>.
+                        Preencha apenas se quiser controlar quando as escolas podem lançar.
+                    </div>
+                </div>
+
+                <div class="campos-grid">
                     <div class="form-group">
                         <label for="dataAbertura">Data de abertura</label>
                         <input type="date" id="dataAbertura"
@@ -1321,36 +1335,12 @@ tbody tr:hover td { background: var(--surface-2); }
                     </div>
                 </div>
 
-                <div class="campos-grid" style="margin-top: 16px;">
-                    <div class="form-group full">
-                        <label for="observacoes">Observações (opcional)</label>
-                        <input type="text" id="observacoes"
-                               placeholder="Ex: Mês com recesso escolar na última semana">
-                        <span class="ajuda">Aparece na listagem de meses configurados.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================
-                 BLOCO 3 — STATUS E CONTROLE
-                 ============================================================ -->
-            <div class="bloco">
-                <div class="bloco-cabecalho">
-                    <span class="bloco-numero" aria-hidden="true">3</span>
-                    <div class="bloco-titulo-grupo">
-                        <span class="bloco-titulo">Status e Controle do Mês</span>
-                        <span class="bloco-subtitulo">
-                            Situação calculada automaticamente, congelamento manual e exceções por escola.
-                        </span>
-                    </div>
-                </div>
-
                 <div class="status-calculado status-indefinido-calc" id="statusCalculado" role="status" aria-live="polite">
                     <span class="material-symbols-outlined" id="iconeStatus" aria-hidden="true">info</span>
                     <div class="status-info">
                         <div class="status-label">Status calculado do mês</div>
                         <div class="status-valor" id="statusValor">Indefinido</div>
-                        <div class="status-detalhe" id="statusDetalhe">Configure o período no bloco 2 para definir o status automaticamente.</div>
+                        <div class="status-detalhe" id="statusDetalhe">Configure as datas acima para definir o status automaticamente.</div>
                     </div>
                 </div>
 
@@ -1366,7 +1356,7 @@ tbody tr:hover td { background: var(--surface-2); }
                         <div class="toggle-info">
                             <div class="toggle-label">Congelar mês antecipadamente</div>
                             <div class="toggle-description">
-                                Fecha o mês para <strong>todas as escolas</strong> antes da data programada no bloco 2.
+                                Fecha o mês para <strong>todas as escolas</strong> antes da data programada de fechamento.
                             </div>
                         </div>
                     </div>
@@ -1689,7 +1679,7 @@ tbody tr:hover td { background: var(--surface-2); }
         atualizarCorCampo(document.getElementById("dataFechamento"));
         atualizarStatusCalculado();
 
-        mostrarMensagem(`Padrão aplicado ao bloco 2: ${formatarData(dataAbertura)} até ${formatarData(dataFechamento)}.`, "sucesso");
+        mostrarMensagem(`Padrão aplicado ao bloco 3: ${formatarData(dataAbertura)} até ${formatarData(dataFechamento)}.`, "sucesso");
     };
 
     function calcularStatusMes(config) {
