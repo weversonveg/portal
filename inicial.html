@@ -399,46 +399,68 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   RODAPÉ DA SIDEBAR + BOTÃO SAIR
+   RODAPÉ DA SIDEBAR — BOTÃO SAIR
    ============================================================ */
 .sidebar-footer {
+    padding: 14px 16px 14px;
     border-top: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--surface-2);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    gap: 12px;
 }
 
 .sidebar-sair {
     display: flex !important;
     align-items: center;
-    gap: 11px;
+    gap: 10px;
     width: 100%;
-    padding: 12px 20px;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     color: var(--text-secondary);
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
     text-align: left;
     cursor: pointer;
-    transition: background-color .12s ease, color .12s ease;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
 }
 
 .sidebar-sair:hover {
     background: var(--danger-bg);
     color: var(--danger);
+    border-color: var(--danger-bd);
+    box-shadow: 0 1px 3px rgba(154, 30, 30, .12);
+}
+
+.sidebar-sair:active {
+    transform: translateY(1px);
 }
 
 .sidebar-sair .material-symbols-outlined {
     font-size: 18px;
     flex-shrink: 0;
+    opacity: .85;
+    transition: transform .15s ease;
+}
+
+.sidebar-sair:hover .material-symbols-outlined {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+.sidebar-sair .sair-texto {
+    flex: 1;
+    letter-spacing: -.005em;
 }
 
 .sidebar-info {
-    padding: 12px 20px;
+    padding: 0 4px;
     font-size: 10.5px;
     color: var(--text-muted);
     line-height: 1.5;
@@ -583,13 +605,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .btn-sair {
     color: var(--text-secondary);
-    border: 1px solid transparent;
+    border: 1px solid var(--border);
+    background: var(--surface);
 }
 
 .btn-sair:hover {
     background: var(--danger-bg);
     color: var(--danger);
     border-color: var(--danger-bd);
+    box-shadow: 0 1px 3px rgba(154, 30, 30, .12);
+}
+
+.btn-sair:active {
+    transform: translateY(1px);
+}
+
+.btn-sair .material-symbols-outlined {
+    transition: transform .15s ease;
+}
+
+.btn-sair:hover .material-symbols-outlined {
+    transform: translateX(2px);
 }
 
 .topbar-btn.carregando .material-symbols-outlined {
@@ -1338,6 +1374,141 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .rodape strong { color: var(--text-secondary); font-weight: 600; }
 
 /* ============================================================
+   MODAL DE SAIR
+   ============================================================ */
+.modal-sair-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 25, 35, .55);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+
+.modal-sair-overlay.ativo {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-sair {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-width: 420px;
+    width: 100%;
+    padding: 28px 28px 22px;
+    box-shadow: 0 20px 50px rgba(20, 25, 35, .28);
+    text-align: center;
+    animation: modalSairEntrar .22s ease;
+}
+
+@keyframes modalSairEntrar {
+    from { transform: translateY(-12px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-sair-icone {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--danger-bg);
+    color: var(--danger);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    border: 1px solid var(--danger-bd);
+}
+
+.modal-sair-icone .material-symbols-outlined {
+    font-size: 28px;
+}
+
+.modal-sair-titulo {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+    margin-bottom: 8px;
+    line-height: 1.25;
+}
+
+.modal-sair-texto {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 22px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.modal-sair-acoes {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-sair-btn {
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    white-space: nowrap;
+    min-width: 110px;
+}
+
+.modal-sair-btn .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.modal-sair-btn-cancelar {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
+    order: 1;
+}
+
+.modal-sair-btn-cancelar:hover {
+    background: var(--surface-2);
+    border-color: var(--gray-400);
+}
+
+.modal-sair-btn-confirmar {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+    order: 2;
+}
+
+.modal-sair-btn-confirmar:hover {
+    background: #7d1717;
+    border-color: #7d1717;
+    box-shadow: 0 2px 8px rgba(154, 30, 30, .28);
+}
+
+.modal-sair-btn-confirmar:active {
+    transform: translateY(1px);
+}
+
+.modal-sair-btn:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+}
+
+/* ============================================================
    RESPONSIVO
    ============================================================ */
 @media (max-width: 1100px) {
@@ -1379,7 +1550,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .topbar-title span { display: none; }
     .topbar-user .user-info span { display: none; }
 
-    /* Em telas médias, esconde os textos dos botões da topbar */
     .topbar-btn .btn-texto { display: none; }
     .topbar-btn { padding: 0 10px; }
 
@@ -1397,7 +1567,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .topbar-btn { padding: 0 8px; height: 32px; }
     .topbar-btn .material-symbols-outlined { font-size: 20px; }
 
-    /* Em telas pequenas, esconde o chip de usuário */
     .topbar-user { display: none; }
     .topbar-right { gap: 4px; }
 
@@ -1406,6 +1575,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .card-body { padding: 14px; }
     .pendencia-item { padding: 12px 14px; }
     .rodape { padding: 16px; font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+    .modal-sair-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .modal-sair {
+        padding: 24px 20px 18px;
+        border-radius: 12px 12px 0 0;
+        max-width: 100%;
+        align-self: flex-end;
+        margin: 0;
+    }
+
+    .modal-sair-acoes {
+        flex-direction: column-reverse;
+        width: 100%;
+    }
+
+    .modal-sair-btn {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 @media (max-width: 420px) {
@@ -1426,7 +1620,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
     @page { margin: 1.5cm; }
     body { background: #fff !important; color: #000 !important; overflow: visible !important; }
     .layout { display: block; height: auto; overflow: visible; }
-    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user { display: none !important; }
+    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
+    .modal-sair-overlay { display: none !important; }
     .main { overflow: visible; }
     .content { overflow: visible; padding: 0; }
     .card, .faixa-status { box-shadow: none !important; border: 1px solid #999; page-break-inside: avoid; }
@@ -1541,7 +1736,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
                         id="btnSairSidebar"
                         title="Sair do sistema">
                     <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    <span>Sair do sistema</span>
+                    <span class="sair-texto">Sair do sistema</span>
+                    <span class="material-symbols-outlined sair-seta" aria-hidden="true">arrow_forward</span>
                 </button>
 
                 <div class="sidebar-info">
@@ -1871,6 +2067,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 </div>
 
+<!-- ============================================================
+     MODAL: Confirmação de saída
+     ============================================================ -->
+<div class="modal-sair-overlay" id="modalSair" role="presentation">
+    <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo" aria-describedby="modalSairTexto">
+        <div class="modal-sair-icone" aria-hidden="true">
+            <span class="material-symbols-outlined">logout</span>
+        </div>
+
+        <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
+        <p class="modal-sair-texto" id="modalSairTexto">
+            Sua sessão será encerrada e você voltará para a tela de login.
+            Os dados em cache neste navegador serão removidos.
+        </p>
+
+        <div class="modal-sair-acoes">
+            <button type="button"
+                    class="modal-sair-btn modal-sair-btn-cancelar"
+                    id="btnCancelarSair">
+                Cancelar
+            </button>
+            <button type="button"
+                    class="modal-sair-btn modal-sair-btn-confirmar"
+                    id="btnConfirmarSair">
+                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                Sim, sair
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 /* ============================================================
    TEMA
@@ -2094,15 +2321,40 @@ function limparCache() {
 }
 
 /* ============================================================
-   BOTÕES SAIR — conectados ANTES do auth para garantir que funcionem
+   MODAL DE SAIR
    ============================================================ */
-async function sairDoSistema(btn) {
-    console.log('[Sair] Clique recebido');
+let ultimoFocoSair = null;
 
-    const confirmar = window.confirm('Deseja sair do sistema?');
-    if (!confirmar) return;
+function abrirModalSair() {
+    const modal = document.getElementById('modalSair');
+    ultimoFocoSair = document.activeElement;
+    modal.classList.add('ativo');
+    document.body.style.overflow = 'hidden';
 
-    if (btn) btn.disabled = true;
+    // Foco no botão Cancelar (ação mais segura)
+    requestAnimationFrame(() => {
+        const btnCancelar = document.getElementById('btnCancelarSair');
+        if (btnCancelar) btnCancelar.focus();
+    });
+}
+
+function fecharModalSair() {
+    const modal = document.getElementById('modalSair');
+    modal.classList.remove('ativo');
+    document.body.style.overflow = '';
+
+    if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') {
+        ultimoFocoSair.focus();
+    }
+    ultimoFocoSair = null;
+}
+
+async function confirmarSaida() {
+    const btn = document.getElementById('btnConfirmarSair');
+    const btnOriginal = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
 
     try {
         console.log('[Sair] Limpando cache local');
@@ -2116,23 +2368,39 @@ async function sairDoSistema(btn) {
         window.location.href = 'index.html';
     } catch (e) {
         console.error('[Sair] Erro:', e);
-        if (btn) btn.disabled = false;
+        btn.disabled = false;
+        btn.innerHTML = btnOriginal;
+        fecharModalSair();
         alert('Não foi possível sair. Tente novamente.');
     }
 }
 
+/* Conecta os botões "Sair" (topbar + sidebar) para abrir o modal */
 const btnSairTopbar  = document.getElementById('btnSairTopbar');
 const btnSairSidebar = document.getElementById('btnSairSidebar');
 
-console.log('[Sair] Topbar:', !!btnSairTopbar, '| Sidebar:', !!btnSairSidebar);
-
 if (btnSairTopbar) {
-    btnSairTopbar.addEventListener('click', function () { sairDoSistema(this); });
+    btnSairTopbar.addEventListener('click', abrirModalSair);
+}
+if (btnSairSidebar) {
+    btnSairSidebar.addEventListener('click', abrirModalSair);
 }
 
-if (btnSairSidebar) {
-    btnSairSidebar.addEventListener('click', function () { sairDoSistema(this); });
-}
+/* Conecta os botões do modal */
+document.getElementById('btnCancelarSair').addEventListener('click', fecharModalSair);
+document.getElementById('btnConfirmarSair').addEventListener('click', confirmarSaida);
+
+/* Fecha ao clicar fora */
+document.getElementById('modalSair').addEventListener('click', function (e) {
+    if (e.target === this) fecharModalSair();
+});
+
+/* Fecha com ESC */
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.getElementById('modalSair').classList.contains('ativo')) {
+        fecharModalSair();
+    }
+});
 
 /* ============================================================
    AUTENTICAÇÃO
