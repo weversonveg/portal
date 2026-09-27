@@ -1526,7 +1526,7 @@ tr:hover td { background: var(--surface-2); }
 
 </div>
 
-<!-- MODAL DE EXCLUIR (do seu conteúdo) -->
+<!-- MODAL DE EXCLUIR -->
 <div class="modal-overlay" id="modalExcluir">
     <div class="modal">
         <div class="modal-header">
@@ -1550,7 +1550,7 @@ tr:hover td { background: var(--surface-2); }
     </div>
 </div>
 
-<!-- MODAL DE SAIR (do layout) -->
+<!-- MODAL DE SAIR -->
 <div class="modal-sair-overlay" id="modalSair" role="presentation">
     <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
         <div class="modal-sair-icone" aria-hidden="true">
@@ -1734,6 +1734,7 @@ import {
   obterServidoresCache,
   salvarServidoresCache,
   removerServidorDoCache,
+  limparCacheServidores,
   cacheFoiInvalidado
 } from "./cache.js";
 
@@ -1758,6 +1759,30 @@ onAuthStateChanged(auth, function (user) {
         window.location.href = 'index.html';
     }
 });
+
+/* ============================================================
+   LAYOUT — Botão Atualizar
+   Limpa o cache e recarrega a página para buscar dados frescos
+   ============================================================ */
+const btnAtualizar = document.getElementById('btnAtualizar');
+
+if (btnAtualizar) {
+    btnAtualizar.addEventListener('click', function () {
+        if (btnAtualizar.classList.contains('carregando')) return;
+
+        btnAtualizar.classList.add('carregando');
+        btnAtualizar.disabled = true;
+
+        try {
+            limparCacheServidores();
+            console.log('[Atualizar] Cache limpo — recarregando dados frescos');
+        } catch (e) {
+            console.warn('[Atualizar] Erro ao limpar cache:', e);
+        }
+
+        window.location.reload();
+    });
+}
 
 /* ============================================================
    LAYOUT — Modal de sair
