@@ -290,7 +290,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     margin-top: 1px;
 }
 
-/* Botão de fechar dentro da sidebar — visível só em mobile com menu aberto */
 .btn-fechar-sidebar {
     display: none;
     width: 32px;
@@ -399,17 +398,50 @@ button { font: inherit; color: inherit; cursor: pointer; }
     line-height: 1.4;
 }
 
+/* Rodapé da sidebar com botão de sair */
 .sidebar-footer {
-    padding: 12px 20px;
     border-top: 1px solid var(--border);
-    font-size: 10.5px;
-    color: var(--text-muted);
-    line-height: 1.5;
     background: var(--surface);
     flex-shrink: 0;
 }
 
-.sidebar-footer strong {
+.sidebar-sair {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 11px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-align: left;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.sidebar-sair:hover {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.sidebar-sair .material-symbols-outlined {
+    font-size: 18px;
+    flex-shrink: 0;
+    opacity: .75;
+}
+
+.sidebar-sair:hover .material-symbols-outlined { opacity: 1; }
+
+.sidebar-info {
+    padding: 12px 20px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.sidebar-info strong {
     color: var(--text-secondary);
     font-weight: 600;
     display: block;
@@ -555,6 +587,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
     background: var(--brand-soft);
     border-color: var(--brand-line);
     color: var(--brand);
+}
+
+/* Botão Sair na topbar */
+.btn-sair {
+    color: var(--text-secondary);
+}
+
+.btn-sair:hover {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger-bd);
 }
 
 .topbar-btn.carregando .material-symbols-outlined {
@@ -1492,10 +1535,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
                 </nav>
             </div>
 
+            <!-- Rodapé da sidebar: botão Sair + informação -->
             <div class="sidebar-footer">
-                <strong>Versão 1.0.0</strong>
-                Sistema de gestão de vale transporte<br>
-                Secretaria Municipal de Educação
+                <button type="button"
+                        class="sidebar-sair"
+                        id="btnSairSidebar"
+                        title="Sair do sistema">
+                    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                    <span>Sair do sistema</span>
+                </button>
+
+                <div class="sidebar-info">
+                    <strong>Versão 1.0.0</strong>
+                    Sistema de gestão de vale transporte<br>
+                    Secretaria Municipal de Educação
+                </div>
             </div>
         </div>
     </aside>
@@ -1548,6 +1602,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
                         <span id="userEmailLabel">Carregando…</span>
                     </div>
                 </div>
+
+                <button type="button"
+                        class="topbar-btn btn-sair"
+                        id="btnSairTopbar"
+                        title="Sair do sistema">
+                    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                    <span>Sair</span>
+                </button>
             </div>
         </header>
 
@@ -1828,14 +1890,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 })();
 
 /* ============================================================
-   MENU LATERAL — desktop recolhe / mobile overlay
+   MENU LATERAL
    ============================================================ */
 (function () {
-    var sidebar  = document.getElementById('sidebarMenu');
-    var backdrop = document.getElementById('sidebarBackdrop');
-    var btn      = document.getElementById('btnMenuToggle');
+    var sidebar   = document.getElementById('sidebarMenu');
+    var backdrop  = document.getElementById('sidebarBackdrop');
+    var btn       = document.getElementById('btnMenuToggle');
     var btnFechar = document.getElementById('btnFecharSidebar');
-    var CHAVE    = 'menu-vt-fechado';
+    var CHAVE     = 'menu-vt-fechado';
 
     function isMobile() {
         return window.matchMedia('(max-width: 900px)').matches;
@@ -1862,7 +1924,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
         }
     });
 
-    // Botão "X" dentro da sidebar (mobile)
     if (btnFechar) {
         btnFechar.addEventListener('click', function () {
             fecharMobile(true);
@@ -1957,7 +2018,10 @@ import {
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 /* ============================================================
    CONSTANTES
@@ -2051,6 +2115,43 @@ onAuthStateChanged(auth, function (user) {
 });
 
 /* ============================================================
+   BOTÕES SAIR (topbar + sidebar)
+   ============================================================ */
+async function sairDoSistema(btn) {
+    const confirmar = window.confirm('Deseja sair do sistema?');
+    if (!confirmar) return;
+
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('carregando');
+    }
+
+    try {
+        limparCache();
+        try { localStorage.removeItem(CACHE_VERSAO); } catch (e) {}
+
+        await signOut(auth);
+        window.location.href = 'index.html';
+
+    } catch (e) {
+        console.error('[Painel] Erro ao sair:', e);
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('carregando');
+        }
+        alert('Não foi possível sair. Tente novamente.');
+    }
+}
+
+document.getElementById('btnSairTopbar').addEventListener('click', function () {
+    sairDoSistema(this);
+});
+
+document.getElementById('btnSairSidebar').addEventListener('click', function () {
+    sairDoSistema(this);
+});
+
+/* ============================================================
    FLUXO PRINCIPAL
    ============================================================ */
 async function iniciarPainel() {
@@ -2101,7 +2202,7 @@ async function iniciarPainel() {
 }
 
 /* ============================================================
-   CÁLCULO COMPLETO (primeira execução ou "Atualizar")
+   CÁLCULO COMPLETO
    ============================================================ */
 async function calcularResumoCompleto() {
     try {
