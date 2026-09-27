@@ -398,19 +398,23 @@ button { font: inherit; color: inherit; cursor: pointer; }
     line-height: 1.4;
 }
 
-/* Rodapé da sidebar com botão de sair */
+/* ============================================================
+   RODAPÉ DA SIDEBAR + BOTÃO SAIR
+   ============================================================ */
 .sidebar-footer {
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-sair {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 11px;
     width: 100%;
-    padding: 11px 20px;
+    padding: 12px 20px;
     background: transparent;
     border: none;
     border-bottom: 1px solid var(--border);
@@ -418,7 +422,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
     font-size: 13.5px;
     font-weight: 500;
     text-align: left;
+    cursor: pointer;
     transition: background-color .12s ease, color .12s ease;
+    white-space: nowrap;
 }
 
 .sidebar-sair:hover {
@@ -429,10 +435,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sidebar-sair .material-symbols-outlined {
     font-size: 18px;
     flex-shrink: 0;
-    opacity: .75;
 }
-
-.sidebar-sair:hover .material-symbols-outlined { opacity: 1; }
 
 .sidebar-info {
     padding: 12px 20px;
@@ -446,7 +449,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     font-weight: 600;
     display: block;
     font-size: 11px;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
 }
 
 .sidebar-backdrop {
@@ -571,27 +574,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
     gap: 6px;
     font-size: 12.5px;
     font-weight: 500;
-    transition: background-color .12s ease, color .12s ease;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
 }
 
 .topbar-btn:hover { background: var(--surface-2); color: var(--text); }
 
 .topbar-btn .material-symbols-outlined { font-size: 18px; }
 
-.topbar-btn.destaque {
-    border-color: var(--border);
-    background: var(--surface-2);
-}
-
-.topbar-btn.destaque:hover {
-    background: var(--brand-soft);
-    border-color: var(--brand-line);
-    color: var(--brand);
-}
-
-/* Botão Sair na topbar */
 .btn-sair {
     color: var(--text-secondary);
+    border: 1px solid transparent;
 }
 
 .btn-sair:hover {
@@ -619,7 +611,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     background: var(--surface-2);
     max-width: 220px;
     min-width: 0;
-    cursor: pointer;
     transition: background-color .12s ease, border-color .12s ease;
 }
 
@@ -855,7 +846,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-texto:hover { background: var(--brand-soft); }
 
 /* ============================================================
-   FAIXA DE STATUS DO MÊS
+   FAIXA DE STATUS
    ============================================================ */
 .faixa-status {
     background: var(--surface);
@@ -1387,6 +1378,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .topbar { padding: 0 16px; gap: 12px; }
     .topbar-title span { display: none; }
     .topbar-user .user-info span { display: none; }
+
+    /* Em telas médias, esconde os textos dos botões da topbar */
+    .topbar-btn .btn-texto { display: none; }
+    .topbar-btn { padding: 0 10px; }
+
     .content { padding: 20px; }
     .page-header h1 { font-size: 21px; }
 }
@@ -1398,10 +1394,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .faixa-acoes { width: 100%; }
     .faixa-acoes .btn { flex: 1; min-width: 0; }
     .topbar { padding: 0 12px; gap: 8px; }
-    .topbar-btn span:not(.material-symbols-outlined) { display: none; }
-    .topbar-btn { padding: 0 8px; }
-    .topbar-user { padding: 3px; max-width: none; }
-    .topbar-user .user-info { display: none; }
+    .topbar-btn { padding: 0 8px; height: 32px; }
+    .topbar-btn .material-symbols-outlined { font-size: 20px; }
+
+    /* Em telas pequenas, esconde o chip de usuário */
+    .topbar-user { display: none; }
+    .topbar-right { gap: 4px; }
+
     .modulos-grid { grid-template-columns: 1fr; }
     .card-header { padding: 10px 14px; }
     .card-body { padding: 14px; }
@@ -1535,7 +1534,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                 </nav>
             </div>
 
-            <!-- Rodapé da sidebar: botão Sair + informação -->
+            <!-- Rodapé da sidebar: botão Sair + info -->
             <div class="sidebar-footer">
                 <button type="button"
                         class="sidebar-sair"
@@ -1547,8 +1546,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
                 <div class="sidebar-info">
                     <strong>Versão 1.0.0</strong>
-                    Sistema de gestão de vale transporte<br>
-                    Secretaria Municipal de Educação
+                    Sistema de gestão de vale transporte
                 </div>
             </div>
         </div>
@@ -1579,11 +1577,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
             <div class="topbar-right">
                 <button type="button"
-                        class="topbar-btn destaque"
+                        class="topbar-btn"
                         id="btnAtualizar"
-                        title="Força a atualização dos dados do painel">
+                        title="Atualizar dados">
                     <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
-                    <span>Atualizar</span>
+                    <span class="btn-texto">Atualizar</span>
                 </button>
 
                 <button type="button"
@@ -1592,10 +1590,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
                         title="Alternar tema claro/escuro">
                     <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
                     <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-                    <span>Tema</span>
+                    <span class="btn-texto">Tema</span>
                 </button>
 
-                <div class="topbar-user" role="status" aria-live="polite" title="Usuário logado">
+                <div class="topbar-user" title="Usuário logado">
                     <div class="user-avatar" id="userAvatar">—</div>
                     <div class="user-info">
                         <strong id="userNameLabel">Usuário</strong>
@@ -1608,7 +1606,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                         id="btnSairTopbar"
                         title="Sair do sistema">
                     <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    <span>Sair</span>
+                    <span class="btn-texto">Sair</span>
                 </button>
             </div>
         </header>
@@ -1879,14 +1877,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
    ============================================================ */
 (function () {
     var btn = document.getElementById('btnTema');
-    btn.addEventListener('click', function () {
-        var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        var novo  = atual === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', novo);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
-        try { localStorage.setItem('tema-vt', novo); } catch (e) {}
-    });
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            var novo  = atual === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', novo);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
+            try { localStorage.setItem('tema-vt', novo); } catch (e) {}
+        });
+    }
 })();
 
 /* ============================================================
@@ -1913,16 +1913,18 @@ button { font: inherit; color: inherit; cursor: pointer; }
         fecharMobile(false);
     }
 
-    btn.addEventListener('click', function () {
-        if (isMobile()) {
-            var aberta = sidebar.classList.contains('aberta-mobile');
-            if (aberta) fecharMobile(true);
-            else abrirMobile();
-        } else {
-            var fechado = sidebar.classList.contains('fechado');
-            aplicarEstadoDesktop(!fechado, true);
-        }
-    });
+    if (btn) {
+        btn.addEventListener('click', function () {
+            if (isMobile()) {
+                var aberta = sidebar.classList.contains('aberta-mobile');
+                if (aberta) fecharMobile(true);
+                else abrirMobile();
+            } else {
+                var fechado = sidebar.classList.contains('fechado');
+                aplicarEstadoDesktop(!fechado, true);
+            }
+        });
+    }
 
     if (btnFechar) {
         btnFechar.addEventListener('click', function () {
@@ -1930,7 +1932,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
         });
     }
 
-    backdrop.addEventListener('click', function () { fecharMobile(true); });
+    if (backdrop) {
+        backdrop.addEventListener('click', function () { fecharMobile(true); });
+    }
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) {
@@ -1938,7 +1942,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         }
         if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) {
             e.preventDefault();
-            btn.click();
+            if (btn) btn.click();
         }
     });
 
@@ -1971,15 +1975,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
             void sidebar.offsetWidth;
             sidebar.style.transition = '';
         }
-        btn.setAttribute('aria-expanded', String(!fechado));
+        if (btn) btn.setAttribute('aria-expanded', String(!fechado));
         try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
     }
 
     function abrirMobile() {
         sidebar.classList.add('aberta-mobile');
         sidebar.classList.remove('fechado');
-        backdrop.classList.add('ativo');
-        btn.setAttribute('aria-expanded', 'true');
+        if (backdrop) backdrop.classList.add('ativo');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
     }
 
@@ -1987,8 +1991,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
         if (!animar) sidebar.style.transition = 'none';
         sidebar.classList.remove('aberta-mobile');
         sidebar.classList.add('fechado');
-        backdrop.classList.remove('ativo');
-        btn.setAttribute('aria-expanded', 'false');
+        if (backdrop) backdrop.classList.remove('ativo');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
         if (!animar) {
             void sidebar.offsetWidth;
@@ -2090,6 +2094,47 @@ function limparCache() {
 }
 
 /* ============================================================
+   BOTÕES SAIR — conectados ANTES do auth para garantir que funcionem
+   ============================================================ */
+async function sairDoSistema(btn) {
+    console.log('[Sair] Clique recebido');
+
+    const confirmar = window.confirm('Deseja sair do sistema?');
+    if (!confirmar) return;
+
+    if (btn) btn.disabled = true;
+
+    try {
+        console.log('[Sair] Limpando cache local');
+        limparCache();
+        try { localStorage.removeItem(CACHE_VERSAO); } catch (e) {}
+
+        console.log('[Sair] Encerrando sessão no Firebase');
+        await signOut(auth);
+
+        console.log('[Sair] Redirecionando para index.html');
+        window.location.href = 'index.html';
+    } catch (e) {
+        console.error('[Sair] Erro:', e);
+        if (btn) btn.disabled = false;
+        alert('Não foi possível sair. Tente novamente.');
+    }
+}
+
+const btnSairTopbar  = document.getElementById('btnSairTopbar');
+const btnSairSidebar = document.getElementById('btnSairSidebar');
+
+console.log('[Sair] Topbar:', !!btnSairTopbar, '| Sidebar:', !!btnSairSidebar);
+
+if (btnSairTopbar) {
+    btnSairTopbar.addEventListener('click', function () { sairDoSistema(this); });
+}
+
+if (btnSairSidebar) {
+    btnSairSidebar.addEventListener('click', function () { sairDoSistema(this); });
+}
+
+/* ============================================================
    AUTENTICAÇÃO
    ============================================================ */
 onAuthStateChanged(auth, function (user) {
@@ -2112,43 +2157,6 @@ onAuthStateChanged(auth, function (user) {
         limparCache();
         window.location.href = 'index.html';
     }
-});
-
-/* ============================================================
-   BOTÕES SAIR (topbar + sidebar)
-   ============================================================ */
-async function sairDoSistema(btn) {
-    const confirmar = window.confirm('Deseja sair do sistema?');
-    if (!confirmar) return;
-
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add('carregando');
-    }
-
-    try {
-        limparCache();
-        try { localStorage.removeItem(CACHE_VERSAO); } catch (e) {}
-
-        await signOut(auth);
-        window.location.href = 'index.html';
-
-    } catch (e) {
-        console.error('[Painel] Erro ao sair:', e);
-        if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('carregando');
-        }
-        alert('Não foi possível sair. Tente novamente.');
-    }
-}
-
-document.getElementById('btnSairTopbar').addEventListener('click', function () {
-    sairDoSistema(this);
-});
-
-document.getElementById('btnSairSidebar').addEventListener('click', function () {
-    sairDoSistema(this);
 });
 
 /* ============================================================
