@@ -278,6 +278,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .sidebar-scroll {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -424,11 +425,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   MAIN
+   MAIN — CORRIGIDO: min-height: 0 para permitir scroll interno
    ============================================================ */
 .main {
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -737,10 +739,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   SEU CONTEÚDO (mantido integralmente)
+   CONTEÚDO DA PÁGINA — CORRIGIDO para permitir scroll interno
    ============================================================ */
 .content-page {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -754,7 +756,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   align-items: center;
   gap: 7px;
   font-size: 13px;
-  color: #7b858e;
+  color: var(--text-muted);
   margin-bottom: 10px;
 }
 .breadcrumb .material-symbols-outlined { font-size: 17px; }
@@ -795,8 +797,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-lotacao { background: #455a64; }
 .btn-lotacao:hover { background: #37474f; }
 
+/* CARD — CORRIGIDO: min-height: 0 */
 .card {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -866,8 +869,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .counter-badge .cache-indicador .material-symbols-outlined { font-size: 13px; }
 
+/* TABELA RESPONSIVA — CORRIGIDO: min-height: 0 */
 .table-responsive {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-x: auto;
@@ -1231,8 +1235,11 @@ tr:hover td { background: var(--surface-2); }
 
 @media (max-width: 600px) {
   .page-header-page h1 { font-size: 20px; }
-  html, body { overflow: auto; }
-  .card, .table-responsive { overflow: visible; }
+
+  /* Em mobile pequeno, o scroll fica na página toda (o card cresce) */
+  .content-page { overflow-y: auto; overflow-x: hidden; }
+  .card { flex: 0 0 auto; min-height: auto; overflow: visible; }
+  .table-responsive { overflow: visible; }
 
   table { border: 0; }
   table thead { display: none; }
@@ -1570,7 +1577,7 @@ tr:hover td { background: var(--surface-2); }
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ============================================================
-     SCRIPT DO LAYOUT (tema, menu lateral, modal de sair, cache)
+     SCRIPT DO LAYOUT (tema, menu lateral, invalidar cache)
      ============================================================ -->
 <script>
 /* TEMA */
@@ -1735,7 +1742,7 @@ import {
 } from "./cache.js";
 
 /* ============================================================
-   LAYOUT — Autenticação (preenche nome/e-mail + bloqueia se deslogado)
+   LAYOUT — Autenticação
    ============================================================ */
 onAuthStateChanged(auth, function (user) {
     if (user) {
