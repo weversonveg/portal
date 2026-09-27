@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,expand_more,help_outline,file_download,print,person,domain,open_in_new,refresh">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,expand_more,help_outline,file_download,print,person,domain,open_in_new,refresh">
 
 <script>
 (function () {
@@ -249,7 +249,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .sidebar-header {
     height: var(--topbar-height);
-    padding: 0 20px;
+    padding: 0 12px 0 20px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -270,6 +270,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     flex-direction: column;
     gap: 0;
     min-width: 0;
+    flex: 1;
 }
 
 .sidebar-brand strong {
@@ -287,6 +288,34 @@ button { font: inherit; color: inherit; cursor: pointer; }
     letter-spacing: .4px;
     line-height: 1.2;
     margin-top: 1px;
+}
+
+/* Botão de fechar dentro da sidebar — visível só em mobile com menu aberto */
+.btn-fechar-sidebar {
+    display: none;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.btn-fechar-sidebar:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.btn-fechar-sidebar .material-symbols-outlined { font-size: 20px; }
+
+@media (max-width: 900px) {
+    .sidebar.aberta-mobile .btn-fechar-sidebar {
+        display: inline-flex;
+    }
 }
 
 .sidebar-scroll {
@@ -528,7 +557,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     color: var(--brand);
 }
 
-/* Spinner de atualização */
 .topbar-btn.carregando .material-symbols-outlined {
     animation: girar 1s linear infinite;
 }
@@ -616,7 +644,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     margin: 0 auto;
 }
 
-/* Aviso de primeiro carregamento */
 .aviso-carregamento {
     background: var(--info-bg);
     border: 1px solid var(--info-bd);
@@ -1170,7 +1197,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     line-height: 1.3;
 }
 
-/* Aviso de cache usado */
 .cache-info {
     display: inline-flex;
     align-items: center;
@@ -1345,9 +1371,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .faixa-titulo { font-size: 14px; }
 }
 
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1378,12 +1401,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
         <div class="sidebar-inner">
+
             <div class="sidebar-header">
                 <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
                 <div class="sidebar-brand">
                     <strong>Vale Transporte</strong>
                     <span>SEMED · RH</span>
                 </div>
+                <button type="button"
+                        class="btn-fechar-sidebar"
+                        id="btnFecharSidebar"
+                        aria-label="Fechar menu"
+                        title="Fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
             </div>
 
             <div class="sidebar-scroll">
@@ -1474,7 +1505,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     <!-- MAIN -->
     <div class="main">
 
-        <!-- TOPBAR -->
         <header class="topbar">
             <div class="topbar-left">
                 <button type="button"
@@ -1521,11 +1551,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
             </div>
         </header>
 
-        <!-- CONTEÚDO -->
         <main class="content">
             <div class="content-inner">
 
-                <!-- Aviso de primeiro carregamento -->
                 <div class="aviso-carregamento" id="avisoCarregamento" role="status" aria-live="polite">
                     <span class="material-symbols-outlined" id="avisoIcone">sync</span>
                     <span id="avisoTexto">Carregando informações…</span>
@@ -1545,7 +1573,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
                     </p>
                 </div>
 
-                <!-- FAIXA DE STATUS -->
                 <div class="faixa-status info" id="faixaStatus" role="status" aria-live="polite">
                     <div class="faixa-status-info">
                         <div class="faixa-icone" aria-hidden="true">
@@ -1569,10 +1596,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
                     </div>
                 </div>
 
-                <!-- COLUNAS -->
                 <div class="colunas">
 
-                    <!-- COLUNA PRINCIPAL -->
                     <div class="coluna">
 
                         <section class="card" aria-labelledby="pendTitulo">
@@ -1669,7 +1694,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
                     </div>
 
-                    <!-- COLUNA LATERAL -->
                     <div class="coluna">
 
                         <section class="card" aria-labelledby="resumoTitulo">
@@ -1804,12 +1828,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 })();
 
 /* ============================================================
-   MENU LATERAL
+   MENU LATERAL — desktop recolhe / mobile overlay
    ============================================================ */
 (function () {
     var sidebar  = document.getElementById('sidebarMenu');
     var backdrop = document.getElementById('sidebarBackdrop');
     var btn      = document.getElementById('btnMenuToggle');
+    var btnFechar = document.getElementById('btnFecharSidebar');
     var CHAVE    = 'menu-vt-fechado';
 
     function isMobile() {
@@ -1836,6 +1861,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
             aplicarEstadoDesktop(!fechado, true);
         }
     });
+
+    // Botão "X" dentro da sidebar (mobile)
+    if (btnFechar) {
+        btnFechar.addEventListener('click', function () {
+            fecharMobile(true);
+        });
+    }
 
     backdrop.addEventListener('click', function () { fecharMobile(true); });
 
@@ -1905,8 +1937,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 })();
 
 /* ============================================================
-   INVALIDAR CACHE — exposto globalmente para uso em outras páginas
-   Basta chamar window.invalidarCachePainel() depois de cada escrita.
+   INVALIDAR CACHE — exposto para uso em outras páginas
    ============================================================ */
 window.invalidarCachePainel = function () {
     try {
@@ -1929,15 +1960,15 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 /* ============================================================
-   CONSTANTES DE CACHE E DOCUMENTO-RESUMO
+   CONSTANTES
    ============================================================ */
 const CACHE_KEY      = 'cache-painel-dados-v1';
 const CACHE_VERSAO   = 'cache-painel-versao';
-const CACHE_TTL_MS   = 30 * 60 * 1000;  // 30 minutos
+const CACHE_TTL_MS   = 30 * 60 * 1000;
 const DOC_RESUMO     = ['_estatisticas', 'resumo'];
 
 /* ============================================================
-   AVISO DE CARREGAMENTO
+   AVISO
    ============================================================ */
 function mostrarAviso(texto, icone, carregando) {
     const aviso = document.getElementById('avisoCarregamento');
@@ -1952,7 +1983,7 @@ function esconderAviso() {
 }
 
 /* ============================================================
-   CACHE: LEITURA, ESCRITA, VERSÃO
+   CACHE
    ============================================================ */
 function lerCache() {
     try {
@@ -1961,13 +1992,11 @@ function lerCache() {
 
         const obj = JSON.parse(bruto);
 
-        // Gatilho 1: tempo expirou
         if (Date.now() > obj.expiresAt) {
             localStorage.removeItem(CACHE_KEY);
             return null;
         }
 
-        // Gatilho 2: versão local mudou (algo foi salvo em outra página)
         const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
         if (obj.versao !== versaoAtual) {
             localStorage.removeItem(CACHE_KEY);
@@ -2016,26 +2045,23 @@ onAuthStateChanged(auth, function (user) {
 
         iniciarPainel();
     } else {
-        // Logout: limpa cache do usuário anterior
         limparCache();
         window.location.href = 'index.html';
     }
 });
 
 /* ============================================================
-   FLUXO PRINCIPAL DO PAINEL
+   FLUXO PRINCIPAL
    ============================================================ */
 async function iniciarPainel() {
-    // 1. Tenta cache
     const cache = lerCache();
     if (cache) {
-        console.log('[Painel] Usando cache — 0 leituras no Firestore');
+        console.log('[Painel] Cache válido — 0 leituras');
         atualizarInfoCache('aviso', 'em cache');
         renderizarTudo(cache.dados);
         return;
     }
 
-    // 2. Sem cache — busca o documento-resumo (1 leitura)
     atualizarInfoCache('aviso', 'verificando…');
     mostrarAviso('Carregando resumo do sistema…', 'sync', true);
 
@@ -2044,17 +2070,14 @@ async function iniciarPainel() {
         const snap = await getDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]));
         if (snap.exists()) {
             resumo = snap.data();
-            console.log('[Painel] Resumo carregado do Firestore — 1 leitura');
+            console.log('[Painel] Resumo lido — 1 leitura');
         }
     } catch (e) {
-        console.warn('[Painel] Não foi possível ler o documento-resumo:', e);
+        console.warn('[Painel] Erro ao ler resumo:', e);
     }
 
-    // 3. Se o resumo não existe (primeira vez), calcula tudo e salva
     if (!resumo) {
-        mostrarAviso('Primeira execução: calculando indicadores (pode levar alguns segundos)…', 'sync', true);
-        console.log('[Painel] Primeira execução — calculando tudo');
-
+        mostrarAviso('Primeira execução: calculando indicadores…', 'sync', true);
         resumo = await calcularResumoCompleto();
         if (resumo) {
             try {
@@ -2063,16 +2086,14 @@ async function iniciarPainel() {
                     _recalculo: 'auto',
                     atualizadoEm: serverTimestamp()
                 });
-                console.log('[Painel] Documento-resumo criado no Firestore');
             } catch (e) {
-                console.warn('[Painel] Não foi possível salvar o resumo:', e);
+                console.warn('[Painel] Erro ao salvar resumo:', e);
             }
         }
     }
 
     if (!resumo) resumo = resumoVazio();
 
-    // 4. Sempre salva cache local com o resultado
     salvarCache(resumo);
     atualizarInfoCache('fresco', 'atualizado agora');
     renderizarTudo(resumo);
@@ -2080,14 +2101,13 @@ async function iniciarPainel() {
 }
 
 /* ============================================================
-   CÁLCULO COMPLETO (usado só na primeira execução ou em "Atualizar")
+   CÁLCULO COMPLETO (primeira execução ou "Atualizar")
    ============================================================ */
 async function calcularResumoCompleto() {
     try {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
-        /* -------- Meses -------- */
         const snapConfig = await getDocs(collection(db, 'configuracoes'));
         const meses = [];
         snapConfig.forEach(d => {
@@ -2095,18 +2115,14 @@ async function calcularResumoCompleto() {
         });
         meses.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
 
-        /* -------- Servidores -------- */
         const snapServ = await getDocs(collection(db, 'servidores'));
         const servidores = [];
         snapServ.forEach(d => servidores.push({ id: d.id, ...d.data() }));
-        const totalServidores = servidores.length;
 
-        /* -------- Registros de férias/folgas -------- */
         const snapReg = await getDocs(collection(db, 'registro_ferias_folgas'));
         const registros = [];
         snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
 
-        /* -------- Exceções ativas -------- */
         let excecoesAtivas = 0;
         const escolasUnicas = new Set();
 
@@ -2121,11 +2137,10 @@ async function calcularResumoCompleto() {
             });
         });
 
-        /* -------- Férias pendentes -------- */
         const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
 
         return {
-            totalServidores,
+            totalServidores: servidores.length,
             totalMesesConfigurados: meses.length,
             totalEscolas: escolasUnicas.size,
             excecoesAtivas,
@@ -2158,7 +2173,7 @@ async function calcularResumoCompleto() {
         };
 
     } catch (e) {
-        console.error('[Painel] Erro no cálculo completo:', e);
+        console.error('[Painel] Erro no cálculo:', e);
         return null;
     }
 }
@@ -2180,8 +2195,6 @@ function resumoVazio() {
 
 /* ============================================================
    CÁLCULO DE FÉRIAS PENDENTES
-   Regra: período aquisitivo fechado + sem lançamento.
-   Limite CLT = fim do período + 12 meses.
    ============================================================ */
 function parseDataParaDate(v) {
     if (!v) return null;
@@ -2228,7 +2241,6 @@ function periodosFechados(dataAdmissao, hoje) {
 }
 
 function calcularFeriasPendentes(servidores, registros, hoje) {
-    // Índices para busca rápida
     const porCpf = new Map();
     const porMatricula = new Map();
 
@@ -2279,7 +2291,6 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
 
         if (admissoes.length === 0) return;
 
-        // Lançamentos desse servidor
         const lancados = new Set();
         if (cpf && porCpf.has(cpf)) porCpf.get(cpf).forEach(a => lancados.add(a));
         mats.forEach(m => {
@@ -2312,7 +2323,7 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
 }
 
 /* ============================================================
-   INFO DE CACHE (badge)
+   INFO DE CACHE
    ============================================================ */
 function atualizarInfoCache(tipo, texto) {
     const el = document.getElementById('cacheInfo');
@@ -2328,7 +2339,7 @@ function atualizarInfoCache(tipo, texto) {
 }
 
 /* ============================================================
-   RENDERIZAÇÃO GERAL
+   RENDERIZAÇÃO
    ============================================================ */
 function renderizarTudo(dados) {
     renderizarFaixaStatus(dados);
@@ -2338,7 +2349,6 @@ function renderizarTudo(dados) {
     renderizarTimeline(dados);
 }
 
-/* ---------- Faixa de status do mês ---------- */
 function renderizarFaixaStatus(dados) {
     const faixa = document.getElementById('faixaStatus');
     const icone = document.getElementById('faixaIcone');
@@ -2393,7 +2403,6 @@ function renderizarFaixaStatus(dados) {
     detalhe.textContent = `Aberto até ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis definidos.`;
 }
 
-/* ---------- Pendências ---------- */
 function renderizarPendencias(dados) {
     const lista = document.getElementById('listaPendencias');
     const contador = document.getElementById('pendContador');
@@ -2487,7 +2496,6 @@ function renderizarPendencias(dados) {
     `).join('');
 }
 
-/* ---------- Resumo numérico ---------- */
 function renderizarResumo(dados) {
     document.getElementById('statMeses').textContent = dados.totalMesesConfigurados || 0;
     document.getElementById('statServidores').textContent = dados.totalServidores || 0;
@@ -2497,7 +2505,6 @@ function renderizarResumo(dados) {
         ? formatarDataHora(dados.dataAtualizacao)
         : '—';
 
-    // Férias pendentes
     const td = document.getElementById('statFeriasPendentes');
     const link = document.getElementById('linkFeriasPendentes');
     if (!td || !link) return;
@@ -2531,7 +2538,6 @@ function renderizarResumo(dados) {
     link.title = `${totalServidores} servidor${totalServidores === 1 ? '' : 'es'} com férias pendentes — ${subtitulo}. Clique para revisar.`;
 }
 
-/* ---------- Últimos meses ---------- */
 function renderizarUltimosMeses(dados) {
     const tbody = document.getElementById('tabelaUltimosMeses');
     const meses = dados.mesesParaExibir || [];
@@ -2569,7 +2575,6 @@ function renderizarUltimosMeses(dados) {
     }).join('');
 }
 
-/* ---------- Timeline ---------- */
 function renderizarTimeline(dados) {
     const ul = document.getElementById('linhaTempo');
     const meses = dados.mesesParaExibir || [];
@@ -2614,7 +2619,7 @@ function renderizarTimeline(dados) {
 }
 
 /* ============================================================
-   HELPERS DE FORMATAÇÃO
+   FORMATAÇÃO
    ============================================================ */
 function formatarMesAno(str) {
     if (!str) return '';
@@ -2644,7 +2649,6 @@ function formatarDataHora(iso) {
 
 /* ============================================================
    BOTÃO "ATUALIZAR AGORA"
-   Força recálculo completo e regrava o documento-resumo.
    ============================================================ */
 document.getElementById('btnAtualizar').addEventListener('click', async function () {
     const btn = this;
@@ -2653,7 +2657,6 @@ document.getElementById('btnAtualizar').addEventListener('click', async function
     btn.classList.add('carregando');
     btn.disabled = true;
 
-    // Invalida cache local e força recálculo
     limparCache();
     atualizarInfoCache('aviso', 'recalculando…');
     mostrarAviso('Recalculando indicadores…', 'sync', true);
