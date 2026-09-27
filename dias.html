@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=home,calendar_month,settings,save,autorenew,info,date_range,lock_open,lock,hourglass_top,sync,history,edit,delete,close,check,lock_open_right,block,tune">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=home,calendar_month,settings,save,autorenew,info,date_range,lock_open,lock,hourglass_top,sync,history,edit,delete,close,check,lock_open_right,block,warning">
 
 <script>
 (function () {
@@ -521,6 +521,16 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 }
 .btn-perigo:hover { background: var(--danger-bg); border-color: var(--danger); }
 
+.btn-perigo-solido {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+}
+.btn-perigo-solido:hover {
+    background: #7f1616;
+    border-color: #7f1616;
+}
+
 .btn-pequeno {
     height: 32px;
     padding: 0 12px;
@@ -853,7 +863,7 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 
 /* ============================================================
-   MODAL
+   MODAL GENÉRICO (usado por reabertura e exclusão)
    ============================================================ */
 .modal-overlay {
     display: none;
@@ -1061,6 +1071,109 @@ tbody tr:hover td { background: var(--surface-2); }
 .escolas-selecionadas-info .material-symbols-outlined { font-size: 16px; flex-shrink: 0; }
 
 /* ============================================================
+   MODAL DE EXCLUSÃO (compacto, com ícone grande)
+   ============================================================ */
+.modal-excluir .modal-box {
+    max-width: 440px;
+}
+
+.modal-excluir .modal-header {
+    background: var(--danger-bg);
+    border-bottom-color: var(--danger-bd);
+}
+
+.modal-excluir .reabertura-title {
+    color: var(--danger);
+}
+
+.modal-excluir .modal-fechar {
+    color: var(--danger);
+}
+.modal-excluir .modal-fechar:hover {
+    background: rgba(153,27,27,.1);
+}
+
+.excluir-body {
+    padding: 24px 24px 20px;
+    text-align: center;
+}
+
+.excluir-icone {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--danger-bg);
+    color: var(--danger);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    border: 1px solid var(--danger-bd);
+}
+
+.excluir-icone .material-symbols-outlined {
+    font-size: 30px;
+}
+
+.excluir-titulo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -.005em;
+}
+
+.excluir-texto {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 16px;
+}
+
+.excluir-mes {
+    display: inline-block;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.excluir-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-bd);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--warn);
+    line-height: 1.5;
+    margin-top: 16px;
+}
+
+.excluir-aviso .material-symbols-outlined {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.modal-excluir .modal-footer {
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 24px 20px;
+}
+
+.modal-excluir .modal-footer button {
+    min-width: 120px;
+}
+
+/* ============================================================
    RESPONSIVO
    ============================================================ */
 @media (max-width: 900px) {
@@ -1140,6 +1253,14 @@ tbody tr:hover td { background: var(--surface-2); }
     .modal-footer button { width: 100%; }
 
     .escolas-checkbox-grid { grid-template-columns: 1fr; }
+
+    .modal-excluir .modal-footer {
+        flex-direction: column-reverse;
+    }
+    .modal-excluir .modal-footer button {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 @media (max-width: 400px) {
@@ -1210,9 +1331,7 @@ tbody tr:hover td { background: var(--surface-2); }
     <section class="form-card">
         <form id="formConfig" onsubmit="salvarConfiguracao(event)">
 
-            <!-- ============================================================
-                 BLOCO 1 — PADRÃO GLOBAL
-                 ============================================================ -->
+            <!-- BLOCO 1 — PADRÃO GLOBAL -->
             <div class="bloco">
                 <div class="bloco-cabecalho">
                     <span class="bloco-numero" aria-hidden="true">1</span>
@@ -1250,9 +1369,7 @@ tbody tr:hover td { background: var(--surface-2); }
                 </div>
             </div>
 
-            <!-- ============================================================
-                 BLOCO 2 — IDENTIFICAÇÃO DO MÊS
-                 ============================================================ -->
+            <!-- BLOCO 2 — IDENTIFICAÇÃO DO MÊS -->
             <div class="bloco">
                 <div class="bloco-cabecalho">
                     <span class="bloco-numero" aria-hidden="true">2</span>
@@ -1282,9 +1399,7 @@ tbody tr:hover td { background: var(--surface-2); }
                 </div>
             </div>
 
-            <!-- ============================================================
-                 BLOCO 3 — CONTROLE DE ABERTURA E FECHAMENTO
-                 ============================================================ -->
+            <!-- BLOCO 3 — CONTROLE DE ABERTURA E FECHAMENTO -->
             <div class="bloco">
                 <div class="bloco-cabecalho">
                     <span class="bloco-numero" aria-hidden="true">3</span>
@@ -1423,6 +1538,7 @@ tbody tr:hover td { background: var(--surface-2); }
     </section>
 </main>
 
+<!-- MODAL: Reabertura por Escola -->
 <div class="modal-overlay" id="modalReabertura" role="presentation">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="tituloModalReabertura">
         <div class="modal-header">
@@ -1462,6 +1578,50 @@ tbody tr:hover td { background: var(--surface-2); }
     </div>
 </div>
 
+<!-- MODAL: Confirmação de exclusão -->
+<div class="modal-overlay modal-excluir" id="modalExcluir" role="presentation">
+    <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="tituloModalExcluir" aria-describedby="textoModalExcluir">
+        <div class="modal-header">
+            <div class="reabertura-title">
+                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                Confirmar exclusão
+            </div>
+            <button type="button" class="modal-fechar" onclick="fecharModalExcluir()" aria-label="Fechar">
+                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+        </div>
+
+        <div class="excluir-body">
+            <div class="excluir-icone" aria-hidden="true">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+            <div class="excluir-titulo" id="tituloModalExcluir">Excluir configuração do mês?</div>
+            <p class="excluir-texto" id="textoModalExcluir">
+                Esta ação removerá permanentemente o registro selecionado.
+            </p>
+            <div class="excluir-mes" id="mesExcluir">—</div>
+
+            <div class="excluir-aviso">
+                <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                <div>
+                    Todos os dados vinculados a este mês — dias letivos, período de lançamento,
+                    congelamento e exceções por escola — serão <strong>perdidos</strong>. Não é possível desfazer.
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancelar" id="btnCancelarExcluir" onclick="fecharModalExcluir()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-perigo-solido" id="btnConfirmarExcluir" onclick="confirmarExclusao()">
+                <span class="material-symbols-outlined" style="font-size:16px;" aria-hidden="true">delete</span>
+                Excluir definitivamente
+            </button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { db } from "./firebase.js";
     import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1475,6 +1635,7 @@ tbody tr:hover td { background: var(--surface-2); }
     ];
 
     let padraoGlobal = { diaAbertura: null, diaFechamento: null };
+    let mesParaExcluir = null;
 
     document.addEventListener("DOMContentLoaded", async function() {
         const hoje = new Date();
@@ -1493,14 +1654,23 @@ tbody tr:hover td { background: var(--surface-2); }
 
         carregarTodasConfiguracoes();
 
+        // Fechar modais clicando fora
         document.getElementById('modalReabertura').addEventListener('click', function(e) {
             if (e.target === this) fecharModalReabertura();
         });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') fecharModalReabertura();
+        document.getElementById('modalExcluir').addEventListener('click', function(e) {
+            if (e.target === this) fecharModalExcluir();
         });
 
-        // Esconde a mensagem assim que o usuário interagir com qualquer campo do form
+        // ESC fecha qualquer modal aberto
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModalReabertura();
+                fecharModalExcluir();
+            }
+        });
+
+        // Auto-esconder mensagem ao interagir com o form
         const form = document.getElementById("formConfig");
         if (form) {
             form.addEventListener("focusin", ocultarMensagem, true);
@@ -1508,6 +1678,9 @@ tbody tr:hover td { background: var(--surface-2); }
         }
     });
 
+    /* ============================================================
+       MODAL DE REABERTURA
+       ============================================================ */
     window.abrirModalReabertura = function() {
         document.getElementById('modalReabertura').classList.add('ativo');
         document.body.style.overflow = 'hidden';
@@ -1518,6 +1691,65 @@ tbody tr:hover td { background: var(--surface-2); }
         document.body.style.overflow = '';
     };
 
+    /* ============================================================
+       MODAL DE EXCLUSÃO
+       ============================================================ */
+    window.abrirModalExcluir = function(mesAno) {
+        mesParaExcluir = mesAno;
+        document.getElementById('mesExcluir').textContent = formatarMesAno(mesAno);
+
+        // Texto adaptativo: com ou sem observações
+        const texto = document.getElementById('textoModalExcluir');
+        texto.textContent = 'Você está prestes a excluir a configuração de:';
+
+        document.getElementById('modalExcluir').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+
+        // Foco inicial no botão Cancelar (ação mais segura)
+        requestAnimationFrame(() => {
+            document.getElementById('btnCancelarExcluir').focus();
+        });
+    };
+
+    window.fecharModalExcluir = function() {
+        document.getElementById('modalExcluir').classList.remove('ativo');
+        document.body.style.overflow = '';
+        mesParaExcluir = null;
+    };
+
+    window.confirmarExclusao = async function() {
+        if (!mesParaExcluir) return;
+
+        const mesAno = mesParaExcluir;
+        const btn = document.getElementById('btnConfirmarExcluir');
+        const btnOriginal = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">sync</span> Excluindo…';
+
+        try {
+            await deleteDoc(doc(db, "configuracoes", mesAno));
+            fecharModalExcluir();
+            mostrarMensagem(`Configuração de ${formatarMesAno(mesAno)} excluída com sucesso.`, "sucesso");
+            carregarTodasConfiguracoes();
+            limparFormulario();
+        } catch (erro) {
+            console.error("Erro ao excluir:", erro);
+            btn.disabled = false;
+            btn.innerHTML = btnOriginal;
+            fecharModalExcluir();
+            mostrarMensagem("Erro ao excluir o registro. Tente novamente.", "erro");
+        }
+    };
+
+    window.excluirConfiguracao = function(mesAno) {
+        // Agora apenas abre o modal — a exclusão real acontece em confirmarExclusao()
+        abrirModalExcluir(mesAno);
+    };
+
+    /* ============================================================
+       CHECKBOXES DE ESCOLA
+       ============================================================ */
     window.montarCheckboxesEscolas = function() {
         const grid = document.getElementById("escolasCheckboxGrid");
         grid.innerHTML = ESCOLAS_DISPONIVEIS.map(escola => {
@@ -1574,6 +1806,9 @@ tbody tr:hover td { background: var(--surface-2); }
         }
     };
 
+    /* ============================================================
+       UTILITÁRIOS
+       ============================================================ */
     function formatarDataISO(data) {
         const ano = data.getFullYear();
         const mes = String(data.getMonth() + 1).padStart(2, '0');
@@ -1588,6 +1823,17 @@ tbody tr:hover td { background: var(--surface-2); }
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
+    function formatarMesAno(str) {
+        if (!str) return "";
+        const [ano, mes] = str.split("-");
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
+        return `${nomeMes} / ${ano}`;
+    }
+
+    /* ============================================================
+       PADRÃO GLOBAL
+       ============================================================ */
     async function carregarPadraoGlobal() {
         try {
             const docRef = doc(db, "configuracoes", "_padraoGlobal");
@@ -1658,6 +1904,9 @@ tbody tr:hover td { background: var(--surface-2); }
         }
     };
 
+    /* ============================================================
+       STATUS DO MÊS
+       ============================================================ */
     function calcularStatusMes(config) {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
@@ -1743,14 +1992,6 @@ tbody tr:hover td { background: var(--surface-2); }
         else campo.classList.remove("preenchido");
     };
 
-    function formatarMesAno(str) {
-        if (!str) return "";
-        const [ano, mes] = str.split("-");
-        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
-        return `${nomeMes} / ${ano}`;
-    }
-
     function verificarExpiracaoExcecao(excecao) {
         if (typeof excecao === 'string') {
             return { escola: excecao, expirada: false, dataExpiracao: null, diasPermitidos: null };
@@ -1769,6 +2010,9 @@ tbody tr:hover td { background: var(--surface-2); }
         };
     }
 
+    /* ============================================================
+       LISTAGEM
+       ============================================================ */
     async function carregarTodasConfiguracoes() {
         const tbody = document.getElementById("tabelaConfiguracoes");
         try {
@@ -1912,20 +2156,6 @@ tbody tr:hover td { background: var(--surface-2); }
         atualizarStatusCalculado();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         mostrarMensagem(`Carregado mês ${formatarMesAno(mesAno)} para edição.`, "sucesso");
-    };
-
-    window.excluirConfiguracao = async function(mesAno) {
-        if (confirm(`Deseja realmente excluir a configuração do mês ${formatarMesAno(mesAno)}?`)) {
-            try {
-                await deleteDoc(doc(db, "configuracoes", mesAno));
-                mostrarMensagem(`Configuração de ${formatarMesAno(mesAno)} excluída com sucesso.`, "sucesso");
-                carregarTodasConfiguracoes();
-                limparFormulario();
-            } catch (erro) {
-                console.error("Erro ao excluir:", erro);
-                mostrarMensagem("Erro ao excluir o registro.", "erro");
-            }
-        }
     };
 
     window.carregarConfiguracao = async function(mesAno) {
@@ -2114,7 +2344,7 @@ tbody tr:hover td { background: var(--surface-2); }
     };
 
     /* ============================================================
-       MENSAGENS — auto-esconder após 5s e ao interagir com o form
+       MENSAGENS — auto-esconder após 5s e ao interagir
        ============================================================ */
     let timeoutMensagem = null;
 
@@ -2123,13 +2353,11 @@ tbody tr:hover td { background: var(--surface-2); }
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
 
-        // Cancela timeout anterior para não esconder a mensagem nova
         if (timeoutMensagem) {
             clearTimeout(timeoutMensagem);
             timeoutMensagem = null;
         }
 
-        // Agenda auto-esconder em 5 segundos
         timeoutMensagem = setTimeout(() => {
             ocultarMensagem();
         }, 5000);
