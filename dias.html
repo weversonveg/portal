@@ -710,6 +710,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     background: var(--ok-bg);
     border-color: var(--ok-bd);
     color: var(--ok);
+    animation: fadeInMsg .2s ease;
 }
 
 .mensagem.erro {
@@ -717,6 +718,12 @@ input:checked + .slider:before { transform: translateX(20px); }
     background: var(--danger-bg);
     border-color: var(--danger-bd);
     color: var(--danger);
+    animation: fadeInMsg .2s ease;
+}
+
+@keyframes fadeInMsg {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
@@ -1240,10 +1247,6 @@ tbody tr:hover td { background: var(--surface-2); }
                         <span class="material-symbols-outlined" aria-hidden="true">save</span>
                         Salvar padrão global
                     </button>
-                    <button type="button" class="btn-secundario" onclick="aplicarPadraoAoMesAtual()">
-                        <span class="material-symbols-outlined" aria-hidden="true">autorenew</span>
-                        Aplicar ao mês do bloco 2
-                    </button>
                 </div>
             </div>
 
@@ -1496,6 +1499,13 @@ tbody tr:hover td { background: var(--surface-2); }
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') fecharModalReabertura();
         });
+
+        // Esconde a mensagem assim que o usuário interagir com qualquer campo do form
+        const form = document.getElementById("formConfig");
+        if (form) {
+            form.addEventListener("focusin", ocultarMensagem, true);
+            form.addEventListener("pointerdown", ocultarMensagem, true);
+        }
     });
 
     window.abrirModalReabertura = function() {
@@ -1646,30 +1656,6 @@ tbody tr:hover td { background: var(--surface-2); }
             console.error("Erro ao salvar padrão:", erro);
             mostrarMensagem("Erro ao salvar o padrão global.", "erro");
         }
-    };
-
-    window.aplicarPadraoAoMesAtual = function() {
-        if (!padraoGlobal.diaAbertura || !padraoGlobal.diaFechamento) {
-            mostrarMensagem("Defina primeiro um padrão global antes de aplicá-lo.", "erro");
-            return;
-        }
-        const mesAno = document.getElementById("mesReferencia").value;
-        if (!mesAno) {
-            mostrarMensagem("Selecione um mês de referência no bloco 2 primeiro.", "erro");
-            return;
-        }
-        const [ano, mes] = mesAno.split("-");
-        const dataAbertura = `${ano}-${mes}-${String(padraoGlobal.diaAbertura).padStart(2, '0')}`;
-        const dataFechamento = `${ano}-${mes}-${String(padraoGlobal.diaFechamento).padStart(2, '0')}`;
-
-        document.getElementById("dataAbertura").value = dataAbertura;
-        document.getElementById("dataFechamento").value = dataFechamento;
-
-        atualizarCorCampo(document.getElementById("dataAbertura"));
-        atualizarCorCampo(document.getElementById("dataFechamento"));
-        atualizarStatusCalculado();
-
-        mostrarMensagem(`Padrão aplicado ao bloco 3: ${formatarData(dataAbertura)} até ${formatarData(dataFechamento)}.`, "sucesso");
     };
 
     function calcularStatusMes(config) {
@@ -2127,16 +2113,38 @@ tbody tr:hover td { background: var(--surface-2); }
         ocultarMensagem();
     };
 
+    /* ============================================================
+       MENSAGENS — auto-esconder após 5s e ao interagir com o form
+       ============================================================ */
+    let timeoutMensagem = null;
+
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
+
+        // Cancela timeout anterior para não esconder a mensagem nova
+        if (timeoutMensagem) {
+            clearTimeout(timeoutMensagem);
+            timeoutMensagem = null;
+        }
+
+        // Agenda auto-esconder em 5 segundos
+        timeoutMensagem = setTimeout(() => {
+            ocultarMensagem();
+        }, 5000);
     }
 
     function ocultarMensagem() {
         const msg = document.getElementById("mensagem");
+        if (!msg) return;
         msg.className = "mensagem";
         msg.textContent = "";
+
+        if (timeoutMensagem) {
+            clearTimeout(timeoutMensagem);
+            timeoutMensagem = null;
+        }
     }
 </script>
 
