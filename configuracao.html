@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block">
 
 <script>
 (function () {
@@ -90,7 +90,6 @@
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
 
-    /* Aliases p/ compatibilidade com a página */
     --brand-contrast: #ffffff;
 }
 
@@ -271,14 +270,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
     position: relative; white-space: nowrap;
 }
 .menu-item a:hover { background: var(--surface-2); color: var(--text); }
-.menu-item.ativo a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
-.menu-item.ativo a::before {
+.menu-item.ativo > a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.menu-item.ativo > a::before {
     content: ""; position: absolute; left: -10px; top: 50%;
     transform: translateY(-50%); width: 3px; height: 20px;
     background: var(--brand); border-radius: 0 3px 3px 0;
 }
 .menu-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-.menu-item.ativo .material-symbols-outlined { opacity: 1; }
+.menu-item.ativo > a .material-symbols-outlined { opacity: 1; }
 
 .menu-item .menu-badge {
     margin-left: auto; font-size: 10.5px; font-weight: 600;
@@ -311,6 +310,47 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .sidebar-backdrop.ativo { display: block; opacity: 1; }
 @media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
+
+/* ============================================================
+   SUBMENU DE ÂNCORAS NA SIDEBAR
+   ============================================================ */
+.submenu {
+    list-style: none;
+    margin: 4px 0 6px 20px;
+    padding: 0 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border-left: 1px solid var(--border);
+}
+.submenu-item a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color .12s ease, color .12s ease;
+}
+.submenu-item a:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+.submenu-item a .material-symbols-outlined {
+    font-size: 15px;
+    opacity: .7;
+    flex-shrink: 0;
+}
+.submenu-item.ativo a {
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-weight: 600;
+}
+.submenu-item.ativo a .material-symbols-outlined { opacity: 1; }
 
 /* ============================================================
    MAIN
@@ -472,6 +512,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     overflow-y: auto;
     overflow-x: hidden;
     padding: 24px 28px 32px;
+    scroll-behavior: smooth;
 }
 
 .breadcrumb {
@@ -496,7 +537,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .page-header-page p { font-size: 13px; color: var(--text-secondary); }
 
 /* ============================================================
-   CARDS / BLOCOS
+   CARDS / BLOCOS / SEÇÕES
    ============================================================ */
 .form-card,
 .table-card {
@@ -507,6 +548,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     margin-bottom: 20px;
+}
+
+/* Seções âncora */
+.secao {
+    scroll-margin-top: 16px;
+    transition: box-shadow .25s ease, border-color .25s ease;
+}
+.secao.destacada {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-soft);
 }
 
 .bloco {
@@ -736,7 +787,7 @@ input:checked + .slider:before { transform: translateX(20px); }
    ============================================================ */
 .mensagem {
     display: none;
-    margin: 0 24px 20px;
+    margin: 0 0 20px;
     padding: 12px 14px; border-radius: 5px;
     font-size: 13px; font-weight: 500;
     border: 1px solid;
@@ -1039,7 +1090,7 @@ tbody tr:hover td { background: var(--surface-2); }
     .content-page { padding: 20px; }
     .bloco { padding: 18px; }
     .form-footer { padding: 14px 18px; }
-    .mensagem { margin: 0 18px 16px; }
+    .mensagem { margin: 0 0 16px; }
 }
 
 @media (max-width: 768px) {
@@ -1131,7 +1182,7 @@ tbody tr:hover td { background: var(--surface-2); }
 <div class="layout">
 
     <!-- ==================================================
-         SIDEBAR (padrão servidores.html)
+         SIDEBAR
          ================================================== -->
     <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
         <div class="sidebar-inner">
@@ -1174,6 +1225,34 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                                 <span>Dias úteis e meses</span>
                             </a>
+
+                            <!-- Submenu de âncoras desta página -->
+                            <ul class="submenu">
+                                <li class="submenu-item">
+                                    <a href="#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
+                                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                                        <span>1. Período aquisitivo</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="#secao-dias-uteis" data-secao="secao-dias-uteis">
+                                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                                        <span>2. Dias úteis letivos</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="#secao-abrir-fechar" data-secao="secao-abrir-fechar">
+                                        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                                        <span>3. Abrir / fechar mês</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="#secao-reabrir" data-secao="secao-reabrir">
+                                        <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
+                                        <span>4. Reabrir período</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="menu-item">
                             <a href="escola.html">
@@ -1306,15 +1385,17 @@ tbody tr:hover td { background: var(--surface-2); }
                 </div>
             </div>
 
-            <section class="form-card">
-                <form id="formConfig" onsubmit="salvarConfiguracao(event)">
+            <form id="formConfig" onsubmit="salvarConfiguracao(event)">
 
-                    <!-- BLOCO 1 — PADRÃO GLOBAL -->
+                <!-- ============================================================
+                     SEÇÃO 1 — PERÍODO AQUISITIVO
+                     ============================================================ -->
+                <section class="form-card secao" id="secao-periodo-aquisitivo">
                     <div class="bloco">
                         <div class="bloco-cabecalho">
                             <span class="bloco-numero" aria-hidden="true">1</span>
                             <div class="bloco-titulo-grupo">
-                                <span class="bloco-titulo">Padrão Global de Período</span>
+                                <span class="bloco-titulo">Configurar Período Aquisitivo</span>
                                 <span class="bloco-subtitulo">
                                     Regra aplicada automaticamente a <strong>novos meses</strong> ainda não cadastrados.
                                 </span>
@@ -1346,13 +1427,17 @@ tbody tr:hover td { background: var(--surface-2); }
                             </button>
                         </div>
                     </div>
+                </section>
 
-                    <!-- BLOCO 2 — IDENTIFICAÇÃO DO MÊS -->
+                <!-- ============================================================
+                     SEÇÃO 2 — DIAS ÚTEIS LETIVOS
+                     ============================================================ -->
+                <section class="form-card secao" id="secao-dias-uteis">
                     <div class="bloco">
                         <div class="bloco-cabecalho">
                             <span class="bloco-numero" aria-hidden="true">2</span>
                             <div class="bloco-titulo-grupo">
-                                <span class="bloco-titulo">Identificação do Mês</span>
+                                <span class="bloco-titulo">Configurar Dias Úteis Letivos</span>
                                 <span class="bloco-subtitulo">
                                     Qual mês está sendo configurado e quantos dias letivos ele tem.
                                 </span>
@@ -1374,17 +1459,28 @@ tbody tr:hover td { background: var(--surface-2); }
                                        oninput="atualizarCorCampo(this)">
                                 <span class="ajuda">Total de dias letivos do mês (base para o cálculo de vales).</span>
                             </div>
+
+                            <div class="form-group full">
+                                <label for="observacoes">Observações (opcional)</label>
+                                <input type="text" id="observacoes"
+                                       placeholder="Ex: Mês fechado antes do prazo por causa do recesso escolar">
+                                <span class="ajuda">Aparece na listagem de meses configurados.</span>
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <!-- BLOCO 3 — CONTROLE -->
+                <!-- ============================================================
+                     SEÇÃO 3 — ABRIR / FECHAR MÊS
+                     ============================================================ -->
+                <section class="form-card secao" id="secao-abrir-fechar">
                     <div class="bloco">
                         <div class="bloco-cabecalho">
                             <span class="bloco-numero" aria-hidden="true">3</span>
                             <div class="bloco-titulo-grupo">
-                                <span class="bloco-titulo">Controle de Abertura e Fechamento</span>
+                                <span class="bloco-titulo">Abrir / Fechar Mês</span>
                                 <span class="bloco-subtitulo">
-                                    Defina as datas manuais, veja o status calculado e configure exceções por escola.
+                                    Defina as datas manuais, veja o status calculado e configure o congelamento antecipado.
                                 </span>
                             </div>
                         </div>
@@ -1438,8 +1534,34 @@ tbody tr:hover td { background: var(--surface-2); }
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </section>
 
-                        <div class="reabertura-trigger" id="reaberturaTrigger">
+                <!-- ============================================================
+                     SEÇÃO 4 — REABRIR PERÍODO
+                     ============================================================ -->
+                <section class="form-card secao" id="secao-reabrir">
+                    <div class="bloco">
+                        <div class="bloco-cabecalho">
+                            <span class="bloco-numero" aria-hidden="true">4</span>
+                            <div class="bloco-titulo-grupo">
+                                <span class="bloco-titulo">Reabrir Período</span>
+                                <span class="bloco-subtitulo">
+                                    Libere o lançamento para escolas específicas, com prazo definido por escola.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="caixa-info">
+                            <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
+                            <div>
+                                <strong>Exceção por escola.</strong>
+                                Use quando o mês estiver fechado e apenas algumas escolas precisarem continuar lançando.
+                                Cada escola terá um prazo próprio, contado a partir de hoje.
+                            </div>
+                        </div>
+
+                        <div class="reabertura-trigger visivel" id="reaberturaTrigger">
                             <div class="reabertura-trigger-info">
                                 <span class="material-symbols-outlined" aria-hidden="true">lock_open_right</span>
                                 <div class="reabertura-trigger-text">
@@ -1452,21 +1574,17 @@ tbody tr:hover td { background: var(--surface-2); }
                                 Reabrir
                             </button>
                         </div>
-
-                        <div class="campos-grid" style="margin-top: 20px;">
-                            <div class="form-group full">
-                                <label for="observacoes">Observações (opcional)</label>
-                                <input type="text" id="observacoes"
-                                       placeholder="Ex: Mês fechado antes do prazo por causa do recesso escolar">
-                                <span class="ajuda">Aparece na listagem de meses configurados.</span>
-                            </div>
-                        </div>
                     </div>
+                </section>
 
-                    <div id="mensagem" class="mensagem" role="status" aria-live="polite"></div>
+                <!-- ============================================================
+                     MENSAGEM + RODAPÉ DE SALVAR
+                     ============================================================ -->
+                <div id="mensagem" class="mensagem" role="status" aria-live="polite"></div>
 
-                    <div class="form-footer">
-                        <div class="footer-info"><span aria-hidden="true">*</span> Campos obrigatórios do bloco 2</div>
+                <div class="form-card" style="padding: 16px 24px;">
+                    <div class="form-footer" style="border-top: none; background: transparent; padding: 0;">
+                        <div class="footer-info"><span aria-hidden="true">*</span> Campos obrigatórios da seção 2</div>
                         <div class="footer-buttons">
                             <button type="submit" id="btnSalvar" class="btn-primario">
                                 <span class="material-symbols-outlined" id="iconeSalvar" aria-hidden="true">save</span>
@@ -1477,8 +1595,9 @@ tbody tr:hover td { background: var(--surface-2); }
                             </button>
                         </div>
                     </div>
-                </form>
-            </section>
+                </div>
+
+            </form>
 
             <!-- TABELA -->
             <section class="table-card">
@@ -1814,8 +1933,73 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 </script>
 
 <!-- ============================================================
+     SCRIPT DE ROLAGEM / DESTAQUE DAS SEÇÕES
+     ============================================================ -->
+<script>
+(function () {
+    var links = document.querySelectorAll('.submenu-item a[data-secao]');
+    var secoes = Array.from(links).map(function (a) {
+        return document.getElementById(a.dataset.secao);
+    }).filter(Boolean);
+
+    links.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            var alvo = document.getElementById(this.dataset.secao);
+            if (!alvo) return;
+
+            var sidebar  = document.getElementById('sidebarMenu');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar && sidebar.classList.contains('aberta-mobile')) {
+                sidebar.classList.remove('aberta-mobile');
+                if (backdrop) backdrop.classList.remove('ativo');
+                document.body.style.overflow = '';
+            }
+
+            alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            try { history.replaceState(null, '', '#' + this.dataset.secao); } catch (err) {}
+
+            alvo.classList.add('destacada');
+            setTimeout(function () { alvo.classList.remove('destacada'); }, 1400);
+        });
+    });
+
+    if ('IntersectionObserver' in window && secoes.length) {
+        var itens = {};
+        links.forEach(function (a) { itens[a.dataset.secao] = a.closest('.submenu-item'); });
+
+        var obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    Object.keys(itens).forEach(function (k) {
+                        if (itens[k]) itens[k].classList.remove('ativo');
+                    });
+                    var li = itens[entry.target.id];
+                    if (li) li.classList.add('ativo');
+                }
+            });
+        }, {
+            root: document.querySelector('.content-page'),
+            rootMargin: '-20% 0px -60% 0px',
+            threshold: 0
+        });
+
+        secoes.forEach(function (s) { obs.observe(s); });
+    }
+
+    if (location.hash) {
+        var alvo = document.querySelector(location.hash);
+        if (alvo) {
+            setTimeout(function () {
+                alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+        }
+    }
+})();
+</script>
+
+<!-- ============================================================
      SCRIPT PRINCIPAL — Configuração
-     (lógica original preservada, sem alterações)
      ============================================================ -->
 <script type="module">
     import { db } from "./firebase.js";
@@ -2416,7 +2600,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const dataFechamento = document.getElementById("dataFechamento").value;
 
         if (!mesReferencia || !diasUteis) {
-            mostrarMensagem("Preencha o mês de referência e os dias úteis (bloco 2).", "erro");
+            mostrarMensagem("Preencha o mês de referência e os dias úteis (seção 2).", "erro");
             return;
         }
         if (dataAbertura && dataFechamento && dataAbertura > dataFechamento) {
