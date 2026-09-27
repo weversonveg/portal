@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Painel de controle do sistema de gestão de Vale Transporte — SEMED.">
+<meta name="description" content="Central de operações — Sistema de Gestão de Vale Transporte SEMED.">
 <meta name="theme-color" content="#4a3068">
-<title>Painel Inicial — Gestão de Vale Transporte</title>
+<title>Central de Operações — Vale Transporte</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=menu,dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,settings,arrow_forward,check_circle,history,bar_chart,trending_up,event,description,home">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,arrow_outward,check_circle,history,bar_chart,trending_up,event,warning,error,info,schedule,person,domain,chevron_right">
 
 <script>
 (function () {
@@ -19,20 +19,13 @@
         document.documentElement.setAttribute('data-theme', t);
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', t === 'dark' ? '#1a1a1c' : '#4a3068');
-
-        var menuFechado = localStorage.getItem('menu-vt-fechado');
-        // Padrão: aberto (dashboard inicial precisa mostrar os módulos)
-        var aplicarFechado = menuFechado === '1';
-        if (aplicarFechado) {
-            document.documentElement.classList.add('menu-inicial-fechado');
-        }
     } catch (e) {}
 })();
 </script>
 
 <style>
 /* ============================================================
-   TOKENS — consistente com as demais páginas
+   TOKENS — mesma paleta institucional
    ============================================================ */
 :root,
 :root[data-theme="light"] {
@@ -87,7 +80,6 @@
     --focus-ring: 0 0 0 3px rgba(74,48,104,.16);
     --focus-border: #4a3068;
 
-    --sidebar-width: 260px;
     --topbar-height: 56px;
 
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -159,17 +151,19 @@
 
 html, body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
     background: var(--background);
     color: var(--text);
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-}
-
-body {
-    overflow: hidden;
+    overflow-x: hidden;
     transition: background-color .2s ease, color .2s ease;
 }
 
@@ -190,201 +184,92 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   LAYOUT — Sidebar + Conteúdo
-   ============================================================ */
-.layout-wrapper {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-}
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-.sidebar {
-    width: var(--sidebar-width);
-    min-width: var(--sidebar-width);
-    height: 100%;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    transition: width .25s ease, min-width .25s ease, opacity .2s ease;
-    overflow: hidden;
-    z-index: 100;
-    flex-shrink: 0;
-}
-
-.sidebar.fechado {
-    width: 0;
-    min-width: 0;
-    border-right: none;
-    opacity: 0;
-}
-
-:root.menu-inicial-fechado .sidebar {
-    width: 0;
-    min-width: 0;
-    border-right: none;
-    opacity: 0;
-}
-
-.sidebar-inner {
-    width: var(--sidebar-width);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    height: var(--topbar-height);
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.sidebar-logo {
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.sidebar-brand {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -.005em;
-}
-
-.sidebar-section {
-    padding: 20px 16px 8px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .8px;
-}
-
-.sidebar-menu {
-    list-style: none;
-    padding: 0 12px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex-grow: 1;
-    overflow-y: auto;
-    white-space: nowrap;
-}
-
-.menu-item a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 5px;
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-size: 13.5px;
-    font-weight: 500;
-    transition: background-color .12s ease, color .12s ease;
-}
-
-.menu-item a:hover {
-    background: var(--surface-2);
-    color: var(--text);
-}
-
-.menu-item.ativo a {
-    background: var(--brand-soft);
-    color: var(--brand);
-    font-weight: 600;
-}
-
-.menu-item .material-symbols-outlined {
-    font-size: 20px;
-    flex-shrink: 0;
-    opacity: .85;
-}
-
-.menu-item.ativo .material-symbols-outlined { opacity: 1; }
-
-/* ============================================================
-   ÁREA PRINCIPAL
-   ============================================================ */
-.main-content {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    background: var(--background);
-}
-
-/* ============================================================
-   TOPBAR
+   TOPBAR — full-width, sem sidebar
    ============================================================ */
 .topbar {
-    height: var(--topbar-height);
+    width: 100%;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    flex-shrink: 0;
-    gap: 16px;
     box-shadow: var(--shadow-sm);
-    z-index: 50;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.topbar-left {
+.topbar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: var(--topbar-height);
+    padding: 0 28px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    min-width: 0;
-    flex: 1 1 auto;
+    gap: 16px;
 }
 
-.btn-menu-toggle {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    color: var(--text-secondary);
-    display: inline-flex;
+.topbar-brand {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+    gap: 10px;
+    flex-shrink: 0;
+    text-decoration: none;
+    color: inherit;
 }
 
-.btn-menu-toggle:hover {
-    background: var(--surface-2);
-    color: var(--text);
-    border-color: var(--border-strong);
-}
+.logo { width: 28px; height: 28px; object-fit: contain; }
 
-.btn-menu-toggle .material-symbols-outlined { font-size: 20px; }
-
-.topbar-title {
+.brand-name {
     font-size: 14px;
     font-weight: 600;
     color: var(--text);
     letter-spacing: -.005em;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
+/* Navegação horizontal em tabs */
+.topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 20px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.topbar-nav::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.nav-tab:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.nav-tab.ativo {
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.nav-tab .material-symbols-outlined {
+    font-size: 17px;
+    opacity: .9;
+}
+
+/* Bloco direito da topbar */
 .topbar-right {
     display: flex;
     align-items: center;
@@ -395,45 +280,36 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .status-conexao {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 11.5px;
+    gap: 7px;
+    font-size: 11px;
     font-weight: 600;
-    padding: 5px 11px;
+    padding: 4px 10px;
     border-radius: 999px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.status-conexao::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray-400);
     flex-shrink: 0;
 }
-
-.signal-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 11px;
-    flex-shrink: 0;
-}
-
-.signal-bars .bar {
-    width: 3px;
-    background-color: var(--border-strong);
-    border-radius: 1px;
-}
-
-.signal-bars .bar-1 { height: 3px; }
-.signal-bars .bar-2 { height: 6px; }
-.signal-bars .bar-3 { height: 8px; }
-.signal-bars .bar-4 { height: 11px; }
 
 .status-conexao.online {
     color: var(--ok);
     background: var(--ok-bg);
     border-color: var(--ok-bd);
 }
-.status-conexao.online .signal-bars .bar { background-color: var(--ok); }
+.status-conexao.online::before { background: var(--ok); }
 
-.user-badge {
+.user-chip {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -442,27 +318,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
     color: var(--text-secondary);
     background: var(--surface-2);
     border: 1px solid var(--border);
-    padding: 5px 12px;
+    padding: 4px 11px;
     border-radius: 999px;
     white-space: nowrap;
-    max-width: 260px;
+    max-width: 220px;
     overflow: hidden;
 }
 
-.user-badge span:last-child {
+.user-chip span:last-child {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.user-badge .material-symbols-outlined {
-    font-size: 16px;
+.user-chip .material-symbols-outlined {
+    font-size: 15px;
     color: var(--brand);
     flex-shrink: 0;
 }
 
 .btn-tema {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -480,430 +356,546 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-color: var(--border-strong);
 }
 
-.btn-tema .material-symbols-outlined { font-size: 18px; }
+.btn-tema .material-symbols-outlined { font-size: 17px; }
 .btn-tema .icon-dark  { display: none; }
 .btn-tema .icon-light { display: inline-flex; }
 :root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
 :root[data-theme="dark"] .btn-tema .icon-light { display: none; }
 
 /* ============================================================
-   DASHBOARD (área com scroll)
+   CONTAINER PRINCIPAL
    ============================================================ */
-.dashboard {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 24px;
-}
-
-.dashboard-inner {
-    max-width: 1280px;
+.container {
+    max-width: 1400px;
     margin: 0 auto;
+    padding: 28px;
 }
 
-/* ---------- Cabeçalho de boas-vindas ---------- */
-.welcome-header {
+/* ============================================================
+   FAIXA DE CONTEXTO (mês atual em destaque)
+   ============================================================ */
+.contexto-mes {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 4px solid var(--brand);
     border-radius: 6px;
     padding: 20px 24px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
     align-items: center;
-    flex-wrap: wrap;
 }
 
-.welcome-text h1 {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -.01em;
-    margin-bottom: 4px;
-}
-
-.welcome-text p {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.welcome-data {
+.contexto-mes-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    padding: 8px 14px;
-    border-radius: 999px;
-    white-space: nowrap;
+    gap: 16px;
+    min-width: 0;
+}
+
+.contexto-icone {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ok-bg);
+    color: var(--ok);
     flex-shrink: 0;
 }
 
-.welcome-data .material-symbols-outlined {
-    font-size: 16px;
-    color: var(--brand);
+.contexto-icone .material-symbols-outlined { font-size: 24px; }
+
+.contexto-mes.fechado .contexto-icone {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+.contexto-mes.aguardando .contexto-icone {
+    background: var(--warn-bg);
+    color: var(--warn);
+}
+.contexto-mes.aberto .contexto-icone {
+    background: var(--ok-bg);
+    color: var(--ok);
+}
+.contexto-mes.indefinido .contexto-icone {
+    background: var(--info-bg);
+    color: var(--info);
 }
 
-/* ---------- KPIs ---------- */
-.kpi-grid {
+.contexto-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.contexto-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+}
+
+.contexto-titulo {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+    line-height: 1.2;
+}
+
+.contexto-detalhe {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.contexto-acoes {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.btn .material-symbols-outlined { font-size: 16px; }
+
+.btn-primario {
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border-color: var(--brand);
+}
+.btn-primario:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+
+.btn-secundario {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
+}
+.btn-secundario:hover { background: var(--surface-2); border-color: var(--gray-400); }
+
+/* ============================================================
+   GRID PRINCIPAL — 2 colunas: conteúdo + lateral
+   ============================================================ */
+.grid-principal {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    align-items: start;
 }
 
-.kpi-card {
+/* ============================================================
+   PAINEL "PRECISA DE ATENÇÃO"
+   ============================================================ */
+.painel-atencao {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 16px 18px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.painel-cabecalho {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface-2);
+}
+
+.painel-cabecalho-esq {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.painel-cabecalho .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+.painel-cabecalho h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.painel-contador {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.atencao-lista {
+    list-style: none;
+}
+
+.atencao-item {
+    display: flex;
+    align-items: center;
     gap: 14px;
-    align-items: flex-start;
-    transition: border-color .15s ease, box-shadow .15s ease;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: background-color .12s ease;
+    cursor: pointer;
 }
 
-.kpi-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-sm);
-}
+.atencao-item:last-child { border-bottom: none; }
 
-.kpi-icon {
-    width: 38px;
-    height: 38px;
+.atencao-item:hover { background: var(--surface-2); }
+
+.atencao-item-icone {
+    width: 34px;
+    height: 34px;
     border-radius: 5px;
-    background: var(--brand-soft);
-    color: var(--brand);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background: var(--surface-3);
+    color: var(--text-secondary);
 }
 
-.kpi-icon .material-symbols-outlined { font-size: 20px; }
-
-.kpi-icon.ok { background: var(--ok-bg); color: var(--ok); }
-.kpi-icon.warn { background: var(--warn-bg); color: var(--warn); }
-.kpi-icon.info { background: var(--info-bg); color: var(--info); }
-
-.kpi-content { min-width: 0; flex: 1; }
-
-.kpi-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin-bottom: 4px;
+.atencao-item-icone.alerta {
+    background: var(--warn-bg);
+    color: var(--warn);
 }
 
-.kpi-value {
-    font-size: 22px;
+.atencao-item-icone.perigo {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.atencao-item-icone.ok {
+    background: var(--ok-bg);
+    color: var(--ok);
+}
+
+.atencao-item-icone .material-symbols-outlined { font-size: 18px; }
+
+.atencao-item-conteudo {
+    flex: 1;
+    min-width: 0;
+}
+
+.atencao-item-titulo {
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--text);
-    letter-spacing: -.02em;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
+    margin-bottom: 2px;
+    line-height: 1.3;
 }
 
-.kpi-hint {
-    font-size: 11.5px;
+.atencao-item-descricao {
+    font-size: 12.5px;
     color: var(--text-secondary);
-    margin-top: 4px;
     line-height: 1.4;
 }
 
-/* ---------- Layout em 2 colunas ---------- */
-.dashboard-columns {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-    gap: 20px;
-    align-items: start;
+.atencao-item-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand);
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
-/* ---------- Seção de módulos ---------- */
-.section-title {
+.atencao-item-cta .material-symbols-outlined { font-size: 14px; }
+
+.atencao-vazio {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.atencao-vazio .material-symbols-outlined {
+    font-size: 28px;
+    color: var(--ok);
+}
+
+/* ============================================================
+   LISTA DE MÓDULOS (2 colunas, formato compacto)
+   ============================================================ */
+.secao-titulo {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .6px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
-.cards-grid {
+.modulos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 
-.nav-card {
+.modulo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 18px;
     text-decoration: none;
-    color: var(--text);
-    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative;
+    color: inherit;
+    transition: border-color .15s ease, background-color .15s ease;
+    min-width: 0;
 }
 
-.nav-card:hover {
+.modulo-item:hover {
     border-color: var(--border-strong);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-1px);
+    background: var(--surface-2);
 }
 
-.nav-card:focus-visible {
+.modulo-item:focus-visible {
     outline: 2px solid var(--focus-border);
     outline-offset: 2px;
 }
 
-.card-icon-box {
-    width: 40px;
-    height: 40px;
+.modulo-item-icone {
+    width: 36px;
+    height: 36px;
     border-radius: 5px;
-    background: var(--brand-soft);
-    color: var(--brand);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: var(--brand-soft);
+    color: var(--brand);
     flex-shrink: 0;
 }
 
-.card-icon-box .material-symbols-outlined { font-size: 22px; }
+.modulo-item-icone .material-symbols-outlined { font-size: 19px; }
 
-.nav-card h3 {
-    font-size: 14.5px;
+.modulo-item-texto {
+    flex: 1;
+    min-width: 0;
+}
+
+.modulo-item-titulo {
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--text);
-    letter-spacing: -.005em;
+    margin-bottom: 2px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.nav-card p {
-    font-size: 12.5px;
+.modulo-item-descricao {
+    font-size: 12px;
     color: var(--text-secondary);
-    line-height: 1.5;
-    flex: 1;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.card-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-    font-weight: 600;
+.modulo-item-seta {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: color .15s ease, transform .15s ease;
+}
+
+.modulo-item-seta .material-symbols-outlined { font-size: 18px; }
+
+.modulo-item:hover .modulo-item-seta {
     color: var(--brand);
-    margin-top: 4px;
-}
-
-.card-cta .material-symbols-outlined {
-    font-size: 15px;
-    transition: transform .15s ease;
-}
-
-.nav-card:hover .card-cta .material-symbols-outlined {
     transform: translateX(2px);
 }
 
-/* ---------- Coluna lateral ---------- */
-.side-column {
+/* ============================================================
+   COLUNA LATERAL — Atividade recente (timeline)
+   ============================================================ */
+.lateral {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    position: sticky;
+    top: calc(var(--topbar-height) + 28px);
 }
 
-.panel {
+.painel-lateral {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
     overflow: hidden;
 }
 
-.panel-header {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface-2);
+.painel-lateral .painel-cabecalho {
+    padding: 12px 16px;
 }
 
-.panel-header .material-symbols-outlined {
-    font-size: 16px;
-    color: var(--text-muted);
-}
-
-.panel-header h3 {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-}
-
-.panel-body {
-    padding: 12px 18px 16px;
-}
-
-/* Atalhos */
-.shortcut-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.timeline {
     list-style: none;
+    padding: 8px 16px 14px;
 }
 
-.shortcut-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 10px;
-    border-radius: 5px;
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-size: 13px;
-    transition: background-color .12s ease, color .12s ease;
+.timeline-item {
+    position: relative;
+    padding: 10px 0 10px 20px;
+    border-left: 1px solid var(--border);
+    margin-left: 5px;
 }
 
-.shortcut-link:hover {
-    background: var(--surface-2);
-    color: var(--text);
-}
+.timeline-item:last-child { border-left-color: transparent; }
 
-.shortcut-link .material-symbols-outlined {
-    font-size: 16px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-}
-
-.shortcut-link .shortcut-arrow {
-    margin-left: auto;
-    font-size: 14px;
-    color: var(--text-muted);
-    opacity: 0;
-    transition: opacity .12s ease, transform .15s ease;
-}
-
-.shortcut-link:hover .shortcut-arrow {
-    opacity: 1;
-    transform: translateX(2px);
-}
-
-/* Feed de últimos meses */
-.feed-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.feed-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px dashed var(--border);
-    font-size: 12.5px;
-}
-
-.feed-item:last-child { border-bottom: none; }
-
-.feed-dot {
-    width: 8px;
-    height: 8px;
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 14px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: var(--brand);
-    flex-shrink: 0;
-    margin-top: 6px;
+    background: var(--surface);
+    border: 2px solid var(--gray-400);
 }
 
-.feed-dot.ok     { background: var(--ok); }
-.feed-dot.warn   { background: var(--warn); }
-.feed-dot.danger { background: var(--danger); }
+.timeline-item.ok::before     { border-color: var(--ok); }
+.timeline-item.warn::before   { border-color: var(--warn); }
+.timeline-item.danger::before { border-color: var(--danger); }
+.timeline-item.info::before   { border-color: var(--info); }
 
-.feed-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.feed-titulo {
+.timeline-item-titulo {
+    font-size: 13px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
+    line-height: 1.3;
 }
 
-.feed-meta {
-    font-size: 11.5px;
+.timeline-item-descricao {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 3px;
+}
+
+.timeline-item-meta {
+    font-size: 11px;
     color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    font-weight: 500;
 }
 
-.feed-vazio {
+.timeline-vazio {
+    padding: 24px 16px;
     text-align: center;
-    padding: 20px 0;
     font-size: 12.5px;
     color: var(--text-muted);
     font-style: italic;
 }
 
-/* ---------- Rodapé ---------- */
-.footer-mini {
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    font-size: 11.5px;
-    color: var(--text-muted);
-    line-height: 1.6;
+/* Estatísticas no painel lateral */
+.stats-lista {
+    list-style: none;
+    padding: 8px 16px 14px;
+}
+
+.stats-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px dashed var(--border);
+}
+
+.stats-item:last-child { border-bottom: none; }
+
+.stats-item-valor {
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================
    RESPONSIVO
    ============================================================ */
-@media (max-width: 1024px) {
-    .dashboard-columns {
+@media (max-width: 1100px) {
+    .grid-principal {
         grid-template-columns: 1fr;
     }
-    .side-column {
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-    .side-column > .panel {
-        flex: 1 1 300px;
-        min-width: 0;
+    .lateral {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
 }
 
 @media (max-width: 900px) {
-    .topbar-title { display: none; }
-    .dashboard { padding: 20px; }
-    .user-badge { max-width: 180px; }
+    .topbar-content { padding: 0 20px; gap: 12px; }
+    .topbar-nav { margin-left: 0; }
+    .container { padding: 20px; }
+    .contexto-mes {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .contexto-acoes { flex-wrap: wrap; }
+    .contexto-acoes .btn { flex: 1; min-width: 130px; }
 }
 
 @media (max-width: 640px) {
-    .dashboard { padding: 16px; }
-    .welcome-header { padding: 16px 18px; }
-    .welcome-text h1 { font-size: 16px; }
-    .welcome-text p { font-size: 12.5px; }
-    .kpi-grid { grid-template-columns: 1fr; gap: 10px; }
-    .kpi-value { font-size: 20px; }
-    .cards-grid { grid-template-columns: 1fr; }
-    .side-column { flex-direction: column; }
-    .user-badge { max-width: 130px; font-size: 12px; }
-    .user-badge .material-symbols-outlined { display: none; }
+    .topbar-content { padding: 0 14px; gap: 8px; }
+    .brand-name, .user-chip span:last-child { display: none; }
+    .user-chip { padding: 4px 8px; }
+    .container { padding: 16px; }
+    .contexto-mes { padding: 16px 18px; }
+    .contexto-titulo { font-size: 15px; }
+    .modulos-grid { grid-template-columns: 1fr; }
+    .modulo-item-descricao { display: none; }
+    .modulo-item { padding: 12px 14px; }
+    .painel-cabecalho { padding: 12px 16px; }
+    .atencao-item { padding: 12px 16px; gap: 12px; }
+    .atencao-item-cta { display: none; }
 }
 
-@media (max-width: 480px) {
-    .topbar { padding: 0 14px; gap: 8px; }
-    .dashboard { padding: 14px; }
-    .welcome-header { flex-direction: column; align-items: flex-start; }
-    .welcome-data { width: 100%; justify-content: center; }
+@media (max-width: 420px) {
+    .status-conexao { display: none; }
+    .modulo-item-titulo { font-size: 13px; }
 }
 
 /* ============================================================
@@ -920,12 +912,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media print {
     @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; overflow: visible !important; }
-    .layout-wrapper { display: block; height: auto; overflow: visible; }
-    .sidebar, .topbar .btn-menu-toggle, .btn-tema, .user-badge, .status-conexao { display: none !important; }
-    .main-content { overflow: visible; }
-    .dashboard { overflow: visible; padding: 0; }
-    .kpi-card, .nav-card, .panel, .welcome-header {
+    body { background: #fff !important; color: #000 !important; }
+    .topbar-right, .btn { display: none !important; }
+    .container { padding: 0; max-width: none; }
+    .contexto-mes, .painel-atencao, .modulo-item, .painel-lateral {
         box-shadow: none !important;
         border: 1px solid #999;
         background: #fff !important;
@@ -938,333 +928,246 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 <body>
 
-<div class="layout-wrapper">
+<!-- ============================ TOPBAR ============================ -->
+<header class="topbar">
+    <div class="topbar-content">
+        <a class="topbar-brand" href="inicial.html">
+            <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
+            <span class="brand-name">Vale Transporte</span>
+        </a>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebarMenu" aria-label="Menu principal">
-        <div class="sidebar-inner">
-            <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
-                <span class="sidebar-brand">Portal RH</span>
+        <nav class="topbar-nav" aria-label="Navegação principal">
+            <a href="inicial.html" class="nav-tab ativo" aria-current="page">
+                <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+                Painel
+            </a>
+            <a href="servidores.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                Servidores
+            </a>
+            <a href="configuracao.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                Meses
+            </a>
+            <a href="escola.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+                Lançamentos
+            </a>
+            <a href="linha_tempo.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
+                Linha do tempo
+            </a>
+            <a href="calculo.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                Cálculo
+            </a>
+            <a href="relatorios.html" class="nav-tab">
+                <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                Relatórios
+            </a>
+        </nav>
+
+        <div class="topbar-right">
+            <div class="status-conexao online" role="status" aria-live="polite">
+                <span id="statusTexto">Online</span>
             </div>
 
-            <div class="sidebar-section">Navegação</div>
+            <div class="user-chip" role="status" aria-live="polite">
+                <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+                <span id="userEmailText">Carregando…</span>
+            </div>
 
-            <ul class="sidebar-menu">
-                <li class="menu-item ativo">
-                    <a href="inicial.html" aria-current="page">
-                        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                        <span>Painel Inicial</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="servidores.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                        <span>Servidores &amp; Vínculos</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="configuracao.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                        <span>Dias Úteis (SEMED)</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="escola.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                        <span>Lançamentos da Unidade</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="linha_tempo.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                        <span>Férias, Folgas e Licenças</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="calculo.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                        <span>Cálculo e Vales</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="relatorios.html">
-                        <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                        <span>Relatórios</span>
-                    </a>
-                </li>
-            </ul>
+            <button type="button"
+                    class="btn-tema"
+                    id="btnTema"
+                    aria-label="Alternar tema claro/escuro"
+                    title="Alternar tema">
+                <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
+                <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
+            </button>
         </div>
-    </aside>
+    </div>
+</header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div class="main-content">
+<!-- ============================ CONTEÚDO ============================ -->
+<main class="container">
 
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <div class="topbar-left">
-                <button type="button"
-                        class="btn-menu-toggle"
-                        id="btnMenuToggle"
-                        aria-label="Abrir ou fechar menu lateral"
-                        aria-controls="sidebarMenu"
-                        aria-expanded="true"
-                        title="Abrir / fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
-                </button>
-                <span class="topbar-title">SEMED — Secretaria Municipal de Educação</span>
+    <!-- FAIXA DE CONTEXTO — mês atual -->
+    <section class="contexto-mes indefinido" id="contextoMes" aria-labelledby="contextoLabel">
+        <div class="contexto-mes-info">
+            <div class="contexto-icone" id="contextoIcone" aria-hidden="true">
+                <span class="material-symbols-outlined" id="contextoIconeSimbolo">schedule</span>
+            </div>
+            <div class="contexto-texto">
+                <span class="contexto-label" id="contextoLabel">Mês atual</span>
+                <span class="contexto-titulo" id="contextoTitulo">—</span>
+                <span class="contexto-detalhe" id="contextoDetalhe">Carregando status…</span>
+            </div>
+        </div>
+
+        <div class="contexto-acoes">
+            <a href="configuracao.html" class="btn btn-secundario">
+                <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                Configurar mês
+            </a>
+            <a href="calculo.html" class="btn btn-primario">
+                <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                Gerar cálculo
+            </a>
+        </div>
+    </section>
+
+    <!-- GRID PRINCIPAL -->
+    <div class="grid-principal">
+
+        <!-- COLUNA PRINCIPAL -->
+        <div class="coluna-principal">
+
+            <!-- Painel: precisa de atenção -->
+            <section class="painel-atencao" aria-labelledby="atencaoTitulo">
+                <header class="painel-cabecalho">
+                    <div class="painel-cabecalho-esq">
+                        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                        <h2 id="atencaoTitulo">Precisa de atenção</h2>
+                    </div>
+                    <span class="painel-contador" id="atencaoContador">— itens</span>
+                </header>
+                <ul class="atencao-lista" id="atencaoLista">
+                    <li class="atencao-vazio">
+                        <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                        Carregando pendências…
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Módulos -->
+            <section aria-labelledby="modulosTitulo">
+                <h2 id="modulosTitulo" class="secao-titulo">Módulos do sistema</h2>
+
+                <div class="modulos-grid">
+                    <a href="servidores.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Servidores e vínculos</div>
+                            <div class="modulo-item-descricao">Cadastro, lotações e linhas</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+
+                    <a href="configuracao.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Configuração de meses</div>
+                            <div class="modulo-item-descricao">Dias úteis e período de lançamento</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+
+                    <a href="escola.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Lançamentos da unidade</div>
+                            <div class="modulo-item-descricao">Faltas e afastamentos por escola</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+
+                    <a href="linha_tempo.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Férias, folgas e licenças</div>
+                            <div class="modulo-item-descricao">Histórico por período aquisitivo</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+
+                    <a href="calculo.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Cálculo e vales</div>
+                            <div class="modulo-item-descricao">Fechamento financeiro do mês</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+
+                    <a href="relatorios.html" class="modulo-item">
+                        <div class="modulo-item-icone">
+                            <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                        </div>
+                        <div class="modulo-item-texto">
+                            <div class="modulo-item-titulo">Relatórios gerais</div>
+                            <div class="modulo-item-descricao">Exportação de consolidados</div>
+                        </div>
+                        <span class="modulo-item-seta material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- COLUNA LATERAL -->
+        <aside class="lateral" aria-label="Informações complementares">
+
+            <!-- Estatísticas -->
+            <div class="painel-lateral">
+                <header class="painel-cabecalho">
+                    <div class="painel-cabecalho-esq">
+                        <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+                        <h2>Resumo geral</h2>
+                    </div>
+                </header>
+                <ul class="stats-lista">
+                    <li class="stats-item">
+                        <span>Meses configurados</span>
+                        <span class="stats-item-valor" id="statMeses">—</span>
+                    </li>
+                    <li class="stats-item">
+                        <span>Servidores cadastrados</span>
+                        <span class="stats-item-valor" id="statServidores">—</span>
+                    </li>
+                    <li class="stats-item">
+                        <span>Exceções ativas</span>
+                        <span class="stats-item-valor" id="statExcecoes">—</span>
+                    </li>
+                    <li class="stats-item">
+                        <span>Última atualização</span>
+                        <span class="stats-item-valor" id="statAtualizacao">—</span>
+                    </li>
+                </ul>
             </div>
 
-            <div class="topbar-right">
-                <div class="status-conexao online" role="status" aria-live="polite">
-                    <div class="signal-bars" aria-hidden="true">
-                        <span class="bar bar-1"></span>
-                        <span class="bar bar-2"></span>
-                        <span class="bar bar-3"></span>
-                        <span class="bar bar-4"></span>
+            <!-- Atividade recente -->
+            <div class="painel-lateral">
+                <header class="painel-cabecalho">
+                    <div class="painel-cabecalho-esq">
+                        <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                        <h2>Atividade recente</h2>
                     </div>
-                    <span id="statusTexto">Online</span>
-                </div>
-
-                <div class="user-badge" role="status" aria-live="polite">
-                    <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
-                    <span id="userEmailText">Carregando…</span>
-                </div>
-
-                <button type="button"
-                        class="btn-tema"
-                        id="btnTema"
-                        aria-label="Alternar tema claro/escuro"
-                        title="Alternar tema">
-                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
-                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-                </button>
+                </header>
+                <ul class="timeline" id="timeline">
+                    <li class="timeline-vazio">Carregando…</li>
+                </ul>
             </div>
-        </header>
 
-        <!-- DASHBOARD -->
-        <main class="dashboard">
-            <div class="dashboard-inner">
-
-                <!-- CABEÇALHO DE BOAS-VINDAS -->
-                <section class="welcome-header" aria-labelledby="welcomeTitle">
-                    <div class="welcome-text">
-                        <h1 id="welcomeTitle">Bem-vindo ao painel de controle</h1>
-                        <p>Gerencie servidores, calendários, férias e o cálculo mensal de vales de transporte.</p>
-                    </div>
-                    <div class="welcome-data">
-                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                        <span id="dataAtual">—</span>
-                    </div>
-                </section>
-
-                <!-- KPIs -->
-                <section aria-labelledby="kpiTitle">
-                    <h2 id="kpiTitle" class="visually-hidden">Indicadores</h2>
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-icon info" aria-hidden="true">
-                                <span class="material-symbols-outlined">calendar_month</span>
-                            </div>
-                            <div class="kpi-content">
-                                <div class="kpi-label">Meses configurados</div>
-                                <div class="kpi-value" id="kpiMeses">—</div>
-                                <div class="kpi-hint">Períodos com dias úteis definidos</div>
-                            </div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-icon" aria-hidden="true">
-                                <span class="material-symbols-outlined">badge</span>
-                            </div>
-                            <div class="kpi-content">
-                                <div class="kpi-label">Servidores ativos</div>
-                                <div class="kpi-value" id="kpiServidores">—</div>
-                                <div class="kpi-hint">Cadastros com vínculo vigente</div>
-                            </div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-icon ok" aria-hidden="true">
-                                <span class="material-symbols-outlined">check_circle</span>
-                            </div>
-                            <div class="kpi-content">
-                                <div class="kpi-label">Mês atual</div>
-                                <div class="kpi-value" id="kpiMesAtual">—</div>
-                                <div class="kpi-hint" id="kpiMesAtualStatus">—</div>
-                            </div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-icon warn" aria-hidden="true">
-                                <span class="material-symbols-outlined">hourglass_top</span>
-                            </div>
-                            <div class="kpi-content">
-                                <div class="kpi-label">Exceções ativas</div>
-                                <div class="kpi-value" id="kpiExcecoes">—</div>
-                                <div class="kpi-hint">Reaberturas de escola em andamento</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- DUAS COLUNAS -->
-                <div class="dashboard-columns">
-
-                    <!-- Coluna principal: Módulos -->
-                    <section aria-labelledby="modulosTitle">
-                        <h2 id="modulosTitle" class="section-title">Acesso rápido aos módulos</h2>
-
-                        <div class="cards-grid">
-                            <a href="servidores.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                                </div>
-                                <h3>Cadastro de Servidores</h3>
-                                <p>Gerencie dados dos professores, lotações em múltiplas escolas e as linhas de transporte atribuídas.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-
-                            <a href="configuracao.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                </div>
-                                <h3>Configuração de Meses</h3>
-                                <p>Defina dias úteis letivos oficiais, período de lançamento e exceções por escola.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-
-                            <a href="escola.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                                </div>
-                                <h3>Lançamentos da Escola</h3>
-                                <p>Ajuste o calendário específico da unidade e registre faltas e afastamentos.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-
-                            <a href="linha_tempo.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                                </div>
-                                <h3>Férias, Folgas e Licenças</h3>
-                                <p>Registre e controle o usufruto de férias, folgas de aniversário e afastamentos médicos.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-
-                            <a href="calculo.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                                </div>
-                                <h3>Cálculo de Vales</h3>
-                                <p>Fechamento financeiro cruzando dias ajustados da escola e afastamentos por servidor.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-
-                            <a href="relatorios.html" class="nav-card">
-                                <div class="card-icon-box">
-                                    <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                                </div>
-                                <h3>Relatórios Gerais</h3>
-                                <p>Consulte e exporte consolidados detalhados de pagamentos, frequências e ausências.</p>
-                                <span class="card-cta">
-                                    Acessar
-                                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
-                                </span>
-                            </a>
-                        </div>
-                    </section>
-
-                    <!-- Coluna lateral -->
-                    <aside class="side-column">
-
-                        <!-- Atalhos -->
-                        <div class="panel">
-                            <div class="panel-header">
-                                <span class="material-symbols-outlined" aria-hidden="true">settings</span>
-                                <h3>Atalhos rápidos</h3>
-                            </div>
-                            <div class="panel-body">
-                                <ul class="shortcut-list">
-                                    <li>
-                                        <a class="shortcut-link" href="configuracao.html">
-                                            <span class="material-symbols-outlined">calendar_month</span>
-                                            <span>Configurar mês atual</span>
-                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="shortcut-link" href="linha_tempo.html">
-                                            <span class="material-symbols-outlined">history</span>
-                                            <span>Consultar linha do tempo</span>
-                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="shortcut-link" href="calculo.html">
-                                            <span class="material-symbols-outlined">calculate</span>
-                                            <span>Gerar cálculo mensal</span>
-                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="shortcut-link" href="relatorios.html">
-                                            <span class="material-symbols-outlined">description</span>
-                                            <span>Exportar relatórios</span>
-                                            <span class="material-symbols-outlined shortcut-arrow">arrow_forward</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Últimos meses -->
-                        <div class="panel">
-                            <div class="panel-header">
-                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
-                                <h3>Últimos meses</h3>
-                            </div>
-                            <div class="panel-body">
-                                <ul class="feed-list" id="feedMeses">
-                                    <li class="feed-vazio">Carregando…</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                    </aside>
-
-                </div>
-
-                <!-- RODAPÉ -->
-                <footer class="footer-mini">
-                    SEMED — Sistema de Gestão de Vale Transporte · v1.0
-                </footer>
-
-            </div>
-        </main>
+        </aside>
 
     </div>
 
-</div>
+</main>
 
 <script>
 /* ============================================================
-   TEMA CLARO / ESCURO
+   TEMA
    ============================================================ */
 (function () {
     var btn = document.getElementById('btnTema');
@@ -1277,187 +1180,345 @@ button { font: inherit; color: inherit; cursor: pointer; }
         try { localStorage.setItem('tema-vt', novo); } catch (e) {}
     });
 })();
-
-/* ============================================================
-   MENU LATERAL — persistência + acessibilidade
-   ============================================================ */
-(function () {
-    var sidebar = document.getElementById('sidebarMenu');
-    var btn     = document.getElementById('btnMenuToggle');
-    var CHAVE   = 'menu-vt-fechado';
-
-    var salvo = null;
-    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    // Padrão: aberto (é a página inicial)
-    var iniciarFechado = salvo === '1';
-
-    aplicarEstado(iniciarFechado, false);
-
-    btn.addEventListener('click', function () {
-        var estaFechado = sidebar.classList.contains('fechado');
-        aplicarEstado(!estaFechado, true);
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'm' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            btn.click();
-        }
-    });
-
-    function aplicarEstado(fechado, animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.toggle('fechado', fechado);
-        document.documentElement.classList.remove('menu-inicial-fechado');
-        if (!animar) {
-            void sidebar.offsetWidth;
-            sidebar.style.transition = '';
-        }
-        btn.setAttribute('aria-expanded', String(!fechado));
-        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
-    }
-})();
-
-/* ============================================================
-   DATA ATUAL — cabeçalho
-   ============================================================ */
-(function () {
-    var el = document.getElementById('dataAtual');
-    if (!el) return;
-    var hoje = new Date();
-    var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    el.textContent = `${dias[hoje.getDay()]}, ${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-})();
 </script>
 
 <script type="module">
 import { db, auth } from "./firebase.js";
-import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 /* ============================================================
-   AUTENTICAÇÃO + e-mail no topo
+   AUTENTICAÇÃO
    ============================================================ */
 onAuthStateChanged(auth, function (user) {
-    var userEmailSpan = document.getElementById('userEmailText');
+    var el = document.getElementById('userEmailText');
     if (user) {
-        userEmailSpan.textContent = user.email;
-        userEmailSpan.title = user.email;
+        el.textContent = user.email;
+        el.title = user.email;
+        carregarPainel();
     } else {
         window.location.href = 'index.html';
     }
 });
 
 /* ============================================================
-   KPIs + FEED (dados reais do Firestore)
+   HELPERS
    ============================================================ */
 function formatarMesAno(str) {
     if (!str) return "";
     const [ano, mes] = str.split("-");
     const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
-    return `${nomeMes} / ${ano}`;
+    return `${meses[parseInt(mes, 10) - 1] || mes} / ${ano}`;
 }
 
 function formatarData(dataStr) {
-    if (!dataStr) return "-";
+    if (!dataStr) return "—";
     const partes = dataStr.split("-");
     if (partes.length !== 3) return dataStr;
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-async function carregarDados() {
+function formatarDataHoraCompleta(iso) {
+    if (!iso) return "—";
+    try {
+        const d = new Date(iso);
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${dia}/${mes}/${ano} ${h}:${m}`;
+    } catch (e) {
+        return "—";
+    }
+}
+
+/* ============================================================
+   CARREGAR PAINEL
+   ============================================================ */
+async function carregarPainel() {
     try {
         /* -------- Meses configurados -------- */
         const snapConfig = await getDocs(collection(db, "configuracoes"));
         const mesesConfig = [];
         snapConfig.forEach(d => {
-            if (d.id !== "_padraoGlobal") mesesConfig.push(d.data());
+            if (d.id !== "_padraoGlobal") mesesConfig.push({ ...d.data(), _id: d.id });
         });
 
-        document.getElementById('kpiMeses').textContent = mesesConfig.length;
+        mesesConfig.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
+
+        /* -------- Servidores -------- */
+        let totalServidores = 0;
+        try {
+            const snapServ = await getDocs(collection(db, "servidores"));
+            totalServidores = snapServ.size;
+        } catch (e) { console.warn("Erro ao carregar servidores:", e); }
 
         /* -------- Mês atual -------- */
         const hoje = new Date();
         const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
         const mesAtual = mesesConfig.find(m => m.mesReferencia === mesAtualStr);
 
-        document.getElementById('kpiMesAtual').textContent = formatarMesAno(mesAtualStr);
-
-        let statusTexto = 'Ainda não configurado';
-        if (mesAtual) {
-            if (mesAtual.congelado) statusTexto = 'Fechado manualmente';
-            else if (!mesAtual.dataAbertura && !mesAtual.dataFechamento) statusTexto = 'Sempre aberto';
-            else if (mesAtual.dataFechamento && new Date(mesAtual.dataFechamento + "T23:59:59") < hoje) statusTexto = 'Período encerrado';
-            else if (mesAtual.dataAbertura && new Date(mesAtual.dataAbertura + "T00:00:00") > hoje) statusTexto = `Abre em ${formatarData(mesAtual.dataAbertura)}`;
-            else statusTexto = `Aberto até ${formatarData(mesAtual.dataFechamento) || '—'}`;
-        }
-        document.getElementById('kpiMesAtualStatus').textContent = statusTexto;
+        atualizarContextoMes(mesAtual, mesAtualStr, hoje);
 
         /* -------- Exceções ativas -------- */
-        let totalExcecoesAtivas = 0;
+        let excecoesAtivas = 0;
         mesesConfig.forEach(m => {
             (m.escolasReabertas || []).forEach(e => {
                 if (typeof e === 'object' && e.dataExpiracao) {
-                    if (new Date(e.dataExpiracao + "T23:59:59") >= hoje) totalExcecoesAtivas++;
+                    if (new Date(e.dataExpiracao + "T23:59:59") >= hoje) excecoesAtivas++;
                 } else {
-                    totalExcecoesAtivas++;
+                    excecoesAtivas++;
                 }
             });
         });
-        document.getElementById('kpiExcecoes').textContent = totalExcecoesAtivas;
 
-        /* -------- Servidores ativos -------- */
-        try {
-            const snapServ = await getDocs(collection(db, "servidores"));
-            document.getElementById('kpiServidores').textContent = snapServ.size;
-        } catch (e) {
-            document.getElementById('kpiServidores').textContent = '—';
+        /* -------- Pendências (painel "precisa de atenção") -------- */
+        const pendencias = [];
+
+        // 1. Mês atual não configurado
+        if (!mesAtual) {
+            pendencias.push({
+                tipo: 'alerta',
+                icone: 'calendar_month',
+                titulo: `${formatarMesAno(mesAtualStr)} ainda não foi configurado`,
+                descricao: 'Defina os dias úteis e o período de lançamento para este mês.',
+                cta: 'Configurar agora',
+                link: 'configuracao.html'
+            });
+        } else {
+            // Mês atual fechado mas sem exceção
+            if (mesAtual.congelado && (!mesAtual.escolasReabertas || mesAtual.escolasReabertas.length === 0)) {
+                pendencias.push({
+                    tipo: 'perigo',
+                    icone: 'lock',
+                    titulo: `${formatarMesAno(mesAtualStr)} está congelado`,
+                    descricao: 'Nenhuma escola pode lançar. Reabra uma exceção se necessário.',
+                    cta: 'Ver configuração',
+                    link: 'configuracao.html'
+                });
+            }
+
+            // Período de lançamento definido mas encerrado
+            if (mesAtual.dataFechamento && new Date(mesAtual.dataFechamento + "T23:59:59") < hoje) {
+                pendencias.push({
+                    tipo: 'alerta',
+                    icone: 'schedule',
+                    titulo: `Período de lançamento de ${formatarMesAno(mesAtualStr)} encerrou`,
+                    descricao: `Fechado em ${formatarData(mesAtual.dataFechamento)}. Reabra por escola se necessário.`,
+                    cta: 'Reabrir escola',
+                    link: 'configuracao.html'
+                });
+            }
         }
 
-        /* -------- Feed: últimos 5 meses configurados -------- */
-        const feed = document.getElementById('feedMeses');
-
-        if (mesesConfig.length === 0) {
-            feed.innerHTML = '<li class="feed-vazio">Nenhum mês configurado ainda.</li>';
-            return;
+        // 2. Meses sem dias úteis definidos
+        const semDiasUteis = mesesConfig.filter(m => !m.diasUteis);
+        if (semDiasUteis.length > 0) {
+            pendencias.push({
+                tipo: 'alerta',
+                icone: 'warning',
+                titulo: `${semDiasUteis.length} ${semDiasUteis.length === 1 ? 'mês' : 'meses'} sem dias úteis definidos`,
+                descricao: 'Isso pode afetar o cálculo de vales dos meses correspondentes.',
+                cta: 'Revisar',
+                link: 'configuracao.html'
+            });
         }
 
-        mesesConfig.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
-        const ultimos = mesesConfig.slice(0, 5);
+        // 3. Exceções expiradas há muito tempo (mais de 30 dias)
+        let excecoesExpiradas = 0;
+        mesesConfig.forEach(m => {
+            (m.escolasReabertas || []).forEach(e => {
+                if (typeof e === 'object' && e.dataExpiracao) {
+                    const d = new Date(e.dataExpiracao + "T23:59:59");
+                    const dias = Math.round((hoje - d) / (1000 * 60 * 60 * 24));
+                    if (d < hoje && dias <= 30) excecoesExpiradas++;
+                }
+            });
+        });
+        if (excecoesExpiradas > 0) {
+            pendencias.push({
+                tipo: 'info',
+                icone: 'info',
+                titulo: `${excecoesExpiradas} ${excecoesExpiradas === 1 ? 'exceção expirada' : 'exceções expiradas'} recentemente`,
+                descricao: 'Exceções por escola que já venceram nos últimos 30 dias.',
+                cta: 'Ver meses',
+                link: 'configuracao.html'
+            });
+        }
 
-        feed.innerHTML = ultimos.map(m => {
-            let dotClass = 'ok';
-            let statusTxt = 'Aberto';
-            if (m.congelado) { dotClass = 'danger'; statusTxt = 'Congelado'; }
-            else if (!m.dataAbertura && !m.dataFechamento) { dotClass = 'warn'; statusTxt = 'Sempre aberto'; }
-            else if (m.dataFechamento && new Date(m.dataFechamento + "T23:59:59") < hoje) { dotClass = 'danger'; statusTxt = 'Encerrado'; }
-            else if (m.dataAbertura && new Date(m.dataAbertura + "T00:00:00") > hoje) { dotClass = 'warn'; statusTxt = 'Aguardando'; }
+        renderizarPendencias(pendencias);
 
-            const qtdEscolas = (m.escolasReabertas || []).length;
-            const extraEscolas = qtdEscolas > 0 ? ` · ${qtdEscolas} exceç${qtdEscolas === 1 ? 'ão' : 'ões'}` : '';
+        /* -------- Estatísticas -------- */
+        document.getElementById('statMeses').textContent = mesesConfig.length;
+        document.getElementById('statServidores').textContent = totalServidores;
+        document.getElementById('statExcecoes').textContent = excecoesAtivas;
 
-            return `
-                <li class="feed-item">
-                    <span class="feed-dot ${dotClass}" aria-hidden="true"></span>
-                    <div class="feed-content">
-                        <div class="feed-titulo">${formatarMesAno(m.mesReferencia)}</div>
-                        <div class="feed-meta">${statusTxt} · ${m.diasUteis || '—'} dias úteis${extraEscolas}</div>
-                    </div>
-                </li>
-            `;
-        }).join('');
+        const datasAtualizacao = mesesConfig
+            .map(m => m.dataAtualizacao)
+            .filter(Boolean)
+            .sort()
+            .reverse();
+
+        document.getElementById('statAtualizacao').textContent =
+            datasAtualizacao[0] ? formatarDataHoraCompleta(datasAtualizacao[0]) : '—';
+
+        /* -------- Timeline -------- */
+        renderizarTimeline(mesesConfig, hoje);
 
     } catch (erro) {
-        console.error("Erro ao carregar dados do painel:", erro);
+        console.error("Erro ao carregar painel:", erro);
     }
 }
 
-/* Roda quando o usuário estiver autenticado */
-onAuthStateChanged(auth, function (user) {
-    if (user) carregarDados();
-});
+/* ============================================================
+   CONTEXTO MÊS ATUAL
+   ============================================================ */
+function atualizarContextoMes(mesAtual, mesAtualStr, hoje) {
+    const ctx = document.getElementById('contextoMes');
+    const iconSimbolo = document.getElementById('contextoIconeSimbolo');
+    const titulo = document.getElementById('contextoTitulo');
+    const detalhe = document.getElementById('contextoDetalhe');
+
+    titulo.textContent = formatarMesAno(mesAtualStr);
+
+    if (!mesAtual) {
+        ctx.className = 'contexto-mes indefinido';
+        iconSimbolo.textContent = 'schedule';
+        detalhe.textContent = 'Este mês ainda não foi configurado no sistema.';
+        return;
+    }
+
+    if (mesAtual.congelado) {
+        ctx.className = 'contexto-mes fechado';
+        iconSimbolo.textContent = 'lock';
+        detalhe.textContent = 'Fechado manualmente para todas as escolas.';
+        return;
+    }
+
+    if (!mesAtual.dataAbertura && !mesAtual.dataFechamento) {
+        ctx.className = 'contexto-mes aberto';
+        iconSimbolo.textContent = 'check_circle';
+        detalhe.textContent = `${mesAtual.diasUteis || '—'} dias úteis · Sempre aberto para lançamentos.`;
+        return;
+    }
+
+    if (mesAtual.dataFechamento && new Date(mesAtual.dataFechamento + "T23:59:59") < hoje) {
+        ctx.className = 'contexto-mes fechado';
+        iconSimbolo.textContent = 'lock';
+        detalhe.textContent = `Período encerrado em ${formatarData(mesAtual.dataFechamento)} · ${mesAtual.diasUteis || '—'} dias úteis.`;
+        return;
+    }
+
+    if (mesAtual.dataAbertura && new Date(mesAtual.dataAbertura + "T00:00:00") > hoje) {
+        ctx.className = 'contexto-mes aguardando';
+        iconSimbolo.textContent = 'schedule';
+        detalhe.textContent = `Abre em ${formatarData(mesAtual.dataAbertura)} · ${mesAtual.diasUteis || '—'} dias úteis.`;
+        return;
+    }
+
+    ctx.className = 'contexto-mes aberto';
+    iconSimbolo.textContent = 'check_circle';
+    detalhe.textContent = `Aberto até ${formatarData(mesAtual.dataFechamento)} · ${mesAtual.diasUteis || '—'} dias úteis.`;
+}
+
+/* ============================================================
+   PENDÊNCIAS
+   ============================================================ */
+function renderizarPendencias(pendencias) {
+    const lista = document.getElementById('atencaoLista');
+    const contador = document.getElementById('atencaoContador');
+
+    contador.textContent = `${pendencias.length} ${pendencias.length === 1 ? 'item' : 'itens'}`;
+
+    if (pendencias.length === 0) {
+        lista.innerHTML = `
+            <li class="atencao-vazio">
+                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                <div>
+                    <strong style="color: var(--text); display: block; margin-bottom: 2px;">Tudo em ordem</strong>
+                    Nenhuma pendência identificada no momento.
+                </div>
+            </li>
+        `;
+        return;
+    }
+
+    lista.innerHTML = pendencias.map(p => `
+        <li>
+            <a href="${p.link}" class="atencao-item">
+                <div class="atencao-item-icone ${p.tipo}" aria-hidden="true">
+                    <span class="material-symbols-outlined">${p.icone}</span>
+                </div>
+                <div class="atencao-item-conteudo">
+                    <div class="atencao-item-titulo">${p.titulo}</div>
+                    <div class="atencao-item-descricao">${p.descricao}</div>
+                </div>
+                <span class="atencao-item-cta">
+                    ${p.cta}
+                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                </span>
+            </a>
+        </li>
+    `).join('');
+}
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+function renderizarTimeline(mesesConfig, hoje) {
+    const timeline = document.getElementById('timeline');
+
+    const eventos = [];
+
+    mesesConfig.slice(0, 8).forEach(m => {
+        let tipo = 'info';
+        let titulo = formatarMesAno(m.mesReferencia);
+        let descricao = '';
+        let meta = '';
+
+        if (m.congelado) {
+            tipo = 'danger';
+            descricao = 'Mês congelado manualmente para todas as escolas.';
+        } else if (!m.dataAbertura && !m.dataFechamento) {
+            tipo = 'warn';
+            descricao = 'Sem período definido — permanece sempre aberto.';
+        } else if (m.dataFechamento && new Date(m.dataFechamento + "T23:59:59") < hoje) {
+            tipo = 'danger';
+            descricao = `Encerrado em ${formatarData(m.dataFechamento)}.`;
+        } else if (m.dataAbertura && new Date(m.dataAbertura + "T00:00:00") > hoje) {
+            tipo = 'warn';
+            descricao = `Aguardando abertura em ${formatarData(m.dataAbertura)}.`;
+        } else {
+            tipo = 'ok';
+            descricao = `Aberto até ${formatarData(m.dataFechamento) || 'indeterminado'}.`;
+        }
+
+        const qtdExcecoes = (m.escolasReabertas || []).length;
+        if (qtdExcecoes > 0) {
+            descricao += ` · ${qtdExcecoes} exceç${qtdExcecoes === 1 ? 'ão' : 'ões'}.`;
+        }
+
+        meta = m.dataAtualizacao ? formatarDataHoraCompleta(m.dataAtualizacao) : '';
+
+        eventos.push({ tipo, titulo, descricao, meta, ordem: m.dataAtualizacao || m.mesReferencia || '' });
+    });
+
+    eventos.sort((a, b) => (b.ordem || '').localeCompare(a.ordem || ''));
+
+    if (eventos.length === 0) {
+        timeline.innerHTML = '<li class="timeline-vazio">Nenhuma atividade registrada ainda.</li>';
+        return;
+    }
+
+    timeline.innerHTML = eventos.slice(0, 6).map(e => `
+        <li class="timeline-item ${e.tipo}">
+            <div class="timeline-item-titulo">${e.titulo}</div>
+            <div class="timeline-item-descricao">${e.descricao}</div>
+            ${e.meta ? `<div class="timeline-item-meta">${e.meta}</div>` : ''}
+        </li>
+    `).join('');
+}
 </script>
 
 </body>
