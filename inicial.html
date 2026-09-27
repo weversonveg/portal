@@ -18,6 +18,12 @@
         document.documentElement.setAttribute('data-theme', t);
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
+
+        var menuFechado = localStorage.getItem('menu-vt-fechado');
+        var aplicarFechado = menuFechado === '1';
+        if (aplicarFechado) {
+            document.documentElement.classList.add('menu-inicial-fechado');
+        }
     } catch (e) {}
 })();
 </script>
@@ -28,14 +34,12 @@
    ============================================================ */
 :root,
 :root[data-theme="light"] {
-    /* Cor institucional única — azul-marinho sóbrio */
     --brand: #1f3a5f;
     --brand-deep: #16283f;
     --brand-hover: #2c4d77;
     --brand-soft: #e8eef5;
     --brand-line: #c5d3e2;
 
-    /* Cinzas — base do sistema */
     --gray-50:  #fafafa;
     --gray-100: #f5f5f6;
     --gray-150: #eeeeef;
@@ -48,7 +52,6 @@
     --gray-800: #27272a;
     --gray-900: #18181b;
 
-    /* Status — discretos */
     --ok: #1a6a38;
     --ok-bg: #f1f8f3;
     --ok-bd: #bfdcc6;
@@ -65,7 +68,6 @@
     --info-bg: #f0f5fb;
     --info-bd: #c3d5e9;
 
-    /* Superfícies */
     --background: #eef0f3;
     --surface: #ffffff;
     --surface-2: #f7f8fa;
@@ -199,7 +201,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   LAYOUT: sidebar + main
+   LAYOUT
    ============================================================ */
 .layout {
     display: flex;
@@ -210,7 +212,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   SIDEBAR
+   SIDEBAR (desktop: empurra | mobile: overlay)
    ============================================================ */
 .sidebar {
     width: var(--sidebar-width);
@@ -221,7 +223,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    transition: width .25s ease, min-width .25s ease;
+    transition: width .25s ease, min-width .25s ease, transform .25s ease;
     overflow: hidden;
     z-index: 100;
 }
@@ -293,7 +295,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     overflow-x: hidden;
 }
 
-/* Seções do menu */
 .menu-section {
     padding: 16px 0 8px;
 }
@@ -374,7 +375,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     line-height: 1.4;
 }
 
-/* Rodapé da sidebar */
 .sidebar-footer {
     padding: 12px 20px;
     border-top: 1px solid var(--border);
@@ -391,6 +391,26 @@ button { font: inherit; color: inherit; cursor: pointer; }
     display: block;
     font-size: 11px;
     margin-bottom: 1px;
+}
+
+/* Backdrop para mobile */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 25, 35, .45);
+    z-index: 150;
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+
+.sidebar-backdrop.ativo {
+    display: block;
+    opacity: 1;
+}
+
+@media (min-width: 901px) {
+    .sidebar-backdrop { display: none !important; }
 }
 
 /* ============================================================
@@ -735,7 +755,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-texto:hover { background: var(--brand-soft); }
 
 /* ============================================================
-   FAIXA DE STATUS DO MÊS ATUAL
+   FAIXA DE STATUS DO MÊS
    ============================================================ */
 .faixa-status {
     background: var(--surface);
@@ -879,7 +899,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .tabela-cta .material-symbols-outlined { font-size: 14px; }
 
-/* Badges (status) — só borda */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -902,7 +921,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .badge-neutro { color: var(--text-secondary); border-color: var(--border-strong); }
 
 /* ============================================================
-   PENDÊNCIAS (lista)
+   PENDÊNCIAS
    ============================================================ */
 .lista-pendencias {
     list-style: none;
@@ -984,7 +1003,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .pendencia-cta:hover { text-decoration: underline; }
 .pendencia-cta .material-symbols-outlined { font-size: 14px; }
 
-/* Empty state */
 .vazio {
     padding: 40px 20px;
     text-align: center;
@@ -1081,7 +1099,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   GRID DE RESUMO (indicadores em tabela)
+   RESUMO NUMÉRICO
    ============================================================ */
 .resumo-tabela {
     width: 100%;
@@ -1106,7 +1124,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   TIMELINE SIMPLES
+   TIMELINE
    ============================================================ */
 .linha-tempo {
     list-style: none;
@@ -1167,7 +1185,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .linha-tempo-meta .material-symbols-outlined { font-size: 12px; }
 
 /* ============================================================
-   LAYOUT DE COLUNAS
+   COLUNAS
    ============================================================ */
 .colunas {
     display: grid;
@@ -1182,14 +1200,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
    RODAPÉ
    ============================================================ */
 .rodape {
-    padding: 24px 28px;
+    padding: 20px 28px;
     border-top: 1px solid var(--border);
     background: var(--surface);
     font-size: 11.5px;
     color: var(--text-muted);
     text-align: center;
     line-height: 1.6;
-    margin-top: 12px;
+    flex-shrink: 0;
 }
 
 .rodape strong { color: var(--text-secondary); font-weight: 600; }
@@ -1197,24 +1215,70 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ============================================================
    RESPONSIVO
    ============================================================ */
+
+/* Tablet grande — colunas viram 1 */
 @media (max-width: 1100px) {
     .colunas { grid-template-columns: 1fr; }
 }
 
+/* ============================================================
+   MOBILE / TABLET — sidebar vira overlay
+   ============================================================ */
 @media (max-width: 900px) {
+
+    /* Sidebar sai do fluxo e vira overlay */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        height: 100dvh;
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        box-shadow: var(--shadow-md);
+        border-right: 1px solid var(--border);
+        z-index: 200;
+    }
+
+    /* Quando aberta em mobile, desliza para dentro */
+    .sidebar.aberta-mobile {
+        transform: translateX(0);
+    }
+
+    /* Em mobile, a classe "fechado" NÃO zera a largura —
+       ela só garante que o transform fique fora da tela */
+    .sidebar.fechado {
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+        border-right: 1px solid var(--border);
+    }
+
+    :root.menu-inicial-fechado .sidebar {
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+    }
+
+    .topbar { padding: 0 16px; gap: 12px; }
     .topbar-title span { display: none; }
     .topbar-user .user-info span { display: none; }
     .content { padding: 20px; }
     .page-header h1 { font-size: 21px; }
 }
 
+/* ============================================================
+   MOBILE PEQUENO
+   ============================================================ */
 @media (max-width: 640px) {
     .content { padding: 16px; }
     .page-header h1 { font-size: 19px; }
     .faixa-status { padding: 12px 14px; }
     .faixa-acoes { width: 100%; }
     .faixa-acoes .btn { flex: 1; min-width: 0; }
-    .topbar { padding: 0 14px; gap: 10px; }
+    .topbar { padding: 0 12px; gap: 8px; }
     .topbar-btn span:not(.material-symbols-outlined) { display: none; }
     .topbar-btn { padding: 0 8px; }
     .topbar-user { padding: 3px; max-width: none; }
@@ -1223,11 +1287,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
     .card-header { padding: 10px 14px; }
     .card-body { padding: 14px; }
     .pendencia-item { padding: 12px 14px; }
+    .rodape { padding: 16px; font-size: 11px; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 420px) {
     .page-header h1 { font-size: 17px; }
-    .btn-menu { display: none; }
+    .faixa-titulo { font-size: 14px; }
 }
 
 /* ============================================================
@@ -1246,7 +1311,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     @page { margin: 1.5cm; }
     body { background: #fff !important; color: #000 !important; overflow: visible !important; }
     .layout { display: block; height: auto; overflow: visible; }
-    .sidebar, .topbar .btn-menu, .topbar .topbar-btn, .topbar-user { display: none !important; }
+    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user { display: none !important; }
     .main { overflow: visible; }
     .content { overflow: visible; padding: 0; }
     .card, .faixa-status { box-shadow: none !important; border: 1px solid #999; page-break-inside: avoid; }
@@ -1360,6 +1425,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
         </div>
     </aside>
 
+    <!-- BACKDROP (usado só em mobile) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
     <!-- ============================================================
          MAIN
          ============================================================ -->
@@ -1413,7 +1481,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <main class="content">
             <div class="content-inner">
 
-                <!-- CABEÇALHO -->
                 <div class="page-header">
                     <nav class="breadcrumb" aria-label="Localização">
                         <a href="inicial.html">Início</a>
@@ -1428,7 +1495,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                     </p>
                 </div>
 
-                <!-- FAIXA DE STATUS DO MÊS ATUAL -->
+                <!-- FAIXA DE STATUS -->
                 <div class="faixa-status info" id="faixaStatus" role="status" aria-live="polite">
                     <div class="faixa-status-info">
                         <div class="faixa-icone" aria-hidden="true">
@@ -1557,7 +1624,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                     <!-- COLUNA LATERAL -->
                     <div class="coluna">
 
-                        <!-- RESUMO NUMÉRICO -->
+                        <!-- RESUMO -->
                         <section class="card" aria-labelledby="resumoTitulo">
                             <header class="card-header">
                                 <div class="card-header-esq">
@@ -1626,7 +1693,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
                             </div>
                         </section>
 
-                        <!-- ATIVIDADE RECENTE -->
+                        <!-- ATIVIDADE -->
                         <section class="card" aria-labelledby="ativTitulo">
                             <header class="card-header">
                                 <div class="card-header-esq">
@@ -1676,32 +1743,82 @@ button { font: inherit; color: inherit; cursor: pointer; }
 })();
 
 /* ============================================================
-   MENU LATERAL — persistência
+   MENU LATERAL — desktop recolhe / mobile overlay
    ============================================================ */
 (function () {
-    var sidebar = document.getElementById('sidebarMenu');
-    var btn     = document.getElementById('btnMenuToggle');
-    var CHAVE   = 'menu-vt-fechado';
+    var sidebar  = document.getElementById('sidebarMenu');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var btn      = document.getElementById('btnMenuToggle');
+    var CHAVE    = 'menu-vt-fechado';
 
+    function isMobile() {
+        return window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    // Estado inicial
     var salvo = null;
     try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    var iniciarFechado = salvo === '1';
+    var iniciarFechadoDesktop = salvo === '1';
 
-    aplicarEstado(iniciarFechado, false);
+    if (!isMobile()) {
+        aplicarEstadoDesktop(iniciarFechadoDesktop, false);
+    } else {
+        fecharMobile(false);
+    }
 
+    // Clique no botão
     btn.addEventListener('click', function () {
-        var estaFechado = sidebar.classList.contains('fechado');
-        aplicarEstado(!estaFechado, true);
+        if (isMobile()) {
+            var aberta = sidebar.classList.contains('aberta-mobile');
+            if (aberta) fecharMobile(true);
+            else abrirMobile();
+        } else {
+            var fechado = sidebar.classList.contains('fechado');
+            aplicarEstadoDesktop(!fechado, true);
+        }
     });
 
+    // Clique no backdrop fecha
+    backdrop.addEventListener('click', function () {
+        fecharMobile(true);
+    });
+
+    // ESC fecha / atalho Ctrl+M
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'm' && (e.ctrlKey || e.metaKey)) {
+        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) {
+            fecharMobile(true);
+        }
+        if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) {
             e.preventDefault();
             btn.click();
         }
     });
 
-    function aplicarEstado(fechado, animar) {
+    // Clique num item do menu fecha em mobile
+    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
+        link.addEventListener('click', function () {
+            if (isMobile()) fecharMobile(false);
+        });
+    });
+
+    // Sincroniza ao redimensionar
+    var ultimoMobile = isMobile();
+    window.addEventListener('resize', function () {
+        var agoraMobile = isMobile();
+        if (agoraMobile !== ultimoMobile) {
+            ultimoMobile = agoraMobile;
+            if (agoraMobile) {
+                fecharMobile(false);
+            } else {
+                sidebar.classList.remove('aberta-mobile');
+                document.body.style.overflow = '';
+                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
+            }
+        }
+    });
+
+    /* ---------- Funções ---------- */
+    function aplicarEstadoDesktop(fechado, animar) {
         if (!animar) sidebar.style.transition = 'none';
         sidebar.classList.toggle('fechado', fechado);
         document.documentElement.classList.remove('menu-inicial-fechado');
@@ -1711,6 +1828,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
         }
         btn.setAttribute('aria-expanded', String(!fechado));
         try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
+    }
+
+    function abrirMobile() {
+        sidebar.classList.add('aberta-mobile');
+        sidebar.classList.remove('fechado');
+        backdrop.classList.add('ativo');
+        btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharMobile(animar) {
+        if (!animar) sidebar.style.transition = 'none';
+        sidebar.classList.remove('aberta-mobile');
+        sidebar.classList.add('fechado');
+        backdrop.classList.remove('ativo');
+        btn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        if (!animar) {
+            void sidebar.offsetWidth;
+            sidebar.style.transition = '';
+        }
     }
 })();
 </script>
@@ -1779,7 +1917,6 @@ function formatarDataHora(iso) {
    ============================================================ */
 async function carregarPainel() {
     try {
-        /* Meses */
         const snapConfig = await getDocs(collection(db, "configuracoes"));
         const meses = [];
         snapConfig.forEach(d => {
@@ -1787,21 +1924,18 @@ async function carregarPainel() {
         });
         meses.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
 
-        /* Servidores */
         let totalServidores = 0;
         try {
             const s = await getDocs(collection(db, "servidores"));
             totalServidores = s.size;
         } catch(e) {}
 
-        /* Mês atual */
         const hoje = new Date();
         const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
         const mesAtual = meses.find(m => m.mesReferencia === mesAtualStr);
 
         atualizarFaixaStatus(mesAtual, mesAtualStr, hoje);
 
-        /* Exceções ativas */
         let excecoesAtivas = 0;
         meses.forEach(m => {
             (m.escolasReabertas || []).forEach(e => {
@@ -1811,13 +1945,11 @@ async function carregarPainel() {
             });
         });
 
-        /* Unidades escolares — contagem única a partir das exceções */
         const escolasUnicas = new Set();
         meses.forEach(m => (m.escolasReabertas || []).forEach(e => {
             escolasUnicas.add(typeof e === 'string' ? e : e.escola);
         }));
 
-        /* Estatísticas */
         document.getElementById('statMeses').textContent = meses.length;
         document.getElementById('statServidores').textContent = totalServidores;
         document.getElementById('statEscolas').textContent = escolasUnicas.size || '—';
@@ -1826,7 +1958,6 @@ async function carregarPainel() {
         const datas = meses.map(m => m.dataAtualizacao).filter(Boolean).sort().reverse();
         document.getElementById('statAtualizacao').textContent = datas[0] ? formatarDataHora(datas[0]) : '—';
 
-        /* Pendências */
         const pendencias = [];
 
         if (!mesAtual) {
@@ -1874,11 +2005,7 @@ async function carregarPainel() {
         }
 
         renderizarPendencias(pendencias);
-
-        /* Tabela últimos meses */
         renderizarUltimosMeses(meses, hoje);
-
-        /* Timeline */
         renderizarTimeline(meses, hoje);
 
     } catch (erro) {
@@ -1981,7 +2108,7 @@ function renderizarPendencias(pendencias) {
 }
 
 /* ============================================================
-   ÚLTIMOS MESES — tabela
+   ÚLTIMOS MESES
    ============================================================ */
 function renderizarUltimosMeses(meses, hoje) {
     const tbody = document.getElementById('tabelaUltimosMeses');
@@ -1991,9 +2118,7 @@ function renderizarUltimosMeses(meses, hoje) {
         return;
     }
 
-    const ultimos = meses.slice(0, 5);
-
-    tbody.innerHTML = ultimos.map(m => {
+    tbody.innerHTML = meses.slice(0, 5).map(m => {
         let classe = 'badge-info', rotulo = 'Indefinido';
 
         if (m.congelado) {
