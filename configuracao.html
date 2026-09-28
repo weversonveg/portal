@@ -442,7 +442,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :root[data-theme="dark"] .btn-tema .icon-light { display: none; }
 
 /* ============================================================
-   INDICADOR DE REDE (topbar — barrinhas + ping + Mbps)
+   INDICADOR DE REDE (topbar — barrinhas + Mbps)
    ============================================================ */
 .rede-indicador {
     display: inline-flex;
@@ -484,11 +484,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .rede-indicador.online .rede-barras span { background: var(--ok); }
 
-.rede-indicador.estavel .rede-barras span:nth-child(1),
-.rede-indicador.estavel .rede-barras span:nth-child(2) { background: var(--warn); }
-.rede-indicador.estavel .rede-barras span:nth-child(3),
-.rede-indicador.estavel .rede-barras span:nth-child(4) { background: var(--gray-300); }
-
 .rede-indicador.offline .rede-barras span { background: var(--gray-300); opacity: .35; }
 .rede-indicador.offline .rede-barras span:nth-child(1) { background: var(--danger); opacity: 1; }
 
@@ -505,11 +500,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 260px;
+    max-width: 200px;
 }
 
 .rede-indicador.online    .rede-texto { color: var(--ok); }
-.rede-indicador.estavel   .rede-texto { color: var(--warn); }
 .rede-indicador.offline   .rede-texto { color: var(--danger); }
 .rede-indicador.verificando .rede-texto { color: var(--text-muted); }
 
@@ -1409,7 +1403,7 @@ tbody tr:hover td { background: var(--surface-2); }
             </div>
 
             <div class="topbar-right">
-                <!-- Indicador de rede (ping + velocidade) -->
+                <!-- Indicador de rede (somente velocidade em Mbps) -->
                 <div class="rede-indicador verificando" id="redeIndicador" role="status" aria-live="polite" title="Verificando conexão…">
                     <span class="rede-barras" aria-hidden="true">
                         <span></span><span></span><span></span><span></span>
@@ -2003,7 +1997,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<!-- SCRIPT DO INDICADOR DE REDE (ping + velocidade) -->
+<!-- SCRIPT DO INDICADOR DE REDE (somente velocidade em Mbps) -->
 <script>
 (function () {
     var el    = document.getElementById('redeIndicador');
@@ -2011,25 +2005,20 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     if (!el || !texto) return;
 
     // Endpoints
-    var URL_PING       = 'https://www.gstatic.com/generate_204';
+    var URL_PING       = 'https://www.gstatic.com/generate_204';            // só p/ saber se está online
     var URL_VELOCIDADE = 'https://speed.cloudflare.com/__down?bytes=500000'; // ~500 KB
 
-    // Intervalos (a velocidade consome banda — por isso é mais espaçada)
-    var INTERVALO_PING = 30000;    // 30 s
-    var INTERVALO_VEL  = 300000;   // 5 min
+    // Intervalos
+    var INTERVALO_PING = 30000;    // 30 s — só verifica se está online
+    var INTERVALO_VEL  = 300000;   // 5 min — mede a velocidade
     var TIMEOUT_PING   = 4000;
     var TIMEOUT_VEL    = 15000;
 
-    // Limites de qualidade do ping
-    var LIMITE_OK_MS   = 1500;
-    var LIMITE_ESTAVEL = 3000;
-
-    var ultimaLatencia    = null;
     var ultimaVelocidade  = null; // em Mbps
     var medindoVelocidade = false;
 
     function aplicarEstado(estado) {
-        el.classList.remove('online', 'estavel', 'offline', 'verificando');
+        el.classList.remove('online', 'offline', 'verificando');
         el.classList.add(estado);
     }
 
@@ -2045,32 +2034,27 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             return;
         }
 
-        var partes = [];
-        if (ultimaLatencia !== null)   partes.push(Math.round(ultimaLatencia) + ' ms');
-        if (ultimaVelocidade !== null) partes.push(ultimaVelocidade.toFixed(1) + ' Mbps');
+        var msg = 'Online';
+        if (ultimaVelocidade !== null) msg += ' · ' + ultimaVelocidade.toFixed(1) + ' Mbps';
 
-        var prefixo =
-            el.classList.contains('online')  ? 'Online' :
-            el.classList.contains('estavel') ? 'Conexão instável' : '';
-
-        var msg = prefixo + (partes.length ? ' · ' + partes.join(' · ') : '');
         texto.textContent = msg;
         el.title = msg + ' (clique para medir novamente)';
     }
 
-    async function medirLatencia() {
-        var inicio = performance.now();
-        var ctrl   = new AbortController();
-        var timer  = setTimeout(function () { ctrl.abort(); }, TIMEOUT_PING);
+    async function verificarOnline() {
+        if (!navigator.onLine) return false;
+
+        var ctrl  = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_PING);
         try {
             await fetch(URL_PING + '?_=' + Date.now(), {
                 method: 'GET', mode: 'no-cors', cache: 'no-store', signal: ctrl.signal
             });
             clearTimeout(timer);
-            return performance.now() - inicio;
+            return true;
         } catch (e) {
             clearTimeout(timer);
-            return null;
+            return false;
         }
     }
 
@@ -2094,8 +2078,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             if (segundos <= 0 || !blob.size) return;
 
             // bits / segundo / 1.000.000 = Mbps
-            var mbps = (blob.size * 8) / segundos / 1000000;
-            ultimaVelocidade = mbps;
+            ultimaVelocidade = (blob.size * 8) / segundos / 1000000;
             atualizarTexto();
         } catch (e) {
             clearTimeout(timer);
@@ -2105,24 +2088,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     async function verificar() {
-        if (!navigator.onLine) {
-            aplicarEstado('offline');
-            atualizarTexto();
-            return;
-        }
         aplicarEstado('verificando');
         atualizarTexto();
 
-        var latencia = await medirLatencia();
-        ultimaLatencia = latencia;
+        var online = await verificarOnline();
 
-        if (latencia === null) {
+        if (!online) {
             aplicarEstado('offline');
             atualizarTexto();
             return;
         }
 
-        aplicarEstado(latencia <= LIMITE_OK_MS ? 'online' : 'estavel');
+        aplicarEstado('online');
         atualizarTexto();
     }
 
