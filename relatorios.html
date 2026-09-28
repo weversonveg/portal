@@ -784,28 +784,159 @@ tr:hover td { background: var(--surface-2); }
 }
 
 /* ============================================================
-   IMPRESSÃO — mostra o cabeçalho do relatório
+   IMPRESSÃO — Relatório profissional com cabeçalho repetido
    ============================================================ */
 @media print {
-    @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; overflow: visible !important; }
-    .layout { display: block; height: auto; overflow: visible; }
+    @page {
+        size: A4 portrait;
+        margin: 18mm 12mm 20mm 12mm;
+    }
+
+    html, body {
+        background: #fff !important;
+        color: #000 !important;
+        overflow: visible !important;
+        font-size: 11px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .layout { display: block !important; height: auto !important; overflow: visible !important; }
     .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
     .topbar-sair, .modal-sair-overlay, .toast-container,
     .filter-card, .export-buttons, .breadcrumb,
     .page-header-page, .mensagem, .summary-container,
-    .loading-overlay { display: none !important; }
-    .main { overflow: visible; }
-    .content-page { overflow: visible; padding: 0; }
-    .print-report-header { display: flex !important; align-items: center; gap: 16px; }
-    .print-logo { display: block !important; margin: 0 !important; }
-    .table-card {
-        border: none !important; box-shadow: none !important;
-        overflow: visible !important; display: block !important;
+    .loading-overlay, .topbar { display: none !important; }
+
+    .main { overflow: visible !important; background: #fff !important; }
+    .content-page { overflow: visible !important; padding: 0 !important; background: #fff !important; }
+
+    /* Cabeçalho institucional — repetido em todas as páginas via thead */
+    .print-report-header {
+        display: flex !important;
+        align-items: center;
+        gap: 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #1f3a5f;
+        margin-bottom: 14px;
     }
-    table { font-size: 10px !important; white-space: normal !important; }
-    th, td { padding: 6px 8px !important; }
+    .print-logo {
+        display: block !important;
+        height: 52px !important;
+        width: auto !important;
+        margin: 0 !important;
+        object-fit: contain;
+    }
+    .print-report-text { text-align: left; line-height: 1.35; }
+    .print-report-text h2 {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #1f3a5f !important;
+        letter-spacing: .2px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+    .print-report-text p {
+        font-size: 10.5px !important;
+        color: #333 !important;
+        margin-top: 3px !important;
+    }
+
+    /* Tabela com thead repetido em cada página */
+    .table-card {
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        display: block !important;
+        background: #fff !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 10px !important;
+        white-space: normal !important;
+        page-break-inside: auto;
+    }
+
+    thead {
+        display: table-header-group !important;
+    }
+    tfoot {
+        display: table-footer-group !important;
+    }
+
+    thead th {
+        background: #1f3a5f !important;
+        color: #fff !important;
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        padding: 7px 8px !important;
+        border: 1px solid #1f3a5f !important;
+        text-align: left;
+    }
+
+    tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    tbody tr:nth-child(even) td {
+        background: #f6f8fa !important;
+    }
+    td {
+        font-size: 10px !important;
+        padding: 6px 8px !important;
+        border: 1px solid #ccd2d8 !important;
+        color: #000 !important;
+        vertical-align: top;
+    }
+
+    /* Badges de status legíveis no papel */
+    .badge-status {
+        display: inline-block !important;
+        padding: 2px 6px !important;
+        border-radius: 3px !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        border: 1px solid #999 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .badge-gozado      { border-color: #1a6a38 !important; color: #1a6a38 !important; }
+    .badge-pendente    { border-color: #8a5610 !important; color: #8a5610 !important; }
+    .badge-vencido     { border-color: #9a1e1e !important; color: #9a1e1e !important; }
+    .badge-disponivel  { border-color: #1a4d8f !important; color: #1a4d8f !important; }
+    .badge-programado  { border-color: #1f3a5f !important; color: #1f3a5f !important; }
+    .badge-atual       { border-color: #1f3a5f !important; color: #1f3a5f !important; }
+    .badge-perdido     { border-color: #9a1e1e !important; color: #9a1e1e !important; }
+    .badge-extemporaneo{ border-color: #8a5610 !important; color: #8a5610 !important; }
+
+    /* Rodapé com numeração de página */
+    .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 6mm;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 9px !important;
+        color: #555 !important;
+        border-top: 1px solid #ccd2d8;
+        padding-top: 4px;
+    }
+    .print-footer .pageNumber::after {
+        content: counter(page);
+    }
+    .print-footer .pageTotal::after {
+        content: counter(pages);
+    }
 }
+
+/* Rodapé oculto na tela */
+.print-footer { display: none; }
 </style>
 </head>
 
@@ -1149,6 +1280,12 @@ tr:hover td { background: var(--surface-2); }
                 </table>
             </section>
 
+            <!-- Rodapé exibido apenas na impressão -->
+            <div class="print-footer">
+                Relatório gerado pelo Sistema de Vale Transporte — SEMED/RH &nbsp;|&nbsp;
+                Página <span class="pageNumber"></span> de <span class="pageTotal"></span>
+            </div>
+
         </div>
 
     </div>
@@ -1380,7 +1517,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
 <!-- ============================================================
      SCRIPT PRINCIPAL DA PÁGINA — Relatórios
-     (lógica original preservada, sem alterações)
      ============================================================ -->
 <script type="module">
     import { db } from "./firebase.js";
