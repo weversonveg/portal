@@ -442,7 +442,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :root[data-theme="dark"] .btn-tema .icon-light { display: none; }
 
 /* ============================================================
-   INDICADOR DE REDE (topbar — só barrinhas + texto)
+   INDICADOR DE REDE (topbar — barrinhas + ping + Mbps)
    ============================================================ */
 .rede-indicador {
     display: inline-flex;
@@ -457,8 +457,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
     user-select: none;
     white-space: nowrap;
     flex-shrink: 0;
-    cursor: default;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color .15s ease;
 }
+.rede-indicador:hover { background: var(--surface-2); }
 
 .rede-barras {
     display: inline-flex;
@@ -502,7 +505,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
+    max-width: 260px;
 }
 
 .rede-indicador.online    .rede-texto { color: var(--ok); }
@@ -1406,7 +1409,7 @@ tbody tr:hover td { background: var(--surface-2); }
             </div>
 
             <div class="topbar-right">
-                <!-- Indicador de rede (ícone + texto) -->
+                <!-- Indicador de rede (ping + velocidade) -->
                 <div class="rede-indicador verificando" id="redeIndicador" role="status" aria-live="polite" title="Verificando conexão…">
                     <span class="rede-barras" aria-hidden="true">
                         <span></span><span></span><span></span><span></span>
@@ -2000,37 +2003,68 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<!-- SCRIPT DO INDICADOR DE REDE -->
+<!-- SCRIPT DO INDICADOR DE REDE (ping + velocidade) -->
 <script>
 (function () {
-    var el      = document.getElementById('redeIndicador');
-    var texto   = document.getElementById('redeTexto');
+    var el    = document.getElementById('redeIndicador');
+    var texto = document.getElementById('redeTexto');
     if (!el || !texto) return;
 
+    // Endpoints
     var URL_PING       = 'https://www.gstatic.com/generate_204';
-    var INTERVALO_MS   = 30000;
-    var TIMEOUT_MS     = 4000;
+    var URL_VELOCIDADE = 'https://speed.cloudflare.com/__down?bytes=500000'; // ~500 KB
+
+    // Intervalos (a velocidade consome banda — por isso é mais espaçada)
+    var INTERVALO_PING = 30000;    // 30 s
+    var INTERVALO_VEL  = 300000;   // 5 min
+    var TIMEOUT_PING   = 4000;
+    var TIMEOUT_VEL    = 15000;
+
+    // Limites de qualidade do ping
     var LIMITE_OK_MS   = 1500;
     var LIMITE_ESTAVEL = 3000;
 
-    function aplicarEstado(estado, msg) {
+    var ultimaLatencia    = null;
+    var ultimaVelocidade  = null; // em Mbps
+    var medindoVelocidade = false;
+
+    function aplicarEstado(estado) {
         el.classList.remove('online', 'estavel', 'offline', 'verificando');
         el.classList.add(estado);
+    }
+
+    function atualizarTexto() {
+        if (el.classList.contains('offline')) {
+            texto.textContent = 'Offline';
+            el.title = 'Sem conexão';
+            return;
+        }
+        if (el.classList.contains('verificando')) {
+            texto.textContent = 'Verificando…';
+            el.title = 'Verificando conexão…';
+            return;
+        }
+
+        var partes = [];
+        if (ultimaLatencia !== null)   partes.push(Math.round(ultimaLatencia) + ' ms');
+        if (ultimaVelocidade !== null) partes.push(ultimaVelocidade.toFixed(1) + ' Mbps');
+
+        var prefixo =
+            el.classList.contains('online')  ? 'Online' :
+            el.classList.contains('estavel') ? 'Conexão instável' : '';
+
+        var msg = prefixo + (partes.length ? ' · ' + partes.join(' · ') : '');
         texto.textContent = msg;
-        el.title = msg;
+        el.title = msg + ' (clique para medir novamente)';
     }
 
     async function medirLatencia() {
         var inicio = performance.now();
-        var ctrl = new AbortController();
-        var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
-
+        var ctrl   = new AbortController();
+        var timer  = setTimeout(function () { ctrl.abort(); }, TIMEOUT_PING);
         try {
             await fetch(URL_PING + '?_=' + Date.now(), {
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-store',
-                signal: ctrl.signal
+                method: 'GET', mode: 'no-cors', cache: 'no-store', signal: ctrl.signal
             });
             clearTimeout(timer);
             return performance.now() - inicio;
@@ -2040,38 +2074,81 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     }
 
-    async function verificar() {
-        if (!navigator.onLine) {
-            aplicarEstado('offline', 'Offline');
-            return;
-        }
+    async function medirVelocidade() {
+        if (medindoVelocidade) return;
+        medindoVelocidade = true;
 
-        aplicarEstado('verificando', 'Verificando…');
+        var ctrl  = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_VEL);
 
-        var latencia = await medirLatencia();
+        try {
+            var inicio = performance.now();
+            var resp = await fetch(URL_VELOCIDADE + '&_=' + Date.now(), {
+                method: 'GET', cache: 'no-store', signal: ctrl.signal
+            });
+            var blob = await resp.blob();
+            var fim  = performance.now();
+            clearTimeout(timer);
 
-        if (latencia === null) {
-            aplicarEstado('offline', 'Offline');
-            return;
-        }
+            var segundos = (fim - inicio) / 1000;
+            if (segundos <= 0 || !blob.size) return;
 
-        if (latencia <= LIMITE_OK_MS) {
-            aplicarEstado('online', 'Online · ' + Math.round(latencia) + 'ms');
-        } else if (latencia <= LIMITE_ESTAVEL) {
-            aplicarEstado('estavel', 'Conexão instável · ' + Math.round(latencia) + 'ms');
-        } else {
-            aplicarEstado('estavel', 'Conexão fraca · ' + Math.round(latencia) + 'ms');
+            // bits / segundo / 1.000.000 = Mbps
+            var mbps = (blob.size * 8) / segundos / 1000000;
+            ultimaVelocidade = mbps;
+            atualizarTexto();
+        } catch (e) {
+            clearTimeout(timer);
+        } finally {
+            medindoVelocidade = false;
         }
     }
 
-    window.addEventListener('online',  verificar);
-    window.addEventListener('offline', function () { aplicarEstado('offline', 'Offline'); });
+    async function verificar() {
+        if (!navigator.onLine) {
+            aplicarEstado('offline');
+            atualizarTexto();
+            return;
+        }
+        aplicarEstado('verificando');
+        atualizarTexto();
 
-    verificar();
-    setInterval(verificar, INTERVALO_MS);
+        var latencia = await medirLatencia();
+        ultimaLatencia = latencia;
+
+        if (latencia === null) {
+            aplicarEstado('offline');
+            atualizarTexto();
+            return;
+        }
+
+        aplicarEstado(latencia <= LIMITE_OK_MS ? 'online' : 'estavel');
+        atualizarTexto();
+    }
+
+    // Clique no indicador = medir tudo de novo
+    el.addEventListener('click', function () {
+        verificar();
+        medirVelocidade();
+    });
+
+    window.addEventListener('online',  function () { verificar(); medirVelocidade(); });
+    window.addEventListener('offline', function () {
+        aplicarEstado('offline');
+        atualizarTexto();
+    });
+
+    // Execução inicial
+    verificar().then(medirVelocidade);
+
+    setInterval(verificar, INTERVALO_PING);
+    setInterval(medirVelocidade, INTERVALO_VEL);
 
     document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) verificar();
+        if (!document.hidden) {
+            verificar();
+            medirVelocidade();
+        }
     });
 })();
 </script>
