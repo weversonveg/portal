@@ -39,6 +39,10 @@
     --brand-hover: #2c4d77;
     --brand-soft: #e8eef5;
 
+    /* Cores específicas solicitadas (botões primários + avatar) */
+    --brand-acao: #2E0F4F;
+    --brand-acao-hover: #3D1566;
+
     --gray-50:  #fafafa;
     --gray-100: #f5f5f6;
     --gray-150: #ececee;
@@ -97,6 +101,10 @@
     --brand: #7ba3cd;
     --brand-hover: #96b8db;
     --brand-soft: #1a2634;
+
+    /* Cores específicas solicitadas (botões primários + avatar) */
+    --brand-acao: #2E0F4F;
+    --brand-acao-hover: #3D1566;
 
     --gray-50:  #1a1c20;
     --gray-100: #1e2024;
@@ -411,9 +419,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border: 1px solid var(--border); background: var(--surface-2);
     max-width: 220px; min-width: 0;
 }
+
+/* Avatar do usuário logado — cor específica solicitada */
 .user-avatar {
     width: 26px; height: 26px; border-radius: 50%;
-    background: var(--brand); color: #fff;
+    background: var(--brand-acao);
+    color: #ffffff;
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 600; flex-shrink: 0;
 }
@@ -720,11 +731,17 @@ button {
 }
 button:disabled { opacity: .65; cursor: not-allowed; }
 
+/* Botão primário — cor específica solicitada (#2E0F4F / #3D1566)
+   Usado em: "Salvar padrão global" e "Salvar configuração do mês" */
 .btn-primario {
-    background: var(--brand); color: var(--brand-contrast);
-    border-color: var(--brand);
+    background: var(--brand-acao);
+    color: #ffffff;
+    border-color: var(--brand-acao);
 }
-.btn-primario:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.btn-primario:hover {
+    background: var(--brand-acao-hover);
+    border-color: var(--brand-acao-hover);
+}
 
 .btn-secundario {
     background: var(--surface); color: var(--text);
@@ -1290,7 +1307,7 @@ tbody tr:hover td { background: var(--surface-2); }
                         <li class="menu-item ativo">
                             <a href="configuracao.html" aria-current="page">
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                <span>Configurar Períodos</span>
+                                <span>Dias úteis e meses</span>
                             </a>
 
                             <ul class="submenu">
@@ -1449,7 +1466,7 @@ tbody tr:hover td { background: var(--surface-2); }
 
             <div class="page-header-page">
                 <div>
-                    <h1>Configurar Períodos</h1>
+                    <h1>Dias Úteis Letivos</h1>
                     <p>Defina o padrão global, identifique o mês e controle sua abertura, fechamento e exceções.</p>
                 </div>
             </div>
@@ -1518,7 +1535,7 @@ tbody tr:hover td { background: var(--surface-2); }
                             </div>
 
                             <div class="form-group">
-                                <label for="diasUteis">Configurar Períodos <span aria-hidden="true">*</span></label>
+                                <label for="diasUteis">Dias úteis letivos <span aria-hidden="true">*</span></label>
                                 <input type="number" id="diasUteis" placeholder="Ex: 22"
                                        min="1" max="31" inputmode="numeric" required
                                        oninput="atualizarCorCampo(this)">
@@ -2004,17 +2021,15 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     var texto = document.getElementById('redeTexto');
     if (!el || !texto) return;
 
-    // Endpoints
-    var URL_PING       = 'https://www.gstatic.com/generate_204';            // só p/ saber se está online
-    var URL_VELOCIDADE = 'https://speed.cloudflare.com/__down?bytes=500000'; // ~500 KB
+    var URL_PING       = 'https://www.gstatic.com/generate_204';
+    var URL_VELOCIDADE = 'https://speed.cloudflare.com/__down?bytes=500000';
 
-    // Intervalos
-    var INTERVALO_PING = 30000;    // 30 s — só verifica se está online
-    var INTERVALO_VEL  = 300000;   // 5 min — mede a velocidade
+    var INTERVALO_PING = 30000;
+    var INTERVALO_VEL  = 300000;
     var TIMEOUT_PING   = 4000;
     var TIMEOUT_VEL    = 15000;
 
-    var ultimaVelocidade  = null; // em Mbps
+    var ultimaVelocidade  = null;
     var medindoVelocidade = false;
 
     function aplicarEstado(estado) {
@@ -2077,7 +2092,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             var segundos = (fim - inicio) / 1000;
             if (segundos <= 0 || !blob.size) return;
 
-            // bits / segundo / 1.000.000 = Mbps
             ultimaVelocidade = (blob.size * 8) / segundos / 1000000;
             atualizarTexto();
         } catch (e) {
@@ -2103,7 +2117,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarTexto();
     }
 
-    // Clique no indicador = medir tudo de novo
     el.addEventListener('click', function () {
         verificar();
         medirVelocidade();
@@ -2115,7 +2128,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarTexto();
     });
 
-    // Execução inicial
     verificar().then(medirVelocidade);
 
     setInterval(verificar, INTERVALO_PING);
