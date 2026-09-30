@@ -1,8 +1,11 @@
 Versão atual 
+
+versão 1.8
 linha do tempo sem cards
 Férias e folgas adicionados na página de relatórios 
 Regra de cálculo de vencimento de férias alterado para 12 meses após completar ciclo 
-
+Todas as paginas com layout novo
+Criado a pagina skell ainda apenas testes
 versão 1.7
 Linha do tempo funcionando com modelos de cards.
 Resolvido o problema de remoção da segunda matricula.
