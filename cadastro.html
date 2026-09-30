@@ -257,6 +257,69 @@ body {
 
 .form-group input::placeholder { color: #9aa3aa; }
 
+/* 👇 NOVO: CAMPO DIAS DE FÉRIAS */
+.dias-ferias-wrapper {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  align-items: start;
+  background: #fafbfc;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid #e5e8eb;
+  margin-top: -6px;
+}
+
+.dias-ferias-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.dias-ferias-input input {
+  height: 40px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.dias-ferias-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.dias-ferias-hint strong {
+  color: var(--primary);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dias-ferias-hint .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.dias-ferias-hint code {
+  background: #eef0f3;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 700px) {
+  .dias-ferias-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mensagem {
   display: none;
   margin: 0 24px 24px;
@@ -306,9 +369,6 @@ button .material-symbols-outlined { font-size: 19px; }
 .btn-voltar { background: #eef0f2; color: #454b52; border: 1px solid #e2e5e8; }
 .btn-voltar:hover { background: #e2e5e8; }
 
-/* =========================================================
-   MODAL DE CONFIRMAÇÃO PROFISSIONAL
-========================================================= */
 .modal-confirm-overlay {
   display: none;
   position: fixed;
@@ -612,6 +672,19 @@ button .material-symbols-outlined { font-size: 19px; }
             <input type="date" id="dataAdmissao1" name="dataAdmissao1" required>
           </div>
 
+          <!-- 👇 NOVO: DIAS DE FÉRIAS POR PERÍODO (MATRÍCULA 1) -->
+          <div class="dias-ferias-wrapper">
+            <div class="dias-ferias-input">
+              <label for="diasFerias1" style="font-size:12px;">Dias de Férias / Período</label>
+              <input type="number" id="diasFerias1" name="diasFerias1" placeholder="30" min="1" max="60" inputmode="numeric" oninput="atualizarCorCampo(this)">
+            </div>
+            <div class="dias-ferias-hint">
+              <strong><span class="material-symbols-outlined">info</span> Direito de férias por período aquisitivo</strong>
+              <span>Preencha com o número de dias que este vínculo tem direito. <b>Se vazio, o sistema usa <code>30 dias</code> como padrão</b>.</span>
+              <span style="font-size:11px; color:var(--text-secondary);">Exemplos: <code>30</code> (administrativo), <code>45</code> (professor), <code>60</code> (casos especiais)</span>
+            </div>
+          </div>
+
           <div class="form-group full">
             <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
             <select id="escola1_m1" name="escola1_m1" required>
@@ -715,6 +788,19 @@ button .material-symbols-outlined { font-size: 19px; }
               <input type="date" id="dataAdmissao2" name="dataAdmissao2">
             </div>
 
+            <!-- 👇 NOVO: DIAS DE FÉRIAS POR PERÍODO (MATRÍCULA 2) -->
+            <div class="dias-ferias-wrapper">
+              <div class="dias-ferias-input">
+                <label for="diasFerias2" style="font-size:12px;">Dias de Férias / Período</label>
+                <input type="number" id="diasFerias2" name="diasFerias2" placeholder="30" min="1" max="60" inputmode="numeric" oninput="atualizarCorCampo(this)">
+              </div>
+              <div class="dias-ferias-hint">
+                <strong><span class="material-symbols-outlined">info</span> Direito de férias por período aquisitivo</strong>
+                <span>Preencha com o número de dias que este vínculo tem direito. <b>Se vazio, o sistema usa <code>30 dias</code> como padrão</b>.</span>
+                <span style="font-size:11px; color:var(--text-secondary);">Exemplos: <code>30</code> (administrativo), <code>45</code> (professor), <code>60</code> (casos especiais)</span>
+              </div>
+            </div>
+
             <div class="form-group full">
               <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
               <select id="escola1_m2" name="escola1_m2">
@@ -813,9 +899,6 @@ button .material-symbols-outlined { font-size: 19px; }
 
 </main>
 
-<!-- =========================================================
-     MODAL DE CONFIRMAÇÃO PROFISSIONAL
-========================================================= -->
 <div id="modalConfirm" class="modal-confirm-overlay">
   <div class="modal-confirm">
     <div class="modal-confirm-header">
@@ -865,9 +948,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const servidorId = urlParams.get('id');
 
 
-/* =========================================================
-   STATUS DA CONEXÃO
-========================================================= */
 function atualizarStatusConexao() {
   const statusDiv = document.getElementById("statusConexao");
   const statusTexto = document.getElementById("statusTexto");
@@ -890,11 +970,6 @@ let cpfDuplicado = false;
 let verificacaoCpfEmAndamento = false;
 
 
-/* =========================================================
-   👇 MODAL DE CONFIRMAÇÃO PROFISSIONAL (substitui o confirm)
-   =========================================================
-   Retorna uma Promise que resolve true (confirmou) ou false (cancelou)
-========================================================= */
 function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = 'Confirmar') {
   return new Promise((resolve) => {
     const modal = document.getElementById("modalConfirm");
@@ -904,12 +979,10 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
     const btnCancelar = document.getElementById("btnModalCancelar");
     const btnConfirmar = document.getElementById("btnModalConfirmar");
 
-    // Configura o conteúdo
     tituloEl.textContent = titulo;
     mensagemEl.textContent = mensagem;
     btnConfirmar.innerHTML = `<span class="material-symbols-outlined">check</span> ${textoConfirmar}`;
 
-    // Configura o ícone e cores
     icone.className = `modal-confirm-icon ${tipo}`;
     const icones = {
       aviso: 'warning',
@@ -923,16 +996,13 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
       btnConfirmar.className = 'modal-confirm-btn confirmar-verde';
     }
 
-    // Mostra o modal
     modal.classList.add("ativo");
 
-    // Limpa listeners anteriores para evitar duplicação
     const novoBtnCancelar = btnCancelar.cloneNode(true);
     const novoBtnConfirmar = btnConfirmar.cloneNode(true);
     btnCancelar.parentNode.replaceChild(novoBtnCancelar, btnCancelar);
     btnConfirmar.parentNode.replaceChild(novoBtnConfirmar, btnConfirmar);
 
-    // Adiciona novos listeners
     novoBtnCancelar.addEventListener('click', () => {
       modal.classList.remove("ativo");
       resolve(false);
@@ -943,7 +1013,6 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
       resolve(true);
     });
 
-    // Fecha com ESC (cancela)
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         modal.classList.remove("ativo");
@@ -953,7 +1022,6 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
     };
     document.addEventListener('keydown', handleEsc);
 
-    // Fecha ao clicar fora (cancela)
     modal.addEventListener('click', function handler(e) {
       if (e.target === modal) {
         modal.classList.remove("ativo");
@@ -965,9 +1033,6 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
 }
 
 
-/* =========================================================
-   INICIALIZAÇÃO
-========================================================= */
 document.addEventListener("DOMContentLoaded", async function() {
   atualizarStatusConexao();
 
@@ -1012,9 +1077,6 @@ document.addEventListener("DOMContentLoaded", async function() {
 });
 
 
-/* =========================================================
-   CARREGAR SERVIDOR PARA EDIÇÃO
-========================================================= */
 async function carregarDadosServidor(id) {
   try {
     const docRef = doc(db, "servidores", id);
@@ -1048,6 +1110,11 @@ async function carregarDadosServidor(id) {
         document.getElementById("cargo1").value = d.matricula1.cargo || "";
         document.getElementById("dataAdmissao1").value = d.matricula1.dataAdmissao || "";
 
+        // 👇 NOVO: carregar diasFerias da matrícula 1
+        if (d.matricula1.diasFerias) {
+          document.getElementById("diasFerias1").value = d.matricula1.diasFerias;
+        }
+
         if (d.matricula1.dataAdmissao && document.getElementById("dataAdmissao1")._flatpickr) {
           document.getElementById("dataAdmissao1")._flatpickr.setDate(d.matricula1.dataAdmissao);
         }
@@ -1075,6 +1142,11 @@ async function carregarDadosServidor(id) {
         document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
         document.getElementById("cargo2").value = d.matricula2.cargo || "";
         document.getElementById("dataAdmissao2").value = d.matricula2.dataAdmissao || "";
+
+        // 👇 NOVO: carregar diasFerias da matrícula 2
+        if (d.matricula2.diasFerias) {
+          document.getElementById("diasFerias2").value = d.matricula2.diasFerias;
+        }
 
         if (d.matricula2.dataAdmissao && document.getElementById("dataAdmissao2")._flatpickr) {
           document.getElementById("dataAdmissao2")._flatpickr.setDate(d.matricula2.dataAdmissao);
@@ -1283,12 +1355,6 @@ window.toggleEscolaExtra = function(numMatricula) {
 };
 
 
-/* =========================================================
-   👇 CONFIRMAÇÃO COM MODAL BONITO (sem alerta do navegador)
-   =========================================================
-   Se o usuário desmarcar o checkbox, aparece o modal bonito.
-   Se cancelar, o checkbox volta a ser marcado automaticamente.
-========================================================= */
 window.toggleSegundoVinculo = async function() {
   const bloco = document.getElementById("blocoSegundoVinculo");
   const checkBox = document.getElementById("possuiSegundoVinculo");
@@ -1300,7 +1366,8 @@ window.toggleSegundoVinculo = async function() {
     "dataAdmissao2",
     "escola1_m2",
     "empresa1_m2",
-    "qtdPassagens1_m2"
+    "qtdPassagens1_m2",
+    "diasFerias2"  // 👇 NOVO: incluir no array de campos
   ];
 
   const camposEscolaExtra2 = [
@@ -1310,12 +1377,9 @@ window.toggleSegundoVinculo = async function() {
   ];
 
   if (checkBox.checked) {
-    // 👉 MARCOU: mostra o bloco e ativa campos obrigatórios
     bloco.classList.add("ativo");
     camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
   } else {
-    // 👉 DESMARCOU: pede confirmação com modal bonito
-    
     const confirmacao = await mostrarConfirmacao(
       "Remover Segunda Matrícula",
       "Isso irá remover todos os dados da Segunda Matrícula deste servidor.\n\nDeseja realmente continuar?",
@@ -1324,16 +1388,12 @@ window.toggleSegundoVinculo = async function() {
     );
 
     if (!confirmacao) {
-      // 👇 Usuário CANCELOU: reverte o checkbox para marcado
       checkBox.checked = true;
       return;
     }
 
-    // 👇 Usuário CONFIRMOU: limpa tudo
-    
     bloco.classList.remove("ativo");
     
-    // Remove obrigatoriedade e LIMPA os campos principais
     camposM2.forEach(id => {
       const campo = document.getElementById(id);
       campo.removeAttribute("required");
@@ -1341,13 +1401,11 @@ window.toggleSegundoVinculo = async function() {
       atualizarCorCampo(campo);
     });
     
-    // Desativa a escola extra 2 se estiver ativa
     const escolaExtra2 = document.getElementById("escolaExtra2");
     if (escolaExtra2.classList.contains("ativo")) {
       toggleEscolaExtra(2);
     }
     
-    // LIMPA também os campos da escola extra 2
     camposEscolaExtra2.forEach(id => {
       const campo = document.getElementById(id);
       campo.removeAttribute("required");
@@ -1355,7 +1413,6 @@ window.toggleSegundoVinculo = async function() {
       atualizarCorCampo(campo);
     });
     
-    // LIMPA o flatpickr da data de admissão 2
     const dataAdmissao2 = document.getElementById("dataAdmissao2");
     if (dataAdmissao2._flatpickr) {
       dataAdmissao2._flatpickr.clear();
@@ -1364,9 +1421,6 @@ window.toggleSegundoVinculo = async function() {
 };
 
 
-/* =========================================================
-   SALVAR SERVIDOR (ABORDAGEM SEGURA EM DUAS ETAPAS)
-========================================================= */
 window.salvarServidor = async function(event) {
   event.preventDefault();
 
@@ -1398,6 +1452,10 @@ window.salvarServidor = async function(event) {
       }
     }
 
+    // 👇 NOVO: capturar diasFerias da matrícula 1
+    const diasFerias1Raw = document.getElementById("diasFerias1").value;
+    const diasFerias1 = diasFerias1Raw ? Number(diasFerias1Raw) : null;
+
     const dadosServidor = {
       nome: document.getElementById("nome").value.trim(),
       cpf: document.getElementById("cpf").value.trim(),
@@ -1417,6 +1475,8 @@ window.salvarServidor = async function(event) {
         numeroMatricula: document.getElementById("numeroMatricula1").value.trim(),
         cargo: document.getElementById("cargo1").value.trim(),
         dataAdmissao: document.getElementById("dataAdmissao1").value,
+        // 👇 NOVO: salvar diasFerias
+        diasFerias: diasFerias1,
 
         escola1: {
           nomeEscola: document.getElementById("escola1_m1").value,
@@ -1437,11 +1497,17 @@ window.salvarServidor = async function(event) {
 
     const temSegundaMatricula = document.getElementById("possuiSegundoVinculo").checked;
     if (temSegundaMatricula) {
+      // 👇 NOVO: capturar diasFerias da matrícula 2
+      const diasFerias2Raw = document.getElementById("diasFerias2").value;
+      const diasFerias2 = diasFerias2Raw ? Number(diasFerias2Raw) : null;
+
       dadosServidor.matricula2 = {
         vinculo: document.getElementById("vinculo2").value,
         numeroMatricula: document.getElementById("numeroMatricula2").value.trim(),
         cargo: document.getElementById("cargo2").value.trim(),
         dataAdmissao: document.getElementById("dataAdmissao2").value,
+        // 👇 NOVO: salvar diasFerias
+        diasFerias: diasFerias2,
 
         escola1: {
           nomeEscola: document.getElementById("escola1_m2").value,
@@ -1480,6 +1546,17 @@ window.salvarServidor = async function(event) {
         }
       }
 
+      // 👇 NOVO: remover diasFerias se o campo estiver vazio (para não ficar com null antigo)
+      if (!diasFerias1) {
+        camposParaRemover["matricula1.diasFerias"] = deleteField();
+      }
+
+      if (!temSegundaMatricula) {
+        camposParaRemover["matricula2.diasFerias"] = deleteField();
+      } else if (temSegundaMatricula && !document.getElementById("diasFerias2").value) {
+        camposParaRemover["matricula2.diasFerias"] = deleteField();
+      }
+
       if (Object.keys(camposParaRemover).length > 0) {
         await updateDoc(doc(db, "servidores", servidorId), camposParaRemover);
       }
@@ -1487,6 +1564,17 @@ window.salvarServidor = async function(event) {
       marcarCacheInvalido();
       mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
     } else {
+      // 👇 NOVO: remover campos null antes de salvar (Firestore não gosta de null)
+      if (!diasFerias1) {
+        delete dadosServidor.matricula1.diasFerias;
+      }
+
+      if (!temSegundaMatricula) {
+        delete dadosServidor.matricula2;
+      } else if (dadosServidor.matricula2 && !document.getElementById("diasFerias2").value) {
+        delete dadosServidor.matricula2.diasFerias;
+      }
+
       await addDoc(collection(db, "servidores"), dadosServidor);
       marcarCacheInvalido();
       mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
@@ -1510,9 +1598,6 @@ window.voltarParaServidores = function() {
 };
 
 
-/* =========================================================
-   👇 CANCELAR COM MODAL BONITO
-========================================================= */
 window.cancelar = async function() {
   const confirmacao = await mostrarConfirmacao(
     "Cancelar cadastro",
