@@ -22,15 +22,23 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 
     --green: #2e7d32;
     --green-light: #eaf6ec;
+    --green-bd: #c8e6c9;
 
     --orange: #e65100;
     --orange-light: #fff3e0;
+    --orange-bd: #ffe0b2;
 
     --blue: #1565c0;
     --blue-light: #e3f2fd;
+    --blue-bd: #bbdefb;
 
     --red: #c62828;
     --red-light: #ffebee;
+    --red-bd: #ffcdd2;
+
+    --purple: #6a1b9a;
+    --purple-light: #f3e8f7;
+    --purple-bd: #e1bee7;
 
     --text: #263238;
     --text-secondary: #68737d;
@@ -65,7 +73,7 @@ body {
 /* BARRA SUPERIOR */
 .topbar {
     width: 100%;
-    max-width: 1280px;
+    max-width: 1400px;
     height: 68px;
     margin: 16px auto 0;
     background: var(--white);
@@ -112,7 +120,7 @@ body {
 /* ÁREA PRINCIPAL */
 .main {
     width: 100%;
-    max-width: 1280px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 24px 16px;
 }
@@ -274,6 +282,11 @@ body {
     background: var(--primary-hover);
 }
 
+.btn-buscar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* TABELA */
 .table-card {
     background: var(--white);
@@ -293,7 +306,7 @@ table {
     border-collapse: collapse;
     text-align: left;
     white-space: nowrap;
-    min-width: 1000px;
+    min-width: 1200px;
 }
 
 th {
@@ -305,6 +318,8 @@ th {
     border-bottom: 1px solid #e5e8eb;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    position: sticky;
+    top: 0;
 }
 
 td {
@@ -356,7 +371,7 @@ tr:hover td {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    min-width: 150px;
+    min-width: 160px;
 }
 
 .periodo-label {
@@ -431,22 +446,47 @@ tr:hover td {
     width: fit-content;
 }
 
-.badge-direito {
+.badge-status .material-symbols-outlined { font-size: 12px; }
+
+.badge-gozado {
     background: var(--green-light);
     color: var(--green);
-    border: 1px solid #c8e6c9;
+    border: 1px solid var(--green-bd);
 }
-
-.badge-aguardando {
+.badge-programado {
+    background: var(--purple-light);
+    color: var(--purple);
+    border: 1px solid var(--purple-bd);
+}
+.badge-disponivel {
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid var(--green-bd);
+}
+.badge-pendente {
     background: var(--orange-light);
     color: var(--orange);
-    border: 1px solid #ffe0b2;
+    border: 1px solid var(--orange-bd);
 }
-
-.badge-info {
+.badge-vencido {
+    background: var(--red-light);
+    color: var(--red);
+    border: 1px solid var(--red-bd);
+}
+.badge-perdido {
+    background: var(--red-light);
+    color: var(--red);
+    border: 1px solid var(--red-bd);
+}
+.badge-atual {
     background: var(--blue-light);
     color: var(--blue);
-    border: 1px solid #bbdefb;
+    border: 1px solid var(--blue-bd);
+}
+.badge-sem-data {
+    background: #eceff1;
+    color: #607d8b;
+    border: 1px solid #cfd8dc;
 }
 
 /* MENSAGEM */
@@ -469,7 +509,7 @@ tr:hover td {
 .mensagem.erro {
     display: block;
     background: var(--red-light);
-    border: 1px solid #ffcdd2;
+    border: 1px solid var(--red-bd);
     color: var(--red);
 }
 
@@ -572,7 +612,7 @@ tr:hover td {
             <input type="text" id="filtroBusca" placeholder="Digite o nome ou CPF...">
         </div>
 
-        <button type="button" class="btn-buscar" onclick="carregarControle()">
+        <button type="button" class="btn-buscar" id="btnCarregar" onclick="carregarControle()">
             <span class="material-symbols-outlined">search</span>
             Carregar Servidores
         </button>
@@ -601,142 +641,472 @@ tr:hover td {
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    document.addEventListener("DOMContentLoaded", function() {
-        carregarControle();
-    });
+    // ============================================================
+    // HELPERS DE DATA (mesma lógica da linha_tempo.html)
+    // ============================================================
+    function parseDataParaDate(s) {
+        if (!s) return null;
+        if (typeof s === 'object' && s.toDate) return s.toDate();
+        s = s.toString().trim();
+        if (s.includes('/')) {
+            const p = s.split('/');
+            return new Date(+p[2], +p[1] - 1, +p[0]);
+        }
+        if (s.includes('-')) {
+            const p = s.substring(0, 10).split('-');
+            return p[0].length === 4
+                ? new Date(+p[0], +p[1] - 1, +p[2])
+                : new Date(+p[2], +p[1] - 1, +p[0]);
+        }
+        return null;
+    }
 
+    function formatarData(s) {
+        if (!s) return '';
+        if (typeof s === 'object' && s.toDate) {
+            s = s.toDate().toISOString().split('T')[0];
+        }
+        s = s.toString().trim();
+        if (s.includes('-') && s.length >= 10) {
+            const p = s.substring(0, 10).split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return s;
+    }
+
+    // ============================================================
+    // CÁLCULO DE PERÍODOS (mesma lógica da linha_tempo.html)
+    // ============================================================
+    function calcularDireitoFerias(dataAdmissao, ref = new Date()) {
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        let completos = 0, det = [], ini = new Date(adm);
+        while (completos < 40) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            const prazoGozo = new Date(fim);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+            const p = {
+                numero: completos + 1,
+                inicio: new Date(ini),
+                fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                dataLimiteGozo: prazoGozo,
+                status: 'pendente'
+            };
+            if (fim <= ref) {
+                completos++;
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'atual';
+                det.push(p);
+                break;
+            }
+        }
+        return { periodosCompletos: completos, diasDireito: completos * 30, periodosDetalhados: det };
+    }
+
+    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+        const nasc = parseDataParaDate(dataNascimento);
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!nasc || !adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        const mes = nasc.getMonth(), dia = nasc.getDate();
+        let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            const limite = aniv ? new Date(aniv) : new Date(fim);
+            const prazoGozo = new Date(limite);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+            const p = {
+                numero: i + 1,
+                inicio: new Date(ini),
+                fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                aniversarioNoPeriodo: aniv,
+                dataLimiteGozo: prazoGozo,
+                status: 'pendente'
+            };
+            if (fim <= ref) {
+                adquiridas++;
+                if (prazoGozo < ref) { p.status = 'perdido'; perdidas++; }
+                else { p.status = 'disponivel'; disponiveis++; }
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'disponivel';
+                disponiveis++;
+                det.push(p);
+                break;
+            }
+        }
+        return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
+    }
+
+    function verificarSeJaGozado(reg, hoje) {
+        const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+        if (!dt) return false;
+        return dt <= hoje;
+    }
+
+    // ============================================================
+    // VÍNCULOS E REGISTROS
+    // ============================================================
+    function extrairVinculos(dt) {
+        const vinculos = [];
+        const add = (mat, adm) => {
+            if (!mat) return;
+            const ms = mat.toString().trim();
+            if (vinculos.find(v => v.matricula === ms)) return;
+            vinculos.push({ matricula: ms, dataAdmissao: adm || '' });
+        };
+        add(
+            dt.matricula || dt.Matricula || dt.matricula_servidor ||
+            (dt.matricula1 && dt.matricula1.numeroMatricula),
+            dt.data_admissao || dt.dataAdmissao ||
+            (dt.matricula1 && dt.matricula1.dataAdmissao)
+        );
+        add(
+            dt.matricula2 && (dt.matricula2.numeroMatricula || dt.matricula2.matricula),
+            dt.matricula2 && (dt.matricula2.dataAdmissao || dt.matricula2.data_admissao)
+        );
+        return vinculos;
+    }
+
+    function coletarEscolas(dt) {
+        const escolas = [];
+        if (dt.matricula1) {
+            if (dt.matricula1.escola1?.nomeEscola) escolas.push(dt.matricula1.escola1.nomeEscola);
+            if (dt.matricula1.escola2?.nomeEscola) escolas.push(dt.matricula1.escola2.nomeEscola);
+        }
+        if (dt.matricula2) {
+            if (dt.matricula2.escola1?.nomeEscola) escolas.push(dt.matricula2.escola1.nomeEscola);
+            if (dt.matricula2.escola2?.nomeEscola) escolas.push(dt.matricula2.escola2.nomeEscola);
+        }
+        return escolas;
+    }
+
+    // ============================================================
+    // CÁLCULO DO PERÍODO ATUAL (mais recente)
+    // ============================================================
+    function obterPeriodoAtual(periodosDetalhados, hoje) {
+        if (!periodosDetalhados || periodosDetalhados.length === 0) return null;
+        // O último período da lista é o atual (em andamento)
+        return periodosDetalhados[periodosDetalhados.length - 1];
+    }
+
+    function calcularProgressoPeriodo(p, hoje) {
+        if (!p) return 0;
+        const total = p.fim - p.inicio;
+        const decorrido = hoje - p.inicio;
+        return Math.min(100, Math.max(0, (decorrido / total) * 100));
+    }
+
+    // ============================================================
+    // BUSCA DE REGISTROS
+    // ============================================================
+    async function buscarRegistrosServidor(cpfLimpo, cpfFmt, servidorIds, vinculos) {
+        const registros = [];
+        const ids = new Set();
+        try {
+            if (cpfLimpo) {
+                const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfLimpo)));
+                sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
+            }
+            if (cpfFmt && cpfFmt !== cpfLimpo) {
+                const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt)));
+                sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
+            }
+            for (const sid of servidorIds) {
+                try {
+                    const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
+                    sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
+                } catch (e) {}
+            }
+            // Fallback: busca por matrícula
+            if (registros.length === 0 && vinculos.length > 0) {
+                const all = await getDocs(collection(db, 'registro_ferias_folgas'));
+                all.forEach(x => {
+                    const dt = x.data();
+                    const rc = (dt.cpf || dt.CPF || '').toString().replace(/\D/g, '');
+                    const rm = (dt.matricula || '').toString().trim().replace(/^0+/, '');
+                    if (rc === cpfLimpo) {
+                        if (!ids.has(x.id)) { registros.push({ id: x.id, ...dt }); ids.add(x.id); }
+                        return;
+                    }
+                    for (const v of vinculos) {
+                        const cm = v.matricula.toString().trim().replace(/^0+/, '');
+                        if (rm && (rm === cm || rm === v.matricula.toString().trim())) {
+                            if (!ids.has(x.id)) { registros.push({ id: x.id, ...dt }); ids.add(x.id); }
+                            return;
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao buscar registros:', e);
+        }
+        return registros;
+    }
+
+    // ============================================================
+    // CONSTRUÇÃO DA LINHA POR SERVIDOR
+    // ============================================================
+    function construirLinhaServidor(nome, cpf, matriculas, dataNascimento, registros, hoje) {
+        const todosVinculos = [];
+        matriculas.forEach(m => todosVinculos.push(m));
+
+        if (todosVinculos.length === 0) return null;
+
+        // Usa o vínculo mais antigo para o cálculo do período
+        const vinculoPrincipal = todosVinculos[0];
+
+        const dirF = calcularDireitoFerias(vinculoPrincipal.dataAdmissao, hoje);
+        const dirG = dataNascimento
+            ? calcularDireitoFolgaAniversario(dataNascimento, vinculoPrincipal.dataAdmissao, hoje)
+            : null;
+
+        // Período atual (último da lista de férias)
+        const periodoAtual = dirF ? obterPeriodoAtual(dirF.periodosDetalhados, hoje) : null;
+
+        // -------- Localizar última folga aniversário gozada --------
+        const folgasLanc = registros.filter(r => {
+            const t = (r.tipo || '').toLowerCase();
+            return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+        });
+        // Ordena por data decrescente e pega a mais recente já gozada
+        const folgasOrdenadas = folgasLanc
+            .map(r => {
+                const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                const dt = parseDataParaDate(raw);
+                return { raw, dt, reg: r };
+            })
+            .filter(x => x.dt)
+            .sort((a, b) => b.dt - a.dt);
+        const ultimaFolga = folgasOrdenadas.find(x => x.dt <= hoje) || folgasOrdenadas[0] || null;
+        const proximaFolga = folgasOrdenadas.find(x => x.dt > hoje) || null;
+
+        // -------- Localizar última férias gozada --------
+        const feriasLanc = registros.filter(r => {
+            const t = (r.tipo || '').toLowerCase();
+            return t.includes('ferias') || t.includes('férias');
+        });
+        const feriasOrdenadas = feriasLanc
+            .map(r => {
+                const raw = r.data_inicio || r.dataInicio || r.data;
+                const dt = parseDataParaDate(raw);
+                return { raw, dt, reg: r };
+            })
+            .filter(x => x.dt)
+            .sort((a, b) => b.dt - a.dt);
+        const ultimaFerias = feriasOrdenadas.find(x => x.dt <= hoje) || feriasOrdenadas[0] || null;
+        const proximaFerias = feriasOrdenadas.find(x => x.dt > hoje) || null;
+
+        return {
+            nome,
+            cpf,
+            matriculas: todosVinculos.map(v => v.matricula),
+            dataAdmissao: vinculoPrincipal.dataAdmissao,
+            periodoAtual,
+            progresso: calcularProgressoPeriodo(periodoAtual, hoje),
+            dirF,
+            dirG,
+            ultimaFolga,
+            proximaFolga,
+            ultimaFerias,
+            proximaFerias,
+            totalFolgasGozadas: folgasOrdenadas.filter(x => x.dt <= hoje).length,
+            totalFeriasGozadas: feriasOrdenadas.filter(x => x.dt <= hoje).length,
+            folgasDisponiveis: dirG ? dirG.folgasDisponiveis : 0,
+            feriasDisponiveis: dirF ? dirF.periodosCompletos : 0
+        };
+    }
+
+    // ============================================================
+    // RENDERIZAÇÃO
+    // ============================================================
+    function renderDataCell(registro, tipo) {
+        if (!registro) {
+            const label = tipo === 'folga' ? 'Nenhuma registrada' : 'Nenhuma registrada';
+            const icone = 'event_busy';
+            return `
+                <div class="data-display sem-data">
+                    <span class="material-symbols-outlined">${icone}</span>
+                    <span class="data-valor">—</span>
+                </div>
+                <span class="data-obs">${label}</span>
+            `;
+        }
+        const dataFormatada = formatarData(registro.raw);
+        const icone = tipo === 'folga' ? 'cake' : 'beach_access';
+        const label = tipo === 'folga' ? 'Folga gozada' : 'Férias gozadas';
+        return `
+            <div class="data-display tem-data">
+                <span class="material-symbols-outlined">${icone}</span>
+                <span class="data-valor">${dataFormatada}</span>
+            </div>
+            <span class="data-obs">${label}</span>
+        `;
+    }
+
+    function renderBadgeStatus(status) {
+        const map = {
+            gozado: ['badge-gozado', 'check_circle', 'Gozado'],
+            programado: ['badge-programado', 'event_upcoming', 'Programado'],
+            disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
+            pendente: ['badge-pendente', 'schedule', 'Pendente'],
+            vencido: ['badge-vencido', 'error', 'Vencido'],
+            perdido: ['badge-perdido', 'cancel', 'Perdido'],
+            atual: ['badge-atual', 'hourglass_top', 'Em andamento']
+        };
+        const x = map[status];
+        if (!x) return '';
+        return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+    }
+
+    // ============================================================
+    // CARREGAMENTO PRINCIPAL
+    // ============================================================
     window.carregarControle = async function() {
-        const escolaFiltro = document.getElementById("filtroEscola").value;
-        const buscaFiltro = document.getElementById("filtroBusca").value.trim().toLowerCase();
-        const msgDiv = document.getElementById("mensagem");
-        const tableCard = document.getElementById("tableCard");
+        const escolaFiltro = document.getElementById('filtroEscola').value;
+        const buscaFiltro = document.getElementById('filtroBusca').value.trim().toLowerCase();
+        const msgDiv = document.getElementById('mensagem');
+        const tableCard = document.getElementById('tableCard');
+        const btn = document.getElementById('btnCarregar');
 
-        msgDiv.className = "mensagem";
-        msgDiv.textContent = "";
-        tableCard.classList.remove("ativo");
+        msgDiv.className = 'mensagem';
+        msgDiv.textContent = '';
+        tableCard.classList.remove('ativo');
+        btn.disabled = true;
 
         try {
-            const querySnapshot = await getDocs(collection(db, "servidores"));
+            const querySnapshot = await getDocs(collection(db, 'servidores'));
             if (querySnapshot.empty) {
-                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                mostrarMensagem('Nenhum servidor cadastrado no sistema.', 'info');
                 return;
             }
 
-            let linhasTabela = "";
+            let linhasTabela = '';
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
             let totalExibidos = 0;
             let totalDireito = 0;
             let totalFolgaAniversario = 0;
             let totalFeriasGozadas = 0;
 
+            const promessas = [];
+
             querySnapshot.forEach((docServidor) => {
                 const s = docServidor.data();
-
-                // Coleta escolas
-                const escolasServidor = [];
-                if (s.matricula1) {
-                    if (s.matricula1.escola1?.nomeEscola) escolasServidor.push(s.matricula1.escola1.nomeEscola);
-                    if (s.matricula1.escola2?.nomeEscola) escolasServidor.push(s.matricula1.escola2.nomeEscola);
-                }
-                if (s.matricula2) {
-                    if (s.matricula2.escola1?.nomeEscola) escolasServidor.push(s.matricula2.escola1.nomeEscola);
-                    if (s.matricula2.escola2?.nomeEscola) escolasServidor.push(s.matricula2.escola2.nomeEscola);
-                }
+                const id = docServidor.id;
 
                 // Filtro escola
-                if (escolaFiltro !== "TODAS" && !escolasServidor.includes(escolaFiltro)) {
+                const escolasServidor = coletarEscolas(s);
+                if (escolaFiltro !== 'TODAS' && !escolasServidor.includes(escolaFiltro)) {
                     return;
                 }
 
                 // Filtro busca
                 if (buscaFiltro) {
-                    const nome = (s.nome || "").toLowerCase();
-                    const cpf = (s.cpf || "").toLowerCase();
+                    const nome = (s.nome || s.Nome || '').toLowerCase();
+                    const cpf = (s.cpf || s.CPF || '').toLowerCase();
                     if (!nome.includes(buscaFiltro) && !cpf.includes(buscaFiltro)) {
                         return;
                     }
                 }
 
-                totalExibidos++;
+                const vinculos = extrairVinculos(s);
+                if (vinculos.length === 0) return;
 
-                // ===== MATRÍCULAS =====
-                const matriculas = [];
-                if (s.matricula1?.numeroMatricula) matriculas.push(s.matricula1.numeroMatricula);
-                if (s.matricula2?.numeroMatricula) matriculas.push(s.matricula2.numeroMatricula);
+                const cpfLimpo = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
+                const cpfFmt = (s.cpf || s.CPF || '').toString();
+                const dataNascimento = s.data_nascimento || s.dataNascimento;
+                const nome = s.nome || s.Nome || 'Não informado';
 
-                // ===== CÁLCULO DE FÉRIAS =====
-                let dataAdmissaoStr = s.dataAdmissao || s.admissao || "";
-                let periodoAquisitivo = "—";
-                let progressoPct = 0;
-                let tempoServicoStr = "";
+                // Processa de forma assíncrona
+                const p = buscarRegistrosServidor(cpfLimpo, cpfFmt, [id], vinculos)
+                    .then(registros => {
+                        const linha = construirLinhaServidor(nome, cpfLimpo, vinculos, dataNascimento, registros, hoje);
+                        if (!linha) return null;
 
-                if (dataAdmissaoStr) {
-                    const admDate = new Date(dataAdmissaoStr + "T00:00:00");
-                    const hoje = new Date();
-                    
-                    let diffAnos = hoje.getFullYear() - admDate.getFullYear();
-                    let diffMeses = hoje.getMonth() - admDate.getMonth();
-                    if (diffMeses < 0 || (diffMeses === 0 && hoje.getDate() < admDate.getDate())) {
-                        diffAnos--;
-                    }
+                        totalExibidos++;
+                        if (linha.feriasDisponiveis > 0) totalDireito++;
+                        if (linha.totalFolgasGozadas > 0) totalFolgaAniversario++;
+                        if (linha.totalFeriasGozadas > 0) totalFeriasGozadas++;
 
-                    // Período aquisitivo atual
-                    const anoInicioPeriodo = admDate.getFullYear() + Math.max(0, diffAnos);
-                    const anoFimPeriodo = anoInicioPeriodo + 1;
-                    periodoAquisitivo = `${anoInicioPeriodo}/${anoFimPeriodo}`;
+                        return linha;
+                    });
+                promessas.push(p);
+            });
 
-                    // Progresso do período atual
-                    const inicioPeriodo = new Date(anoInicioPeriodo, admDate.getMonth(), admDate.getDate());
-                    const fimPeriodo = new Date(anoFimPeriodo, admDate.getMonth(), admDate.getDate());
-                    const totalPeriodo = fimPeriodo - inicioPeriodo;
-                    const decorrido = hoje - inicioPeriodo;
-                    progressoPct = Math.min(100, Math.max(0, (decorrido / totalPeriodo) * 100));
+            const linhas = (await Promise.all(promessas)).filter(Boolean);
 
-                    if (diffAnos >= 1) {
-                        totalDireito++;
-                    }
+            // Ordena por nome
+            linhas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
-                    tempoServicoStr = diffAnos > 0 ? `${diffAnos} ano(s)` : `${Math.max(0, diffMeses)} mes(es)`;
-                }
-
-                // ===== FOLGA ANIVERSÁRIO =====
-                const folgaAniversario = s.folgaAniversario || "";
-                if (folgaAniversario) totalFolgaAniversario++;
-
-                // ===== FÉRIAS GOZADAS =====
-                const feriasGozadas = s.feriasGozadas || "";
-                if (feriasGozadas) totalFeriasGozadas++;
+            linhas.forEach(linha => {
+                const periodo = linha.periodoAtual;
+                const periodoLabel = periodo ? periodo.anoReferencia : '—';
+                const progresso = linha.progresso;
+                const statusPeriodo = periodo
+                    ? renderBadgeStatus(periodo.status)
+                    : '';
+                const inicioFmt = periodo ? formatarData(periodo.inicio.toISOString().split('T')[0]) : '—';
+                const fimFmt = periodo ? formatarData(periodo.fim.toISOString().split('T')[0]) : '—';
 
                 linhasTabela += `
                     <tr>
                         <td>
                             <div class="servidor-info">
-                                <span class="servidor-nome">${s.nome || '-'}</span>
+                                <span class="servidor-nome">${linha.nome}</span>
                                 <div class="servidor-doc">
-                                    <span>CPF: ${s.cpf || '-'}</span>
-                                    ${matriculas.map(m => `<span class="tag">Mat: ${m}</span>`).join('')}
+                                    <span>CPF: ${linha.cpf ? linha.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-'}</span>
+                                    ${linha.matriculas.map(m => `<span class="tag">Mat: ${m}</span>`).join('')}
                                 </div>
                             </div>
                         </td>
                         <td>
                             <div class="periodo-cell">
-                                <span class="periodo-label">${periodoAquisitivo}</span>
+                                <span class="periodo-label">${periodoLabel}</span>
                                 <div class="progress-bar">
-                                    <div class="progress-fill ${progressoPct >= 100 ? 'completo' : 'emcurso'}" style="width:${progressoPct}%"></div>
+                                    <div class="progress-fill ${progresso >= 100 ? 'completo' : 'emcurso'}" style="width:${progresso}%"></div>
                                 </div>
-                                <span class="periodo-status">${tempoServicoStr ? tempoServicoStr + ' de serviço' : ''}</span>
+                                <span class="periodo-status">${inicioFmt} a ${fimFmt}</span>
+                                ${statusPeriodo}
                             </div>
                         </td>
-                        <td>${dataAdmissaoStr ? dataAdmissaoStr.split('-').reverse().join('/') : '-'}</td>
+                        <td>${linha.dataAdmissao ? formatarData(linha.dataAdmissao) : '-'}</td>
                         <td>
                             <div class="data-cell">
-                                ${renderDataCell(folgaAniversario, 'folga')}
+                                ${renderDataCell(linha.ultimaFolga, 'folga')}
+                                ${linha.proximaFolga ? `<span class="data-obs" style="color:var(--purple);font-weight:600;">Próxima: ${formatarData(linha.proximaFolga.raw)}</span>` : ''}
+                                ${linha.folgasDisponiveis > 0 ? `<span class="data-obs" style="color:var(--green);font-weight:600;">${linha.folgasDisponiveis} disponível(is)</span>` : ''}
                             </div>
                         </td>
                         <td>
                             <div class="data-cell">
-                                ${renderDataCell(feriasGozadas, 'ferias')}
+                                ${renderDataCell(linha.ultimaFerias, 'ferias')}
+                                ${linha.proximaFerias ? `<span class="data-obs" style="color:var(--purple);font-weight:600;">Próxima: ${formatarData(linha.proximaFerias.raw)}</span>` : ''}
+                                ${linha.feriasDisponiveis > 0 ? `<span class="data-obs" style="color:var(--green);font-weight:600;">${linha.feriasDisponiveis} período(s)</span>` : ''}
                             </div>
                         </td>
                     </tr>
@@ -744,54 +1114,37 @@ tr:hover td {
             });
 
             if (totalExibidos === 0) {
-                mostrarMensagem("Nenhum servidor encontrado para os filtros selecionados.", "info");
+                mostrarMensagem('Nenhum servidor encontrado para os filtros selecionados.', 'info');
                 return;
             }
 
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
-            tableCard.classList.add("ativo");
+            document.getElementById('tabelaCorpo').innerHTML = linhasTabela;
+            tableCard.classList.add('ativo');
 
-            // Atualiza resumo
-            document.getElementById("resumoGrid").style.display = "grid";
-            document.getElementById("totalServidores").textContent = totalExibidos;
-            document.getElementById("totalDireito").textContent = totalDireito;
-            document.getElementById("totalFolgaAniversario").textContent = totalFolgaAniversario;
-            document.getElementById("totalFeriasGozadas").textContent = totalFeriasGozadas;
+            document.getElementById('resumoGrid').style.display = 'grid';
+            document.getElementById('totalServidores').textContent = totalExibidos;
+            document.getElementById('totalDireito').textContent = totalDireito;
+            document.getElementById('totalFolgaAniversario').textContent = totalFolgaAniversario;
+            document.getElementById('totalFeriasGozadas').textContent = totalFeriasGozadas;
 
         } catch (erro) {
-            console.error("Erro ao carregar controle:", erro);
-            mostrarMensagem("Erro ao carregar dados dos servidores.", "erro");
+            console.error('Erro ao carregar controle:', erro);
+            mostrarMensagem('Erro ao carregar dados dos servidores.', 'erro');
+        } finally {
+            btn.disabled = false;
         }
-    }
-
-    function renderDataCell(valor, tipo) {
-        if (valor) {
-            const dataFormatada = valor.includes('-') ? valor.split('-').reverse().join('/') : valor;
-            const icone = tipo === 'folga' ? 'cake' : 'beach_access';
-            const label = tipo === 'folga' ? 'Folga registrada' : 'Férias registradas';
-            return `
-                <div class="data-display tem-data">
-                    <span class="material-symbols-outlined">${icone}</span>
-                    <span class="data-valor">${dataFormatada}</span>
-                </div>
-                <span class="data-obs">${label}</span>
-            `;
-        }
-        const label = tipo === 'folga' ? 'Não registrada' : 'Não registrada';
-        return `
-            <div class="data-display sem-data">
-                <span class="material-symbols-outlined">event_busy</span>
-                <span class="data-valor">—</span>
-            </div>
-            <span class="data-obs">${label}</span>
-        `;
     }
 
     function mostrarMensagem(texto, tipo) {
-        const msg = document.getElementById("mensagem");
+        const msg = document.getElementById('mensagem');
         msg.textContent = texto;
-        msg.className = "mensagem " + tipo;
+        msg.className = 'mensagem ' + tipo;
     }
+
+    // Carrega automaticamente ao abrir
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarControle();
+    });
 </script>
 
 </body>
