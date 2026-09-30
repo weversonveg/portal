@@ -42,6 +42,7 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wg
 
     --text: #263238;
     --text-secondary: #68737d;
+    --text-muted: #90a4ae;
 
     --border: #d9dee3;
     --background: #f4f6f8;
@@ -70,7 +71,7 @@ body {
 /* BARRA SUPERIOR */
 .topbar {
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
     height: 68px;
     margin: 16px auto 0;
     background: var(--white);
@@ -90,10 +91,11 @@ body {
 /* ÁREA PRINCIPAL */
 .main {
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 24px 16px;
 }
+
 .page-header { margin-bottom: 24px; }
 .breadcrumb {
     display: flex; align-items: center; gap: 7px;
@@ -103,249 +105,414 @@ body {
 .page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
 .page-header p { font-size: 13px; color: var(--text-secondary); }
 
-/* CARDS DE RESUMO */
-.resumo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.resumo-card {
+/* CARD DE BUSCA */
+.busca-card {
     background: var(--white);
     border: 1px solid #e0e4e7;
     border-radius: 8px;
     box-shadow: var(--shadow);
-    padding: 18px 20px;
-    display: flex; align-items: center; gap: 14px;
-    transition: box-shadow 0.15s;
+    padding: 22px 24px;
+    margin-bottom: 24px;
 }
-.resumo-card:hover { box-shadow: var(--shadow-hover); }
-.resumo-icon {
-    width: 44px; height: 44px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.resumo-icon .material-symbols-outlined { font-size: 24px; }
-.resumo-icon.roxo { background: var(--primary-light); color: var(--primary); }
-.resumo-icon.verde { background: var(--green-light); color: var(--green); }
-.resumo-icon.laranja { background: var(--orange-light); color: var(--orange); }
-.resumo-icon.azul { background: var(--blue-light); color: var(--blue); }
-.resumo-info { display: flex; flex-direction: column; }
-.resumo-info .valor { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
-.resumo-info .rotulo { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
 
-/* CARD DE FILTROS */
-.filter-card {
-    background: var(--white);
-    border: 1px solid #e0e4e7;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-bottom: 24px;
-    display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+.busca-form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
-.filter-group { display: flex; flex-direction: column; flex-grow: 1; min-width: 180px; }
-.filter-group label {
-    font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px;
+
+.busca-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 220px;
 }
-.filter-group input,
-.filter-group select {
-    height: 42px; padding: 0 12px;
-    background: #ffffff; border: 1px solid var(--border);
-    border-radius: 6px; outline: none;
-    font-size: 14px; color: #263238;
+
+.busca-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
 }
-.filter-group input:focus,
-.filter-group select:focus {
+
+.busca-group input {
+    height: 46px;
+    padding: 0 14px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 15px;
+    color: #263238;
+    letter-spacing: 0.4px;
+}
+
+.busca-group input:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(91,42,134,.10);
 }
+
 .btn-buscar {
-    height: 42px; background: var(--primary); color: white;
-    border: none; border-radius: 6px; padding: 0 20px;
-    font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 13px; transition: background 0.15s; flex-shrink: 0;
+    height: 46px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    transition: background 0.15s;
+    flex-shrink: 0;
 }
+
 .btn-buscar:hover { background: var(--primary-hover); }
 .btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* TABELA */
-.table-card {
+/* ESTADO VAZIO / MENSAGEM */
+.estado-vazio {
     background: var(--white);
-    border: 1px solid #e0e4e7;
+    border: 1px dashed var(--border);
     border-radius: 8px;
-    box-shadow: var(--shadow);
-    overflow-x: auto;
-    display: none;
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-secondary);
 }
-.table-card.ativo { display: block; }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    min-width: 1250px;
+
+.estado-vazio .material-symbols-outlined {
+    font-size: 48px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: block;
 }
-th {
-    background: #fafbfc;
-    padding: 12px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #455a64;
-    border-bottom: 1px solid #e5e8eb;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    vertical-align: middle;
+
+.estado-vazio h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
 }
-td {
-    padding: 12px 14px;
+
+.estado-vazio p {
     font-size: 13px;
-    color: #263238;
-    border-bottom: 1px solid #edf2f7;
-    vertical-align: top;
+    color: var(--text-secondary);
 }
-tr:hover td { background: #f8fafc; }
 
-/* LINHA DE SERVIDOR COM MÚLTIPLAS MATRÍCULAS */
-tr.linha-servidor-inicio > td {
-    border-top: 2px solid #e0e4e7;
-}
-tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
-
-/* COLUNA SERVIDOR */
-.servidor-info {
-    display: flex; flex-direction: column; gap: 3px;
-    min-width: 220px;
-}
-.servidor-nome {
-    font-weight: 600; font-size: 13.5px; color: var(--text);
-}
-.servidor-doc {
-    font-size: 11.5px; color: var(--text-secondary);
-    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-}
-.servidor-doc .tag {
-    background: #f0f2f5; padding: 1px 6px; border-radius: 4px;
-    font-size: 10.5px; font-weight: 600; color: #546e7a;
-}
-.servidor-badge-mat {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: var(--primary-light); color: var(--primary);
-    padding: 3px 8px; border-radius: 4px;
-    font-size: 11px; font-weight: 700;
-    border: 1px solid #d5c4e0;
-    margin-top: 4px;
-    width: fit-content;
-}
-.servidor-badge-mat .material-symbols-outlined { font-size: 13px; }
-
-/* BLOCO DE PERÍODO */
-.periodos-stack {
-    display: flex; flex-direction: column; gap: 6px;
-    min-width: 230px;
-}
-.periodo-item {
-    border: 1px solid var(--border);
+.mensagem {
+    display: none;
+    padding: 14px 16px;
     border-radius: 6px;
-    padding: 8px 10px;
-    display: flex; flex-direction: column; gap: 4px;
-    background: #fafbfc;
-    transition: border-color 0.15s;
-}
-.periodo-item.atual {
-    border-color: var(--primary);
-    background: var(--primary-light);
-}
-.periodo-item.anterior { background: #fafbfc; }
-
-.periodo-head {
-    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    align-items: center;
     gap: 8px;
 }
-.periodo-label {
-    font-weight: 700; font-size: 12px; color: var(--primary);
-    display: flex; align-items: center; gap: 4px;
+
+.mensagem.ativo { display: flex; }
+
+.mensagem.erro {
+    background: var(--red-light);
+    border: 1px solid var(--red-bd);
+    color: var(--red);
 }
-.periodo-item.atual .periodo-label::after {
-    content: "ATUAL";
-    font-size: 8.5px; font-weight: 700;
-    background: var(--primary); color: #fff;
-    padding: 1px 5px; border-radius: 3px;
+
+.mensagem.info {
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+.mensagem .material-symbols-outlined { font-size: 20px; }
+
+/* ============================================================
+   CARDS DE PERÍODO
+   ============================================================ */
+.periodos-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.periodo-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+}
+
+.periodo-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.periodo-card.atual {
+    border-color: var(--primary);
+    border-width: 2px;
+}
+
+/* CABEÇALHO DO CARD */
+.periodo-card-header {
+    background: #fafbfc;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.periodo-card.atual .periodo-card-header {
+    background: var(--primary-light);
+}
+
+.periodo-referencia {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.periodo-referencia .titulo {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.periodo-datas {
-    font-size: 10.5px; color: var(--text-secondary); font-weight: 500;
+
+.periodo-referencia .valor {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.3px;
 }
-.periodo-gozo {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11.5px; font-weight: 600; margin-top: 2px;
+
+.tag-atual {
+    background: var(--primary);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
 }
-.periodo-gozo.tem-data { color: var(--green); }
-.periodo-gozo.sem-data { color: #90a4ae; }
-.periodo-gozo .material-symbols-outlined { font-size: 14px; }
-.periodo-extra {
-    font-size: 10px; color: var(--text-secondary); font-weight: 500;
-    padding-left: 2px;
+
+.tag-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.tag-status .material-symbols-outlined { font-size: 13px; }
+
+.tag-gozado { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
+.tag-programado { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-bd); }
+.tag-disponivel { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
+.tag-pendente { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange-bd); }
+.tag-vencido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
+.tag-perdido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
+.tag-atual { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-bd); }
+
+/* CORPO DO CARD */
+.periodo-card-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+/* INFO DO VÍNCULO */
+.vinculo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.vinculo-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.vinculo-linha .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.vinculo-linha strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.vinculo-linha .matricula-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* DATAS DO PERÍODO */
+.periodo-datas-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.periodo-datas-box .label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.periodo-datas-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.periodo-datas-linha .material-symbols-outlined {
+    font-size: 17px;
+    color: var(--primary);
+    flex-shrink: 0;
 }
 
 /* PROGRESSO */
-.progress-bar {
-    width: 100%; height: 4px; background: #e8eaed;
-    border-radius: 4px; overflow: hidden; margin-top: 2px;
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e8eaed;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
 .progress-fill {
-    height: 100%; border-radius: 4px;
+    height: 100%;
+    border-radius: 4px;
     transition: width 0.4s ease;
 }
+
 .progress-fill.completo { background: var(--green); }
 .progress-fill.emcurso { background: var(--orange); }
 
-/* BADGES */
-.badge-status {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 2px 6px; border-radius: 4px;
-    font-size: 9.5px; font-weight: 700;
-    width: fit-content; text-transform: uppercase; letter-spacing: 0.3px;
+/* SEÇÕES DE GOZO */
+.gozos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
-.badge-status .material-symbols-outlined { font-size: 11px; }
-.badge-gozado { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
-.badge-programado { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-bd); }
-.badge-disponivel { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
-.badge-pendente { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange-bd); }
-.badge-vencido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
-.badge-perdido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
-.badge-atual { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-bd); }
 
-/* HEADER DA CÉLULA */
-.celula-header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; margin-bottom: 6px;
-    font-size: 10.5px; font-weight: 600; color: var(--text-secondary);
+.gozo-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #fafbfc;
 }
-.celula-header .total {
-    background: var(--primary-light); color: var(--primary);
-    padding: 2px 7px; border-radius: 10px;
+
+.gozo-box.tem-data {
+    background: var(--green-light);
+    border-color: var(--green-bd);
+}
+
+.gozo-box.tem-data.folga {
+    background: var(--orange-light);
+    border-color: var(--orange-bd);
+}
+
+.gozo-titulo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
 }
 
-/* MENSAGEM */
-.mensagem {
-    display: none; padding: 12px 14px; border-radius: 6px;
-    font-size: 13px; font-weight: 500; margin-bottom: 16px;
-}
-.mensagem.info {
-    display: block; background: #eef2f7;
-    border: 1px solid #cbd5e1; color: #334155;
-}
-.mensagem.erro {
-    display: block; background: var(--red-light);
-    border: 1px solid var(--red-bd); color: var(--red);
+.gozo-box.tem-data .gozo-titulo { color: var(--green); }
+.gozo-box.tem-data.folga .gozo-titulo { color: var(--orange); }
+
+.gozo-titulo .material-symbols-outlined { font-size: 14px; }
+
+.gozo-valor {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
 }
 
+.gozo-box:not(.tem-data) .gozo-valor {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.gozo-status-mini {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.gozo-box.tem-data .gozo-status-mini { color: var(--green); }
+.gozo-box.tem-data.folga .gozo-status-mini { color: var(--orange); }
+.gozo-box:not(.tem-data) .gozo-status-mini { color: var(--text-muted); }
+
+/* RESPONSIVO */
 @media (max-width: 768px) {
-    .filter-card { flex-direction: column; align-items: stretch; }
+    .busca-form { flex-direction: column; align-items: stretch; }
     .btn-buscar { width: 100%; justify-content: center; }
-    .resumo-grid { grid-template-columns: repeat(2, 1fr); }
+    .periodos-wrapper { grid-template-columns: 1fr; }
+    .gozos-grid { grid-template-columns: 1fr; }
 }
 
 </style>
@@ -371,86 +538,40 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
             <span>Férias e Folgas Aniversário</span>
         </div>
         <h1>Controle de Férias e Folga Aniversário</h1>
-        <p>Cálculo automático de aquisição de férias por data de admissão e acompanhamento de folgas de aniversário.</p>
+        <p>Digite o CPF do servidor para visualizar os três últimos períodos aquisitivos.</p>
     </div>
 
-    <div class="resumo-grid" id="resumoGrid" style="display:none;">
-        <div class="resumo-card">
-            <div class="resumo-icon roxo"><span class="material-symbols-outlined">group</span></div>
-            <div class="resumo-info">
-                <span class="valor" id="totalServidores">0</span>
-                <span class="rotulo">Servidores</span>
+    <!-- CARD DE BUSCA -->
+    <section class="busca-card">
+        <div class="busca-form">
+            <div class="busca-group">
+                <label for="termoBusca">CPF do Servidor</label>
+                <input type="text" id="termoBusca" placeholder="000.000.000-00"
+                       maxlength="14" autocomplete="off" inputmode="numeric">
             </div>
+            <button class="btn-buscar" id="btnBuscar">
+                <span class="material-symbols-outlined">search</span>
+                Buscar
+            </button>
         </div>
-        <div class="resumo-card">
-            <div class="resumo-icon verde"><span class="material-symbols-outlined">badge</span></div>
-            <div class="resumo-info">
-                <span class="valor" id="totalVinculos">0</span>
-                <span class="rotulo">Vínculos / Matrículas</span>
-            </div>
-        </div>
-        <div class="resumo-card">
-            <div class="resumo-icon laranja"><span class="material-symbols-outlined">cake</span></div>
-            <div class="resumo-info">
-                <span class="valor" id="totalFolgaAniversario">0</span>
-                <span class="rotulo">Folgas aniversário gozadas</span>
-            </div>
-        </div>
-        <div class="resumo-card">
-            <div class="resumo-icon azul"><span class="material-symbols-outlined">beach_access</span></div>
-            <div class="resumo-info">
-                <span class="valor" id="totalFeriasGozadas">0</span>
-                <span class="rotulo">Férias gozadas</span>
-            </div>
-        </div>
-    </div>
-
-    <section class="filter-card">
-        <div class="filter-group">
-            <label for="filtroEscola">Filtrar por Escola</label>
-            <select id="filtroEscola">
-                <option value="TODAS">Todas as Escolas</option>
-                <option value="CEAE">CEAE</option>
-                <option value="CETEPE">CETEPE</option>
-                <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label for="filtroBusca">Buscar por Nome ou CPF</label>
-            <input type="text" id="filtroBusca" placeholder="Digite o nome ou CPF...">
-        </div>
-
-        <button type="button" class="btn-buscar" id="btnCarregar" onclick="carregarControle()">
-            <span class="material-symbols-outlined">search</span>
-            Carregar Servidores
-        </button>
     </section>
 
     <div id="mensagem" class="mensagem"></div>
 
-    <section id="tableCard" class="table-card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Servidor / Documentos</th>
-                    <th>Matrícula</th>
-                    <th>Período Aquisitivo</th>
-                    <th>Data de Admissão</th>
-                    <th>Folga Aniversário</th>
-                    <th>Férias</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaCorpo"></tbody>
-        </table>
-    </section>
+    <!-- ESTADO VAZIO INICIAL -->
+    <div id="estadoVazio" class="estado-vazio">
+        <span class="material-symbols-outlined">person_search</span>
+        <h3>Nenhum servidor consultado</h3>
+        <p>Digite um CPF acima e clique em "Buscar" para visualizar os períodos.</p>
+    </div>
+
+    <!-- CONTAINER DOS CARDS -->
+    <div id="periodosContainer" class="periodos-wrapper" style="display:none;"></div>
 </main>
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const QTD_PERIODOS_EXIBIR = 3;
 
@@ -485,6 +606,13 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
             return `${p[2]}/${p[1]}/${p[0]}`;
         }
         return s;
+    }
+
+    function formatarCPF(cpf) {
+        if (!cpf) return '';
+        const limpo = cpf.toString().replace(/\D/g, '');
+        if (limpo.length !== 11) return cpf;
+        return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     }
 
     // ============================================================
@@ -522,7 +650,7 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
                 break;
             }
         }
-        return { periodosCompletos: completos, periodosDetalhados: det };
+        return { periodosDetalhados: det };
     }
 
     function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
@@ -531,7 +659,7 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
         if (!nasc || !adm) return null;
         ref.setHours(0, 0, 0, 0);
         const mes = nasc.getMonth(), dia = nasc.getDate();
-        let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
+        let det = [], ini = new Date(adm);
         for (let i = 0; i < 40; i++) {
             const fim = new Date(ini);
             fim.setFullYear(fim.getFullYear() + 1);
@@ -551,20 +679,17 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
                 inicio: new Date(ini),
                 fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-                aniversarioNoPeriodo: aniv,
                 dataLimiteGozo: prazoGozo,
                 status: 'pendente'
             };
             if (fim <= ref) {
-                adquiridas++;
-                if (prazoGozo < ref) { p.status = 'perdido'; perdidas++; }
-                else { p.status = 'disponivel'; disponiveis++; }
+                if (prazoGozo < ref) { p.status = 'perdido'; }
+                else { p.status = 'disponivel'; }
                 det.push(p);
                 ini = new Date(fim);
                 ini.setDate(ini.getDate() + 1);
             } else {
                 p.status = 'disponivel';
-                disponiveis++;
                 det.push(p);
                 break;
             }
@@ -579,74 +704,50 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
     }
 
     // ============================================================
-    // VÍNCULOS — IMPORTANTE: agora preserva ordem e escola
+    // VÍNCULOS
     // ============================================================
     function extrairVinculos(dt) {
         const vinculos = [];
-
-        // Matrícula 1
         if (dt.matricula1) {
             const m1 = dt.matricula1.numeroMatricula || dt.matricula1.matricula;
             if (m1) {
                 vinculos.push({
                     matricula: m1.toString().trim(),
                     dataAdmissao: dt.matricula1.dataAdmissao || dt.matricula1.data_admissao || '',
-                    escola: dt.matricula1.escola1?.nomeEscola || dt.matricula1.escola2?.nomeEscola || '',
-                    origem: 'matricula1'
+                    escola: dt.matricula1.escola1?.nomeEscola || dt.matricula1.escola2?.nomeEscola || ''
                 });
             }
         }
-
-        // Matrícula 2
         if (dt.matricula2) {
             const m2 = dt.matricula2.numeroMatricula || dt.matricula2.matricula;
             if (m2) {
                 vinculos.push({
                     matricula: m2.toString().trim(),
                     dataAdmissao: dt.matricula2.dataAdmissao || dt.matricula2.data_admissao || '',
-                    escola: dt.matricula2.escola1?.nomeEscola || dt.matricula2.escola2?.nomeEscola || '',
-                    origem: 'matricula2'
+                    escola: dt.matricula2.escola1?.nomeEscola || dt.matricula2.escola2?.nomeEscola || ''
                 });
             }
         }
-
-        // Fallbacks caso não tenha matricula1/2 estruturado
         if (vinculos.length === 0) {
             const mat = dt.matricula || dt.Matricula || dt.matricula_servidor;
             if (mat) {
                 vinculos.push({
                     matricula: mat.toString().trim(),
                     dataAdmissao: dt.data_admissao || dt.dataAdmissao || '',
-                    escola: '',
-                    origem: 'direto'
+                    escola: ''
                 });
             }
         }
-
         return vinculos;
     }
 
-    function coletarEscolas(dt) {
-        const escolas = [];
-        if (dt.matricula1) {
-            if (dt.matricula1.escola1?.nomeEscola) escolas.push(dt.matricula1.escola1.nomeEscola);
-            if (dt.matricula1.escola2?.nomeEscola) escolas.push(dt.matricula1.escola2.nomeEscola);
-        }
-        if (dt.matricula2) {
-            if (dt.matricula2.escola1?.nomeEscola) escolas.push(dt.matricula2.escola1.nomeEscola);
-            if (dt.matricula2.escola2?.nomeEscola) escolas.push(dt.matricula2.escola2.nomeEscola);
-        }
-        return escolas;
-    }
-
     // ============================================================
-    // BUSCA DE REGISTROS (por matrícula específica agora)
+    // BUSCA DE REGISTROS
     // ============================================================
-    async function buscarRegistrosServidor(cpfLimpo, cpfFmt, servidorIds, matriculaEspecifica) {
+    async function buscarRegistrosPorCPF(cpfLimpo, cpfFmt) {
         const registros = [];
         const ids = new Set();
         try {
-            // Busca por CPF (todos os registros do servidor)
             if (cpfLimpo) {
                 const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfLimpo)));
                 sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
@@ -655,31 +756,14 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
                 const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt)));
                 sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
             }
-            for (const sid of servidorIds) {
-                try {
-                    const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid)));
-                    sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
-                } catch (e) {}
-            }
         } catch (e) {
             console.error('Erro ao buscar registros:', e);
         }
-
-        // Filtra por matrícula específica (se houver)
-        if (matriculaEspecifica) {
-            const matBusca = matriculaEspecifica.toString().trim().replace(/^0+/, '');
-            return registros.filter(r => {
-                const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-                if (!rm) return true; // mantém registros sem matrícula (por CPF)
-                return rm === matBusca || rm === matriculaEspecifica.toString().trim();
-            });
-        }
-
         return registros;
     }
 
     // ============================================================
-    // ASSOCIAR REGISTRO A PERÍODO
+    // ASSOCIAÇÃO REGISTRO → PERÍODO
     // ============================================================
     function encontrarRegistroParaPeriodo(periodo, registros, tipo, dataNascimento, dataAdmissao) {
         if (!periodo) return null;
@@ -736,329 +820,322 @@ tr.linha-servidor-inicio:hover > td { background: #f8fafc; }
     }
 
     // ============================================================
-    // PREPARAR PERÍODOS
+    // PREPARA ITEM DE GOZO (férias ou folga)
     // ============================================================
-    function prepararPeriodos(periodosDetalhados, registros, tipo, dataNascimento, dataAdmissao, hoje) {
-        if (!periodosDetalhados || periodosDetalhados.length === 0) return [];
-        const ordenados = [...periodosDetalhados].sort((a, b) => b.inicio - a.inicio);
-        const selecionados = ordenados.slice(0, QTD_PERIODOS_EXIBIR);
+    function prepararGozo(periodo, registros, tipo, dataNascimento, dataAdmissao, hoje) {
+        const lanc = encontrarRegistroParaPeriodo(periodo, registros, tipo, dataNascimento, dataAdmissao);
 
-        return selecionados.map(p => {
-            const lanc = encontrarRegistroParaPeriodo(p, registros, tipo, dataNascimento, dataAdmissao);
-            let status = p.status;
-            let dataGozo = null;
+        let status = periodo.status;
+        let dataGozo = null;
 
-            if (lanc) {
-                const raw = tipo === 'ferias'
-                    ? (lanc.data_inicio || lanc.dataInicio || lanc.data)
-                    : (lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
-                dataGozo = raw;
-                status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
-            } else {
-                if (p.status === 'atual') status = 'atual';
-                else if (p.dataLimiteGozo < hoje) status = tipo === 'folga' ? 'perdido' : 'vencido';
-                else status = tipo === 'folga' ? 'disponivel' : 'pendente';
-            }
+        if (lanc) {
+            const raw = tipo === 'ferias'
+                ? (lanc.data_inicio || lanc.dataInicio || lanc.data)
+                : (lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
+            dataGozo = raw;
+            status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+        } else {
+            if (periodo.status === 'atual') status = 'atual';
+            else if (periodo.dataLimiteGozo < hoje) status = tipo === 'folga' ? 'perdido' : 'vencido';
+            else status = tipo === 'folga' ? 'disponivel' : 'pendente';
+        }
 
-            let progresso = 0;
-            if (p.status === 'atual') {
-                const total = p.fim - p.inicio;
-                const decorrido = hoje - p.inicio;
-                progresso = Math.min(100, Math.max(0, (decorrido / total) * 100));
-            }
-
-            return {
-                periodo: p,
-                status,
-                dataGozo,
-                progresso,
-                isAtual: p.status === 'atual'
-            };
-        });
+        return { status, dataGozo, reg: lanc };
     }
 
     // ============================================================
-    // RENDERIZAÇÃO
+    // RENDERIZAÇÃO DE TAG DE STATUS
     // ============================================================
-    function renderBadgeStatus(status) {
+    function renderTagStatus(status) {
         const map = {
-            gozado: ['badge-gozado', 'check_circle', 'Gozado'],
-            programado: ['badge-programado', 'event_upcoming', 'Programado'],
-            disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
-            pendente: ['badge-pendente', 'schedule', 'Pendente'],
-            vencido: ['badge-vencido', 'error', 'Vencido'],
-            perdido: ['badge-perdido', 'cancel', 'Perdido'],
-            atual: ['badge-atual', 'hourglass_top', 'Em curso']
+            gozado: ['tag-gozado', 'check_circle', 'Gozado'],
+            programado: ['tag-programado', 'event_upcoming', 'Programado'],
+            disponivel: ['tag-disponivel', 'event_available', 'Disponível'],
+            pendente: ['tag-pendente', 'schedule', 'Pendente'],
+            vencido: ['tag-vencido', 'error', 'Vencido'],
+            perdido: ['tag-perdido', 'cancel', 'Perdido'],
+            atual: ['tag-atual', 'hourglass_top', 'Em curso']
         };
         const x = map[status];
         if (!x) return '';
-        return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+        return `<span class="tag-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
     }
 
-    function renderPeriodoItem(item, tipo) {
-        const p = item.periodo;
+    // ============================================================
+    // RENDERIZA UM CARD DE PERÍODO
+    // ============================================================
+    function renderCardPeriodo(periodo, gozoFerias, gozoFolga, vinculo, hoje) {
+        const p = periodo;
         const inicioFmt = formatarData(p.inicio.toISOString().split('T')[0]);
         const fimFmt = formatarData(p.fim.toISOString().split('T')[0]);
-        const icone = tipo === 'folga' ? 'cake' : 'beach_access';
-        const dataGozoFmt = item.dataGozo ? formatarData(item.dataGozo) : null;
+        const isAtual = p.status === 'atual';
+
+        // Progresso
+        let progresso = 0;
+        if (isAtual) {
+            const total = p.fim - p.inicio;
+            const decorrido = hoje - p.inicio;
+            progresso = Math.min(100, Math.max(0, (decorrido / total) * 100));
+        }
+
+        // Férias
+        const feriasDataFmt = gozoFerias.dataGozo ? formatarData(gozoFerias.dataGozo) : null;
+        const feriasTemData = !!feriasDataFmt;
+        const feriasStatus = gozoFerias.status;
+
+        // Folga aniversário
+        const folgaDataFmt = gozoFolga.dataGozo ? formatarData(gozoFolga.dataGozo) : null;
+        const folgaTemData = !!folgaDataFmt;
+        const folgaStatus = gozoFolga.status;
 
         return `
-            <div class="periodo-item ${item.isAtual ? 'atual' : 'anterior'}">
-                <div class="periodo-head">
-                    <span class="periodo-label">
-                        <span class="material-symbols-outlined" style="font-size:14px;">${icone}</span>
-                        ${p.anoReferencia}
-                    </span>
-                    ${renderBadgeStatus(item.status)}
-                </div>
-                <span class="periodo-datas">${inicioFmt} a ${fimFmt}</span>
-                ${item.isAtual ? `
-                    <div class="progress-bar">
-                        <div class="progress-fill ${item.progresso >= 100 ? 'completo' : 'emcurso'}"
-                             style="width:${item.progresso}%"></div>
+            <div class="periodo-card ${isAtual ? 'atual' : ''}">
+                <div class="periodo-card-header">
+                    <div class="periodo-referencia">
+                        <span class="titulo">Período Aquisitivo</span>
+                        <span class="valor">${p.anoReferencia}</span>
                     </div>
-                ` : ''}
-                <div class="periodo-gozo ${dataGozoFmt ? 'tem-data' : 'sem-data'}">
-                    <span class="material-symbols-outlined">event</span>
-                    ${dataGozoFmt ? `Gozo: ${dataGozoFmt}` : 'Sem gozo registrado'}
+                    ${isAtual
+                        ? '<span class="tag-atual">ATUAL</span>'
+                        : renderTagStatus(feriasStatus)}
+                </div>
+
+                <div class="periodo-card-body">
+
+                    <!-- VÍNCULO -->
+                    <div class="vinculo-info">
+                        <div class="vinculo-linha">
+                            <span class="material-symbols-outlined">badge</span>
+                            <span>Matrícula</span>
+                            <span class="matricula-badge">${vinculo.matricula}</span>
+                        </div>
+                        ${vinculo.escola ? `
+                            <div class="vinculo-linha">
+                                <span class="material-symbols-outlined">school</span>
+                                <strong>${vinculo.escola}</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- DATAS -->
+                    <div class="periodo-datas-box">
+                        <span class="label">Vigência do período</span>
+                        <div class="periodo-datas-linha">
+                            <span class="material-symbols-outlined">event</span>
+                            <span>${inicioFmt} &nbsp;→&nbsp; ${fimFmt}</span>
+                        </div>
+                    </div>
+
+                    <!-- PROGRESSO (só atual) -->
+                    ${isAtual ? `
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span>Decorrido</span>
+                                <span>${progresso.toFixed(0)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${progresso >= 100 ? 'completo' : 'emcurso'}"
+                                     style="width:${progresso}%"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- GOZOS -->
+                    <div class="gozos-grid">
+                        <div class="gozo-box ${feriasTemData ? 'tem-data' : ''}">
+                            <div class="gozo-titulo">
+                                <span class="material-symbols-outlined">beach_access</span>
+                                Férias
+                            </div>
+                            <div class="gozo-valor">
+                                ${feriasTemData ? feriasDataFmt : 'Não registrado'}
+                            </div>
+                            <div class="gozo-status-mini">
+                                ${feriasTemData ? (feriasStatus === 'gozado' ? 'Gozado' : 'Programado') : (feriasStatus === 'vencido' ? 'Vencido' : feriasStatus === 'pendente' ? 'Pendente' : '—')}
+                            </div>
+                        </div>
+
+                        <div class="gozo-box ${folgaTemData ? 'tem-data folga' : ''}">
+                            <div class="gozo-titulo">
+                                <span class="material-symbols-outlined">cake</span>
+                                Folga Aniv.
+                            </div>
+                            <div class="gozo-valor">
+                                ${folgaTemData ? folgaDataFmt : 'Não registrado'}
+                            </div>
+                            <div class="gozo-status-mini">
+                                ${folgaTemData ? (folgaStatus === 'gozado' ? 'Gozado' : 'Programado') : (folgaStatus === 'perdido' ? 'Perdido' : folgaStatus === 'disponivel' ? 'Disponível' : '—')}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         `;
     }
 
-    function renderColunaPeriodos(itens, tipo) {
-        if (!itens || itens.length === 0) {
-            return `<span class="periodo-extra">Sem períodos calculados</span>`;
-        }
-        const totalGozados = itens.filter(i => i.status === 'gozado').length;
-        const header = `
-            <div class="celula-header">
-                <span>${itens.length} período(s)</span>
-                <span class="total">${totalGozados} gozado(s)</span>
-            </div>
-        `;
-        const blocos = itens.map(i => renderPeriodoItem(i, tipo)).join('');
-        return `<div class="periodos-stack">${header}${blocos}</div>`;
-    }
-
     // ============================================================
-    // CARREGAMENTO PRINCIPAL — UMA LINHA POR VÍNCULO
+    // BUSCA PRINCIPAL
     // ============================================================
-    window.carregarControle = async function() {
-        const escolaFiltro = document.getElementById('filtroEscola').value;
-        const buscaFiltro = document.getElementById('filtroBusca').value.trim().toLowerCase();
+    async function buscar() {
+        const termo = document.getElementById('termoBusca').value.trim();
         const msgDiv = document.getElementById('mensagem');
-        const tableCard = document.getElementById('tableCard');
-        const btn = document.getElementById('btnCarregar');
+        const estadoVazio = document.getElementById('estadoVazio');
+        const container = document.getElementById('periodosContainer');
+        const btn = document.getElementById('btnBuscar');
 
         msgDiv.className = 'mensagem';
         msgDiv.textContent = '';
-        tableCard.classList.remove('ativo');
+        container.style.display = 'none';
+        estadoVazio.style.display = 'none';
+
+        if (!termo) {
+            mostrarMensagem('Digite um CPF para buscar.', 'erro');
+            estadoVazio.style.display = 'block';
+            return;
+        }
+
         btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="animation: girar 1s linear infinite;">sync</span> Buscando...';
 
         try {
-            const querySnapshot = await getDocs(collection(db, 'servidores'));
-            if (querySnapshot.empty) {
-                mostrarMensagem('Nenhum servidor cadastrado no sistema.', 'info');
+            const cpfLimpo = termo.replace(/\D/g, '');
+            const cpfFmt = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+
+            // Busca servidor por CPF (tenta vários formatos)
+            const colRef = collection(db, 'servidores');
+            const encontrados = new Map();
+            try {
+                const qs = [
+                    where('cpf', '==', cpfLimpo),
+                    where('cpf', '==', cpfFmt),
+                    where('CPF', '==', cpfLimpo),
+                    where('CPF', '==', cpfFmt)
+                ];
+                for (const q of qs) {
+                    try {
+                        const sn = await getDocs(query(colRef, q));
+                        sn.forEach(d => encontrados.set(d.id, d));
+                    } catch (e) {}
+                }
+            } catch (e) {}
+
+            if (encontrados.size === 0) {
+                mostrarMensagem('CPF não localizado no sistema.', 'erro');
+                estadoVazio.style.display = 'block';
+                estadoVazio.querySelector('h3').textContent = 'Servidor não encontrado';
+                estadoVazio.querySelector('p').textContent = 'Confira o CPF digitado e tente novamente.';
                 return;
             }
+
+            const docServidor = Array.from(encontrados.values())[0];
+            const s = docServidor.data();
+            const dataNascimento = s.data_nascimento || s.dataNascimento;
+
+            const vinculos = extrairVinculos(s);
+            if (vinculos.length === 0) {
+                mostrarMensagem('Servidor sem matrícula/admissão cadastrada.', 'info');
+                estadoVazio.style.display = 'block';
+                return;
+            }
+
+            // Busca registros de férias/folgas
+            const registros = await buscarRegistrosPorCPF(cpfLimpo, cpfFmt);
 
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            let totalServidores = 0;
-            let totalVinculos = 0;
-            let totalFolgaAniversario = 0;
-            let totalFeriasGozadas = 0;
+            let html = '';
 
-            const promessas = [];
+            // Para cada vínculo (matrícula), gera até 3 cards
+            vinculos.forEach(vinculo => {
+                if (!vinculo.dataAdmissao) return;
 
-            querySnapshot.forEach((docServidor) => {
-                const s = docServidor.data();
-                const id = docServidor.id;
+                const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje);
+                const dirG = dataNascimento
+                    ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
+                    : null;
 
-                const escolasServidor = coletarEscolas(s);
-                if (escolaFiltro !== 'TODAS' && !escolasServidor.includes(escolaFiltro)) return;
+                if (!dirF) return;
 
-                if (buscaFiltro) {
-                    const nome = (s.nome || s.Nome || '').toLowerCase();
-                    const cpf = (s.cpf || s.CPF || '').toLowerCase();
-                    if (!nome.includes(buscaFiltro) && !cpf.includes(buscaFiltro)) return;
+                // Ordena do mais recente para o mais antigo
+                const periodosOrdenados = [...dirF.periodosDetalhados].sort((a, b) => b.inicio - a.inicio);
+                const selecionados = periodosOrdenados.slice(0, QTD_PERIODOS_EXIBIR);
+
+                // Mapa de períodos de folga por ano de referência
+                const mapaFolgas = new Map();
+                if (dirG) {
+                    dirG.periodosDetalhados.forEach(p => mapaFolgas.set(p.anoReferencia, p));
                 }
 
-                const vinculos = extrairVinculos(s);
-                if (vinculos.length === 0) return;
+                selecionados.forEach(periodo => {
+                    // Registros da matrícula específica
+                    const registrosMat = registros.filter(r => {
+                        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+                        if (!rm) return true;
+                        const vm = vinculo.matricula.toString().trim().replace(/^0+/, '');
+                        return rm === vm || rm === vinculo.matricula.toString().trim();
+                    });
 
-                const cpfLimpo = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
-                const cpfFmt = (s.cpf || s.CPF || '').toString();
-                const dataNascimento = s.data_nascimento || s.dataNascimento;
-                const nome = s.nome || s.Nome || 'Não informado';
+                    const gozoFerias = prepararGozo(periodo, registrosMat, 'ferias', dataNascimento, vinculo.dataAdmissao, hoje);
 
-                totalServidores++;
+                    // Folga aniversário equivalente a este período
+                    const periodoFolga = mapaFolgas.get(periodo.anoReferencia);
+                    const gozoFolga = periodoFolga
+                        ? prepararGozo(periodoFolga, registrosMat, 'folga', dataNascimento, vinculo.dataAdmissao, hoje)
+                        : { status: '—', dataGozo: null };
 
-                // Para cada vínculo, cria uma linha separada
-                vinculos.forEach((vinculo, idx) => {
-                    const p = buscarRegistrosServidor(cpfLimpo, cpfFmt, [id], vinculo.matricula)
-                        .then(registros => {
-                            return construirLinhaVinculo(
-                                nome, cpfLimpo, vinculo,
-                                idx === 0, // primeiro vínculo é "principal" para exibição do nome
-                                dataNascimento, registros, hoje
-                            );
-                        });
-                    promessas.push(p);
+                    html += renderCardPeriodo(periodo, gozoFerias, gozoFolga, vinculo, hoje);
                 });
             });
 
-            const linhas = (await Promise.all(promessas)).filter(Boolean);
-
-            // Ordena: primeiro por nome, depois por data de admissão
-            linhas.sort((a, b) => {
-                const cmp = a.nome.localeCompare(b.nome, 'pt-BR');
-                if (cmp !== 0) return cmp;
-                const da = parseDataParaDate(a.dataAdmissao);
-                const db = parseDataParaDate(b.dataAdmissao);
-                if (!da) return 1;
-                if (!db) return -1;
-                return da - db;
-            });
-
-            let linhasTabela = '';
-            linhas.forEach(linha => {
-                totalVinculos++;
-                totalFolgaAniversario += linha.totalFolgasGozadas;
-                totalFeriasGozadas += linha.totalFeriasGozadas;
-
-                // Destaca apenas o nome no primeiro vínculo do servidor
-                const celulaServidor = linha.isPrimeiroVinculo
-                    ? `
-                        <div class="servidor-info">
-                            <span class="servidor-nome">${linha.nome}</span>
-                            <div class="servidor-doc">
-                                <span>CPF: ${linha.cpf ? linha.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-'}</span>
-                            </div>
-                        </div>
-                    `
-                    : `<span style="color:var(--text-muted);font-size:11.5px;font-style:italic;">↳ mesmo servidor</span>`;
-
-                linhasTabela += `
-                    <tr class="${linha.isPrimeiroVinculo ? 'linha-servidor-inicio' : ''}">
-                        <td>${celulaServidor}</td>
-                        <td>
-                            <span class="servidor-badge-mat">
-                                <span class="material-symbols-outlined">badge</span>
-                                ${linha.matricula}
-                            </span>
-                            ${linha.escola ? `<div style="font-size:10.5px;color:var(--text-secondary);margin-top:4px;">${linha.escola}</div>` : ''}
-                        </td>
-                        <td>
-                            ${linha.periodoAtual ? `
-                                <div class="periodo-item ${linha.periodoAtual.isAtual ? 'atual' : 'anterior'}" style="min-width:180px;">
-                                    <div class="periodo-head">
-                                        <span class="periodo-label">
-                                            <span class="material-symbols-outlined" style="font-size:14px;">calendar_month</span>
-                                            ${linha.periodoAtual.periodo.anoReferencia}
-                                        </span>
-                                        ${renderBadgeStatus(linha.periodoAtual.status)}
-                                    </div>
-                                    <span class="periodo-datas">${formatarData(linha.periodoAtual.periodo.inicio.toISOString().split('T')[0])} a ${formatarData(linha.periodoAtual.periodo.fim.toISOString().split('T')[0])}</span>
-                                    ${linha.periodoAtual.isAtual ? `
-                                        <div class="progress-bar">
-                                            <div class="progress-fill ${linha.periodoAtual.progresso >= 100 ? 'completo' : 'emcurso'}"
-                                                 style="width:${linha.periodoAtual.progresso}%"></div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            ` : '<span style="color:var(--text-muted);">—</span>'}
-                        </td>
-                        <td>${linha.dataAdmissao ? formatarData(linha.dataAdmissao) : '-'}</td>
-                        <td>${renderColunaPeriodos(linha.periodosFolga, 'folga')}</td>
-                        <td>${renderColunaPeriodos(linha.periodosFerias, 'ferias')}</td>
-                    </tr>
-                `;
-            });
-
-            if (linhas.length === 0) {
-                mostrarMensagem('Nenhum servidor encontrado para os filtros selecionados.', 'info');
+            if (!html) {
+                mostrarMensagem('Nenhum período aquisitivo calculado para este servidor.', 'info');
+                estadoVazio.style.display = 'block';
                 return;
             }
 
-            document.getElementById('tabelaCorpo').innerHTML = linhasTabela;
-            tableCard.classList.add('ativo');
-
-            document.getElementById('resumoGrid').style.display = 'grid';
-            document.getElementById('totalServidores').textContent = totalServidores;
-            document.getElementById('totalVinculos').textContent = totalVinculos;
-            document.getElementById('totalFolgaAniversario').textContent = totalFolgaAniversario;
-            document.getElementById('totalFeriasGozadas').textContent = totalFeriasGozadas;
+            container.innerHTML = html;
+            container.style.display = 'grid';
 
         } catch (erro) {
-            console.error('Erro ao carregar controle:', erro);
-            mostrarMensagem('Erro ao carregar dados dos servidores.', 'erro');
+            console.error('Erro na busca:', erro);
+            mostrarMensagem('Erro ao buscar os dados. Tente novamente.', 'erro');
+            estadoVazio.style.display = 'block';
         } finally {
             btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">search</span> Buscar';
         }
-    }
-
-    // ============================================================
-    // CONSTRÓI UMA LINHA PARA UM VÍNCULO ESPECÍFICO
-    // ============================================================
-    function construirLinhaVinculo(nome, cpf, vinculo, isPrimeiroVinculo, dataNascimento, registros, hoje) {
-        if (!vinculo.dataAdmissao) {
-            return {
-                nome, cpf,
-                matricula: vinculo.matricula,
-                escola: vinculo.escola,
-                dataAdmissao: '',
-                isPrimeiroVinculo,
-                periodoAtual: null,
-                periodosFolga: [],
-                periodosFerias: [],
-                totalFolgasGozadas: 0,
-                totalFeriasGozadas: 0
-            };
-        }
-
-        const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje);
-        const dirG = dataNascimento
-            ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
-            : null;
-
-        const periodosFerias = dirF
-            ? prepararPeriodos(dirF.periodosDetalhados, registros, 'ferias', dataNascimento, vinculo.dataAdmissao, hoje)
-            : [];
-
-        const periodosFolga = dirG
-            ? prepararPeriodos(dirG.periodosDetalhados, registros, 'folga', dataNascimento, vinculo.dataAdmissao, hoje)
-            : [];
-
-        // Período atual = primeiro da lista de férias (mais recente)
-        const periodoAtual = periodosFerias.length > 0 ? periodosFerias[0] : null;
-
-        return {
-            nome,
-            cpf,
-            matricula: vinculo.matricula,
-            escola: vinculo.escola,
-            dataAdmissao: vinculo.dataAdmissao,
-            isPrimeiroVinculo,
-            periodoAtual,
-            periodosFolga,
-            periodosFerias,
-            totalFolgasGozadas: periodosFolga.filter(i => i.status === 'gozado').length,
-            totalFeriasGozadas: periodosFerias.filter(i => i.status === 'gozado').length
-        };
     }
 
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById('mensagem');
-        msg.textContent = texto;
-        msg.className = 'mensagem ' + tipo;
+        msg.className = 'mensagem ativo ' + tipo;
+        const icone = tipo === 'erro' ? 'error' : 'info';
+        msg.innerHTML = `<span class="material-symbols-outlined">${icone}</span> ${texto}`;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        carregarControle();
+    // ============================================================
+    // MÁSCARA DE CPF + EVENTOS
+    // ============================================================
+    const inputBusca = document.getElementById('termoBusca');
+    inputBusca.addEventListener('input', function(e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 11) v = v.slice(0, 11);
+        if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+        else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+        else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+        e.target.value = v;
     });
+    inputBusca.addEventListener('keypress', e => {
+        if (e.key === 'Enter') { e.preventDefault(); buscar(); }
+    });
+    document.getElementById('btnBuscar').addEventListener('click', buscar);
+
+    // Animação do spinner (declarada inline no botão)
+    const styleSpin = document.createElement('style');
+    styleSpin.textContent = '@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+    document.head.appendChild(styleSpin);
 </script>
 
 </body>
