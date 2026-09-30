@@ -305,7 +305,6 @@ table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    white-space: nowrap;
     min-width: 1200px;
 }
 
@@ -320,6 +319,7 @@ th {
     letter-spacing: 0.3px;
     position: sticky;
     top: 0;
+    vertical-align: middle;
 }
 
 td {
@@ -327,7 +327,7 @@ td {
     font-size: 13px;
     color: #263238;
     border-bottom: 1px solid #edf2f7;
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 tr:hover td {
@@ -366,26 +366,96 @@ tr:hover td {
     color: #546e7a;
 }
 
-/* PERÍODO */
-.periodo-cell {
+/* BLOCOS DE PERÍODO (empilhados) */
+.periodos-stack {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    min-width: 160px;
+    gap: 6px;
+    min-width: 240px;
+}
+
+.periodo-item {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #fafbfc;
+    transition: border-color 0.15s;
+}
+
+.periodo-item.atual {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.periodo-item.anterior {
+    background: #fafbfc;
+}
+
+.periodo-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .periodo-label {
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
+.periodo-item.atual .periodo-label::after {
+    content: "ATUAL";
+    font-size: 8.5px;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+.periodo-datas {
+    font-size: 10.5px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.periodo-gozo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.periodo-gozo.tem-data { color: var(--green); }
+.periodo-gozo.sem-data { color: #90a4ae; }
+
+.periodo-gozo .material-symbols-outlined { font-size: 14px; }
+
+.periodo-extra {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding-left: 2px;
+}
+
+/* BARRA DE PROGRESSO */
 .progress-bar {
     width: 100%;
-    height: 6px;
+    height: 4px;
     background: #e8eaed;
     border-radius: 4px;
     overflow: hidden;
+    margin-top: 2px;
 }
 
 .progress-fill {
@@ -397,56 +467,21 @@ tr:hover td {
 .progress-fill.completo { background: var(--green); }
 .progress-fill.emcurso { background: var(--orange); }
 
-.periodo-status {
-    font-size: 10.5px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-/* CÉLULAS DE DATA */
-.data-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 150px;
-}
-
-.data-display {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.data-display .material-symbols-outlined {
-    font-size: 16px;
-}
-
-.data-display.tem-data { color: var(--green); }
-.data-display.sem-data { color: #b0bec5; }
-
-.data-valor {
-    font-weight: 600;
-    font-size: 12.5px;
-}
-
-.data-obs {
-    font-size: 10.5px;
-    color: var(--text-secondary);
-}
-
 /* BADGES */
 .badge-status {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
+    gap: 3px;
+    padding: 2px 6px;
     border-radius: 4px;
-    font-size: 10.5px;
-    font-weight: 600;
+    font-size: 9.5px;
+    font-weight: 700;
     width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-.badge-status .material-symbols-outlined { font-size: 12px; }
+.badge-status .material-symbols-outlined { font-size: 11px; }
 
 .badge-gozado {
     background: var(--green-light);
@@ -483,10 +518,25 @@ tr:hover td {
     color: var(--blue);
     border: 1px solid var(--blue-bd);
 }
-.badge-sem-data {
-    background: #eceff1;
-    color: #607d8b;
-    border: 1px solid #cfd8dc;
+
+/* RESUMO NO TOPO DA CÉLULA */
+.celula-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.celula-header .total {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 700;
 }
 
 /* MENSAGEM */
@@ -644,7 +694,12 @@ tr:hover td {
     import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // ============================================================
-    // HELPERS DE DATA (mesma lógica da linha_tempo.html)
+    // CONSTANTE: quantos períodos exibir (atual + anteriores)
+    // ============================================================
+    const QTD_PERIODOS_EXIBIR = 3;
+
+    // ============================================================
+    // HELPERS DE DATA
     // ============================================================
     function parseDataParaDate(s) {
         if (!s) return null;
@@ -674,6 +729,16 @@ tr:hover td {
             return `${p[2]}/${p[1]}/${p[0]}`;
         }
         return s;
+    }
+
+    function formatarDataCurta(s) {
+        if (!s) return '';
+        const d = parseDataParaDate(s);
+        if (!d) return '';
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+        return `${dia}/${mes}/${ano}`;
     }
 
     // ============================================================
@@ -768,7 +833,7 @@ tr:hover td {
     }
 
     // ============================================================
-    // VÍNCULOS E REGISTROS
+    // HELPERS DE VÍNCULO
     // ============================================================
     function extrairVinculos(dt) {
         const vinculos = [];
@@ -805,22 +870,6 @@ tr:hover td {
     }
 
     // ============================================================
-    // CÁLCULO DO PERÍODO ATUAL (mais recente)
-    // ============================================================
-    function obterPeriodoAtual(periodosDetalhados, hoje) {
-        if (!periodosDetalhados || periodosDetalhados.length === 0) return null;
-        // O último período da lista é o atual (em andamento)
-        return periodosDetalhados[periodosDetalhados.length - 1];
-    }
-
-    function calcularProgressoPeriodo(p, hoje) {
-        if (!p) return 0;
-        const total = p.fim - p.inicio;
-        const decorrido = hoje - p.inicio;
-        return Math.min(100, Math.max(0, (decorrido / total) * 100));
-    }
-
-    // ============================================================
     // BUSCA DE REGISTROS
     // ============================================================
     async function buscarRegistrosServidor(cpfLimpo, cpfFmt, servidorIds, vinculos) {
@@ -841,7 +890,6 @@ tr:hover td {
                     sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
                 } catch (e) {}
             }
-            // Fallback: busca por matrícula
             if (registros.length === 0 && vinculos.length > 0) {
                 const all = await getDocs(collection(db, 'registro_ferias_folgas'));
                 all.forEach(x => {
@@ -868,105 +916,122 @@ tr:hover td {
     }
 
     // ============================================================
-    // CONSTRUÇÃO DA LINHA POR SERVIDOR
+    // ASSOCIAR REGISTRO A UM PERÍODO
     // ============================================================
-    function construirLinhaServidor(nome, cpf, matriculas, dataNascimento, registros, hoje) {
-        const todosVinculos = [];
-        matriculas.forEach(m => todosVinculos.push(m));
+    function encontrarRegistroParaPeriodo(periodo, registros, tipo, dataNascimento, dataAdmissao) {
+        if (!periodo) return null;
+        const anoRef = periodo.anoReferencia;
 
-        if (todosVinculos.length === 0) return null;
+        if (tipo === 'ferias') {
+            // Para férias, casa por ano_referencia
+            const feriasLanc = registros.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
+            return feriasLanc.find(r => (r.ano_referencia || r.ano || '') === anoRef) || null;
+        } else {
+            // Para folga aniversário, casa por ano_referencia OU pelo período identificado pela data
+            const folgasLanc = registros.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+            // Primeiro tenta casar por ano_referencia explícito
+            let lanc = folgasLanc.find(r => (r.ano_referencia || r.ano || '') === anoRef);
+            if (lanc) return lanc;
 
-        // Usa o vínculo mais antigo para o cálculo do período
-        const vinculoPrincipal = todosVinculos[0];
-
-        const dirF = calcularDireitoFerias(vinculoPrincipal.dataAdmissao, hoje);
-        const dirG = dataNascimento
-            ? calcularDireitoFolgaAniversario(dataNascimento, vinculoPrincipal.dataAdmissao, hoje)
-            : null;
-
-        // Período atual (último da lista de férias)
-        const periodoAtual = dirF ? obterPeriodoAtual(dirF.periodosDetalhados, hoje) : null;
-
-        // -------- Localizar última folga aniversário gozada --------
-        const folgasLanc = registros.filter(r => {
-            const t = (r.tipo || '').toLowerCase();
-            return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
-        });
-        // Ordena por data decrescente e pega a mais recente já gozada
-        const folgasOrdenadas = folgasLanc
-            .map(r => {
+            // Caso contrário, tenta identificar por data de gozo
+            for (const r of folgasLanc) {
                 const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
-                const dt = parseDataParaDate(raw);
-                return { raw, dt, reg: r };
-            })
-            .filter(x => x.dt)
-            .sort((a, b) => b.dt - a.dt);
-        const ultimaFolga = folgasOrdenadas.find(x => x.dt <= hoje) || folgasOrdenadas[0] || null;
-        const proximaFolga = folgasOrdenadas.find(x => x.dt > hoje) || null;
+                const per = identificarPeriodoFolgaAniversario(raw, dataNascimento, dataAdmissao);
+                if (per === anoRef) return r;
+            }
+            return null;
+        }
+    }
 
-        // -------- Localizar última férias gozada --------
-        const feriasLanc = registros.filter(r => {
-            const t = (r.tipo || '').toLowerCase();
-            return t.includes('ferias') || t.includes('férias');
+    function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
+        const dtGozo = parseDataParaDate(dataGozo);
+        const dtNasc = parseDataParaDate(dataNascimento);
+        const dtAdm = parseDataParaDate(dataAdmissao);
+        if (!dtGozo || !dtNasc || !dtAdm) return null;
+        const mes = dtNasc.getMonth(), dia = dtNasc.getDate();
+        let ini = new Date(dtAdm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            const limite = aniv || fim;
+            if (dtGozo <= limite && dtGozo >= ini) return `${ini.getFullYear()}/${fim.getFullYear()}`;
+            if (dtGozo > limite && dtGozo <= fim) {
+                const pi = new Date(fim); pi.setDate(pi.getDate() + 1);
+                const pf = new Date(pi); pf.setFullYear(pf.getFullYear() + 1); pf.setDate(pf.getDate() - 1);
+                return `${pi.getFullYear()}/${pf.getFullYear()}`;
+            }
+            ini = new Date(fim); ini.setDate(ini.getDate() + 1);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // PREPARAR PERÍODOS PARA EXIBIÇÃO
+    // ============================================================
+    function prepararPeriodos(periodosDetalhados, registros, tipo, dataNascimento, dataAdmissao, hoje) {
+        if (!periodosDetalhados || periodosDetalhados.length === 0) return [];
+
+        // Ordena do mais recente para o mais antigo
+        const ordenados = [...periodosDetalhados].sort((a, b) => b.inicio - a.inicio);
+
+        // Pega os N primeiros (atual + anteriores)
+        const selecionados = ordenados.slice(0, QTD_PERIODOS_EXIBIR);
+
+        return selecionados.map((p, idx) => {
+            const lanc = encontrarRegistroParaPeriodo(p, registros, tipo, dataNascimento, dataAdmissao);
+
+            let status = p.status;
+            let dataGozo = null;
+            let extraInfo = '';
+
+            if (lanc) {
+                const raw = tipo === 'ferias'
+                    ? (lanc.data_inicio || lanc.dataInicio || lanc.data)
+                    : (lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
+                dataGozo = raw;
+                const jaGozado = verificarSeJaGozado(lanc, hoje);
+                status = jaGozado ? 'gozado' : 'programado';
+            } else {
+                // Sem lançamento: define status pelo período
+                if (p.status === 'atual') status = 'atual';
+                else if (p.dataLimiteGozo < hoje) status = tipo === 'folga' ? 'perdido' : 'vencido';
+                else status = tipo === 'folga' ? 'disponivel' : 'pendente';
+            }
+
+            // Progresso (só faz sentido no período atual)
+            let progresso = 0;
+            if (p.status === 'atual') {
+                const total = p.fim - p.inicio;
+                const decorrido = hoje - p.inicio;
+                progresso = Math.min(100, Math.max(0, (decorrido / total) * 100));
+            }
+
+            return {
+                periodo: p,
+                status,
+                dataGozo,
+                progresso,
+                isAtual: p.status === 'atual',
+                jaGozado: !!dataGozo && verificarSeJaGozado(lanc || {}, hoje)
+            };
         });
-        const feriasOrdenadas = feriasLanc
-            .map(r => {
-                const raw = r.data_inicio || r.dataInicio || r.data;
-                const dt = parseDataParaDate(raw);
-                return { raw, dt, reg: r };
-            })
-            .filter(x => x.dt)
-            .sort((a, b) => b.dt - a.dt);
-        const ultimaFerias = feriasOrdenadas.find(x => x.dt <= hoje) || feriasOrdenadas[0] || null;
-        const proximaFerias = feriasOrdenadas.find(x => x.dt > hoje) || null;
-
-        return {
-            nome,
-            cpf,
-            matriculas: todosVinculos.map(v => v.matricula),
-            dataAdmissao: vinculoPrincipal.dataAdmissao,
-            periodoAtual,
-            progresso: calcularProgressoPeriodo(periodoAtual, hoje),
-            dirF,
-            dirG,
-            ultimaFolga,
-            proximaFolga,
-            ultimaFerias,
-            proximaFerias,
-            totalFolgasGozadas: folgasOrdenadas.filter(x => x.dt <= hoje).length,
-            totalFeriasGozadas: feriasOrdenadas.filter(x => x.dt <= hoje).length,
-            folgasDisponiveis: dirG ? dirG.folgasDisponiveis : 0,
-            feriasDisponiveis: dirF ? dirF.periodosCompletos : 0
-        };
     }
 
     // ============================================================
     // RENDERIZAÇÃO
     // ============================================================
-    function renderDataCell(registro, tipo) {
-        if (!registro) {
-            const label = tipo === 'folga' ? 'Nenhuma registrada' : 'Nenhuma registrada';
-            const icone = 'event_busy';
-            return `
-                <div class="data-display sem-data">
-                    <span class="material-symbols-outlined">${icone}</span>
-                    <span class="data-valor">—</span>
-                </div>
-                <span class="data-obs">${label}</span>
-            `;
-        }
-        const dataFormatada = formatarData(registro.raw);
-        const icone = tipo === 'folga' ? 'cake' : 'beach_access';
-        const label = tipo === 'folga' ? 'Folga gozada' : 'Férias gozadas';
-        return `
-            <div class="data-display tem-data">
-                <span class="material-symbols-outlined">${icone}</span>
-                <span class="data-valor">${dataFormatada}</span>
-            </div>
-            <span class="data-obs">${label}</span>
-        `;
-    }
-
     function renderBadgeStatus(status) {
         const map = {
             gozado: ['badge-gozado', 'check_circle', 'Gozado'],
@@ -975,11 +1040,104 @@ tr:hover td {
             pendente: ['badge-pendente', 'schedule', 'Pendente'],
             vencido: ['badge-vencido', 'error', 'Vencido'],
             perdido: ['badge-perdido', 'cancel', 'Perdido'],
-            atual: ['badge-atual', 'hourglass_top', 'Em andamento']
+            atual: ['badge-atual', 'hourglass_top', 'Em curso']
         };
         const x = map[status];
         if (!x) return '';
         return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+    }
+
+    function renderPeriodoItem(item, tipo) {
+        const p = item.periodo;
+        const label = p.anoReferencia;
+        const inicioFmt = formatarData(p.inicio.toISOString().split('T')[0]);
+        const fimFmt = formatarData(p.fim.toISOString().split('T')[0]);
+        const icone = tipo === 'folga' ? 'cake' : 'beach_access';
+        const dataGozoFmt = item.dataGozo ? formatarData(item.dataGozo) : null;
+
+        return `
+            <div class="periodo-item ${item.isAtual ? 'atual' : 'anterior'}">
+                <div class="periodo-head">
+                    <span class="periodo-label">
+                        <span class="material-symbols-outlined" style="font-size:14px;">${icone}</span>
+                        ${label}
+                    </span>
+                    ${renderBadgeStatus(item.status)}
+                </div>
+                <span class="periodo-datas">${inicioFmt} a ${fimFmt}</span>
+                ${item.isAtual ? `
+                    <div class="progress-bar">
+                        <div class="progress-fill ${item.progresso >= 100 ? 'completo' : 'emcurso'}"
+                             style="width:${item.progresso}%"></div>
+                    </div>
+                ` : ''}
+                <div class="periodo-gozo ${dataGozoFmt ? 'tem-data' : 'sem-data'}">
+                    <span class="material-symbols-outlined">event</span>
+                    ${dataGozoFmt ? `Gozo: ${dataGozoFmt}` : 'Sem gozo registrado'}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderColunaPeriodos(itens, tipo) {
+        if (!itens || itens.length === 0) {
+            return `<span class="periodo-extra">Sem períodos calculados</span>`;
+        }
+        const totalGozados = itens.filter(i => i.status === 'gozado').length;
+        const totalItens = itens.length;
+
+        const header = `
+            <div class="celula-header">
+                <span>${totalItens} período(s)</span>
+                <span class="total">${totalGozados} gozado(s)</span>
+            </div>
+        `;
+
+        const blocos = itens.map(i => renderPeriodoItem(i, tipo)).join('');
+
+        return `<div class="periodos-stack">${header}${blocos}</div>`;
+    }
+
+    // ============================================================
+    // CONSTRUÇÃO DA LINHA POR SERVIDOR
+    // ============================================================
+    function construirLinhaServidor(nome, cpf, matriculas, dataNascimento, registros, hoje) {
+        if (matriculas.length === 0) return null;
+
+        // Vínculo principal = o mais antigo (admissão mais antiga)
+        const vinculoPrincipal = [...matriculas].sort((a, b) => {
+            const da = parseDataParaDate(a.dataAdmissao);
+            const db = parseDataParaDate(b.dataAdmissao);
+            if (!da) return 1;
+            if (!db) return -1;
+            return da - db;
+        })[0];
+
+        const dirF = calcularDireitoFerias(vinculoPrincipal.dataAdmissao, hoje);
+        const dirG = dataNascimento
+            ? calcularDireitoFolgaAniversario(dataNascimento, vinculoPrincipal.dataAdmissao, hoje)
+            : null;
+
+        // Prepara os 3 últimos períodos de férias
+        const periodosFerias = dirF
+            ? prepararPeriodos(dirF.periodosDetalhados, registros, 'ferias', dataNascimento, vinculoPrincipal.dataAdmissao, hoje)
+            : [];
+
+        // Prepara os 3 últimos períodos de folga aniversário
+        const periodosFolga = dirG
+            ? prepararPeriodos(dirG.periodosDetalhados, registros, 'folga', dataNascimento, vinculoPrincipal.dataAdmissao, hoje)
+            : [];
+
+        return {
+            nome,
+            cpf,
+            matriculas,
+            dataAdmissao: vinculoPrincipal.dataAdmissao,
+            periodosFerias,
+            periodosFolga,
+            totalFolgasGozadas: periodosFolga.filter(i => i.status === 'gozado').length,
+            totalFeriasGozadas: periodosFerias.filter(i => i.status === 'gozado').length
+        };
     }
 
     // ============================================================
@@ -1019,19 +1177,13 @@ tr:hover td {
                 const s = docServidor.data();
                 const id = docServidor.id;
 
-                // Filtro escola
                 const escolasServidor = coletarEscolas(s);
-                if (escolaFiltro !== 'TODAS' && !escolasServidor.includes(escolaFiltro)) {
-                    return;
-                }
+                if (escolaFiltro !== 'TODAS' && !escolasServidor.includes(escolaFiltro)) return;
 
-                // Filtro busca
                 if (buscaFiltro) {
                     const nome = (s.nome || s.Nome || '').toLowerCase();
                     const cpf = (s.cpf || s.CPF || '').toLowerCase();
-                    if (!nome.includes(buscaFiltro) && !cpf.includes(buscaFiltro)) {
-                        return;
-                    }
+                    if (!nome.includes(buscaFiltro) && !cpf.includes(buscaFiltro)) return;
                 }
 
                 const vinculos = extrairVinculos(s);
@@ -1042,14 +1194,13 @@ tr:hover td {
                 const dataNascimento = s.data_nascimento || s.dataNascimento;
                 const nome = s.nome || s.Nome || 'Não informado';
 
-                // Processa de forma assíncrona
                 const p = buscarRegistrosServidor(cpfLimpo, cpfFmt, [id], vinculos)
                     .then(registros => {
                         const linha = construirLinhaServidor(nome, cpfLimpo, vinculos, dataNascimento, registros, hoje);
                         if (!linha) return null;
 
                         totalExibidos++;
-                        if (linha.feriasDisponiveis > 0) totalDireito++;
+                        if (linha.periodosFerias.some(x => x.status === 'gozado' || x.status === 'disponivel')) totalDireito++;
                         if (linha.totalFolgasGozadas > 0) totalFolgaAniversario++;
                         if (linha.totalFeriasGozadas > 0) totalFeriasGozadas++;
 
@@ -1059,20 +1210,9 @@ tr:hover td {
             });
 
             const linhas = (await Promise.all(promessas)).filter(Boolean);
-
-            // Ordena por nome
             linhas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
             linhas.forEach(linha => {
-                const periodo = linha.periodoAtual;
-                const periodoLabel = periodo ? periodo.anoReferencia : '—';
-                const progresso = linha.progresso;
-                const statusPeriodo = periodo
-                    ? renderBadgeStatus(periodo.status)
-                    : '';
-                const inicioFmt = periodo ? formatarData(periodo.inicio.toISOString().split('T')[0]) : '—';
-                const fimFmt = periodo ? formatarData(periodo.fim.toISOString().split('T')[0]) : '—';
-
                 linhasTabela += `
                     <tr>
                         <td>
@@ -1080,35 +1220,35 @@ tr:hover td {
                                 <span class="servidor-nome">${linha.nome}</span>
                                 <div class="servidor-doc">
                                     <span>CPF: ${linha.cpf ? linha.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-'}</span>
-                                    ${linha.matriculas.map(m => `<span class="tag">Mat: ${m}</span>`).join('')}
+                                    ${linha.matriculas.map(m => `<span class="tag">Mat: ${m.matricula}</span>`).join('')}
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <div class="periodo-cell">
-                                <span class="periodo-label">${periodoLabel}</span>
-                                <div class="progress-bar">
-                                    <div class="progress-fill ${progresso >= 100 ? 'completo' : 'emcurso'}" style="width:${progresso}%"></div>
-                                </div>
-                                <span class="periodo-status">${inicioFmt} a ${fimFmt}</span>
-                                ${statusPeriodo}
+                            <div class="periodos-stack">
+                                ${linha.periodosFerias.slice(0, 1).map(i => `
+                                    <div class="periodo-item ${i.isAtual ? 'atual' : 'anterior'}">
+                                        <div class="periodo-head">
+                                            <span class="periodo-label">
+                                                <span class="material-symbols-outlined" style="font-size:14px;">calendar_month</span>
+                                                ${i.periodo.anoReferencia}
+                                            </span>
+                                            ${renderBadgeStatus(i.status)}
+                                        </div>
+                                        <span class="periodo-datas">${formatarData(i.periodo.inicio.toISOString().split('T')[0])} a ${formatarData(i.periodo.fim.toISOString().split('T')[0])}</span>
+                                        ${i.isAtual ? `
+                                            <div class="progress-bar">
+                                                <div class="progress-fill ${i.progresso >= 100 ? 'completo' : 'emcurso'}"
+                                                     style="width:${i.progresso}%"></div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
                             </div>
                         </td>
                         <td>${linha.dataAdmissao ? formatarData(linha.dataAdmissao) : '-'}</td>
-                        <td>
-                            <div class="data-cell">
-                                ${renderDataCell(linha.ultimaFolga, 'folga')}
-                                ${linha.proximaFolga ? `<span class="data-obs" style="color:var(--purple);font-weight:600;">Próxima: ${formatarData(linha.proximaFolga.raw)}</span>` : ''}
-                                ${linha.folgasDisponiveis > 0 ? `<span class="data-obs" style="color:var(--green);font-weight:600;">${linha.folgasDisponiveis} disponível(is)</span>` : ''}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="data-cell">
-                                ${renderDataCell(linha.ultimaFerias, 'ferias')}
-                                ${linha.proximaFerias ? `<span class="data-obs" style="color:var(--purple);font-weight:600;">Próxima: ${formatarData(linha.proximaFerias.raw)}</span>` : ''}
-                                ${linha.feriasDisponiveis > 0 ? `<span class="data-obs" style="color:var(--green);font-weight:600;">${linha.feriasDisponiveis} período(s)</span>` : ''}
-                            </div>
-                        </td>
+                        <td>${renderColunaPeriodos(linha.periodosFolga, 'folga')}</td>
+                        <td>${renderColunaPeriodos(linha.periodosFerias, 'ferias')}</td>
                     </tr>
                 `;
             });
@@ -1141,7 +1281,6 @@ tr:hover td {
         msg.className = 'mensagem ' + tipo;
     }
 
-    // Carrega automaticamente ao abrir
     document.addEventListener('DOMContentLoaded', function() {
         carregarControle();
     });
