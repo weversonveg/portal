@@ -1,1284 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
-
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1f3a5f">
-<title>Linha do tempo — Vale Transporte</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,table_view,beach_access,cake,event_upcoming,event_available,cancel,hourglass_top,error_outline,hourglass_bottom">
-
-<script>
-(function () {
-    try {
-        var t = localStorage.getItem('tema-vt') || 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
-
-        var menuFechado = localStorage.getItem('menu-vt-fechado');
-        if (menuFechado === '1') {
-            document.documentElement.classList.add('menu-inicial-fechado');
-        }
-    } catch (e) {}
-})();
-</script>
-
-<style>
-:root,
-:root[data-theme="light"] {
-    --brand: #1f3a5f;
-    --brand-hover: #2c4d77;
-    --brand-soft: #e8eef5;
-
-    --gray-50:  #fafafa;
-    --gray-100: #f5f5f6;
-    --gray-200: #e4e4e7;
-    --gray-300: #d4d4d8;
-    --gray-400: #a1a1aa;
-    --gray-500: #71717a;
-    --gray-600: #52525b;
-    --gray-700: #3f3f46;
-    --gray-800: #27272a;
-    --gray-900: #18181b;
-
-    --ok: #1a6a38;
-    --ok-bg: #f1f8f3;
-    --ok-bd: #bfdcc6;
-    --warn: #8a5610;
-    --warn-bg: #fbf7ef;
-    --warn-bd: #e6d3ac;
-    --danger: #9a1e1e;
-    --danger-bg: #fbf3f3;
-    --danger-bd: #e0c2c2;
-    --info: #1a4d8f;
-    --info-bg: #f0f5fb;
-    --info-bd: #c3d5e9;
-
-    --background: #eef0f3;
-    --surface: #ffffff;
-    --surface-2: #f7f8fa;
-    --surface-3: #eef0f3;
-
-    --text: #1a1d21;
-    --text-secondary: #4d5560;
-    --text-muted: #7b8490;
-
-    --border: #d8dce0;
-    --border-strong: #b8bfc7;
-
-    --shadow-sm: 0 1px 2px rgba(20,25,35,.05);
-    --shadow-md: 0 2px 6px rgba(20,25,35,.08);
-
-    --sidebar-width: 268px;
-    --topbar-height: 56px;
-
-    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-soft: var(--ok-bg);
-    --red: var(--danger);
-    --red-soft: var(--danger-bg);
-    --yellow: var(--warn);
-    --yellow-soft: var(--warn-bg);
-    --blue: var(--brand);
-    --blue-soft: var(--brand-soft);
-    --purple: #6a1b9a;
-    --purple-soft: #f3e8f7;
-    --border-light: var(--surface-2);
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
-}
-
-:root[data-theme="dark"] {
-    --brand: #7ba3cd;
-    --brand-hover: #96b8db;
-    --brand-soft: #1a2634;
-
-    --gray-50:  #1a1c20;
-    --gray-100: #1e2024;
-    --gray-200: #2a2d31;
-    --gray-300: #3a3d42;
-    --gray-400: #52555b;
-    --gray-500: #71757c;
-    --gray-600: #a1a5ab;
-    --gray-700: #d4d7db;
-    --gray-800: #e4e6e9;
-    --gray-900: #f4f5f7;
-
-    --ok: #86c79a;
-    --ok-bg: #13251a;
-    --ok-bd: #2f5c3f;
-    --warn: #e4c56c;
-    --warn-bg: #26200f;
-    --warn-bd: #5c4d2a;
-    --danger: #f0a1a1;
-    --danger-bg: #241515;
-    --danger-bd: #5c3434;
-    --info: #a3b8dd;
-    --info-bg: #141b28;
-    --info-bd: #33405a;
-
-    --background: #0f1114;
-    --surface: #171a1e;
-    --surface-2: #1c1f23;
-    --surface-3: #23262b;
-
-    --text: #eceef1;
-    --text-secondary: #a1a5ab;
-    --text-muted: #71757c;
-
-    --border: #2a2d32;
-    --border-strong: #3a3d42;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-    --shadow-md: 0 2px 6px rgba(0,0,0,.5);
-
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-soft: var(--ok-bg);
-    --red: var(--danger);
-    --red-soft: var(--danger-bg);
-    --yellow: var(--warn);
-    --yellow-soft: var(--warn-bg);
-    --blue: var(--brand);
-    --blue-soft: var(--brand-soft);
-    --purple: #d0a9f0;
-    --purple-soft: #241633;
-    --border-light: var(--surface-2);
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
-}
-
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font);
-    -webkit-tap-highlight-color: transparent;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    background: var(--background);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
-body { overflow: hidden; }
-button { font: inherit; color: inherit; cursor: pointer; }
-
-:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-    border-radius: 3px;
-}
-
-.visually-hidden {
-    position: absolute !important;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0);
-    white-space: nowrap; border: 0;
-}
-
-.layout {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-}
-
-.sidebar {
-    width: var(--sidebar-width);
-    min-width: var(--sidebar-width);
-    height: 100%;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    transition: width .25s ease, min-width .25s ease, transform .25s ease;
-    overflow: hidden;
-    z-index: 100;
-}
-.sidebar.fechado { width: 0; min-width: 0; border-right: none; }
-:root.menu-inicial-fechado .sidebar { width: 0; min-width: 0; border-right: none; }
-
-.sidebar-inner {
-    width: var(--sidebar-width);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    height: var(--topbar-height);
-    padding: 0 12px 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    background: var(--surface);
-}
-
-.sidebar-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
-.sidebar-brand { display: flex; flex-direction: column; gap: 0; min-width: 0; flex: 1; }
-.sidebar-brand strong { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
-.sidebar-brand span {
-    font-size: 10.5px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .4px;
-    line-height: 1.2; margin-top: 1px;
-}
-
-.btn-fechar-sidebar {
-    display: none; width: 32px; height: 32px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    align-items: center; justify-content: center; flex-shrink: 0;
-}
-.btn-fechar-sidebar .material-symbols-outlined { font-size: 20px; }
-@media (max-width: 900px) {
-    .sidebar.aberta-mobile .btn-fechar-sidebar { display: inline-flex; }
-}
-
-.sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-
-.menu-section { padding: 16px 0 8px; }
-.menu-section-title {
-    padding: 0 20px; font-size: 10.5px; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: .7px; margin-bottom: 6px;
-}
-.menu { list-style: none; padding: 0 10px; display: flex; flex-direction: column; gap: 1px; }
-.menu-item a {
-    display: flex; align-items: center; gap: 11px;
-    padding: 9px 12px; border-radius: 4px;
-    text-decoration: none; color: var(--text-secondary);
-    font-size: 13.5px; font-weight: 500;
-    position: relative; white-space: nowrap;
-}
-.menu-item a:hover { background: var(--surface-2); color: var(--text); }
-.menu-item.ativo a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
-.menu-item.ativo a::before {
-    content: ""; position: absolute; left: -10px; top: 50%;
-    transform: translateY(-50%); width: 3px; height: 20px;
-    background: var(--brand); border-radius: 0 3px 3px 0;
-}
-.menu-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-.menu-item.ativo .material-symbols-outlined { opacity: 1; }
-
-.menu-item .menu-badge {
-    margin-left: auto; font-size: 10.5px; font-weight: 600;
-    color: var(--warn); background: var(--warn-bg);
-    border: 1px solid var(--warn-bd);
-    padding: 1px 7px; border-radius: 999px; line-height: 1.4;
-}
-
-.menu-section-sair {
-    margin-top: 8px; padding-top: 16px;
-    border-top: 1px solid var(--border); padding-bottom: 8px;
-}
-.menu-item-sair button {
-    display: flex; align-items: center; gap: 11px;
-    width: 100%; padding: 9px 12px; border-radius: 4px;
-    background: transparent; border: none;
-    color: var(--text-secondary); font-size: 13.5px;
-    font-weight: 500; text-align: left; white-space: nowrap;
-}
-.menu-item-sair button:hover { background: var(--danger-bg); color: var(--danger); }
-.menu-item-sair button .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-
-.sidebar-info { padding: 16px 22px 22px; font-size: 10.5px; color: var(--text-muted); line-height: 1.5; }
-.sidebar-info strong { color: var(--text-secondary); font-weight: 600; display: block; font-size: 11px; margin-bottom: 2px; }
-
-.sidebar-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .45);
-    z-index: 150; opacity: 0; transition: opacity .2s ease;
-}
-.sidebar-backdrop.ativo { display: block; opacity: 1; }
-@media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
-
-.main {
-    flex: 1 1 auto; min-width: 0; min-height: 0;
-    display: flex; flex-direction: column; height: 100%;
-    overflow: hidden; background: var(--background);
-}
-
-.topbar {
-    height: var(--topbar-height);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; gap: 16px; flex-shrink: 0; z-index: 50;
-}
-.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; }
-.btn-menu {
-    width: 34px; height: 34px; flex-shrink: 0;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-}
-.btn-menu:hover { background: var(--surface-2); color: var(--text); }
-.btn-menu .material-symbols-outlined { font-size: 20px; }
-
-.topbar-title { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.topbar-title strong {
-    font-size: 13.5px; font-weight: 600; color: var(--text);
-    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-title span {
-    font-size: 11px; color: var(--text-muted); line-height: 1.2;
-    margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.topbar-btn {
-    height: 34px; padding: 0 12px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12.5px; font-weight: 500;
-}
-.topbar-btn:hover { background: var(--surface-2); color: var(--text); }
-.topbar-btn .material-symbols-outlined { font-size: 18px; }
-.topbar-btn.carregando .material-symbols-outlined { animation: girar 1s linear infinite; }
-@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.topbar-user-group { display: flex; align-items: center; gap: 4px; }
-.topbar-user {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 10px 4px 4px; border-radius: 999px;
-    border: 1px solid var(--border); background: var(--surface-2);
-    max-width: 220px; min-width: 0;
-}
-.user-avatar {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--brand); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600; flex-shrink: 0;
-}
-.user-info { display: flex; flex-direction: column; gap: 0; min-width: 0; line-height: 1.15; }
-.user-info strong {
-    font-size: 12px; font-weight: 600; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.user-info span {
-    font-size: 10.5px; color: var(--text-muted);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-sair {
-    width: 34px; height: 34px; padding: 0;
-    background: transparent; border: none; border-radius: 4px;
-    color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: background-color .12s ease, color .12s ease;
-}
-.topbar-sair:hover { background: var(--danger-bg); color: var(--danger); }
-.topbar-sair .material-symbols-outlined { font-size: 20px; }
-
-.btn-tema .icon-dark  { display: none; }
-.btn-tema .icon-light { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
-
-.modal-sair-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .55);
-    z-index: 9999; align-items: center; justify-content: center;
-    padding: 20px; opacity: 0; transition: opacity .18s ease;
-}
-.modal-sair-overlay.ativo { display: flex; opacity: 1; }
-.modal-sair {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; max-width: 400px; width: 100%;
-    padding: 28px 28px 22px;
-    box-shadow: 0 20px 50px rgba(20, 25, 35, .28);
-    text-align: center; animation: modalSairEntrar .22s ease;
-}
-@keyframes modalSairEntrar {
-    from { transform: translateY(-12px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-.modal-sair-icone {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--danger-bg); color: var(--danger);
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-bottom: 16px; border: 1px solid var(--danger-bd);
-}
-.modal-sair-icone .material-symbols-outlined { font-size: 28px; }
-.modal-sair-titulo {
-    font-size: 17px; font-weight: 600; color: var(--text);
-    letter-spacing: -.01em; margin-bottom: 22px; line-height: 1.25;
-}
-.modal-sair-acoes { display: flex; gap: 10px; justify-content: center; }
-.modal-sair-btn {
-    height: 38px; padding: 0 18px; border-radius: 5px;
-    border: 1px solid transparent; font-size: 13.5px; font-weight: 500;
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; white-space: nowrap; min-width: 110px;
-}
-.modal-sair-btn .material-symbols-outlined { font-size: 17px; }
-.modal-sair-btn-cancelar {
-    background: var(--surface); color: var(--text);
-    border-color: var(--border-strong); order: 1;
-}
-.modal-sair-btn-cancelar:hover { background: var(--surface-2); border-color: var(--gray-400); }
-.modal-sair-btn-confirmar {
-    background: var(--danger); color: #fff;
-    border-color: var(--danger); order: 2;
-}
-.modal-sair-btn-confirmar:hover { background: #7d1717; border-color: #7d1717; }
-.modal-sair-btn:disabled { opacity: .65; cursor: not-allowed; }
-
-@media (max-width: 480px) {
-    .modal-sair-overlay { padding: 0; align-items: flex-end; }
-    .modal-sair {
-        padding: 24px 20px 18px; border-radius: 12px 12px 0 0;
-        max-width: 100%; align-self: flex-end; margin: 0;
-    }
-    .modal-sair-acoes { flex-direction: column-reverse; width: 100%; }
-    .modal-sair-btn { width: 100%; min-width: 0; }
-}
-
-.content-page {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 24px 28px 32px;
-}
-
-.breadcrumb {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 13px; color: var(--text-muted);
-    margin-bottom: 12px;
-}
-.breadcrumb .material-symbols-outlined { font-size: 17px; }
-.breadcrumb a { text-decoration: none; color: inherit; }
-.breadcrumb a:hover { color: var(--brand); }
-.breadcrumb .sep { opacity: .5; }
-
-.page-header-page {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
-}
-.page-header-page h1 {
-    font-family: var(--font-serif);
-    font-size: 24px; font-weight: 600; color: var(--text);
-    margin-bottom: 4px;
-}
-.page-header-page p { font-size: 13px; color: var(--text-secondary); }
-
-.form-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; box-shadow: var(--shadow-sm);
-    padding: 18px 20px; margin-bottom: 14px;
-}
-.card-title {
-    font-size: 13px; font-weight: 700; color: var(--text);
-    margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
-    padding-bottom: 10px; border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: .3px;
-}
-.card-title .material-symbols-outlined { color: var(--brand); font-size: 18px; }
-
-.form-card.busca-compacta { padding: 12px 16px; margin-bottom: 12px; }
-.busca-linha { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-.busca-linha .form-group { flex: 1; min-width: 220px; margin-bottom: 0; }
-.busca-linha .form-group label { font-size: 10px; margin-bottom: 3px; }
-
-.form-group { display: flex; flex-direction: column; }
-.form-group label {
-    font-size: 11px; font-weight: 600;
-    color: var(--text-secondary); margin-bottom: 4px;
-    text-transform: uppercase; letter-spacing: .3px;
-}
-.form-group label span { color: var(--danger); }
-
-.search-input {
-    height: 36px; padding: 0 10px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 4px; outline: none;
-    font-size: 13px; color: var(--text); width: 100%;
-    transition: border-color .15s;
-}
-.search-input:focus { border-color: var(--brand); }
-.search-input:disabled { background: var(--surface-3); color: var(--text-muted); cursor: not-allowed; }
-
-.btn-buscar {
-    width: auto; height: 36px; padding: 0 18px;
-    background: var(--brand); color: #fff;
-    border: none; border-radius: 4px;
-    font-weight: 600; font-size: 12px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-    flex-shrink: 0; letter-spacing: .2px;
-}
-.btn-buscar:hover { background: var(--brand-hover); }
-.btn-buscar:disabled { opacity: .6; cursor: not-allowed; }
-.btn-buscar .material-symbols-outlined { font-size: 16px; }
-
-.cabecalho-compacto {
-    display: flex; align-items: center; gap: 14px;
-    flex-wrap: wrap; padding: 10px 18px;
-}
-.cab-item { display: flex; flex-direction: column; gap: 1px; }
-.cab-label {
-    font-size: 9px; font-weight: 700; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .5px;
-}
-.cab-item strong { font-size: 13px; color: var(--text); font-weight: 600; }
-.cab-div { width: 1px; height: 24px; background: var(--border); }
-
-.resumo-executivo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-.resumo-matricula {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; padding: 12px 16px; box-shadow: var(--shadow-sm);
-}
-.resumo-matricula-header {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 10px; padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-}
-.resumo-matricula-badge {
-    font-size: 10px; font-weight: 700; color: var(--brand);
-    background: var(--brand-soft); padding: 3px 9px; border-radius: 3px;
-    letter-spacing: .3px; text-transform: uppercase;
-}
-.resumo-matricula-nome { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-.resumo-cards-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.resumo-bloco {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 5px; padding: 10px 12px; flex: 1; min-width: 220px;
-}
-.resumo-bloco-titulo {
-    font-size: 11px; font-weight: 700; color: var(--text);
-    margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
-    text-transform: uppercase; letter-spacing: .3px;
-}
-.resumo-bloco-titulo .material-symbols-outlined { font-size: 14px; color: var(--brand); }
-.resumo-chips { display: flex; gap: 5px; flex-wrap: wrap; }
-
-.chip {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 3px;
-    font-size: 11px; font-weight: 500;
-    background: var(--surface-3); color: var(--text-secondary);
-    border: 1px solid var(--border);
-}
-.chip .num { font-weight: 700; font-size: 12px; }
-.chip-num-verde    { color: var(--ok); }
-.chip-num-amarelo  { color: var(--warn); }
-.chip-num-vermelho { color: var(--danger); }
-.chip-num-roxo     { color: var(--purple); }
-.chip-num-azul     { color: var(--brand); }
-.chip-num-cinza    { color: var(--text); }
-
-.filtros-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-.filtro-group {
-    display: flex; flex-direction: column;
-    min-width: 130px; flex: 1; max-width: 180px;
-}
-.filtro-group label {
-    font-size: 10px; font-weight: 600;
-    color: var(--text-muted); margin-bottom: 3px;
-    text-transform: uppercase; letter-spacing: .3px;
-}
-.filtro-select {
-    height: 34px; padding: 0 8px;
-    border: 1px solid var(--border); border-radius: 4px;
-    font-size: 12px; background: var(--surface);
-    color: var(--text); outline: none;
-}
-.filtro-select:focus { border-color: var(--brand); }
-
-.periodos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.periodos-table th {
-    background: var(--surface-2); padding: 8px 10px;
-    text-align: left; font-weight: 700;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    font-size: 10px; text-transform: uppercase;
-    white-space: nowrap; letter-spacing: .3px;
-}
-.periodos-table td {
-    padding: 9px 10px; border-bottom: 1px solid var(--border);
-    vertical-align: middle; color: var(--text);
-}
-.periodos-table tr:hover { background: var(--surface-2); }
-
-.badge-status {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 3px 7px; border-radius: 3px;
-    font-size: 10px; font-weight: 600; white-space: nowrap;
-    background: var(--surface-2); border: 1px solid var(--border);
-}
-.badge-status .material-symbols-outlined { font-size: 11px; }
-.badge-gozado      { color: var(--ok);      border-color: var(--ok-bd);      background: var(--ok-bg); }
-.badge-pendente    { color: var(--warn);    border-color: var(--warn-bd);    background: var(--warn-bg); }
-.badge-vencido     { color: var(--danger);  border-color: var(--danger-bd);  background: var(--danger-bg); }
-.badge-atual       { color: var(--brand);   border-color: var(--brand-soft); background: var(--brand-soft); }
-.badge-programado  { color: var(--purple);  border-color: #e1bee7;           background: var(--purple-soft); }
-.badge-disponivel  { color: var(--ok);      border-color: var(--ok-bd);      background: var(--ok-bg); }
-.badge-perdido     { color: var(--danger);  border-color: var(--danger-bd);  background: var(--danger-bg); }
-.badge-extemporaneo{ color: var(--warn);    border-color: var(--warn-bd);    background: var(--warn-bg); }
-.badge-parcial     { color: var(--info);    border-color: var(--info-bd);    background: var(--info-bg); }
-
-.tipo-badge {
-    font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .3px;
-    padding: 2px 6px; border-radius: 3px; white-space: nowrap;
-    background: var(--surface-3); color: var(--text-secondary);
-    border: 1px solid var(--border);
-}
-
-.mensagem-erro {
-    background: var(--danger-bg); border: 1px solid var(--danger-bd);
-    color: var(--danger); padding: 10px 14px;
-    border-radius: 4px; font-size: 12px; font-weight: 500;
-    margin-bottom: 14px; display: none;
-    align-items: center; gap: 8px;
-}
-.mensagem-erro.ativo { display: flex; }
-.hidden { display: none !important; }
-
-.loading-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.15); z-index: 9998;
-    align-items: center; justify-content: center;
-}
-.loading-overlay.ativo { display: flex; }
-.loading-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.15);
-    padding: 26px 36px; display: flex; flex-direction: column;
-    align-items: center; gap: 14px;
-    animation: loadingIn .2s ease;
-}
-@keyframes loadingIn {
-    from { transform: scale(.92); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
-}
-.spinner {
-    width: 38px; height: 38px;
-    border: 3px solid var(--border);
-    border-top-color: var(--brand);
-    border-radius: 50%; animation: girar .8s linear infinite;
-}
-.loading-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
-
-.modal-alerta-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.5); z-index: 9999;
-    align-items: center; justify-content: center; padding: 20px;
-}
-.modal-alerta-overlay.ativo { display: flex; animation: fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-@keyframes slideDown { from{transform:translateY(-20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-.modal-alerta {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; max-width: 400px; width: 100%;
-    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3);
-    animation: slideDown .3s ease;
-}
-.modal-alerta-header { padding: 22px 22px 14px; text-align: center; }
-.modal-alerta-icon {
-    width: 52px; height: 52px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 14px; background: var(--brand-soft); color: var(--brand);
-}
-.modal-alerta-icon .material-symbols-outlined { font-size: 28px; }
-.modal-alerta-titulo { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.modal-alerta-mensagem { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.modal-alerta-footer { padding: 14px 22px 22px; display: flex; justify-content: center; }
-.modal-alerta-btn {
-    height: 38px; background: var(--brand); color: #fff;
-    border: none; border-radius: 4px; padding: 0 28px;
-    font-size: 13px; font-weight: 600; cursor: pointer; min-width: 110px;
-}
-.modal-alerta-btn:hover { background: var(--brand-hover); }
-
-@media (max-width: 900px) {
-    .sidebar {
-        position: fixed; top: 0; left: 0;
-        height: 100vh; height: 100dvh;
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-        transition: transform .25s ease;
-        box-shadow: var(--shadow-md);
-        border-right: 1px solid var(--border); z-index: 200;
-    }
-    .sidebar.aberta-mobile { transform: translateX(0); }
-    .sidebar.fechado {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-        border-right: 1px solid var(--border);
-    }
-    :root.menu-inicial-fechado .sidebar {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-    }
-    .topbar { padding: 0 16px; gap: 12px; }
-    .topbar-title span { display: none; }
-    .topbar-user .user-info span { display: none; }
-    .topbar-btn .btn-texto { display: none; }
-    .topbar-btn { padding: 0 10px; }
-}
-
-@media (max-width: 768px) {
-    .content-page { padding: 16px 12px 32px; }
-    .cabecalho-compacto { gap: 8px; }
-    .cab-div { display: none; }
-    .filtros-row { flex-direction: column; }
-    .filtro-group { max-width: 100%; }
-    .busca-linha { flex-direction: column; align-items: stretch; }
-    .btn-buscar { width: 100%; }
-    .resumo-cards-row { flex-direction: column; }
-}
-
-@media (max-width: 640px) {
-    .topbar { padding: 0 12px; gap: 8px; }
-    .topbar-btn { padding: 0 8px; height: 32px; }
-    .topbar-user { display: none; }
-    .topbar-right { gap: 4px; }
-    .page-header-page h1 { font-size: 20px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-@media print {
-    @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; overflow: visible !important; }
-    .layout { display: block; height: auto; overflow: visible; }
-    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
-    .topbar-sair, .modal-sair-overlay, .loading-overlay,
-    .modal-alerta-overlay, .busca-compacta, .filtros-row { display: none !important; }
-    .main { overflow: visible; }
-    .content-page { overflow: visible; padding: 0; }
-    .form-card { box-shadow: none; border: 1px solid #999; }
-    .periodos-table { font-size: 10px; }
-    .periodos-table tr { page-break-inside: avoid; }
-}
-</style>
-</head>
-
-<body>
-
-<div class="layout">
-
-    <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
-        <div class="sidebar-inner">
-
-            <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
-                <div class="sidebar-brand">
-                    <strong>Vale Transporte</strong>
-                    <span>SEMED · RH</span>
-                </div>
-                <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
-                </button>
-            </div>
-
-            <div class="sidebar-scroll">
-                <nav class="menu-section">
-                    <div class="menu-section-title">Principal</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="inicial.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                                <span>Painel de controle</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="servidores.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                                <span>Servidores e vínculos</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Configuração</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="configuracao.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                <span>Dias úteis e meses</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades escolares</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Operação</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                                <span>Lançamentos da unidade</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="lancamento.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                                <span>Férias, folgas e licenças</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="calculo.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                                <span>Cálculo e vales</span>
-                                <span class="menu-badge">Mensal</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Consultas</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="relatorios.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                                <span>Relatórios gerais</span>
-                            </a>
-                        </li>
-                        <li class="menu-item ativo">
-                            <a href="linha_tempo.html" aria-current="page">
-                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
-                                <span>Linha do tempo</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section menu-section-sair">
-                    <ul class="menu">
-                        <li class="menu-item menu-item-sair">
-                            <button type="button" id="btnSairSidebar">
-                                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                                <span>Sair do sistema</span>
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-
-                <div class="sidebar-info">
-                    <strong>Versão 1.0.0</strong>
-                    Sistema de gestão de vale transporte
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
-
-    <div class="main">
-
-        <header class="topbar">
-            <div class="topbar-left">
-                <button type="button" class="btn-menu" id="btnMenuToggle" aria-label="Abrir ou fechar menu lateral" aria-controls="sidebarMenu" aria-expanded="true" title="Abrir / fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
-                </button>
-
-                <div class="topbar-title">
-                    <strong>Linha do tempo</strong>
-                    <span>SEMED — Visão consolidada de férias e folgas</span>
-                </div>
-            </div>
-
-            <div class="topbar-right">
-                <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
-                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
-                    <span class="btn-texto">Atualizar</span>
-                </button>
-
-                <button type="button" class="topbar-btn btn-tema" id="btnTema" title="Alternar tema claro/escuro">
-                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
-                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-                    <span class="btn-texto">Tema</span>
-                </button>
-
-                <div class="topbar-user-group">
-                    <div class="topbar-user" title="Usuário logado">
-                        <div class="user-avatar" id="userAvatar">—</div>
-                        <div class="user-info">
-                            <strong id="userNameLabel">Usuário</strong>
-                            <span id="userEmailLabel">Carregando…</span>
-                        </div>
-                    </div>
-
-                    <button type="button" class="topbar-sair" id="btnSairTopbar" title="Sair do sistema" aria-label="Sair do sistema">
-                        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <div class="content-page">
-
-            <div class="breadcrumb">
-                <span class="material-symbols-outlined">home</span>
-                <a href="inicial.html">Início</a>
-                <span class="sep">/</span>
-                <span>Linha do tempo</span>
-            </div>
-
-            <div class="page-header-page">
-                <div>
-                    <h1>Linha do Tempo do Servidor</h1>
-                    <p>Visão consolidada de férias e folgas por período aquisitivo.</p>
-                </div>
-            </div>
-
-            <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="polite">
-                <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
-                <span id="textoErro">Erro ao carregar dados.</span>
-            </div>
-
-            <section class="form-card busca-compacta" id="formBuscaCard">
-                <div class="busca-linha">
-                    <div class="form-group">
-                        <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
-                        <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20" autocomplete="off" inputmode="numeric">
-                    </div>
-                    <button class="btn-buscar" id="btnBuscar">
-                        <span class="material-symbols-outlined" aria-hidden="true">search</span>
-                        Buscar
-                    </button>
-                </div>
-            </section>
-
-            <div id="resultadoContainer" class="hidden">
-
-                <section class="form-card cabecalho-compacto" aria-label="Dados do servidor">
-                    <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">—</strong></div>
-                    <div class="cab-div" aria-hidden="true"></div>
-                    <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">—</strong></div>
-                    <div class="cab-div" aria-hidden="true"></div>
-                    <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">—</strong></div>
-                    <div class="cab-div" aria-hidden="true"></div>
-                    <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
-                </section>
-
-                <div id="resumoExecutivo" class="resumo-executivo"></div>
-
-                <section class="form-card">
-                    <div class="card-title">
-                        <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
-                        Situação de Férias e Folgas por Período
-                    </div>
-
-                    <div class="filtros-row">
-                        <div class="filtro-group">
-                            <label for="filtroMatricula">Matrícula</label>
-                            <select id="filtroMatricula" class="filtro-select"></select>
-                        </div>
-                        <div class="filtro-group">
-                            <label for="filtroTipo">Tipo</label>
-                            <select id="filtroTipo" class="filtro-select">
-                                <option value="">Todos</option>
-                                <option value="ferias">Férias</option>
-                                <option value="folga">Folga Aniversário</option>
-                            </select>
-                        </div>
-                        <div class="filtro-group">
-                            <label for="filtroStatus">Status</label>
-                            <select id="filtroStatus" class="filtro-select">
-                                <option value="">Todos</option>
-                                <option value="gozado">Gozado</option>
-                                <option value="parcial">Parcial</option>
-                                <option value="disponivel">Disponível</option>
-                                <option value="pendente">Pendente</option>
-                                <option value="programado">Programado</option>
-                                <option value="vencido">Vencido</option>
-                                <option value="perdido">Perdido</option>
-                                <option value="atual">Em andamento</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="overflow-x:auto;">
-                        <table class="periodos-table">
-                            <thead>
-                                <tr>
-                                    <th>Servidor</th>
-                                    <th>Matrícula</th>
-                                    <th>Tipo</th>
-                                    <th>Período</th>
-                                    <th>Ciclo Aquisitivo</th>
-                                    <th>Prazo de Gozo</th>
-                                    <th>Status</th>
-                                    <th>Gozo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaUnica"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite">
-    <div class="loading-box">
-        <div class="spinner" aria-hidden="true"></div>
-        <span class="loading-text" id="loadingTexto">Carregando...</span>
-    </div>
-</div>
-
-<div id="modalAlerta" class="modal-alerta-overlay" role="presentation">
-    <div class="modal-alerta" role="alertdialog" aria-modal="true" aria-labelledby="modalAlertaTitulo">
-        <div class="modal-alerta-header">
-            <div class="modal-alerta-icon" id="modalAlertaIcon" aria-hidden="true"><span class="material-symbols-outlined">info</span></div>
-            <div class="modal-alerta-titulo" id="modalAlertaTitulo">Aviso</div>
-            <div class="modal-alerta-mensagem" id="modalAlertaMensagem">Mensagem</div>
-        </div>
-        <div class="modal-alerta-footer">
-            <button type="button" class="modal-alerta-btn" id="btnFecharModalAlerta">OK</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-sair-overlay" id="modalSair" role="presentation">
-    <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
-        <div class="modal-sair-icone" aria-hidden="true">
-            <span class="material-symbols-outlined" id="modalSairIconeSimbolo">logout</span>
-        </div>
-        <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
-        <div class="modal-sair-acoes">
-            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">Cancelar</button>
-            <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
-                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                Sim, sair
-            </button>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-import { auth } from "./firebase.js";
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-(function () {
-    var btn = document.getElementById('btnTema');
-    if (btn) {
-        btn.addEventListener('click', function () {
-            var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-            var novo  = atual === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', novo);
-            var meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
-            try { localStorage.setItem('tema-vt', novo); } catch (e) {}
-        });
-    }
-})();
-
-(function () {
-    var sidebar   = document.getElementById('sidebarMenu');
-    var backdrop  = document.getElementById('sidebarBackdrop');
-    var btn       = document.getElementById('btnMenuToggle');
-    var btnFechar = document.getElementById('btnFecharSidebar');
-    var CHAVE     = 'menu-vt-fechado';
-
-    function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
-
-    var salvo = null;
-    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    var iniciarFechadoDesktop = salvo === '1';
-
-    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-    else fecharMobile(false);
-
-    if (btn) {
-        btn.addEventListener('click', function () {
-            if (isMobile()) {
-                var aberta = sidebar.classList.contains('aberta-mobile');
-                if (aberta) fecharMobile(true); else abrirMobile();
-            } else {
-                var fechado = sidebar.classList.contains('fechado');
-                aplicarEstadoDesktop(!fechado, true);
-            }
-        });
-    }
-    if (btnFechar) btnFechar.addEventListener('click', function () { fecharMobile(true); });
-    if (backdrop) backdrop.addEventListener('click', function () { fecharMobile(true); });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) fecharMobile(true);
-        if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); }
-    });
-
-    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
-        link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); });
-    });
-
-    var ultimoMobile = isMobile();
-    window.addEventListener('resize', function () {
-        var agoraMobile = isMobile();
-        if (agoraMobile !== ultimoMobile) {
-            ultimoMobile = agoraMobile;
-            if (agoraMobile) fecharMobile(false);
-            else {
-                sidebar.classList.remove('aberta-mobile');
-                document.body.style.overflow = '';
-                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-            }
-        }
-    });
-
-    function aplicarEstadoDesktop(fechado, animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.toggle('fechado', fechado);
-        document.documentElement.classList.remove('menu-inicial-fechado');
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-        if (btn) btn.setAttribute('aria-expanded', String(!fechado));
-        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
-    }
-    function abrirMobile() {
-        sidebar.classList.add('aberta-mobile');
-        sidebar.classList.remove('fechado');
-        if (backdrop) backdrop.classList.add('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-    }
-    function fecharMobile(animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.remove('aberta-mobile');
-        sidebar.classList.add('fechado');
-        if (backdrop) backdrop.classList.remove('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-    }
-})();
-
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean)
-            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
-            .slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
-var ultimoFocoSair = null;
-function abrirModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    ultimoFocoSair = document.activeElement;
-    modal.classList.add('ativo');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () {
-        var b = document.getElementById('btnCancelarSair');
-        if (b) b.focus();
-    });
-}
-function fecharModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    modal.classList.remove('ativo');
-    document.body.style.overflow = '';
-    if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') ultimoFocoSair.focus();
-    ultimoFocoSair = null;
-}
-async function confirmarSaida() {
-    var btn = document.getElementById('btnConfirmarSair');
-    if (!btn) return;
-    var btnOriginal = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
-    try {
-        try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
-        try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
-        await signOut(auth);
-        window.location.href = 'index.html';
-    } catch (e) {
-        console.error('[Sair] Erro:', e);
-        btn.disabled = false;
-        btn.innerHTML = btnOriginal;
-    }
-}
-
-var btnSairTopbar  = document.getElementById('btnSairTopbar');
-var btnSairSidebar = document.getElementById('btnSairSidebar');
-if (btnSairTopbar)  btnSairTopbar.addEventListener('click', abrirModalSair);
-if (btnSairSidebar) btnSairSidebar.addEventListener('click', abrirModalSair);
-var b1 = document.getElementById('btnCancelarSair');
-var b2 = document.getElementById('btnConfirmarSair');
-var modalSair = document.getElementById('modalSair');
-if (b1) b1.addEventListener('click', fecharModalSair);
-if (b2) b2.addEventListener('click', confirmarSaida);
-if (modalSair) modalSair.addEventListener('click', function (e) {
-    if (e.target === this) fecharModalSair();
-});
-
-(function () {
-    var btnAtualizar = document.getElementById('btnAtualizar');
-    if (!btnAtualizar) return;
-    btnAtualizar.addEventListener('click', function () {
-        if (btnAtualizar.classList.contains('carregando')) return;
-        btnAtualizar.classList.add('carregando');
-        btnAtualizar.disabled = true;
-        try {
-            Object.keys(localStorage)
-                .filter(function (k) { return k.startsWith('cache-'); })
-                .forEach(function (k) { localStorage.removeItem(k); });
-        } catch (e) {}
-        window.location.reload();
-    });
-})();
-</script>
-
 <script type="module">
 import { db, auth } from "./firebase.js";
 import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1289,23 +8,36 @@ let acessoAutorizado = false;
 let linhasUnificadas = [];
 let nomeServidorAtual = '';
 let ultimoTermoBuscado = '';
-let servidorAtualRef = null; // 👇 referência ao servidor atual para obter diasFerias
+let servidorAtualRef = null;
 
 const DIAS_PADRAO = 30;
 
-// 👇 OPÇÃO B: direito manual por vínculo/servidor; padrão 30
 function obterDiasPorPeriodo(servidor, vinculo) {
     if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
     if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
     return DIAS_PADRAO;
 }
 
-// 👇 NOVO: calcula dias consumidos em um registro de férias
 function calcularDiasRegistro(reg) {
-    const ini = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data);
-    const fim = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.dataFim || reg.data_fim) || ini;
-    if (!ini || !fim) return 0;
-    const d = Math.round((fim - ini) / 86400000) + 1;
+    // Tenta todos os nomes possíveis de campos
+    const ini = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data || reg.inicio);
+    const fim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino || reg.termino || reg.fim);
+    
+    if (!ini) {
+        console.warn('[DEBUG] Registro sem data de início:', reg);
+        return 0;
+    }
+    
+    const dataFim = fim || ini; // Se não tem data fim, usa data início (folga de 1 dia)
+    const d = Math.round((dataFim - ini) / 86400000) + 1;
+    
+    // 👇 DEBUG: mostra o que foi calculado
+    console.log('[DEBUG] calcularDiasRegistro:', {
+        dataInicio: reg.dataInicio || reg.data_inicio,
+        dataFim: reg.dataFim || reg.data_fim,
+        diasCalculados: d > 0 ? d : 0
+    });
+    
     return d > 0 ? d : 0;
 }
 
@@ -1406,14 +138,13 @@ function parseDataParaDate(s){
     return null;
 }
 function verificarSeJaGozado(reg, hoje){
-    const dt=parseDataParaDate(reg.data_inicio||reg.dataInicio||reg.data||reg.data_gozo);
+    const dt=parseDataParaDate(reg.dataInicio||reg.data_inicio||reg.data||reg.data_gozo);
     if(!dt)return false;
     return dt<=hoje;
 }
 
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
-    // 👇 tolera formato "X/Y dias" (parcial não deve ser checado)
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
     const dg = parseDataParaDate(gozoStr);
     return dg ? dg > dataLimite : false;
@@ -1443,7 +174,6 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
     return null;
 }
 
-// 👇 AGORA ACEITA diasDireito COMO PARÂMETRO
 function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
@@ -1516,35 +246,79 @@ function filtrarRegistrosPorMatricula(registros, vinculo){
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
 
+    // 👇 DEBUG: mostra todos os registros carregados
+    console.log('[DEBUG] Total de registros carregados:', registros.length);
+    console.log('[DEBUG] Exemplo de registro:', registros[0]);
+
     vinculos.forEach(vinculo=>{
         if(!vinculo.dataAdmissao)return;
         const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
+        
+        // 👇 DEBUG: mostra registros filtrados por matrícula
+        console.log(`[DEBUG] Matrícula ${vinculo.matricula}: ${regsMat.length} registros`);
 
-        // 👇 NOVO: passa diasDireito do vínculo
         const diasDireito = obterDiasPorPeriodo(servidorAtualRef, vinculo);
         const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje, diasDireito);
         if(dirF){
             const feriasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('ferias')||t.includes('férias');});
+            
+            // 👇 DEBUG: mostra lançamentos de férias
+            console.log(`[DEBUG] Lançamentos de férias para matrícula ${vinculo.matricula}:`, feriasLanc.length);
+            
             dirF.periodosDetalhados.forEach(p=>{
-                // 👇 NOVO: pega TODOS os lançamentos do período e soma os dias
-                const lancs = feriasLanc.filter(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                // 👇 CORREÇÃO: busca lançamentos por ano_referencia OU por sobreposição de datas
+                const lancs = feriasLanc.filter(r => {
+                    const anoRef = (r.ano_referencia || r.ano || '');
+                    if (anoRef === p.anoReferencia) return true;
+                    
+                    // Fallback: se não tem ano_referencia, tenta por sobreposição de datas
+                    if (!anoRef) {
+                        const regIni = parseDataParaDate(r.dataInicio || r.data_inicio || r.data);
+                        const regFim = parseDataParaDate(r.dataFim || r.data_fim || regIni);
+                        if (regIni && regFim) {
+                            // Verifica se há sobreposição com o período
+                            return !(regFim < p.inicio || regIni > p.fim);
+                        }
+                    }
+                    return false;
+                });
+                
+                // 👇 DEBUG: mostra lançamentos encontrados para este período
+                if (lancs.length > 0) {
+                    console.log(`[DEBUG] Período ${p.anoReferencia}: ${lancs.length} lançamento(s) encontrado(s)`);
+                    lancs.forEach((l, i) => {
+                        const dias = calcularDiasRegistro(l);
+                        console.log(`  - Lançamento ${i+1}:`, {
+                            ano_referencia: l.ano_referencia,
+                            dataInicio: l.dataInicio || l.data_inicio,
+                            dataFim: l.dataFim || l.data_fim,
+                            dias: dias
+                        });
+                    });
+                }
+                
                 const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
                 const totalDireito = p.totalDireito || diasDireito;
 
                 let status, gozo;
 
                 if (diasConsumidos >= totalDireito) {
-                    // totalmente gozado
                     const primeiro = lancs[0];
-                    gozo = formatarData(primeiro.data_inicio || primeiro.dataInicio || primeiro.data);
+                    gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
                     status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
                 } else if (diasConsumidos > 0) {
-                    // 👇 NOVO STATUS PARCIAL
                     const primeiro = lancs[0];
                     gozo = `${diasConsumidos}/${totalDireito} dias`;
                     status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
+                    
+                    // 👇 DEBUG: mostra quando status parcial é aplicado
+                    console.log(`[DEBUG] Status PARCIAL aplicado:`, {
+                        periodo: p.anoReferencia,
+                        diasConsumidos,
+                        totalDireito,
+                        gozo
+                    });
                 } else {
-                    // nenhum lançamento
                     gozo = '';
                     if(p.status==='atual') status='atual';
                     else if(p.dataLimiteGozo<hoje) status='vencido';
@@ -1565,13 +339,13 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
             const folgasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('aniversario')||t.includes('aniversário')||t.includes('folga');});
             dirG.periodosDetalhados.forEach(p=>{
                 const lanc=folgasLanc.find(r=>{
-                    const raw=r.data||r.data_gozo||r.data_inicio||r.dataInicio;
+                    const raw=r.data||r.data_gozo||r.dataInicio||r.data_inicio;
                     const per=identificarPeriodoFolgaAniversario(raw,dataNascimento,vinculo.dataAdmissao);
                     return (per||r.ano_referencia||r.ano||'')===p.anoReferencia;
                 });
                 let status=p.status, gozo='';
                 if(lanc){
-                    const raw=lanc.data||lanc.data_gozo||lanc.data_inicio||lanc.dataInicio;
+                    const raw=lanc.data||lanc.data_gozo||lanc.dataInicio||lanc.data_inicio;
                     gozo=formatarData(raw);
                     status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 }
@@ -1746,7 +520,6 @@ async function processarServidores(docs){
     const d0=docs[0].data();
     const nome=d0.nome||d0.Nome||'Não informado';
     nomeServidorAtual = nome;
-    // 👇 guarda o servidor completo para usar no obterDiasPorPeriodo
     servidorAtualRef = d0;
     const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
     const cpfFmt=(d0.cpf||d0.CPF||'').toString();
@@ -1756,7 +529,6 @@ async function processarServidores(docs){
     const servidorIds=docs.map(d=>d.id);
     docs.forEach(d=>{
         const dt=d.data();
-        // 👇 NOVO: add() agora também captura diasFerias de cada matrícula
         const add=(mat,adm,diasFerias)=>{
             if(!mat)return;
             const ms=mat.toString().trim();
@@ -1818,7 +590,6 @@ async function processarServidores(docs){
     document.getElementById('nomeServidor').textContent=nome;
     document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
     document.getElementById('nascimentoServidor').textContent=formatarData(nascimento)||'—';
-    // 👇 mostra diasFerias na linha de matrículas
     document.getElementById('matriculasServidor').textContent=vinculos.map(v=>{
         const dias = v.diasFerias ? ` • ${v.diasFerias}d/per` : ' • 30d/per';
         return `${v.matricula} (Adm ${formatarData(v.dataAdmissao)||'—'}${dias})`;
@@ -1846,6 +617,3 @@ function ocultarErro(){document.getElementById('mensagemErro').classList.remove(
 
 window.buscarServidor = buscarServidor;
 </script>
-
-</body>
-</html>
