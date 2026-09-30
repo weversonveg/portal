@@ -1,1317 +1,341 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1f3a5f">
-<title>Relatórios — Vale Transporte</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,arrow_drop_down,picture_as_pdf,csv,table_view">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<script>
-(function () {
-    try {
-        var t = localStorage.getItem('tema-vt') || 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
-
-        var menuFechado = localStorage.getItem('menu-vt-fechado');
-        if (menuFechado === '1') {
-            document.documentElement.classList.add('menu-inicial-fechado');
-        }
-    } catch (e) {}
-})();
-</script>
+<title>Relatórios Avançados e Exportação - Vale Transporte</title>
 
 <style>
-/* ============================================================
-   LAYOUT — TOKENS (padrão servidores.html)
-   ============================================================ */
-:root,
-:root[data-theme="light"] {
-    --brand: #1f3a5f;
-    --brand-hover: #2c4d77;
-    --brand-soft: #e8eef5;
-
-    --gray-50:  #fafafa;
-    --gray-100: #f5f5f6;
-    --gray-200: #e4e4e7;
-    --gray-300: #d4d4d8;
-    --gray-400: #a1a1aa;
-    --gray-500: #71717a;
-    --gray-600: #52525b;
-    --gray-700: #3f3f46;
-    --gray-800: #27272a;
-    --gray-900: #18181b;
-
-    --ok: #1a6a38;
-    --ok-bg: #f1f8f3;
-    --ok-bd: #bfdcc6;
-    --warn: #8a5610;
-    --warn-bg: #fbf7ef;
-    --warn-bd: #e6d3ac;
-    --danger: #9a1e1e;
-    --danger-bg: #fbf3f3;
-    --danger-bd: #e0c2c2;
-    --info: #1a4d8f;
-    --info-bg: #f0f5fb;
-    --info-bd: #c3d5e9;
-
-    --background: #eef0f3;
-    --surface: #ffffff;
-    --surface-2: #f7f8fa;
-    --surface-3: #eef0f3;
-
-    --text: #1a1d21;
-    --text-secondary: #4d5560;
-    --text-muted: #7b8490;
-
-    --border: #d8dce0;
-    --border-strong: #b8bfc7;
-
-    --shadow-sm: 0 1px 2px rgba(20,25,35,.05);
-    --shadow-md: 0 2px 6px rgba(20,25,35,.08);
-
-    --sidebar-width: 268px;
-    --topbar-height: 56px;
-
-    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-
-    /* Aliases p/ compatibilidade com a página de relatórios */
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-hover: #155329;
-    --green-light: var(--ok-bg);
-    --blue: #1565c0;
-    --blue-hover: #0d47a1;
-    --red: var(--danger);
-    --red-hover: #7d1717;
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --blue: #0277bd;
+    --blue-hover: #01579b;
+    --red: #c62828;
+    --red-hover: #a01f1f;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-:root[data-theme="dark"] {
-    --brand: #7ba3cd;
-    --brand-hover: #96b8db;
-    --brand-soft: #1a2634;
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; min-height: 100%; }
+body { min-height: 100vh; background: var(--background); color: var(--text); }
 
-    --gray-50:  #1a1c20;
-    --gray-100: #1e2024;
-    --gray-200: #2a2d31;
-    --gray-300: #3a3d42;
-    --gray-400: #52555b;
-    --gray-500: #71757c;
-    --gray-600: #a1a5ab;
-    --gray-700: #d4d7db;
-    --gray-800: #e4e6e9;
-    --gray-900: #f4f5f7;
+.topbar { width: 100%; max-width: 1116px; height: 68px; margin: 16px auto 0; background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 20px; }
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 12px; }
+.logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 22px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); }
 
-    --ok: #86c79a;
-    --ok-bg: #13251a;
-    --ok-bd: #2f5c3f;
-    --warn: #e4c56c;
-    --warn-bg: #26200f;
-    --warn-bd: #5c4d2a;
-    --danger: #f0a1a1;
-    --danger-bg: #241515;
-    --danger-bd: #5c3434;
-    --info: #a3b8dd;
-    --info-bg: #141b28;
-    --info-bd: #33405a;
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 24px 16px; }
 
-    --background: #0f1114;
-    --surface: #171a1e;
-    --surface-2: #1c1f23;
-    --surface-3: #23262b;
-
-    --text: #eceef1;
-    --text-secondary: #a1a5ab;
-    --text-muted: #71757c;
-
-    --border: #2a2d32;
-    --border-strong: #3a3d42;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-    --shadow-md: 0 2px 6px rgba(0,0,0,.5);
-
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-hover: #6fb886;
-    --green-light: var(--ok-bg);
-    --blue: #8ec4ff;
-    --blue-hover: #a8d4ff;
-    --red: var(--danger);
-    --red-hover: #ffc0c0;
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
-}
-
-/* ============================================================
-   RESET
-   ============================================================ */
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font);
-    -webkit-tap-highlight-color: transparent;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    background: var(--background);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
-body { overflow: hidden; }
-button { font: inherit; color: inherit; cursor: pointer; }
-
-:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-    border-radius: 3px;
-}
-
-.visually-hidden {
-    position: absolute !important;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0);
-    white-space: nowrap; border: 0;
-}
-
-/* ============================================================
-   LAYOUT
-   ============================================================ */
-.layout {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-}
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-.sidebar {
-    width: var(--sidebar-width);
-    min-width: var(--sidebar-width);
-    height: 100%;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    transition: width .25s ease, min-width .25s ease, transform .25s ease;
-    overflow: hidden;
-    z-index: 100;
-}
-.sidebar.fechado { width: 0; min-width: 0; border-right: none; }
-:root.menu-inicial-fechado .sidebar { width: 0; min-width: 0; border-right: none; }
-
-.sidebar-inner {
-    width: var(--sidebar-width);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    height: var(--topbar-height);
-    padding: 0 12px 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    background: var(--surface);
-}
-
-.sidebar-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
-.sidebar-brand { display: flex; flex-direction: column; gap: 0; min-width: 0; flex: 1; }
-.sidebar-brand strong { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
-.sidebar-brand span {
-    font-size: 10.5px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .4px;
-    line-height: 1.2; margin-top: 1px;
-}
-
-.btn-fechar-sidebar {
-    display: none; width: 32px; height: 32px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    align-items: center; justify-content: center; flex-shrink: 0;
-}
-.btn-fechar-sidebar .material-symbols-outlined { font-size: 20px; }
-@media (max-width: 900px) {
-    .sidebar.aberta-mobile .btn-fechar-sidebar { display: inline-flex; }
-}
-
-.sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-
-.menu-section { padding: 16px 0 8px; }
-.menu-section-title {
-    padding: 0 20px; font-size: 10.5px; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: .7px; margin-bottom: 6px;
-}
-.menu { list-style: none; padding: 0 10px; display: flex; flex-direction: column; gap: 1px; }
-.menu-item a {
-    display: flex; align-items: center; gap: 11px;
-    padding: 9px 12px; border-radius: 4px;
-    text-decoration: none; color: var(--text-secondary);
-    font-size: 13.5px; font-weight: 500;
-    position: relative; white-space: nowrap;
-}
-.menu-item a:hover { background: var(--surface-2); color: var(--text); }
-.menu-item.ativo a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
-.menu-item.ativo a::before {
-    content: ""; position: absolute; left: -10px; top: 50%;
-    transform: translateY(-50%); width: 3px; height: 20px;
-    background: var(--brand); border-radius: 0 3px 3px 0;
-}
-.menu-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-.menu-item.ativo .material-symbols-outlined { opacity: 1; }
-
-.menu-item .menu-badge {
-    margin-left: auto; font-size: 10.5px; font-weight: 600;
-    color: var(--warn); background: var(--warn-bg);
-    border: 1px solid var(--warn-bd);
-    padding: 1px 7px; border-radius: 999px; line-height: 1.4;
-}
-
-.menu-section-sair {
-    margin-top: 8px; padding-top: 16px;
-    border-top: 1px solid var(--border); padding-bottom: 8px;
-}
-.menu-item-sair button {
-    display: flex; align-items: center; gap: 11px;
-    width: 100%; padding: 9px 12px; border-radius: 4px;
-    background: transparent; border: none;
-    color: var(--text-secondary); font-size: 13.5px;
-    font-weight: 500; text-align: left; white-space: nowrap;
-}
-.menu-item-sair button:hover { background: var(--danger-bg); color: var(--danger); }
-.menu-item-sair button .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-
-.sidebar-info { padding: 16px 22px 22px; font-size: 10.5px; color: var(--text-muted); line-height: 1.5; }
-.sidebar-info strong { color: var(--text-secondary); font-weight: 600; display: block; font-size: 11px; margin-bottom: 2px; }
-
-.sidebar-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .45);
-    z-index: 150; opacity: 0; transition: opacity .2s ease;
-}
-.sidebar-backdrop.ativo { display: block; opacity: 1; }
-@media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
-
-/* ============================================================
-   MAIN
-   ============================================================ */
-.main {
-    flex: 1 1 auto; min-width: 0; min-height: 0;
-    display: flex; flex-direction: column; height: 100%;
-    overflow: hidden; background: var(--background);
-}
-
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    height: var(--topbar-height);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; gap: 16px; flex-shrink: 0; z-index: 50;
-}
-.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; }
-.btn-menu {
-    width: 34px; height: 34px; flex-shrink: 0;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-}
-.btn-menu:hover { background: var(--surface-2); color: var(--text); }
-.btn-menu .material-symbols-outlined { font-size: 20px; }
-
-.topbar-title { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.topbar-title strong {
-    font-size: 13.5px; font-weight: 600; color: var(--text);
-    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-title span {
-    font-size: 11px; color: var(--text-muted); line-height: 1.2;
-    margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.topbar-btn {
-    height: 34px; padding: 0 12px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12.5px; font-weight: 500;
-}
-.topbar-btn:hover { background: var(--surface-2); color: var(--text); }
-.topbar-btn .material-symbols-outlined { font-size: 18px; }
-.topbar-btn.carregando .material-symbols-outlined { animation: girar 1s linear infinite; }
-@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.topbar-user-group { display: flex; align-items: center; gap: 4px; }
-.topbar-user {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 10px 4px 4px; border-radius: 999px;
-    border: 1px solid var(--border); background: var(--surface-2);
-    max-width: 220px; min-width: 0;
-}
-.user-avatar {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--brand); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600; flex-shrink: 0;
-}
-.user-info { display: flex; flex-direction: column; gap: 0; min-width: 0; line-height: 1.15; }
-.user-info strong {
-    font-size: 12px; font-weight: 600; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.user-info span {
-    font-size: 10.5px; color: var(--text-muted);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-sair {
-    width: 34px; height: 34px; padding: 0;
-    background: transparent; border: none; border-radius: 4px;
-    color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: background-color .12s ease, color .12s ease;
-}
-.topbar-sair:hover { background: var(--danger-bg); color: var(--danger); }
-.topbar-sair .material-symbols-outlined { font-size: 20px; }
-
-.btn-tema .icon-dark  { display: none; }
-.btn-tema .icon-light { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
-
-/* ============================================================
-   MODAL DE SAIR
-   ============================================================ */
-.modal-sair-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .55);
-    z-index: 9999; align-items: center; justify-content: center;
-    padding: 20px; opacity: 0; transition: opacity .18s ease;
-}
-.modal-sair-overlay.ativo { display: flex; opacity: 1; }
-.modal-sair {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; max-width: 400px; width: 100%;
-    padding: 28px 28px 22px;
-    box-shadow: 0 20px 50px rgba(20, 25, 35, .28);
-    text-align: center; animation: modalSairEntrar .22s ease;
-}
-@keyframes modalSairEntrar {
-    from { transform: translateY(-12px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-.modal-sair-icone {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--danger-bg); color: var(--danger);
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-bottom: 16px; border: 1px solid var(--danger-bd);
-}
-.modal-sair-icone .material-symbols-outlined { font-size: 28px; }
-.modal-sair-titulo {
-    font-size: 17px; font-weight: 600; color: var(--text);
-    letter-spacing: -.01em; margin-bottom: 22px; line-height: 1.25;
-}
-.modal-sair-acoes { display: flex; gap: 10px; justify-content: center; }
-.modal-sair-btn {
-    height: 38px; padding: 0 18px; border-radius: 5px;
-    border: 1px solid transparent; font-size: 13.5px; font-weight: 500;
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; white-space: nowrap; min-width: 110px;
-}
-.modal-sair-btn .material-symbols-outlined { font-size: 17px; }
-.modal-sair-btn-cancelar {
-    background: var(--surface); color: var(--text);
-    border-color: var(--border-strong); order: 1;
-}
-.modal-sair-btn-cancelar:hover { background: var(--surface-2); border-color: var(--gray-400); }
-.modal-sair-btn-confirmar {
-    background: var(--danger); color: #fff;
-    border-color: var(--danger); order: 2;
-}
-.modal-sair-btn-confirmar:hover { background: #7d1717; border-color: #7d1717; }
-.modal-sair-btn:disabled { opacity: .65; cursor: not-allowed; }
-
-@media (max-width: 480px) {
-    .modal-sair-overlay { padding: 0; align-items: flex-end; }
-    .modal-sair {
-        padding: 24px 20px 18px; border-radius: 12px 12px 0 0;
-        max-width: 100%; align-self: flex-end; margin: 0;
-    }
-    .modal-sair-acoes { flex-direction: column-reverse; width: 100%; }
-    .modal-sair-btn { width: 100%; min-width: 0; }
-}
-
-/* ============================================================
-   CONTENT PAGE
-   ============================================================ */
-.content-page {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 24px 28px 24px;
-}
-
-.breadcrumb {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 13px; color: var(--text-muted);
-    margin-bottom: 12px;
-}
+.page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b858e; margin-bottom: 8px; }
 .breadcrumb .material-symbols-outlined { font-size: 17px; }
-.breadcrumb a { text-decoration: none; color: inherit; }
-.breadcrumb a:hover { color: var(--brand); }
-.breadcrumb .sep { opacity: .5; }
+.page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--text-secondary); }
 
-.page-header-page {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
-}
-.page-header-page h1 {
-    font-family: var(--font-serif);
-    font-size: 24px; font-weight: 600; color: var(--text);
-    margin-bottom: 4px;
-}
-.page-header-page p { font-size: 13px; color: var(--text-secondary); }
-
-/* ============================================================
-   BOTÕES DE EXPORTAÇÃO
-   ============================================================ */
 .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.btn-export {
-    height: 40px; color: #fff; border: none; border-radius: 6px;
-    padding: 0 14px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 5px; font-size: 13px;
-    transition: background .15s;
-}
-.btn-pdf { background: var(--red); }
-.btn-pdf:hover:not(:disabled) { background: var(--red-hover); }
-.btn-csv { background: var(--blue); }
-.btn-csv:hover:not(:disabled) { background: var(--blue-hover); }
-.btn-xls { background: #1f7238; }
-.btn-xls:hover:not(:disabled) { background: #154c25; }
-.btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ============================================================
-   CARD DE FILTROS
-   ============================================================ */
-.filter-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: var(--shadow-sm);
-    padding: 20px; margin-bottom: 20px;
-    display: flex; flex-direction: column; gap: 16px;
-}
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-}
+.filter-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .filter-group { display: flex; flex-direction: column; }
 .filter-group.full-width { grid-column: 1 / -1; }
-.filter-group label {
-    font-size: 13px; font-weight: 600;
-    color: var(--text-secondary); margin-bottom: 6px;
-}
-.filter-group label span { color: var(--red); }
-.filter-group input,
-.filter-group select {
-    height: 42px; padding: 0 12px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; outline: none; font-size: 14px; color: var(--text);
-}
-.filter-group input:focus,
-.filter-group select:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px var(--brand-soft);
-}
+.filter-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
+.filter-group input, .filter-group select { height: 42px; padding: 0 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; color: #263238; }
+.filter-group input:focus, .filter-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
 
-/* Dropdown customizado de escolas */
 .custom-dropdown { position: relative; width: 100%; }
-.dropdown-select-box {
-    height: 42px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 0 12px; display: flex; align-items: center;
-    justify-content: space-between; cursor: pointer;
-    font-size: 14px; color: var(--text); user-select: none;
-    transition: border-color .15s;
-}
-.dropdown-select-box:hover { border-color: var(--brand); }
-.dropdown-options-panel {
-    display: none; position: absolute; top: calc(100% + 4px); left: 0;
-    width: 100%; max-height: 220px; overflow-y: auto;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; box-shadow: var(--shadow-md);
-    z-index: 100; padding: 8px;
-}
+.dropdown-select-box { height: 42px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 14px; color: #263238; user-select: none; transition: border-color 0.15s; }
+.dropdown-select-box:hover { border-color: var(--primary); }
+.dropdown-options-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: var(--white); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; padding: 8px; }
 .dropdown-options-panel.ativo { display: block; }
-.dropdown-option {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 10px; font-size: 13px; font-weight: 500;
-    color: var(--text); cursor: pointer; border-radius: 4px;
-    transition: background .1s;
-}
-.dropdown-option:hover { background: var(--brand-soft); }
-.dropdown-option input[type="checkbox"] {
-    width: 16px; height: 16px;
-    accent-color: var(--brand); cursor: pointer;
-}
+.dropdown-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; border-radius: 4px; transition: background 0.1s; }
+.dropdown-option:hover { background: var(--primary-light); }
+.dropdown-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
 
-.filter-checkbox-group {
-    display: flex; align-items: center; gap: 8px;
-    grid-column: 1 / -1; font-size: 13px; font-weight: 600;
-    color: var(--text-secondary); cursor: pointer; margin-top: 4px;
-}
-.filter-checkbox-group input {
-    width: 18px; height: 18px;
-    accent-color: var(--brand); cursor: pointer;
-}
+.filter-checkbox-group { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: #455a64; cursor: pointer; margin-top: 4px; }
+.filter-checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
-.filter-actions {
-    display: flex; justify-content: flex-end; gap: 12px;
-    border-top: 1px solid var(--border); padding-top: 16px;
-}
-.btn-gerar {
-    height: 42px; background: var(--brand); color: #fff;
-    border: none; border-radius: 6px; padding: 0 20px;
-    font-weight: 600; cursor: pointer; display: flex;
-    align-items: center; gap: 6px; font-size: 13px;
-    transition: background .15s;
-}
-.btn-gerar:hover { background: var(--brand-hover); }
+.filter-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e5e8eb; padding-top: 16px; }
+
+.btn-gerar { height: 42px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: background 0.15s; }
+.btn-gerar:hover { background: var(--primary-hover); }
 .btn-gerar:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ============================================================
-   SUMMARY + TABELA
-   ============================================================ */
-.summary-container {
-    display: none;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px; margin-bottom: 20px;
-}
-.summary-container.ativo { display: grid; }
-.summary-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: var(--shadow-sm);
-    padding: 16px 18px;
-}
-.summary-box label {
-    font-size: 11px; font-weight: 600;
-    color: var(--text-secondary); text-transform: uppercase;
-    letter-spacing: .3px;
-}
-.summary-box p {
-    font-size: 18px; font-weight: 700;
-    color: var(--text); margin-top: 4px;
-}
+.btn-export { height: 40px; color: white; border: none; border-radius: 6px; padding: 0 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; transition: background 0.15s; }
+.btn-pdf { background: var(--red); }
+.btn-pdf:hover { background: var(--red-hover); }
+.btn-csv { background: var(--blue); }
+.btn-csv:hover { background: var(--blue-hover); }
+.btn-xls { background: #1f7238; }
+.btn-xls:hover { background: #154c25; }
+.btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: var(--shadow-sm);
-    overflow-x: auto; display: none;
-}
+.summary-container { display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-container.ativo { display: grid; }
+.summary-box { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 16px 18px; }
+.summary-box label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+.summary-box p { font-size: 18px; font-weight: 700; color: #263238; margin-top: 4px; }
+
+.table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; display: none; }
 .table-card.ativo { display: block; }
 
-.print-report-header {
-    display: none; margin-bottom: 20px; padding-bottom: 12px;
-    border-bottom: 2px solid var(--brand);
-}
+.print-report-header { display: none; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #3d2450; }
 .print-logo { display: none; height: 56px; width: auto; object-fit: contain; margin: 0; }
 .print-report-text { text-align: left; }
-.print-report-header h2 { font-size: 16px; font-weight: 700; color: var(--brand); }
-.print-report-header p { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.print-report-header h2 { font-size: 16px; font-weight: 700; color: #3d2450; }
+.print-report-header p { font-size: 12px; color: #555; margin-top: 4px; }
 
 table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
-th {
-    background: var(--surface-2); padding: 12px 16px;
-    font-size: 11px; font-weight: 700;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: .4px;
-}
-td {
-    padding: 12px 16px; font-size: 13px;
-    color: var(--text); border-bottom: 1px solid var(--border);
-}
-tr:hover td { background: var(--surface-2); }
+th { background: #fafbfc; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #455a64; border-bottom: 1px solid #e5e8eb; text-transform: uppercase; }
+td { padding: 12px 16px; font-size: 13px; color: #263238; border-bottom: 1px solid #edf2f7; }
+tr:hover td { background: #f8fafc; }
 
-/* ============================================================
-   MENSAGENS
-   ============================================================ */
-.mensagem {
-    display: none; padding: 12px 14px; border-radius: 6px;
-    font-size: 13px; font-weight: 500; margin-bottom: 16px;
-}
-.mensagem.erro { display: block; background: var(--danger-bg); border: 1px solid var(--danger-bd); color: var(--danger); }
-.mensagem.info { display: block; background: var(--info-bg); border: 1px solid var(--info-bd); color: var(--info); }
-.mensagem.sucesso { display: block; background: var(--ok-bg); border: 1px solid var(--ok-bd); color: var(--ok); }
+.mensagem { display: none; padding: 12px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
+.mensagem.erro { display: block; background: #fff0f0; border: 1px solid #efc5c5; color: #c62828; }
+.mensagem.info { display: block; background: #eef2f7; border: 1px solid #cbd5e1; color: #334155; }
+.mensagem.sucesso { display: block; background: #edf7ee; border: 1px solid #c8e6c9; color: #2e7d32; }
 
-/* ============================================================
-   BADGES DE STATUS
-   ============================================================ */
-.badge-status {
-    display: inline-block; padding: 4px 10px; border-radius: 4px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-}
-.badge-gozado      { background: var(--ok-bg); color: var(--ok); }
-.badge-pendente    { background: var(--warn-bg); color: var(--warn); }
-.badge-vencido     { background: var(--danger-bg); color: var(--danger); }
-.badge-disponivel  { background: var(--info-bg); color: var(--info); }
-.badge-programado  { background: var(--brand-soft); color: var(--brand); }
-.badge-atual       { background: var(--brand-soft); color: var(--brand); }
-.badge-perdido     { background: var(--danger-bg); color: var(--danger); }
-.badge-extemporaneo{ background: var(--warn-bg); color: var(--warn); }
+.badge-status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-gozado { background: #e8f5e9; color: #2e7d32; }
+.badge-pendente { background: #fff8e1; color: #f57c00; }
+.badge-vencido { background: #ffebee; color: #c62828; }
+.badge-disponivel { background: #e3f2fd; color: #0277bd; }
+.badge-programado { background: #f3e5f5; color: #6a1b9a; }
+.badge-atual { background: #e8eaf6; color: #283593; }
+.badge-perdido { background: #fce4ec; color: #ad1457; }
+.badge-extemporaneo { background: #fff8e1; color: #f57c00; }
+.badge-parcial { background: #e3f2fd; color: #0277bd; }
 
-/* ============================================================
-   LOADING OVERLAY
-   ============================================================ */
-.loading-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.15); z-index: 9998;
-    align-items: center; justify-content: center;
-}
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.15); z-index: 9998; align-items: center; justify-content: center; }
 .loading-overlay.ativo { display: flex; }
-.loading-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.15);
-    padding: 26px 36px; display: flex; flex-direction: column;
-    align-items: center; gap: 14px;
-    animation: loadingIn .2s ease;
-}
-@keyframes loadingIn {
-    from { transform: scale(.92); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
-}
-.spinner {
-    width: 38px; height: 38px;
-    border: 3px solid var(--border);
-    border-top-color: var(--brand);
-    border-radius: 50%; animation: girar .8s linear infinite;
-}
+.loading-box { background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 26px 36px; display: flex; flex-direction: column; align-items: center; gap: 14px; animation: loadingIn 0.2s ease; }
+@keyframes loadingIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
 .loading-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
-/* ============================================================
-   TOAST
-   ============================================================ */
-.toast-container {
-    position: fixed; top: 20px; right: 20px; z-index: 2000;
-    display: flex; flex-direction: column; gap: 8px;
-}
-
-/* ============================================================
-   RESPONSIVO
-   ============================================================ */
-@media (max-width: 900px) {
-    .sidebar {
-        position: fixed; top: 0; left: 0;
-        height: 100vh; height: 100dvh;
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-        transition: transform .25s ease;
-        box-shadow: var(--shadow-md);
-        border-right: 1px solid var(--border); z-index: 200;
-    }
-    .sidebar.aberta-mobile { transform: translateX(0); }
-    .sidebar.fechado {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%); border-right: 1px solid var(--border);
-    }
-    :root.menu-inicial-fechado .sidebar {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-    }
-    .topbar { padding: 0 16px; gap: 12px; }
-    .topbar-title span { display: none; }
-    .topbar-user .user-info span { display: none; }
-    .topbar-btn .btn-texto { display: none; }
-    .topbar-btn { padding: 0 10px; }
+@media print {
+    body { background: white; }
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container, .loading-overlay { display: none !important; }
+    .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .print-report-header { display: flex !important; align-items: center; gap: 16px; }
+    .print-logo { display: block !important; margin: 0 !important; }
+    .print-report-text { text-align: left; }
+    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; display: block !important; }
+    table { font-size: 10px !important; white-space: normal !important; }
+    th, td { padding: 6px 8px !important; }
 }
 
 @media (max-width: 768px) {
-    .content-page { padding: 16px 12px; }
-    .page-header-page { flex-direction: column; align-items: stretch; }
+    .topbar { width: 100%; margin-top: 0; border-radius: 0; }
+    .main { width: 100%; padding: 16px 12px; }
+    .page-header { flex-direction: column; align-items: stretch; }
     .export-buttons { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
     .filter-actions { flex-direction: column; }
     .btn-gerar { width: 100%; justify-content: center; }
 }
-
-@media (max-width: 640px) {
-    .topbar { padding: 0 12px; gap: 8px; }
-    .topbar-btn { padding: 0 8px; height: 32px; }
-    .topbar-user { display: none; }
-    .topbar-right { gap: 4px; }
-}
-
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-/* ============================================================
-   IMPRESSÃO — Relatório profissional com cabeçalho repetido
-   ============================================================ */
-@media print {
-    @page {
-        size: A4 portrait;
-        margin: 18mm 12mm 20mm 12mm;
-    }
-
-    html, body {
-        background: #fff !important;
-        color: #000 !important;
-        overflow: visible !important;
-        font-size: 11px !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-
-    .layout { display: block !important; height: auto !important; overflow: visible !important; }
-    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
-    .topbar-sair, .modal-sair-overlay, .toast-container,
-    .filter-card, .export-buttons, .breadcrumb,
-    .page-header-page, .mensagem, .summary-container,
-    .loading-overlay, .topbar { display: none !important; }
-
-    .main { overflow: visible !important; background: #fff !important; }
-    .content-page { overflow: visible !important; padding: 0 !important; background: #fff !important; }
-
-    /* Cabeçalho institucional — repetido em todas as páginas via thead */
-    .print-report-header {
-        display: flex !important;
-        align-items: center;
-        gap: 14px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #1f3a5f;
-        margin-bottom: 14px;
-    }
-    .print-logo {
-        display: block !important;
-        height: 52px !important;
-        width: auto !important;
-        margin: 0 !important;
-        object-fit: contain;
-    }
-    .print-report-text { text-align: left; line-height: 1.35; }
-    .print-report-text h2 {
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        color: #1f3a5f !important;
-        letter-spacing: .2px;
-        margin: 0;
-        text-transform: uppercase;
-    }
-    .print-report-text p {
-        font-size: 10.5px !important;
-        color: #333 !important;
-        margin-top: 3px !important;
-    }
-
-    /* Tabela com thead repetido em cada página */
-    .table-card {
-        border: none !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-        display: block !important;
-        background: #fff !important;
-    }
-
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 10px !important;
-        white-space: normal !important;
-        page-break-inside: auto;
-    }
-
-    thead {
-        display: table-header-group !important;
-    }
-    tfoot {
-        display: table-footer-group !important;
-    }
-
-    thead th {
-        background: #1f3a5f !important;
-        color: #fff !important;
-        font-size: 9.5px !important;
-        font-weight: 700 !important;
-        text-transform: uppercase;
-        letter-spacing: .3px;
-        padding: 7px 8px !important;
-        border: 1px solid #1f3a5f !important;
-        text-align: left;
-    }
-
-    tbody tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
-    tbody tr:nth-child(even) td {
-        background: #f6f8fa !important;
-    }
-    td {
-        font-size: 10px !important;
-        padding: 6px 8px !important;
-        border: 1px solid #ccd2d8 !important;
-        color: #000 !important;
-        vertical-align: top;
-    }
-
-    /* Badges de status legíveis no papel */
-    .badge-status {
-        display: inline-block !important;
-        padding: 2px 6px !important;
-        border-radius: 3px !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        text-transform: uppercase;
-        border: 1px solid #999 !important;
-        background: #fff !important;
-        color: #000 !important;
-    }
-    .badge-gozado      { border-color: #1a6a38 !important; color: #1a6a38 !important; }
-    .badge-pendente    { border-color: #8a5610 !important; color: #8a5610 !important; }
-    .badge-vencido     { border-color: #9a1e1e !important; color: #9a1e1e !important; }
-    .badge-disponivel  { border-color: #1a4d8f !important; color: #1a4d8f !important; }
-    .badge-programado  { border-color: #1f3a5f !important; color: #1f3a5f !important; }
-    .badge-atual       { border-color: #1f3a5f !important; color: #1f3a5f !important; }
-    .badge-perdido     { border-color: #9a1e1e !important; color: #9a1e1e !important; }
-    .badge-extemporaneo{ border-color: #8a5610 !important; color: #8a5610 !important; }
-
-    /* Rodapé com numeração de página */
-    .print-footer {
-        display: block !important;
-        position: fixed;
-        bottom: 6mm;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 9px !important;
-        color: #555 !important;
-        border-top: 1px solid #ccd2d8;
-        padding-top: 4px;
-    }
-    .print-footer .pageNumber::after {
-        content: counter(page);
-    }
-    .print-footer .pageTotal::after {
-        content: counter(pages);
-    }
-}
-
-/* Rodapé oculto na tela */
-.print-footer { display: none; }
 </style>
 </head>
 
 <body>
 
-<div class="layout">
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Relatórios</span>
+    </div>
+</header>
 
-    <!-- ==================================================
-         SIDEBAR (padrão servidores.html)
-         ================================================== -->
-    <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
-        <div class="sidebar-inner">
-
-            <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
-                <div class="sidebar-brand">
-                    <strong>Vale Transporte</strong>
-                    <span>SEMED · RH</span>
-                </div>
-                <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
-                </button>
-            </div>
-
-            <div class="sidebar-scroll">
-                <nav class="menu-section">
-                    <div class="menu-section-title">Principal</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="inicial.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                                <span>Painel de controle</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="servidores.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                                <span>Servidores e vínculos</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Configuração</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="configuracao.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                <span>Dias úteis e meses</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades escolares</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Operação</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                                <span>Lançamentos da unidade</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="linha_tempo.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                                <span>Férias, folgas e licenças</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="calculo.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                                <span>Cálculo e vales</span>
-                                <span class="menu-badge">Mensal</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Consultas</div>
-                    <ul class="menu">
-                        <li class="menu-item ativo">
-                            <a href="relatorios.html" aria-current="page">
-                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                                <span>Relatórios gerais</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section menu-section-sair">
-                    <ul class="menu">
-                        <li class="menu-item menu-item-sair">
-                            <button type="button" id="btnSairSidebar">
-                                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                                <span>Sair do sistema</span>
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-
-                <div class="sidebar-info">
-                    <strong>Versão 1.0.0</strong>
-                    Sistema de gestão de vale transporte
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
-
-    <!-- ==================================================
-         MAIN
-         ================================================== -->
-    <div class="main">
-
-        <header class="topbar">
-            <div class="topbar-left">
-                <button type="button" class="btn-menu" id="btnMenuToggle" aria-label="Abrir ou fechar menu lateral" aria-controls="sidebarMenu" aria-expanded="true" title="Abrir / fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
-                </button>
-
-                <div class="topbar-title">
-                    <strong>Relatórios</strong>
-                    <span>SEMED — Central de Relatórios</span>
-                </div>
-            </div>
-
-            <div class="topbar-right">
-                <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
-                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
-                    <span class="btn-texto">Atualizar</span>
-                </button>
-
-                <button type="button" class="topbar-btn btn-tema" id="btnTema" title="Alternar tema claro/escuro">
-                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
-                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-                    <span class="btn-texto">Tema</span>
-                </button>
-
-                <div class="topbar-user-group">
-                    <div class="topbar-user" title="Usuário logado">
-                        <div class="user-avatar" id="userAvatar">—</div>
-                        <div class="user-info">
-                            <strong id="userNameLabel">Usuário</strong>
-                            <span id="userEmailLabel">Carregando…</span>
-                        </div>
-                    </div>
-
-                    <button type="button" class="topbar-sair" id="btnSairTopbar" title="Sair do sistema" aria-label="Sair do sistema">
-                        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- ==================================================
-             CONTEÚDO DA PÁGINA
-             ================================================== -->
-        <div class="content-page">
-
+<main class="main">
+    <div class="page-header">
+        <div>
             <div class="breadcrumb">
                 <span class="material-symbols-outlined">home</span>
-                <a href="inicial.html">Início</a>
-                <span class="sep">/</span>
-                <span>Relatórios</span>
+                <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+                <span>/</span>
+                <span>Relatórios Avançados</span>
             </div>
-
-            <div class="page-header-page">
-                <div>
-                    <h1>Central de Relatórios</h1>
-                    <p>Gere relatórios de vales ou da situação de férias e folgas dos servidores.</p>
-                </div>
-                <div class="export-buttons">
-                    <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF">
-                        <span class="material-symbols-outlined" style="font-size:16px;">picture_as_pdf</span> PDF
-                    </button>
-                    <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar CSV">
-                        <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
-                    </button>
-                    <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar Excel">
-                        <span class="material-symbols-outlined" style="font-size:16px;">table_view</span> Excel
-                    </button>
-                </div>
-            </div>
-
-            <section class="filter-card">
-                <div class="filter-grid">
-                    <div class="filter-group">
-                        <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
-                        <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
-                            <option value="vales">Vales Transporte (Passes Mensais)</option>
-                            <option value="ferias">Situação de Férias e Folgas</option>
-                        </select>
-                    </div>
-
-                    <!-- Filtros específicos de VALES -->
-                    <div id="filtrosVales" style="display: contents;">
-                        <div class="filter-group">
-                            <label for="tipoPeriodo">Tipo de Período</label>
-                            <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
-                                <option value="mensal">Mensal (Mês Específico)</option>
-                                <option value="anual">Anual (Ano Inteiro)</option>
-                            </select>
-                        </div>
-                        <div class="filter-group" id="grupoMes">
-                            <label for="mesReferencia">Mês de Referência <span>*</span></label>
-                            <input type="month" id="mesReferencia" lang="pt-BR">
-                        </div>
-                        <div class="filter-group" id="grupoAno" style="display: none;">
-                            <label for="anoReferencia">Ano de Referência <span>*</span></label>
-                            <select id="anoReferencia">
-                                <option value="2026">2026</option>
-                                <option value="2025">2025</option>
-                                <option value="2024">2024</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtroCargo">Cargo / Função</label>
-                            <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtroEmpresa">Empresa / Concessionária</label>
-                            <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
-                        </div>
-                        <div class="filter-checkbox-group">
-                            <input type="checkbox" id="filtroApenasFalta">
-                            <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
-                        </div>
-                    </div>
-
-                    <!-- Filtros específicos de FÉRIAS E FOLGAS -->
-                    <div id="filtrosFerias" style="display: none;">
-                        <div class="filter-group">
-                            <label for="filtroTipoBeneficio">Tipo de Benefício</label>
-                            <select id="filtroTipoBeneficio">
-                                <option value="todos">Todos</option>
-                                <option value="ferias">Férias</option>
-                                <option value="folga">Folga Aniversário</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtroStatus">Status</label>
-                            <select id="filtroStatus">
-                                <option value="todos">Todos</option>
-                                <option value="pendente">Pendente</option>
-                                <option value="vencido">Vencido</option>
-                                <option value="disponivel">Disponível</option>
-                                <option value="gozado">Gozado</option>
-                                <option value="programado">Programado</option>
-                                <option value="perdido">Perdido</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtroMatriculaFerias">Matrícula</label>
-                            <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtroNomeServidor">Nome do Servidor</label>
-                            <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
-                        </div>
-                    </div>
-
-                    <!-- Escolas (comum aos dois relatórios) -->
-                    <div class="filter-group full-width">
-                        <label>Escolas / Unidades de Ensino</label>
-                        <div class="custom-dropdown" id="dropdownEscolasContainer">
-                            <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
-                                <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
-                                <span class="material-symbols-outlined">arrow_drop_down</span>
-                            </div>
-                            <div class="dropdown-options-panel" id="dropdownPanel">
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
-                                <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-actions">
-                    <button type="button" id="btnGerar" class="btn-gerar" onclick="gerarRelatorio()">
-                        <span class="material-symbols-outlined">description</span>
-                        Gerar Relatório Consolidado
-                    </button>
-                </div>
-            </section>
-
-            <div id="mensagem" class="mensagem"></div>
-
-            <section id="summaryContainer" class="summary-container">
-                <div class="summary-box">
-                    <label id="labelSumPeriodo">Período Analisado</label>
-                    <p id="sumPeriodo">-</p>
-                </div>
-                <div class="summary-box">
-                    <label id="labelSumVinculos">Total de Vínculos</label>
-                    <p id="sumVinculos">0</p>
-                </div>
-                <div class="summary-box" id="boxSumTotal" style="border-left: 4px solid var(--ok);">
-                    <label id="labelSumTotal">Total Geral de Passes</label>
-                    <p id="sumTotalPasses" style="color: var(--ok);">0 passes</p>
-                </div>
-            </section>
-
-            <section id="tableCard" class="table-card">
-                <div class="print-report-header">
-                    <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
-                    <div class="print-report-text">
-                        <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
-                        <p id="printSubtitulo">Relatório Consolidado</p>
-                    </div>
-                </div>
-
-                <table>
-                    <thead id="tabelaCabecalho">
-                        <tr>
-                            <th>Servidor</th>
-                            <th>CPF / Matrícula</th>
-                            <th>Cargo</th>
-                            <th>Escola / Lotação</th>
-                            <th>Concessionária</th>
-                            <th>Passes/Dia</th>
-                            <th>Dias Efetivos</th>
-                            <th>Afast. Totais</th>
-                            <th>Total Passes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaCorpo"></tbody>
-                </table>
-            </section>
-
-            <!-- Rodapé exibido apenas na impressão -->
-            <div class="print-footer">
-                Relatório gerado pelo Sistema de Vale Transporte — SEMED/RH &nbsp;|&nbsp;
-                Página <span class="pageNumber"></span> de <span class="pageTotal"></span>
-            </div>
-
+            <h1>Central de Relatórios</h1>
+            <p>Gere relatórios de vales ou da situação de férias e folgas dos servidores.</p>
         </div>
-
-    </div>
-
-</div>
-
-<!-- ==================================================
-     MODAL DE SAIR
-     ================================================== -->
-<div class="modal-sair-overlay" id="modalSair" role="presentation">
-    <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
-        <div class="modal-sair-icone" aria-hidden="true">
-            <span class="material-symbols-outlined" id="modalSairIconeSimbolo">logout</span>
-        </div>
-        <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
-        <div class="modal-sair-acoes">
-            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">Cancelar</button>
-            <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
-                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                Sim, sair
+        <div class="export-buttons">
+            <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF">
+                <span class="material-symbols-outlined" style="font-size:16px;">picture_as_pdf</span> PDF
+            </button>
+            <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar CSV">
+                <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
+            </button>
+            <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar Excel">
+                <span class="material-symbols-outlined" style="font-size:16px;">table_view</span> Excel
             </button>
         </div>
     </div>
-</div>
 
-<div class="toast-container" id="toastContainer"></div>
+    <section class="filter-card">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
+                <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
+                    <option value="vales">Vales Transporte (Passes Mensais)</option>
+                    <option value="ferias">Situação de Férias e Folgas</option>
+                </select>
+            </div>
+
+            <div id="filtrosVales" style="display: contents;">
+                <div class="filter-group">
+                    <label for="tipoPeriodo">Tipo de Período</label>
+                    <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
+                        <option value="mensal">Mensal (Mês Específico)</option>
+                        <option value="anual">Anual (Ano Inteiro)</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="grupoMes">
+                    <label for="mesReferencia">Mês de Referência <span>*</span></label>
+                    <input type="month" id="mesReferencia" lang="pt-BR">
+                </div>
+                <div class="filter-group" id="grupoAno" style="display: none;">
+                    <label for="anoReferencia">Ano de Referência <span>*</span></label>
+                    <select id="anoReferencia">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroCargo">Cargo / Função</label>
+                    <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
+                </div>
+                <div class="filter-group">
+                    <label for="filtroEmpresa">Empresa / Concessionária</label>
+                    <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
+                </div>
+                <div class="filter-checkbox-group">
+                    <input type="checkbox" id="filtroApenasFalta">
+                    <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
+                </div>
+            </div>
+
+            <div id="filtrosFerias" style="display: none;">
+                <div class="filter-group">
+                    <label for="filtroTipoBeneficio">Tipo de Benefício</label>
+                    <select id="filtroTipoBeneficio">
+                        <option value="todos">Todos</option>
+                        <option value="ferias">Férias</option>
+                        <option value="folga">Folga Aniversário</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroStatus">Status</label>
+                    <select id="filtroStatus">
+                        <option value="todos">Todos</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="gozado">Gozado</option>
+                        <option value="parcial">Parcial</option>
+                        <option value="programado">Programado</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroMatriculaFerias">Matrícula</label>
+                    <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
+                </div>
+                <div class="filter-group">
+                    <label for="filtroNomeServidor">Nome do Servidor</label>
+                    <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
+                </div>
+            </div>
+
+            <div class="filter-group full-width">
+                <label>Escolas / Unidades de Ensino</label>
+                <div class="custom-dropdown" id="dropdownEscolasContainer">
+                    <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
+                        <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
+                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                    </div>
+                    <div class="dropdown-options-panel" id="dropdownPanel">
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button type="button" id="btnGerar" class="btn-gerar" onclick="gerarRelatorio()">
+                <span class="material-symbols-outlined">description</span>
+                Gerar Relatório Consolidado
+            </button>
+        </div>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label id="labelSumPeriodo">Período Analisado</label>
+            <p id="sumPeriodo">-</p>
+        </div>
+        <div class="summary-box">
+            <label id="labelSumVinculos">Total de Vínculos</label>
+            <p id="sumVinculos">0</p>
+        </div>
+        <div class="summary-box" id="boxSumTotal" style="border-left: 4px solid var(--green);">
+            <label id="labelSumTotal">Total Geral de Passes</label>
+            <p id="sumTotalPasses" style="color: var(--green);">0 passes</p>
+        </div>
+    </section>
+
+    <section id="tableCard" class="table-card">
+        <div class="print-report-header">
+            <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+            <div class="print-report-text">
+                <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
+                <p id="printSubtitulo">Relatório Consolidado</p>
+            </div>
+        </div>
+
+        <table>
+            <thead id="tabelaCabecalho">
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola / Lotação</th>
+                    <th>Concessionária</th>
+                    <th>Passes/Dia</th>
+                    <th>Dias Efetivos</th>
+                    <th>Afast. Totais</th>
+                    <th>Total Passes</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo"></tbody>
+        </table>
+    </section>
+</main>
 
 <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-box">
@@ -1320,210 +344,21 @@ tr:hover td { background: var(--surface-2); }
     </div>
 </div>
 
-<!-- ============================================================
-     SCRIPT DO LAYOUT (tema, menu lateral, usuário, sair)
-     ============================================================ -->
-<script type="module">
-import { auth } from "./firebase.js";
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-/* TEMA */
-(function () {
-    var btn = document.getElementById('btnTema');
-    if (btn) {
-        btn.addEventListener('click', function () {
-            var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-            var novo  = atual === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', novo);
-            var meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
-            try { localStorage.setItem('tema-vt', novo); } catch (e) {}
-        });
-    }
-})();
-
-/* MENU LATERAL */
-(function () {
-    var sidebar   = document.getElementById('sidebarMenu');
-    var backdrop  = document.getElementById('sidebarBackdrop');
-    var btn       = document.getElementById('btnMenuToggle');
-    var btnFechar = document.getElementById('btnFecharSidebar');
-    var CHAVE     = 'menu-vt-fechado';
-
-    function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
-
-    var salvo = null;
-    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    var iniciarFechadoDesktop = salvo === '1';
-
-    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-    else fecharMobile(false);
-
-    if (btn) {
-        btn.addEventListener('click', function () {
-            if (isMobile()) {
-                var aberta = sidebar.classList.contains('aberta-mobile');
-                if (aberta) fecharMobile(true); else abrirMobile();
-            } else {
-                var fechado = sidebar.classList.contains('fechado');
-                aplicarEstadoDesktop(!fechado, true);
-            }
-        });
-    }
-    if (btnFechar) btnFechar.addEventListener('click', function () { fecharMobile(true); });
-    if (backdrop) backdrop.addEventListener('click', function () { fecharMobile(true); });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) fecharMobile(true);
-        if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); }
-    });
-
-    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
-        link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); });
-    });
-
-    var ultimoMobile = isMobile();
-    window.addEventListener('resize', function () {
-        var agoraMobile = isMobile();
-        if (agoraMobile !== ultimoMobile) {
-            ultimoMobile = agoraMobile;
-            if (agoraMobile) fecharMobile(false);
-            else {
-                sidebar.classList.remove('aberta-mobile');
-                document.body.style.overflow = '';
-                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-            }
-        }
-    });
-
-    function aplicarEstadoDesktop(fechado, animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.toggle('fechado', fechado);
-        document.documentElement.classList.remove('menu-inicial-fechado');
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-        if (btn) btn.setAttribute('aria-expanded', String(!fechado));
-        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
-    }
-    function abrirMobile() {
-        sidebar.classList.add('aberta-mobile');
-        sidebar.classList.remove('fechado');
-        if (backdrop) backdrop.classList.add('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-    }
-    function fecharMobile(animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.remove('aberta-mobile');
-        sidebar.classList.add('fechado');
-        if (backdrop) backdrop.classList.remove('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-    }
-})();
-
-/* USUÁRIO LOGADO NA TOPBAR + PROTEÇÃO DE ROTA */
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean)
-            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
-            .slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
-/* MODAL DE SAIR */
-var ultimoFocoSair = null;
-function abrirModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    ultimoFocoSair = document.activeElement;
-    modal.classList.add('ativo');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () {
-        var b = document.getElementById('btnCancelarSair');
-        if (b) b.focus();
-    });
-}
-function fecharModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    modal.classList.remove('ativo');
-    document.body.style.overflow = '';
-    if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') ultimoFocoSair.focus();
-    ultimoFocoSair = null;
-}
-async function confirmarSaida() {
-    var btn = document.getElementById('btnConfirmarSair');
-    if (!btn) return;
-    var btnOriginal = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
-    try {
-        try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
-        try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
-        await signOut(auth);
-        window.location.href = 'index.html';
-    } catch (e) {
-        console.error('[Sair] Erro:', e);
-        btn.disabled = false;
-        btn.innerHTML = btnOriginal;
-    }
-}
-
-var btnSairTopbar  = document.getElementById('btnSairTopbar');
-var btnSairSidebar = document.getElementById('btnSairSidebar');
-if (btnSairTopbar)  btnSairTopbar.addEventListener('click', abrirModalSair);
-if (btnSairSidebar) btnSairSidebar.addEventListener('click', abrirModalSair);
-var b1 = document.getElementById('btnCancelarSair');
-var b2 = document.getElementById('btnConfirmarSair');
-var modalSair = document.getElementById('modalSair');
-if (b1) b1.addEventListener('click', fecharModalSair);
-if (b2) b2.addEventListener('click', confirmarSaida);
-if (modalSair) modalSair.addEventListener('click', function (e) {
-    if (e.target === this) fecharModalSair();
-});
-
-/* BOTÃO ATUALIZAR */
-(function () {
-    var btnAtualizar = document.getElementById('btnAtualizar');
-    if (!btnAtualizar) return;
-    btnAtualizar.addEventListener('click', function () {
-        if (btnAtualizar.classList.contains('carregando')) return;
-        btnAtualizar.classList.add('carregando');
-        btnAtualizar.disabled = true;
-        try {
-            Object.keys(localStorage)
-                .filter(function (k) { return k.startsWith('cache-'); })
-                .forEach(function (k) { localStorage.removeItem(k); });
-        } catch (e) {}
-        window.location.reload();
-    });
-})();
-</script>
-
-<!-- ============================================================
-     SCRIPT PRINCIPAL DA PÁGINA — Relatórios
-     ============================================================ -->
 <script type="module">
     import { db } from "./firebase.js";
     import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let dadosRelatorioGlobal = [];
     let tipoRelatorioAtual = 'vales';
+
+    const DIAS_PADRAO = 30;
+
+    // 👇 OPÇÃO B: direito manual por vínculo/servidor; padrão 30
+    function obterDiasPorPeriodo(servidor, vinculo) {
+        if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
+        if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
+        return DIAS_PADRAO;
+    }
 
     function mostrarLoading(texto = 'Carregando...') {
         document.getElementById('loadingTexto').textContent = texto;
@@ -1582,6 +417,15 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
         const dg = parseDataParaDate(gozoStr);
         return dg ? dg > dataLimite : false;
+    }
+
+    // 👇 NOVO: calcula dias consumidos em um registro
+    function calcularDiasRegistro(reg) {
+        const ini = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data);
+        const fim = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.dataFim || reg.data_fim) || ini;
+        if (!ini || !fim) return 0;
+        const d = Math.round((fim - ini) / 86400000) + 1;
+        return d > 0 ? d : 0;
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -1647,11 +491,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
     }
 
-    function calcularDireitoFerias(dataAdmissao, ref) {
+    // 👇 CORRIGIDO: aceitar diasDireito como parâmetro
+    function calcularDireitoFerias(dataAdmissao, ref, diasDireito) {
         const adm = parseDataParaDate(dataAdmissao);
         if (!adm) return null;
         const refClean = new Date(ref);
         refClean.setHours(0, 0, 0, 0);
+        const totalDireito = diasDireito || DIAS_PADRAO;
         let completos = 0, det = [], ini = new Date(adm);
         while (completos < 40) {
             const fim = new Date(ini);
@@ -1662,7 +508,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const p = {
                 numero: completos + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-                dataLimiteGozo: prazoGozo, status: 'pendente'
+                dataLimiteGozo: prazoGozo, status: 'pendente',
+                totalDireito: totalDireito
             };
             if (fim <= refClean) {
                 completos++;
@@ -1810,7 +657,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         matricula: s.matricula1.numeroMatricula,
                         dataAdmissao: s.matricula1.dataAdmissao || s.data_admissao || '',
                         cargo: s.matricula1.cargo || '-',
-                        escola: (s.matricula1.escola1 && s.matricula1.escola1.nomeEscola) || (s.matricula1.escola2 && s.matricula1.escola2.nomeEscola) || '-'
+                        escola: (s.matricula1.escola1 && s.matricula1.escola1.nomeEscola) || (s.matricula1.escola2 && s.matricula1.escola2.nomeEscola) || '-',
+                        diasFerias: s.matricula1.diasFerias || s.diasFerias || null
                     });
                 }
                 if (s.matricula2 && s.matricula2.numeroMatricula) {
@@ -1818,13 +666,15 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         matricula: s.matricula2.numeroMatricula,
                         dataAdmissao: s.matricula2.dataAdmissao || s.data_admissao || '',
                         cargo: s.matricula2.cargo || '-',
-                        escola: (s.matricula2.escola1 && s.matricula2.escola1.nomeEscola) || (s.matricula2.escola2 && s.matricula2.escola2.nomeEscola) || '-'
+                        escola: (s.matricula2.escola1 && s.matricula2.escola1.nomeEscola) || (s.matricula2.escola2 && s.matricula2.escola2.nomeEscola) || '-',
+                        diasFerias: s.matricula2.diasFerias || s.diasFerias || null
                     });
                 }
 
                 vinculos.forEach(v => {
                     if (matriculaFiltro && !v.matricula.toString().includes(matriculaFiltro)) return;
                     if (!v.dataAdmissao) return;
+
                     if (!todasEscolasMarcadas && !escolasSelecionadas.includes(v.escola)) return;
 
                     const regsMat = registros.filter(r => {
@@ -1834,7 +684,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     });
 
                     if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'ferias') {
-                        const dirF = calcularDireitoFerias(v.dataAdmissao, hoje);
+                        // 👇 NOVO: passa diasDireito para calcularDireitoFerias
+                        const diasDireito = obterDiasPorPeriodo(s, v);
+                        const dirF = calcularDireitoFerias(v.dataAdmissao, hoje, diasDireito);
                         if (dirF) {
                             const feriasLanc = regsMat.filter(r => {
                                 const t = (r.tipo || '').toLowerCase();
@@ -1842,12 +694,19 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                             });
 
                             dirF.periodosDetalhados.forEach(p => {
-                                const lanc = feriasLanc.find(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                                const lancs = feriasLanc.filter(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                                const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
                                 let status = p.status, gozo = '';
-                                if (lanc) {
-                                    const raw = lanc.data_inicio || lanc.dataInicio || lanc.data;
-                                    gozo = formatarData(raw);
-                                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+
+                                // 👇 NOVO: status parcial ou gozado baseado em dias consumidos
+                                if (diasConsumidos >= p.totalDireito) {
+                                    const primeiro = lancs[0];
+                                    gozo = formatarData(primeiro.data_inicio || primeiro.dataInicio || primeiro.data);
+                                    status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
+                                } else if (diasConsumidos > 0) {
+                                    const primeiro = lancs[0];
+                                    gozo = `${diasConsumidos}/${p.totalDireito} dias`;
+                                    status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
                                 } else {
                                     if (p.status === 'atual') status = 'atual';
                                     else if (p.dataLimiteGozo < hoje) status = 'vencido';
@@ -1955,10 +814,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("sumPeriodo").textContent = "Atual";
             document.getElementById("labelSumVinculos").textContent = "Total de Registros";
             document.getElementById("sumVinculos").textContent = linhasFinais.length;
-            document.getElementById("labelSumTotal").textContent = "Pendentes + Vencidos";
-            const pendentesVencidos = linhasFinais.filter(l => l.status === 'pendente' || l.status === 'vencido').length;
-            document.getElementById("sumTotalPasses").textContent = `${pendentesVencidos} registros`;
-            document.getElementById("sumTotalPasses").style.color = pendentesVencidos > 0 ? 'var(--red)' : 'var(--green)';
+            document.getElementById("labelSumTotal").textContent = "Pendentes + Vencidos + Parciais";
+            const pendentesVencidosParciais = linhasFinais.filter(l => l.status === 'pendente' || l.status === 'vencido' || l.status === 'parcial').length;
+            document.getElementById("sumTotalPasses").textContent = `${pendentesVencidosParciais} registros`;
+            document.getElementById("sumTotalPasses").style.color = pendentesVencidosParciais > 0 ? 'var(--red)' : 'var(--green)';
 
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
@@ -2106,7 +965,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         <td>${item.empresa}</td>
                         <td>${item.passesDiarios}</td>
                         <td><b>${item.diasEfetivosTotal} dias</b></td>
-                        <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                        <td><span style="color:${item.afastamentosTotal > 0 ? '#c62828' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
                         <td><b>${item.passesTotal}</b></td>
                     </tr>`;
             });
@@ -2283,8 +1142,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
     }
-
-    window.mostrarMensagem = mostrarMensagem;
 </script>
 
 </body>
