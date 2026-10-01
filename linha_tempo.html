@@ -1464,7 +1464,7 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
 }
 
 /* =========================================================
-   👇 CORRIGIDO: FOLGA ANIVERSÁRIO
+   FOLGA ANIVERSÁRIO (CORRIGIDA)
    Só conta como adquirida/disponível quando:
    1) O período aquisitivo fechou (fim <= ref)  E
    2) O aniversário dentro do período já aconteceu (aniv <= ref)
@@ -1479,14 +1479,12 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
     for(let i=0;i<40;i++){
         const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
 
-        // Procura o aniversário dentro deste período aquisitivo
         let aniv=null;
         for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
             const c=new Date(a,mes,dia);
             if(c>=ini&&c<=fim){aniv=c;break;}
         }
 
-        // Prazo para gozar = data do aniversário + 12 meses
         const limite=aniv?new Date(aniv):new Date(fim);
         const prazoGozo = new Date(limite);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
@@ -1496,20 +1494,16 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
             aniversarioNoPeriodo:aniv,dataLimiteGozo:prazoGozo,status:'pendente'};
 
         if(fim<=ref){
-            // 👇 Período aquisitivo COMPLETO
             if(aniv && aniv<=ref){
-                // 👇 Aniversário JÁ ACONTECEU dentro do período → folga adquirida
                 adquiridas++;
                 if(prazoGozo<ref){p.status='perdido';perdidas++;}
                 else{p.status='disponivel';disponiveis++;}
             } else {
-                // Período fechou mas o aniversário ainda não ocorreu nele
                 p.status='pendente';
             }
             det.push(p);
             ini=new Date(fim); ini.setDate(ini.getDate()+1);
         } else {
-            // 👇 Período aquisitivo AINDA EM ANDAMENTO → pendente (não disponível)
             p.status='pendente';
             det.push(p);
             break;
@@ -1635,6 +1629,9 @@ function badgeTipo(k){
     return k==='ferias'?'<span class="tipo-badge">Férias</span>':'<span class="tipo-badge">Folga Aniv.</span>';
 }
 
+/* =========================================================
+   RESUMO EXECUTIVO (SINTAXE CORRIGIDA)
+========================================================= */
 function renderizarResumoExecutivo(){
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
@@ -1660,7 +1657,7 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(f,'gozado')}</span></span>
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
-                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')</span></span>
+                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')}</span></span>
                             <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
                         </div>
                     </div>
@@ -1873,4 +1870,4 @@ window.buscarServidor = buscarServidor;
 </script>
 
 </body>
-</html> 
+</html>
