@@ -1289,22 +1289,20 @@ let acessoAutorizado = false;
 let linhasUnificadas = [];
 let nomeServidorAtual = '';
 let ultimoTermoBuscado = '';
-let servidorAtualRef = null; // 👇 referência ao servidor atual para obter diasFerias
+let servidorAtualRef = null;
 
 const DIAS_PADRAO = 30;
 
-// 👇 OPÇÃO B: direito manual por vínculo/servidor; padrão 30
 function obterDiasPorPeriodo(servidor, vinculo) {
     if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
     if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
     return DIAS_PADRAO;
 }
 
-// 👇 NOVO: calcula dias consumidos em um registro de férias
 function calcularDiasRegistro(reg) {
-    const ini = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data);
-    const fim = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.dataFim || reg.data_fim) || ini;
-    if (!ini || !fim) return 0;
+    const ini = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+    const fim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino) || ini;
+    if (!ini) return 0;
     const d = Math.round((fim - ini) / 86400000) + 1;
     return d > 0 ? d : 0;
 }
@@ -1406,14 +1404,13 @@ function parseDataParaDate(s){
     return null;
 }
 function verificarSeJaGozado(reg, hoje){
-    const dt=parseDataParaDate(reg.data_inicio||reg.dataInicio||reg.data||reg.data_gozo);
+    const dt=parseDataParaDate(reg.dataInicio||reg.data_inicio||reg.data||reg.data_gozo);
     if(!dt)return false;
     return dt<=hoje;
 }
 
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
-    // 👇 tolera formato "X/Y dias" (parcial não deve ser checado)
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
     const dg = parseDataParaDate(gozoStr);
     return dg ? dg > dataLimite : false;
@@ -1443,7 +1440,6 @@ function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmiss
     return null;
 }
 
-// 👇 AGORA ACEITA diasDireito COMO PARÂMETRO
 function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
@@ -1467,36 +1463,59 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
     return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
 }
 
+/* =========================================================
+   👇 CORRIGIDO: FOLGA ANIVERSÁRIO
+   Só conta como adquirida/disponível quando:
+   1) O período aquisitivo fechou (fim <= ref)  E
+   2) O aniversário dentro do período já aconteceu (aniv <= ref)
+========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
     ref.setHours(0,0,0,0);
     const mes=nasc.getMonth(), dia=nasc.getDate();
     let adquiridas=0, disponiveis=0, perdidas=0, proxima=null, det=[], ini=new Date(adm);
+
     for(let i=0;i<40;i++){
         const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+
+        // Procura o aniversário dentro deste período aquisitivo
         let aniv=null;
         for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
             const c=new Date(a,mes,dia);
             if(c>=ini&&c<=fim){aniv=c;break;}
         }
-        const limite=aniv?new Date(aniv):new Date(fim);
 
+        // Prazo para gozar = data do aniversário + 12 meses
+        const limite=aniv?new Date(aniv):new Date(fim);
         const prazoGozo = new Date(limite);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
         const p={numero:i+1,inicio:new Date(ini),fim:new Date(fim),
             anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
             aniversarioNoPeriodo:aniv,dataLimiteGozo:prazoGozo,status:'pendente'};
+
         if(fim<=ref){
-            adquiridas++;
-            if(prazoGozo<ref){p.status='perdido';perdidas++;}
-            else{p.status='disponivel';disponiveis++;}
-            det.push(p); ini=new Date(fim); ini.setDate(ini.getDate()+1);
+            // 👇 Período aquisitivo COMPLETO
+            if(aniv && aniv<=ref){
+                // 👇 Aniversário JÁ ACONTECEU dentro do período → folga adquirida
+                adquiridas++;
+                if(prazoGozo<ref){p.status='perdido';perdidas++;}
+                else{p.status='disponivel';disponiveis++;}
+            } else {
+                // Período fechou mas o aniversário ainda não ocorreu nele
+                p.status='pendente';
+            }
+            det.push(p);
+            ini=new Date(fim); ini.setDate(ini.getDate()+1);
         } else {
-            p.status='disponivel'; disponiveis++; det.push(p); break;
+            // 👇 Período aquisitivo AINDA EM ANDAMENTO → pendente (não disponível)
+            p.status='pendente';
+            det.push(p);
+            break;
         }
     }
+
     const anoBase=ref.getFullYear();
     for(let a=anoBase;a<=anoBase+2;a++){
         const c=new Date(a,mes,dia);
@@ -1513,6 +1532,20 @@ function filtrarRegistrosPorMatricula(registros, vinculo){
     });
 }
 
+function associarRegistroAPeriodo(reg, periodo) {
+    const anoRef = (reg.ano_referencia || reg.ano || '');
+    if (anoRef === periodo.anoReferencia) return true;
+
+    if (!anoRef) {
+        const regIni = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+        const regFim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino || regIni);
+        if (regIni && regFim) {
+            return !(regFim < periodo.inicio || regIni > periodo.fim);
+        }
+    }
+    return false;
+}
+
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
 
@@ -1520,31 +1553,26 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
         if(!vinculo.dataAdmissao)return;
         const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
 
-        // 👇 NOVO: passa diasDireito do vínculo
         const diasDireito = obterDiasPorPeriodo(servidorAtualRef, vinculo);
         const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje, diasDireito);
         if(dirF){
             const feriasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('ferias')||t.includes('férias');});
             dirF.periodosDetalhados.forEach(p=>{
-                // 👇 NOVO: pega TODOS os lançamentos do período e soma os dias
-                const lancs = feriasLanc.filter(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                const lancs = feriasLanc.filter(r => associarRegistroAPeriodo(r, p));
                 const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
                 const totalDireito = p.totalDireito || diasDireito;
 
                 let status, gozo;
 
                 if (diasConsumidos >= totalDireito) {
-                    // totalmente gozado
                     const primeiro = lancs[0];
-                    gozo = formatarData(primeiro.data_inicio || primeiro.dataInicio || primeiro.data);
+                    gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
                     status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
                 } else if (diasConsumidos > 0) {
-                    // 👇 NOVO STATUS PARCIAL
                     const primeiro = lancs[0];
                     gozo = `${diasConsumidos}/${totalDireito} dias`;
                     status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
                 } else {
-                    // nenhum lançamento
                     gozo = '';
                     if(p.status==='atual') status='atual';
                     else if(p.dataLimiteGozo<hoje) status='vencido';
@@ -1565,13 +1593,13 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
             const folgasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('aniversario')||t.includes('aniversário')||t.includes('folga');});
             dirG.periodosDetalhados.forEach(p=>{
                 const lanc=folgasLanc.find(r=>{
-                    const raw=r.data||r.data_gozo||r.data_inicio||r.dataInicio;
+                    const raw=r.data||r.data_gozo||r.dataInicio||r.data_inicio;
                     const per=identificarPeriodoFolgaAniversario(raw,dataNascimento,vinculo.dataAdmissao);
                     return (per||r.ano_referencia||r.ano||'')===p.anoReferencia;
                 });
                 let status=p.status, gozo='';
                 if(lanc){
-                    const raw=lanc.data||lanc.data_gozo||lanc.data_inicio||lanc.dataInicio;
+                    const raw=lanc.data||lanc.data_gozo||lanc.dataInicio||lanc.data_inicio;
                     gozo=formatarData(raw);
                     status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 }
@@ -1632,7 +1660,7 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(f,'gozado')}</span></span>
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
-                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')}</span></span>
+                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')</span></span>
                             <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
                         </div>
                     </div>
@@ -1746,7 +1774,6 @@ async function processarServidores(docs){
     const d0=docs[0].data();
     const nome=d0.nome||d0.Nome||'Não informado';
     nomeServidorAtual = nome;
-    // 👇 guarda o servidor completo para usar no obterDiasPorPeriodo
     servidorAtualRef = d0;
     const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
     const cpfFmt=(d0.cpf||d0.CPF||'').toString();
@@ -1756,7 +1783,6 @@ async function processarServidores(docs){
     const servidorIds=docs.map(d=>d.id);
     docs.forEach(d=>{
         const dt=d.data();
-        // 👇 NOVO: add() agora também captura diasFerias de cada matrícula
         const add=(mat,adm,diasFerias)=>{
             if(!mat)return;
             const ms=mat.toString().trim();
@@ -1818,7 +1844,6 @@ async function processarServidores(docs){
     document.getElementById('nomeServidor').textContent=nome;
     document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
     document.getElementById('nascimentoServidor').textContent=formatarData(nascimento)||'—';
-    // 👇 mostra diasFerias na linha de matrículas
     document.getElementById('matriculasServidor').textContent=vinculos.map(v=>{
         const dias = v.diasFerias ? ` • ${v.diasFerias}d/per` : ' • 30d/per';
         return `${v.matricula} (Adm ${formatarData(v.dataAdmissao)||'—'}${dias})`;
