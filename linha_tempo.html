@@ -204,10 +204,35 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .filtro-group label { font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.3px; }
 .filtro-select { height:34px; padding:0 8px; border:1px solid var(--border); border-radius:4px; font-size:12px; background:var(--surface); color:var(--text); outline:none; }
 .filtro-select:focus { border-color:var(--brand); }
-.periodos-table { width:100%; border-collapse:collapse; font-size:12px; }
-.periodos-table th { background:var(--surface-2); padding:8px 10px; text-align:left; font-weight:700; color:var(--text-secondary); border-bottom:1px solid var(--border); font-size:10px; text-transform:uppercase; white-space:nowrap; letter-spacing:.3px; }
+
+/* 👇 WRAPPER DA TABELA COM SCROLL + CABEÇALHO STICKY */
+.table-wrapper {
+    overflow: auto;
+    max-height: 60vh;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+}
+
+.periodos-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+.periodos-table th {
+    background:var(--surface-2);
+    padding:8px 10px;
+    text-align:left;
+    font-weight:700;
+    color:var(--text-secondary);
+    border-bottom:1px solid var(--border);
+    font-size:10px;
+    text-transform:uppercase;
+    white-space:nowrap;
+    letter-spacing:.3px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 1px 0 var(--border);
+}
 .periodos-table td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text); }
-.periodos-table tr:hover { background:var(--surface-2); }
+.periodos-table tr:hover td { background:var(--surface-2); }
+
 .badge-status { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:3px; font-size:10px; font-weight:600; white-space:nowrap; background:var(--surface-2); border:1px solid var(--border); }
 .badge-status .material-symbols-outlined { font-size:11px; }
 .badge-gozado { color:var(--ok); border-color:var(--ok-bd); background:var(--ok-bg); }
@@ -281,7 +306,9 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .main { overflow:visible; }
     .content-page { overflow:visible; padding:0; }
     .form-card { box-shadow:none; border:1px solid #999; }
+    .table-wrapper { overflow:visible !important; max-height:none !important; border-top:none !important; margin-top:0 !important; }
     .periodos-table { font-size:10px; }
+    .periodos-table th { position:static !important; box-shadow:none !important; }
     .periodos-table tr { page-break-inside:avoid; }
 }
 </style>
@@ -460,7 +487,9 @@ button { font:inherit; color:inherit; cursor:pointer; }
                             </select>
                         </div>
                     </div>
-                    <div style="overflow-x:auto;">
+
+                    <!-- 👇 WRAPPER DA TABELA COM SCROLL VERTICAL E CABEÇALHO STICKY -->
+                    <div class="table-wrapper">
                         <table class="periodos-table">
                             <thead>
                                 <tr>
@@ -843,13 +872,6 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
     return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
 }
 
-/* =========================================================
-   FOLGA ANIVERSÁRIO — REGRA FINAL
-   - Disponível a partir do PRÓPRIO ANIVERSÁRIO (dataDisponivel = aniv)
-   - Prazo para gozar = aniversário + 12 meses
-   - Depois do prazo sem gozar = Perdido
-   - Não depende do fechamento do período aquisitivo
-========================================================= */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
@@ -1010,6 +1032,12 @@ function badgeTipo(k){
     return k==='ferias'?'<span class="tipo-badge">Férias</span>':'<span class="tipo-badge">Folga Aniv.</span>';
 }
 
+/* =========================================================
+   RESUMO EXECUTIVO — CORRIGIDO
+   - Férias "Adquiridas" = ciclo COMPLETO (status !== 'atual')
+   - Folga "Adquiridas" = aniversário já aconteceu (disponivel/gozado/programado/perdido)
+   - Chip "Em andamento" para mostrar ciclos abertos das férias
+========================================================= */
 function renderizarResumoExecutivo(){
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
@@ -1019,6 +1047,15 @@ function renderizarResumoExecutivo(){
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
+
+        // 👇 FÉRIAS: adquiridas = ciclo COMPLETO (status diferente de 'atual')
+        const feriasAdquiridas = f.filter(l => l.status !== 'atual').length;
+
+        // 👇 FOLGA: adquiridas = aniversário já aconteceu
+        const folgaAdquiridas = g.filter(l =>
+            ['disponivel','gozado','programado','perdido'].includes(l.status)
+        ).length;
+
         html += `
             <div class="resumo-matricula">
                 <div class="resumo-matricula-header">
@@ -1031,12 +1068,13 @@ function renderizarResumoExecutivo(){
                             <span class="material-symbols-outlined">beach_access</span> Férias
                         </div>
                         <div class="resumo-chips">
-                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${f.length}</span></span>
+                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${feriasAdquiridas}</span></span>
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(f,'gozado')}</span></span>
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
                             <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')}</span></span>
                             <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
+                            <span class="chip">Em andamento <span class="num chip-num-cinza">${c(f,'atual')}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
@@ -1044,9 +1082,10 @@ function renderizarResumoExecutivo(){
                             <span class="material-symbols-outlined">cake</span> Folga Aniversário
                         </div>
                         <div class="resumo-chips">
-                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${g.length}</span></span>
+                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${folgaAdquiridas}</span></span>
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(g,'gozado')}</span></span>
-                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g,'disponivel')+c(g,'atual')}</span></span>
+                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(g,'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g,'disponivel')}</span></span>
                             <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(g,'pendente')}</span></span>
                             <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g,'perdido')}</span></span>
                         </div>
