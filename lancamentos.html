@@ -5,8 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
 <title>Controle de Férias, Folgas e Licenças - Vale Transporte</title>
 
@@ -14,10 +14,11 @@
 :root {
     --primary: #5b2a86;
     --primary-hover: #47206b;
-    --primary-light: #f1ebf6;
+    --primary-light: #f5f2f8;
     --green: #2e7d32;
     --green-hover: #1b5e20;
     --green-light: #eaf6ec;
+    --green-border: #72b879;
     --red: #c62828;
     --red-hover: #a51f1f;
     --red-light: #fff0f0;
@@ -51,8 +52,8 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .page-header { margin-bottom: 24px; }
 .breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b858e; margin-bottom: 8px; }
 .breadcrumb .material-symbols-outlined { font-size: 17px; }
-.page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
-.page-header p { font-size: 13px; color: var(--text-secondary); }
+.page-header h1 { font-size: 24px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 14px; color: var(--text-secondary); }
 
 .acesso-negado-banner { display: none; background: var(--red-light); border: 1px solid var(--red-border); color: var(--red); padding: 20px 24px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; align-items: flex-start; gap: 14px; box-shadow: var(--shadow); }
 .acesso-negado-banner.ativo { display: flex; }
@@ -295,23 +296,14 @@ tr:hover td { background: #f8fafc; }
     let servidorCache = null;
     let registrosCache = [];
     let periodosAbertos = [];
+    let diasDireitoCache = 30;
 
     const DIAS_PADRAO = 30;
 
-    // 👇 OPÇÃO B: direito manual por vínculo/servidor; padrão 30
     function obterDiasPorPeriodo(servidor, vinculo) {
         if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
         if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
         return DIAS_PADRAO;
-    }
-
-    function obterVinculoObj(matriculaNum) {
-        if (!servidorCache) return null;
-        const m1 = servidorCache.matricula1;
-        const m2 = servidorCache.matricula2;
-        if (m1 && m1.numeroMatricula && m1.numeroMatricula.toString() === matriculaNum.toString()) return m1;
-        if (m2 && m2.numeroMatricula && m2.numeroMatricula.toString() === matriculaNum.toString()) return m2;
-        return null;
     }
 
     function normalizarTexto(valor) {
@@ -342,12 +334,12 @@ tr:hover td { background: #f8fafc; }
         return str;
     }
 
-    function calcularDiasRegistro(r) {
-        const ini = parseData(r.dataInicio || r.data_inicio);
-        const fim = parseData(r.dataFim || r.data_fim) || ini;
-        if (!ini || !fim) return 0;
-        const dias = Math.round((fim - ini) / 86400000) + 1;
-        return dias > 0 ? dias : 0;
+    function calcularDiasRegistro(reg) {
+        const ini = parseData(reg.dataInicio || reg.data_inicio || reg.data);
+        const fim = parseData(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino) || ini;
+        if (!ini) return 0;
+        const d = Math.round((fim - ini) / 86400000) + 1;
+        return d > 0 ? d : 0;
     }
 
     function diasConsumidosPorPeriodo(matricula, tipo, anoRef) {
@@ -361,9 +353,12 @@ tr:hover td { background: #f8fafc; }
     }
 
     /* =========================================================
-       PERÍODOS ABERTOS (AGORA COM DIREITO VARIÁVEL 30/45/...)
+       PERÍODOS ABERTOS — REGRA FINAL
+       FÉRIAS: direito variável; validação de dias parciais no salvar.
+       FOLGA: disponível a partir do PRÓPRIO ANIVERSÁRIO; prazo = aniv + 12 meses.
+              Antes do aniversário, o período NÃO aparece no dropdown.
     ========================================================= */
-    function calcularPeriodosAbertos(dataAdmissao, matricula, tipo, diasDireito) {
+    function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
         if (!dtAdm) return [];
 
@@ -376,8 +371,7 @@ tr:hover td { background: #f8fafc; }
             ? parseData(servidorCache.data_nascimento || servidorCache.dataNascimento)
             : null;
 
-        //  Folga = 1 dia | Férias = direito do vínculo (30, 45, ...)
-        const totalDireito = (tipo === 'FOLGA_ANIVERSARIO') ? 1 : (diasDireito || DIAS_PADRAO);
+        const totalDireito = (tipo === 'FOLGA_ANIVERSARIO') ? 1 : diasDireitoCache;
 
         for (let i = 0; i < 15; i++) {
             const fim = new Date(ini);
@@ -388,6 +382,7 @@ tr:hover td { background: #f8fafc; }
 
             let dataLimite = new Date(fim);
             let aniversarioNoPeriodo = null;
+            let dataDisponivel = null;
 
             if (tipo === 'FOLGA_ANIVERSARIO' && dtNasc) {
                 const mes = dtNasc.getMonth();
@@ -400,33 +395,44 @@ tr:hover td { background: #f8fafc; }
                         break;
                     }
                 }
+                // 👇 Disponível no PRÓPRIO ANIVERSÁRIO
+                dataDisponivel = new Date(aniversarioNoPeriodo || fim);
             }
 
-            const prazoGozo = new Date(dataLimite);
+            // 👇 Prazo = aniversário + 12 meses (folga) | fim + 12 meses (férias)
+            const prazoGozo = new Date(dataDisponivel || dataLimite);
             prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
             const consumidos = diasConsumidosPorPeriodo(matricula, tipo, anoRef);
             const restantes = totalDireito - consumidos;
 
             if (restantes > 0) {
-                let status = 'pendente';
-                if (fim < hoje) {
-                    status = prazoGozo < hoje ? 'vencido' : 'pendente';
+                // 👇 Folga ainda não liberada (aniversário não chegou): não entra no dropdown
+                if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje < dataDisponivel) {
+                    // aguardando o aniversário — não lista
                 } else {
-                    status = 'atual';
-                }
+                    let status = 'pendente';
+                    if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje >= prazoGozo) {
+                        status = 'vencido';
+                    } else if (fim < hoje) {
+                        status = prazoGozo < hoje ? 'vencido' : 'pendente';
+                    } else {
+                        status = 'atual';
+                    }
 
-                periodos.push({
-                    anoReferencia: anoRef,
-                    inicio: new Date(ini),
-                    fim: new Date(fim),
-                    dataLimite: prazoGozo,
-                    aniversarioNoPeriodo: aniversarioNoPeriodo,
-                    status: status,
-                    consumidos: consumidos,
-                    restantes: restantes,
-                    totalDireito: totalDireito
-                });
+                    periodos.push({
+                        anoReferencia: anoRef,
+                        inicio: new Date(ini),
+                        fim: new Date(fim),
+                        dataLimite: prazoGozo,
+                        dataDisponivel: dataDisponivel,
+                        aniversarioNoPeriodo: aniversarioNoPeriodo,
+                        status: status,
+                        consumidos: consumidos,
+                        restantes: restantes,
+                        totalDireito: totalDireito
+                    });
+                }
             }
 
             ini = new Date(fim);
@@ -456,17 +462,20 @@ tr:hover td { background: #f8fafc; }
 
         const [matricula, escola] = vinculoSelect.split("|");
 
-        let dataAdmissao = null;
         let vinculoObj = null;
+        let dataAdmissao = null;
         if (servidorCache) {
-            if (servidorCache.matricula1 && servidorCache.matricula1.numeroMatricula === matricula) {
-                dataAdmissao = servidorCache.matricula1.dataAdmissao || servidorCache.matricula1.data_admissao;
+            if (servidorCache.matricula1 && servidorCache.matricula1.numeroMatricula == matricula) {
                 vinculoObj = servidorCache.matricula1;
-            } else if (servidorCache.matricula2 && servidorCache.matricula2.numeroMatricula === matricula) {
-                dataAdmissao = servidorCache.matricula2.dataAdmissao || servidorCache.matricula2.data_admissao;
+                dataAdmissao = vinculoObj.dataAdmissao || vinculoObj.data_admissao;
+            } else if (servidorCache.matricula2 && servidorCache.matricula2.numeroMatricula == matricula) {
                 vinculoObj = servidorCache.matricula2;
+                dataAdmissao = vinculoObj.dataAdmissao || vinculoObj.data_admissao;
             }
         }
+
+        // 👇 Resolve direito variável do vínculo
+        diasDireitoCache = obterDiasPorPeriodo(servidorCache, vinculoObj);
 
         if (!dataAdmissao) {
             selectPeriodo.innerHTML = `<option value="">⚠️ Data de admissão não informada nesta matrícula</option>`;
@@ -474,10 +483,7 @@ tr:hover td { background: #f8fafc; }
             return;
         }
 
-        // 👇 Resolve o direito deste vínculo (30, 45, ...)
-        const diasDireito = obterDiasPorPeriodo(servidorCache, vinculoObj);
-
-        periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo, diasDireito);
+        periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo);
 
         if (periodosAbertos.length === 0) {
             selectPeriodo.innerHTML = `<option value="">✓ Não há períodos em aberto (todos gozados)</option>`;
@@ -733,7 +739,7 @@ tr:hover td { background: #f8fafc; }
                     const numMat = matObj.numeroMatricula || 'S/N';
                     const cargo = matObj.cargo || 'Cargo não informado';
                     const admissao = matObj.dataAdmissao || matObj.data_admissao || '';
-                    const dias = matObj.diasFerias ? ` • ${matObj.diasFerias}d/período` : '';
+                    const dias = matObj.diasFerias ? ` • ${matObj.diasFerias}d/per` : '';
                     if (matObj.escola1 && matObj.escola1.nomeEscola) options += `<option value="${numMat}|${matObj.escola1.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola1.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}${dias}</option>`;
                     if (matObj.escola2 && matObj.escola2.nomeEscola) options += `<option value="${numMat}|${matObj.escola2.nomeEscola}">Mat: ${numMat} (${cargo}) - ${matObj.escola2.nomeEscola} ${admissao ? `• Adm: ${formatarDataBr(admissao)}` : ''}${dias}</option>`;
                 }
@@ -850,11 +856,10 @@ tr:hover td { background: #f8fafc; }
                 if (tipo === 'FERIAS') {
                     const duracao = Math.round((new Date(dataFim + 'T00:00:00') - new Date(dataInicio + 'T00:00:00')) / 86400000) + 1;
                     const consumidos = diasConsumidosPorPeriodo(matriculaEscolhida, 'FERIAS', anoReferencia);
-                    // 👇 Direito variável do vínculo
-                    const diasDireito = obterDiasPorPeriodo(servidorCache, obterVinculoObj(matriculaEscolhida));
+                    const totalDireito = diasDireitoCache;
 
-                    if (consumidos + duracao > diasDireito) {
-                        mostrarMensagem(`⚠️ O período ${anoReferencia} já possui ${consumidos} dia(s) lançado(s). Restam apenas ${diasDireito - consumidos} dia(s), mas você está lançando ${duracao}.`, "erro");
+                    if (consumidos + duracao > totalDireito) {
+                        mostrarMensagem(`⚠️ O período ${anoReferencia} já possui ${consumidos} dia(s) lançado(s). Restam apenas ${totalDireito - consumidos} dia(s), mas você está lançando ${duracao}.`, "erro");
                         return;
                     }
                 } else if (tipo === 'FOLGA_ANIVERSARIO') {
