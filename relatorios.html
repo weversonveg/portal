@@ -246,12 +246,12 @@ tr:hover td { background: #f8fafc; }
                     <label for="filtroStatus">Status</label>
                     <select id="filtroStatus">
                         <option value="todos">Todos</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="vencido">Vencido</option>
-                        <option value="disponivel">Disponível</option>
                         <option value="gozado">Gozado</option>
                         <option value="parcial">Parcial</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="pendente">Pendente</option>
                         <option value="programado">Programado</option>
+                        <option value="vencido">Vencido</option>
                         <option value="perdido">Perdido</option>
                     </select>
                 </div>
@@ -304,8 +304,8 @@ tr:hover td { background: #f8fafc; }
             <p id="sumVinculos">0</p>
         </div>
         <div class="summary-box" id="boxSumTotal" style="border-left: 4px solid var(--green);">
-            <label id="labelSumTotal">Total Geral de Passes</label>
-            <p id="sumTotalPasses" style="color: var(--green);">0 passes</p>
+            <label id="labelSumTotal">Total Geral</label>
+            <p id="sumTotalPasses" style="color: var(--green);">0</p>
         </div>
     </section>
 
@@ -353,11 +353,18 @@ tr:hover td { background: #f8fafc; }
 
     const DIAS_PADRAO = 30;
 
-    // 👇 OPÇÃO B: direito manual por vínculo/servidor; padrão 30
     function obterDiasPorPeriodo(servidor, vinculo) {
         if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
         if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
         return DIAS_PADRAO;
+    }
+
+    function calcularDiasRegistro(reg) {
+        const ini = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+        const fim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino) || ini;
+        if (!ini) return 0;
+        const d = Math.round((fim - ini) / 86400000) + 1;
+        return d > 0 ? d : 0;
     }
 
     function mostrarLoading(texto = 'Carregando...') {
@@ -415,84 +422,12 @@ tr:hover td { background: #f8fafc; }
 
     function verificarExtemporaneo(status, gozoStr, dataLimite) {
         if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
+        if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
         const dg = parseDataParaDate(gozoStr);
         return dg ? dg > dataLimite : false;
     }
 
-    // 👇 NOVO: calcula dias consumidos em um registro
-    function calcularDiasRegistro(reg) {
-        const ini = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data);
-        const fim = parseDataParaDate(reg.data_termino || reg.dataTermino || reg.dataFim || reg.data_fim) || ini;
-        if (!ini || !fim) return 0;
-        const d = Math.round((fim - ini) / 86400000) + 1;
-        return d > 0 ? d : 0;
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const hoje = new Date();
-        const ano = hoje.getFullYear();
-        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
-        document.getElementById("anoReferencia").value = ano;
-        atualizarTextoDropdown();
-
-        document.addEventListener("click", function(e) {
-            const container = document.getElementById("dropdownEscolasContainer");
-            const panel = document.getElementById("dropdownPanel");
-            if (!container.contains(e.target)) {
-                panel.classList.remove("ativo");
-            }
-        });
-    });
-
-    window.alternarTipoRelatorio = function() {
-        tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
-        const filtrosVales = document.getElementById("filtrosVales");
-        const filtrosFerias = document.getElementById("filtrosFerias");
-        if (tipoRelatorioAtual === "vales") {
-            filtrosVales.style.display = "contents";
-            filtrosFerias.style.display = "none";
-        } else {
-            filtrosVales.style.display = "none";
-            filtrosFerias.style.display = "contents";
-        }
-    }
-
-    window.alternarTipoPeriodo = function() {
-        const tipo = document.getElementById("tipoPeriodo").value;
-        if (tipo === "mensal") {
-            document.getElementById("grupoMes").style.display = "flex";
-            document.getElementById("grupoAno").style.display = "none";
-        } else {
-            document.getElementById("grupoMes").style.display = "none";
-            document.getElementById("grupoAno").style.display = "flex";
-        }
-    }
-
-    window.toggleDropdownEscolas = function() {
-        document.getElementById("dropdownPanel").classList.toggle("ativo");
-    }
-
-    window.toggleTodasEscolas = function(master) {
-        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
-        checkboxes.forEach(cb => { if (cb !== master) cb.checked = master.checked; });
-        atualizarTextoDropdown();
-    }
-
-    window.atualizarTextoDropdown = function() {
-        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
-        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"])');
-        const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
-        const spanTexto = document.getElementById("dropdownTextoSelecionado");
-
-        if (master && master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
-        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; if(master) master.checked = false; }
-        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; if(master) master.checked = true; }
-        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
-    }
-
-    // 👇 CORRIGIDO: aceitar diasDireito como parâmetro
-    function calcularDireitoFerias(dataAdmissao, ref, diasDireito) {
+    function calcularDireitoFerias(dataAdmissao, ref = new Date(), diasDireito = DIAS_PADRAO) {
         const adm = parseDataParaDate(dataAdmissao);
         if (!adm) return null;
         const refClean = new Date(ref);
@@ -522,78 +457,68 @@ tr:hover td { background: #f8fafc; }
                 break;
             }
         }
-        return { periodosCompletos: completos, periodosDetalhados: det };
+        return { periodosCompletos: completos, diasDireito: completos * totalDireito, periodosDetalhados: det };
     }
 
-    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref) {
+    /* =========================================================
+       FOLGA ANIVERSÁRIO — REGRA FINAL
+       Disponível a partir do aniversário; prazo = aniv + 12 meses;
+       depois do prazo sem gozar = Perdido. Não depende do fechamento
+       do período aquisitivo.
+    ========================================================= */
+    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
         const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
         if (!nasc || !adm) return null;
         const refClean = new Date(ref);
         refClean.setHours(0, 0, 0, 0);
         const mes = nasc.getMonth(), dia = nasc.getDate();
-        let det = [], ini = new Date(adm);
+        let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
+
         for (let i = 0; i < 40; i++) {
             const fim = new Date(ini);
             fim.setFullYear(fim.getFullYear() + 1);
             fim.setDate(fim.getDate() - 1);
+
             let aniv = null;
             for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
                 const c = new Date(a, mes, dia);
                 if (c >= ini && c <= fim) { aniv = c; break; }
             }
-            const limite = aniv ? new Date(aniv) : new Date(fim);
-            const prazoGozo = new Date(limite);
+            if (!aniv) { ini = new Date(fim); ini.setDate(ini.getDate() + 1); continue; }
+
+            const dataDisponivel = new Date(aniv);
+            const prazoGozo = new Date(aniv);
             prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
             const p = {
                 numero: i + 1, inicio: new Date(ini), fim: new Date(fim),
                 anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
-                aniversarioNoPeriodo: aniv, dataLimiteGozo: prazoGozo, status: 'pendente'
+                aniversarioNoPeriodo: aniv,
+                dataDisponivel: dataDisponivel,
+                dataLimiteGozo: prazoGozo, status: 'pendente'
             };
-            if (fim <= refClean) {
-                if (prazoGozo < refClean) { p.status = 'perdido'; }
-                else { p.status = 'disponivel'; }
-                det.push(p);
-                ini = new Date(fim);
-                ini.setDate(ini.getDate() + 1);
-            } else {
-                p.status = 'disponivel';
+
+            if (refClean < dataDisponivel) {
+                p.status = 'pendente';
                 det.push(p);
                 break;
             }
+
+            adquiridas++;
+            if (refClean >= prazoGozo) { p.status = 'perdido'; perdidas++; }
+            else { p.status = 'disponivel'; disponiveis++; }
+            det.push(p);
+
+            ini = new Date(fim); ini.setDate(ini.getDate() + 1);
         }
-        return { periodosDetalhados: det };
+
+        return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
     }
 
     function verificarSeJaGozado(reg, hoje) {
         const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
         if (!dt) return false;
         return dt <= hoje;
-    }
-
-    function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
-        const dtGozo = parseDataParaDate(dataGozo), dtNasc = parseDataParaDate(dataNascimento), dtAdm = parseDataParaDate(dataAdmissao);
-        if (!dtGozo || !dtNasc || !dtAdm) return null;
-        const mes = dtNasc.getMonth(), dia = dtNasc.getDate();
-        let ini = new Date(dtAdm);
-        for (let i = 0; i < 40; i++) {
-            const fim = new Date(ini);
-            fim.setFullYear(fim.getFullYear() + 1);
-            fim.setDate(fim.getDate() - 1);
-            let aniv = null;
-            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
-                const c = new Date(a, mes, dia);
-                if (c >= ini && c <= fim) { aniv = c; break; }
-            }
-            const limite = aniv || fim;
-            if (dtGozo <= limite && dtGozo >= ini) return `${ini.getFullYear()}/${fim.getFullYear()}`;
-            if (dtGozo > limite && dtGozo <= fim) {
-                const pi = new Date(fim); pi.setDate(pi.getDate() + 1);
-                const pf = new Date(pi); pf.setFullYear(pf.getFullYear() + 1); pf.setDate(pf.getDate() - 1);
-                return `${pi.getFullYear()}/${pf.getFullYear()}`;
-            }
-            ini = new Date(fim); ini.setDate(ini.getDate() + 1);
-        }
-        return null;
     }
 
     window.gerarRelatorio = async function() {
@@ -674,7 +599,6 @@ tr:hover td { background: #f8fafc; }
                 vinculos.forEach(v => {
                     if (matriculaFiltro && !v.matricula.toString().includes(matriculaFiltro)) return;
                     if (!v.dataAdmissao) return;
-
                     if (!todasEscolasMarcadas && !escolasSelecionadas.includes(v.escola)) return;
 
                     const regsMat = registros.filter(r => {
@@ -684,7 +608,6 @@ tr:hover td { background: #f8fafc; }
                     });
 
                     if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'ferias') {
-                        // 👇 NOVO: passa diasDireito para calcularDireitoFerias
                         const diasDireito = obterDiasPorPeriodo(s, v);
                         const dirF = calcularDireitoFerias(v.dataAdmissao, hoje, diasDireito);
                         if (dirF) {
@@ -694,20 +617,31 @@ tr:hover td { background: #f8fafc; }
                             });
 
                             dirF.periodosDetalhados.forEach(p => {
-                                const lancs = feriasLanc.filter(r => (r.ano_referencia || r.ano || '') === p.anoReferencia);
+                                const lancs = feriasLanc.filter(r => {
+                                    const anoRef = (r.ano_referencia || r.ano || '');
+                                    if (anoRef === p.anoReferencia) return true;
+                                    if (!anoRef) {
+                                        const regIni = parseDataParaDate(r.dataInicio || r.data_inicio || r.data);
+                                        const regFim = parseDataParaDate(r.dataFim || r.data_fim || r.dataTermino || r.data_termino || regIni);
+                                        if (regIni && regFim) return !(regFim < p.inicio || regIni > p.fim);
+                                    }
+                                    return false;
+                                });
                                 const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
-                                let status = p.status, gozo = '';
+                                const totalDireito = p.totalDireito || diasDireito;
 
-                                // 👇 NOVO: status parcial ou gozado baseado em dias consumidos
-                                if (diasConsumidos >= p.totalDireito) {
+                                let status, gozo;
+
+                                if (diasConsumidos >= totalDireito) {
                                     const primeiro = lancs[0];
-                                    gozo = formatarData(primeiro.data_inicio || primeiro.dataInicio || primeiro.data);
+                                    gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
                                     status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
                                 } else if (diasConsumidos > 0) {
                                     const primeiro = lancs[0];
-                                    gozo = `${diasConsumidos}/${p.totalDireito} dias`;
+                                    gozo = `${diasConsumidos}/${totalDireito} dias`;
                                     status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
                                 } else {
+                                    gozo = '';
                                     if (p.status === 'atual') status = 'atual';
                                     else if (p.dataLimiteGozo < hoje) status = 'vencido';
                                     else status = 'pendente';
@@ -738,9 +672,11 @@ tr:hover td { background: #f8fafc; }
 
                             dirG.periodosDetalhados.forEach(p => {
                                 const lanc = folgasLanc.find(r => {
+                                    const anoRef = (r.ano_referencia || r.ano || '');
+                                    if (anoRef) return anoRef === p.anoReferencia;
                                     const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
-                                    const per = identificarPeriodoFolgaAniversario(raw, nascimento, v.dataAdmissao);
-                                    return (per || r.ano_referencia || r.ano || '') === p.anoReferencia;
+                                    const dGozo = parseDataParaDate(raw);
+                                    return dGozo && dGozo >= p.dataDisponivel && dGozo < p.dataLimiteGozo;
                                 });
 
                                 let status = p.status, gozo = '';
@@ -1137,11 +1073,74 @@ tr:hover td { background: #f8fafc; }
         }
     }
 
+    window.alternarTipoRelatorio = function() {
+        tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
+        const filtrosVales = document.getElementById("filtrosVales");
+        const filtrosFerias = document.getElementById("filtrosFerias");
+        if (tipoRelatorioAtual === "vales") {
+            filtrosVales.style.display = "contents";
+            filtrosFerias.style.display = "none";
+        } else {
+            filtrosVales.style.display = "none";
+            filtrosFerias.style.display = "contents";
+        }
+    }
+
+    window.alternarTipoPeriodo = function() {
+        const tipo = document.getElementById("tipoPeriodo").value;
+        if (tipo === "mensal") {
+            document.getElementById("grupoMes").style.display = "flex";
+            document.getElementById("grupoAno").style.display = "none";
+        } else {
+            document.getElementById("grupoMes").style.display = "none";
+            document.getElementById("grupoAno").style.display = "flex";
+        }
+    }
+
+    window.toggleDropdownEscolas = function() {
+        document.getElementById("dropdownPanel").classList.toggle("ativo");
+    }
+
+    window.toggleTodasEscolas = function(master) {
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
+        checkboxes.forEach(cb => { if (cb !== master) cb.checked = master.checked; });
+        atualizarTextoDropdown();
+    }
+
+    window.atualizarTextoDropdown = function() {
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"])');
+        const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
+        const spanTexto = document.getElementById("dropdownTextoSelecionado");
+
+        if (master && master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
+        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; if(master) master.checked = false; }
+        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; if(master) master.checked = true; }
+        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
+    }
+
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        document.getElementById("anoReferencia").value = ano;
+        atualizarTextoDropdown();
+
+        document.addEventListener("click", function(e) {
+            const container = document.getElementById("dropdownEscolasContainer");
+            const panel = document.getElementById("dropdownPanel");
+            if (!container.contains(e.target)) {
+                panel.classList.remove("ativo");
+            }
+        });
+    });
 </script>
 
 </body>
