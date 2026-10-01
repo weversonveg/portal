@@ -697,7 +697,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-color: var(--ok-bd) !important;
 }
 
-/* Campo controlado pelo Flatpickr — cursor pointer para indicar clique */
 .form-group input.flatpickr-input {
     cursor: pointer;
 }
@@ -1155,6 +1154,91 @@ tbody tr:hover td { background: var(--surface-2); }
     justify-content: center; gap: 12px; padding: 14px 24px 20px;
 }
 .modal-excluir .modal-footer button { min-width: 120px; }
+
+/* ============================================================
+   FLATPICKR — sobrescreve o azul do material_purple pelo roxo do sistema
+   ============================================================ */
+.flatpickr-calendar .flatpickr-months,
+.flatpickr-calendar .flatpickr-weekdays,
+.flatpickr-calendar .flatpickr-monthSelect-months {
+    background: #2E0F4F !important;
+}
+.flatpickr-calendar .flatpickr-month,
+.flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-calendar .flatpickr-current-month input.cur-year,
+.flatpickr-calendar .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-next-month {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+.flatpickr-calendar .flatpickr-prev-month:hover svg,
+.flatpickr-calendar .flatpickr-next-month:hover svg {
+    fill: #d8c8ec !important;
+}
+.flatpickr-calendar span.flatpickr-weekday {
+    color: #e8dcf5 !important;
+}
+
+/* Dia selecionado — roxo principal */
+.flatpickr-calendar .flatpickr-day.selected,
+.flatpickr-calendar .flatpickr-day.startRange,
+.flatpickr-calendar .flatpickr-day.endRange,
+.flatpickr-calendar .flatpickr-day.selected.inRange,
+.flatpickr-calendar .flatpickr-day.selected:focus,
+.flatpickr-calendar .flatpickr-day.selected:hover,
+.flatpickr-calendar .flatpickr-day.startRange:hover,
+.flatpickr-calendar .flatpickr-day.endRange:hover {
+    background: #2E0F4F !important;
+    border-color: #2E0F4F !important;
+    color: #ffffff !important;
+}
+
+/* Hover nos dias */
+.flatpickr-calendar .flatpickr-day:hover {
+    background: #f1e9f9 !important;
+    border-color: #f1e9f9 !important;
+    color: #2E0F4F !important;
+}
+.flatpickr-calendar .flatpickr-day.today {
+    border-color: #2E0F4F !important;
+    color: #2E0F4F !important;
+}
+.flatpickr-calendar .flatpickr-day.today:hover {
+    background: #2E0F4F !important;
+    border-color: #2E0F4F !important;
+    color: #ffffff !important;
+}
+
+/* Mês selecionado (monthSelectPlugin) */
+.flatpickr-calendar .flatpickr-monthSelect-month.selected {
+    background: #2E0F4F !important;
+    border-color: #2E0F4F !important;
+    color: #ffffff !important;
+}
+.flatpickr-calendar .flatpickr-monthSelect-month:hover {
+    background: #f1e9f9 !important;
+    border-color: #f1e9f9 !important;
+    color: #2E0F4F !important;
+}
+.flatpickr-calendar .flatpickr-monthSelect-month.today {
+    border-color: #2E0F4F !important;
+    color: #2E0F4F !important;
+}
+
+/* Setinhas, intervalo e disabled */
+.flatpickr-calendar .flatpickr-day.inRange,
+.flatpickr-calendar .flatpickr-day.prevMonthDay.inRange,
+.flatpickr-calendar .flatpickr-day.nextMonthDay.inRange {
+    background: #e6d9f2 !important;
+    border-color: #e6d9f2 !important;
+    color: #2E0F4F !important;
+}
+.flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+.flatpickr-calendar .flatpickr-day.flatpickr-disabled:hover {
+    color: #b8b8c0 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
 
 /* ============================================================
    RESPONSIVO
@@ -1842,7 +1926,7 @@ tbody tr:hover td { background: var(--surface-2); }
     </div>
 </div>
 
-<!-- ===== FLATPICKR — bibliotecas (sem defer, para rodar o init logo abaixo) ===== -->
+<!-- ===== FLATPICKR — bibliotecas ===== -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
@@ -1866,7 +1950,6 @@ tbody tr:hover td { background: var(--surface-2); }
         onChange: function (selectedDates, dateStr, instance) {
             if (window.atualizarCorCampo) window.atualizarCorCampo(instance.element);
             if (typeof ocultarMensagem === "function") ocultarMensagem();
-            // dispara onchange inline (ex.: atualizarStatusCalculado)
             instance.element.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
@@ -1892,8 +1975,7 @@ tbody tr:hover td { background: var(--surface-2); }
     }
     flatpickr("input[type='month']", cfgMes);
 
-    // ---------- Mantém .value sincronizado quando o script define via JS ----------
-    // (ex.: espelho-mes, inputMes.value = mesAtualStr)
+    // ---------- Sincroniza .value com a instância ----------
     document.querySelectorAll('.flatpickr-input').forEach(function (input) {
         var inst = input._flatpickr;
         if (!inst) return;
@@ -2105,7 +2187,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<!-- SCRIPT DO INDICADOR DE REDE (somente velocidade em Mbps) -->
+<!-- SCRIPT DO INDICADOR DE REDE -->
 <script>
 (function () {
     var el    = document.getElementById('redeIndicador');
@@ -2318,7 +2400,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (!campo) return;
         if (campo.value !== valor) {
             campo.value = valor;
-            // Se o Flatpickr estiver ativo, sincroniza a instância
             if (campo._flatpickr) {
                 try {
                     if (valor) campo._flatpickr.setDate(valor, false);
@@ -2390,7 +2471,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const inputMes = document.getElementById("mesReferencia");
         inputMes.value = mesAtualStr;
-        // Sincroniza instância Flatpickr, se existir
         if (inputMes._flatpickr) {
             try { inputMes._flatpickr.setDate(mesAtualStr, false); } catch (e) {}
         }
