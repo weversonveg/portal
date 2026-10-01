@@ -92,7 +92,16 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .summary-box label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
 .summary-box p { font-size: 18px; font-weight: 700; color: #263238; margin-top: 4px; }
 
-.table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; display: none; }
+/* 👇 TABELA COM CABEÇALHO CONGELADO */
+.table-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: 65vh;
+    display: none;
+}
 .table-card.ativo { display: block; }
 
 .print-report-header { display: none; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #3d2450; }
@@ -101,8 +110,20 @@ body { min-height: 100vh; background: var(--background); color: var(--text); }
 .print-report-header h2 { font-size: 16px; font-weight: 700; color: #3d2450; }
 .print-report-header p { font-size: 12px; color: #555; margin-top: 4px; }
 
-table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
-th { background: #fafbfc; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #455a64; border-bottom: 1px solid #e5e8eb; text-transform: uppercase; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; white-space: nowrap; }
+th {
+    background: #fafbfc;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #455a64;
+    border-bottom: 1px solid #e5e8eb;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 1px 0 #e5e8eb;
+}
 td { padding: 12px 16px; font-size: 13px; color: #263238; border-bottom: 1px solid #edf2f7; }
 tr:hover td { background: #f8fafc; }
 
@@ -137,8 +158,9 @@ tr:hover td { background: #f8fafc; }
     .print-report-header { display: flex !important; align-items: center; gap: 16px; }
     .print-logo { display: block !important; margin: 0 !important; }
     .print-report-text { text-align: left; }
-    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; display: block !important; }
+    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; display: block !important; max-height: none !important; }
     table { font-size: 10px !important; white-space: normal !important; }
+    th { position: static !important; box-shadow: none !important; }
     th, td { padding: 6px 8px !important; }
 }
 
@@ -460,12 +482,6 @@ tr:hover td { background: #f8fafc; }
         return { periodosCompletos: completos, diasDireito: completos * totalDireito, periodosDetalhados: det };
     }
 
-    /* =========================================================
-       FOLGA ANIVERSÁRIO — REGRA FINAL
-       Disponível a partir do aniversário; prazo = aniv + 12 meses;
-       depois do prazo sem gozar = Perdido. Não depende do fechamento
-       do período aquisitivo.
-    ========================================================= */
     function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
         const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
         if (!nasc || !adm) return null;
