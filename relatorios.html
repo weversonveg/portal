@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Relatórios Avançados e Exportação - Vale Transporte</title>
+
+<style>
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --blue: #0277bd;
+    --blue-hover: #01579b;
+    --red: #c62828;
+    --red-hover: #a01f1f;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; min-height: 100%; }
+body { min-height: 100vh; background: var(--background); color: var(--text); }
+
+.topbar { width: 100%; max-width: 1116px; height: 68px; margin: 16px auto 0; background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 20px; }
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 12px; }
+.logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 22px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); }
+
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 24px 16px; }
+
+.page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b858e; margin-bottom: 8px; }
+.breadcrumb .material-symbols-outlined { font-size: 17px; }
+.page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--text-secondary); }
+
+.export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.filter-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.filter-group { display: flex; flex-direction: column; }
+.filter-group.full-width { grid-column: 1 / -1; }
+.filter-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
+.filter-group input, .filter-group select { height: 42px; padding: 0 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; color: #263238; }
+.filter-group input:focus, .filter-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
+
+.custom-dropdown { position: relative; width: 100%; }
+.dropdown-select-box { height: 42px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 14px; color: #263238; user-select: none; transition: border-color 0.15s; }
+.dropdown-select-box:hover { border-color: var(--primary); }
+.dropdown-options-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: var(--white); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; padding: 8px; }
+.dropdown-options-panel.ativo { display: block; }
+.dropdown-option { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; border-radius: 4px; transition: background 0.1s; }
+.dropdown-option:hover { background: var(--primary-light); }
+.dropdown-option input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
+.filter-checkbox-group { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: #455a64; cursor: pointer; margin-top: 4px; }
+.filter-checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+.filter-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e5e8eb; padding-top: 16px; }
+
+.btn-gerar { height: 42px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; transition: background 0.15s; }
+.btn-gerar:hover { background: var(--primary-hover); }
+.btn-gerar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-export { height: 40px; color: white; border: none; border-radius: 6px; padding: 0 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; transition: background 0.15s; }
+.btn-pdf { background: var(--red); }
+.btn-pdf:hover { background: var(--red-hover); }
+.btn-csv { background: var(--blue); }
+.btn-csv:hover { background: var(--blue-hover); }
+.btn-xls { background: #1f7238; }
+.btn-xls:hover { background: #154c25; }
+.btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.summary-container { display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-container.ativo { display: grid; }
+.summary-box { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 16px 18px; }
+.summary-box label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+.summary-box p { font-size: 18px; font-weight: 700; color: #263238; margin-top: 4px; }
+
+.table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow-x: auto; display: none; }
+.table-card.ativo { display: block; }
+
+.print-report-header { display: none; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #3d2450; }
+.print-logo { display: none; height: 56px; width: auto; object-fit: contain; margin: 0; }
+.print-report-text { text-align: left; }
+.print-report-header h2 { font-size: 16px; font-weight: 700; color: #3d2450; }
+.print-report-header p { font-size: 12px; color: #555; margin-top: 4px; }
+
+table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+th { background: #fafbfc; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #455a64; border-bottom: 1px solid #e5e8eb; text-transform: uppercase; }
+td { padding: 12px 16px; font-size: 13px; color: #263238; border-bottom: 1px solid #edf2f7; }
+tr:hover td { background: #f8fafc; }
+
+.mensagem { display: none; padding: 12px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
+.mensagem.erro { display: block; background: #fff0f0; border: 1px solid #efc5c5; color: #c62828; }
+.mensagem.info { display: block; background: #eef2f7; border: 1px solid #cbd5e1; color: #334155; }
+.mensagem.sucesso { display: block; background: #edf7ee; border: 1px solid #c8e6c9; color: #2e7d32; }
+
+.badge-status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-gozado { background: #e8f5e9; color: #2e7d32; }
+.badge-pendente { background: #fff8e1; color: #f57c00; }
+.badge-vencido { background: #ffebee; color: #c62828; }
+.badge-disponivel { background: #e3f2fd; color: #0277bd; }
+.badge-programado { background: #f3e5f5; color: #6a1b9a; }
+.badge-atual { background: #e8eaf6; color: #283593; }
+.badge-perdido { background: #fce4ec; color: #ad1457; }
+.badge-extemporaneo { background: #fff8e1; color: #f57c00; }
+.badge-parcial { background: #e3f2fd; color: #0277bd; }
+
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.15); z-index: 9998; align-items: center; justify-content: center; }
+.loading-overlay.ativo { display: flex; }
+.loading-box { background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 26px 36px; display: flex; flex-direction: column; align-items: center; gap: 14px; animation: loadingIn 0.2s ease; }
+@keyframes loadingIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+@media print {
+    body { background: white; }
+    .topbar, .filter-card, .btn-gerar, .export-buttons, .breadcrumb, .page-header, .mensagem, .summary-container, .loading-overlay { display: none !important; }
+    .main { width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .print-report-header { display: flex !important; align-items: center; gap: 16px; }
+    .print-logo { display: block !important; margin: 0 !important; }
+    .print-report-text { text-align: left; }
+    .table-card { border: none !important; box-shadow: none !important; overflow: visible !important; display: block !important; }
+    table { font-size: 10px !important; white-space: normal !important; }
+    th, td { padding: 6px 8px !important; }
+}
+
+@media (max-width: 768px) {
+    .topbar { width: 100%; margin-top: 0; border-radius: 0; }
+    .main { width: 100%; padding: 16px 12px; }
+    .page-header { flex-direction: column; align-items: stretch; }
+    .export-buttons { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .filter-actions { flex-direction: column; }
+    .btn-gerar { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Relatórios</span>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <span class="material-symbols-outlined">home</span>
+                <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+                <span>/</span>
+                <span>Relatórios Avançados</span>
+            </div>
+            <h1>Central de Relatórios</h1>
+            <p>Gere relatórios de vales ou da situação de férias e folgas dos servidores.</p>
+        </div>
+        <div class="export-buttons">
+            <button type="button" id="btnPdf" class="btn-export btn-pdf" onclick="exportarPDF()" disabled title="Salvar em PDF">
+                <span class="material-symbols-outlined" style="font-size:16px;">picture_as_pdf</span> PDF
+            </button>
+            <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar CSV">
+                <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
+            </button>
+            <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar Excel">
+                <span class="material-symbols-outlined" style="font-size:16px;">table_view</span> Excel
+            </button>
+        </div>
+    </div>
+
+    <section class="filter-card">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="tipoRelatorio">Tipo de Relatório <span>*</span></label>
+                <select id="tipoRelatorio" onchange="alternarTipoRelatorio()">
+                    <option value="vales">Vales Transporte (Passes Mensais)</option>
+                    <option value="ferias">Situação de Férias e Folgas</option>
+                </select>
+            </div>
+
+            <div id="filtrosVales" style="display: contents;">
+                <div class="filter-group">
+                    <label for="tipoPeriodo">Tipo de Período</label>
+                    <select id="tipoPeriodo" onchange="alternarTipoPeriodo()">
+                        <option value="mensal">Mensal (Mês Específico)</option>
+                        <option value="anual">Anual (Ano Inteiro)</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="grupoMes">
+                    <label for="mesReferencia">Mês de Referência <span>*</span></label>
+                    <input type="month" id="mesReferencia" lang="pt-BR">
+                </div>
+                <div class="filter-group" id="grupoAno" style="display: none;">
+                    <label for="anoReferencia">Ano de Referência <span>*</span></label>
+                    <select id="anoReferencia">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroCargo">Cargo / Função</label>
+                    <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
+                </div>
+                <div class="filter-group">
+                    <label for="filtroEmpresa">Empresa / Concessionária</label>
+                    <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
+                </div>
+                <div class="filter-checkbox-group">
+                    <input type="checkbox" id="filtroApenasFalta">
+                    <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
+                </div>
+            </div>
+
+            <div id="filtrosFerias" style="display: none;">
+                <div class="filter-group">
+                    <label for="filtroTipoBeneficio">Tipo de Benefício</label>
+                    <select id="filtroTipoBeneficio">
+                        <option value="todos">Todos</option>
+                        <option value="ferias">Férias</option>
+                        <option value="folga">Folga Aniversário</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroStatus">Status</label>
+                    <select id="filtroStatus">
+                        <option value="todos">Todos</option>
+                        <option value="gozado">Gozado</option>
+                        <option value="parcial">Parcial</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="programado">Programado</option>
+                        <option value="vencido">Vencido</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtroMatriculaFerias">Matrícula</label>
+                    <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
+                </div>
+                <div class="filter-group">
+                    <label for="filtroNomeServidor">Nome do Servidor</label>
+                    <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
+                </div>
+            </div>
+
+            <div class="filter-group full-width">
+                <label>Escolas / Unidades de Ensino</label>
+                <div class="custom-dropdown" id="dropdownEscolasContainer">
+                    <div class="dropdown-select-box" onclick="toggleDropdownEscolas()">
+                        <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
+                        <span class="material-symbols-outlined">arrow_drop_down</span>
+                    </div>
+                    <div class="dropdown-options-panel" id="dropdownPanel">
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b></label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CEAE" checked onchange="atualizarTextoDropdown()"> CEAE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CETEPE" checked onchange="atualizarTextoDropdown()"> CETEPE</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO JOSÉ" checked onchange="atualizarTextoDropdown()"> E M SÃO JOSÉ</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="E M SÃO GERALDO" checked onchange="atualizarTextoDropdown()"> E M SÃO GERALDO</label>
+                        <label class="dropdown-option"><input type="checkbox" name="escolaCheck" value="CMEI ANÁLIA NOGUEIRA" checked onchange="atualizarTextoDropdown()"> CMEI ANÁLIA NOGUEIRA</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button type="button" id="btnGerar" class="btn-gerar" onclick="gerarRelatorio()">
+                <span class="material-symbols-outlined">description</span>
+                Gerar Relatório Consolidado
+            </button>
+        </div>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <section id="summaryContainer" class="summary-container">
+        <div class="summary-box">
+            <label id="labelSumPeriodo">Período Analisado</label>
+            <p id="sumPeriodo">-</p>
+        </div>
+        <div class="summary-box">
+            <label id="labelSumVinculos">Total de Vínculos</label>
+            <p id="sumVinculos">0</p>
+        </div>
+        <div class="summary-box" id="boxSumTotal" style="border-left: 4px solid var(--green);">
+            <label id="labelSumTotal">Total Geral</label>
+            <p id="sumTotalPasses" style="color: var(--green);">0</p>
+        </div>
+    </section>
+
+    <section id="tableCard" class="table-card">
+        <div class="print-report-header">
+            <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+            <div class="print-report-text">
+                <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
+                <p id="printSubtitulo">Relatório Consolidado</p>
+            </div>
+        </div>
+
+        <table>
+            <thead id="tabelaCabecalho">
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola / Lotação</th>
+                    <th>Concessionária</th>
+                    <th>Passes/Dia</th>
+                    <th>Dias Efetivos</th>
+                    <th>Afast. Totais</th>
+                    <th>Total Passes</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo"></tbody>
+        </table>
+    </section>
+</main>
+
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <span class="loading-text" id="loadingTexto">Carregando...</span>
+    </div>
+</div>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let dadosRelatorioGlobal = [];
+    let tipoRelatorioAtual = 'vales';
+
+    const DIAS_PADRAO = 30;
+
+    function obterDiasPorPeriodo(servidor, vinculo) {
+        if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
+        if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
+        return DIAS_PADRAO;
+    }
+
+    function calcularDiasRegistro(reg) {
+        const ini = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+        const fim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino) || ini;
+        if (!ini) return 0;
+        const d = Math.round((fim - ini) / 86400000) + 1;
+        return d > 0 ? d : 0;
+    }
+
+    function mostrarLoading(texto = 'Carregando...') {
+        document.getElementById('loadingTexto').textContent = texto;
+        document.getElementById('loadingOverlay').classList.add('ativo');
+        const btn = document.getElementById('btnGerar');
+        if (btn) btn.disabled = true;
+    }
+    function ocultarLoading() {
+        document.getElementById('loadingOverlay').classList.remove('ativo');
+        const btn = document.getElementById('btnGerar');
+        if (btn) btn.disabled = false;
+    }
+
+    function lerSelecaoEscolas() {
+        const checkboxesEscola = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"]):checked');
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const todasEscolasMarcadas = master ? master.checked : false;
+        const escolasSelecionadas = Array.from(checkboxesEscola).map(cb => cb.value);
+        return { todasEscolasMarcadas, escolasSelecionadas };
+    }
+
+    function formatarMesAnoPTBR(valor) {
+        if (!valor) return "";
+        const partes = valor.split("-");
+        if (partes.length !== 2) return valor;
+        return `${partes[1]}/${partes[0]}`;
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '';
+        if (typeof dataStr === 'object' && dataStr.toDate) dataStr = dataStr.toDate().toISOString().split('T')[0];
+        dataStr = dataStr.toString().trim();
+        if (dataStr.includes('-') && dataStr.length >= 10) {
+            const partes = dataStr.substring(0, 10).split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        return dataStr;
+    }
+
+    function parseDataParaDate(dataStr) {
+        if (!dataStr) return null;
+        if (typeof dataStr === 'object' && dataStr.toDate) return dataStr.toDate();
+        dataStr = dataStr.toString().trim();
+        if (dataStr.includes('/')) {
+            const partes = dataStr.split('/');
+            return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        } else if (dataStr.includes('-')) {
+            const partes = dataStr.substring(0, 10).split('-');
+            if (partes[0].length === 4) return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+            else return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        }
+        return null;
+    }
+
+    function verificarExtemporaneo(status, gozoStr, dataLimite) {
+        if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
+        if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
+        const dg = parseDataParaDate(gozoStr);
+        return dg ? dg > dataLimite : false;
+    }
+
+    function calcularDireitoFerias(dataAdmissao, ref = new Date(), diasDireito = DIAS_PADRAO) {
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!adm) return null;
+        const refClean = new Date(ref);
+        refClean.setHours(0, 0, 0, 0);
+        const totalDireito = diasDireito || DIAS_PADRAO;
+        let completos = 0, det = [], ini = new Date(adm);
+        while (completos < 40) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+            const prazoGozo = new Date(fim);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+            const p = {
+                numero: completos + 1, inicio: new Date(ini), fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                dataLimiteGozo: prazoGozo, status: 'pendente',
+                totalDireito: totalDireito
+            };
+            if (fim <= refClean) {
+                completos++;
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'atual';
+                det.push(p);
+                break;
+            }
+        }
+        return { periodosCompletos: completos, diasDireito: completos * totalDireito, periodosDetalhados: det };
+    }
+
+    /* =========================================================
+       FOLGA ANIVERSÁRIO — REGRA FINAL
+       Disponível a partir do aniversário; prazo = aniv + 12 meses;
+       depois do prazo sem gozar = Perdido. Não depende do fechamento
+       do período aquisitivo.
+    ========================================================= */
+    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+        const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
+        if (!nasc || !adm) return null;
+        const refClean = new Date(ref);
+        refClean.setHours(0, 0, 0, 0);
+        const mes = nasc.getMonth(), dia = nasc.getDate();
+        let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
+
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            if (!aniv) { ini = new Date(fim); ini.setDate(ini.getDate() + 1); continue; }
+
+            const dataDisponivel = new Date(aniv);
+            const prazoGozo = new Date(aniv);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+            const p = {
+                numero: i + 1, inicio: new Date(ini), fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                aniversarioNoPeriodo: aniv,
+                dataDisponivel: dataDisponivel,
+                dataLimiteGozo: prazoGozo, status: 'pendente'
+            };
+
+            if (refClean < dataDisponivel) {
+                p.status = 'pendente';
+                det.push(p);
+                break;
+            }
+
+            adquiridas++;
+            if (refClean >= prazoGozo) { p.status = 'perdido'; perdidas++; }
+            else { p.status = 'disponivel'; disponiveis++; }
+            det.push(p);
+
+            ini = new Date(fim); ini.setDate(ini.getDate() + 1);
+        }
+
+        return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
+    }
+
+    function verificarSeJaGozado(reg, hoje) {
+        const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+        if (!dt) return false;
+        return dt <= hoje;
+    }
+
+    window.gerarRelatorio = async function() {
+        if (tipoRelatorioAtual === "ferias") {
+            await gerarRelatorioFerias();
+        } else {
+            await gerarRelatorioVales();
+        }
+    }
+
+    async function gerarRelatorioFerias() {
+        const tipoBeneficioFiltro = document.getElementById("filtroTipoBeneficio").value;
+        const statusFiltro = document.getElementById("filtroStatus").value;
+        const matriculaFiltro = document.getElementById("filtroMatriculaFerias").value.trim();
+        const nomeFiltro = document.getElementById("filtroNomeServidor").value.trim().toLowerCase();
+
+        const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
+
+        const msgDiv = document.getElementById("mensagem");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnCsv = document.getElementById("btnCsv");
+        const btnXls = document.getElementById("btnXls");
+
+        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
+
+        if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
+            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
+            return;
+        }
+
+        mostrarLoading('Gerando relatório de férias e folgas...');
+
+        try {
+            const servidoresSnap = await getDocs(collection(db, "servidores"));
+            if (servidoresSnap.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                return;
+            }
+
+            const registrosSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+            const registros = [];
+            registrosSnap.forEach(d => registros.push({ id: d.id, ...d.data() }));
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            let linhasFinais = [];
+
+            servidoresSnap.forEach(docServidor => {
+                const s = docServidor.data();
+                const nome = s.nome || 'Não informado';
+                const cpf = s.cpf || '';
+                const nascimento = s.data_nascimento || s.dataNascimento;
+
+                if (nomeFiltro && !nome.toLowerCase().includes(nomeFiltro)) return;
+
+                const vinculos = [];
+                if (s.matricula1 && s.matricula1.numeroMatricula) {
+                    vinculos.push({
+                        matricula: s.matricula1.numeroMatricula,
+                        dataAdmissao: s.matricula1.dataAdmissao || s.data_admissao || '',
+                        cargo: s.matricula1.cargo || '-',
+                        escola: (s.matricula1.escola1 && s.matricula1.escola1.nomeEscola) || (s.matricula1.escola2 && s.matricula1.escola2.nomeEscola) || '-',
+                        diasFerias: s.matricula1.diasFerias || s.diasFerias || null
+                    });
+                }
+                if (s.matricula2 && s.matricula2.numeroMatricula) {
+                    vinculos.push({
+                        matricula: s.matricula2.numeroMatricula,
+                        dataAdmissao: s.matricula2.dataAdmissao || s.data_admissao || '',
+                        cargo: s.matricula2.cargo || '-',
+                        escola: (s.matricula2.escola1 && s.matricula2.escola1.nomeEscola) || (s.matricula2.escola2 && s.matricula2.escola2.nomeEscola) || '-',
+                        diasFerias: s.matricula2.diasFerias || s.diasFerias || null
+                    });
+                }
+
+                vinculos.forEach(v => {
+                    if (matriculaFiltro && !v.matricula.toString().includes(matriculaFiltro)) return;
+                    if (!v.dataAdmissao) return;
+                    if (!todasEscolasMarcadas && !escolasSelecionadas.includes(v.escola)) return;
+
+                    const regsMat = registros.filter(r => {
+                        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+                        const vm = v.matricula.toString().trim().replace(/^0+/, '');
+                        return !rm || rm === vm || rm === v.matricula.toString().trim();
+                    });
+
+                    if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'ferias') {
+                        const diasDireito = obterDiasPorPeriodo(s, v);
+                        const dirF = calcularDireitoFerias(v.dataAdmissao, hoje, diasDireito);
+                        if (dirF) {
+                            const feriasLanc = regsMat.filter(r => {
+                                const t = (r.tipo || '').toLowerCase();
+                                return t.includes('ferias') || t.includes('férias');
+                            });
+
+                            dirF.periodosDetalhados.forEach(p => {
+                                const lancs = feriasLanc.filter(r => {
+                                    const anoRef = (r.ano_referencia || r.ano || '');
+                                    if (anoRef === p.anoReferencia) return true;
+                                    if (!anoRef) {
+                                        const regIni = parseDataParaDate(r.dataInicio || r.data_inicio || r.data);
+                                        const regFim = parseDataParaDate(r.dataFim || r.data_fim || r.dataTermino || r.data_termino || regIni);
+                                        if (regIni && regFim) return !(regFim < p.inicio || regIni > p.fim);
+                                    }
+                                    return false;
+                                });
+                                const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
+                                const totalDireito = p.totalDireito || diasDireito;
+
+                                let status, gozo;
+
+                                if (diasConsumidos >= totalDireito) {
+                                    const primeiro = lancs[0];
+                                    gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
+                                    status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
+                                } else if (diasConsumidos > 0) {
+                                    const primeiro = lancs[0];
+                                    gozo = `${diasConsumidos}/${totalDireito} dias`;
+                                    status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
+                                } else {
+                                    gozo = '';
+                                    if (p.status === 'atual') status = 'atual';
+                                    else if (p.dataLimiteGozo < hoje) status = 'vencido';
+                                    else status = 'pendente';
+                                }
+
+                                if (statusFiltro !== 'todos' && statusFiltro !== status) return;
+
+                                linhasFinais.push({
+                                    nome: nome, cpf: cpf, matricula: v.matricula,
+                                    cargo: v.cargo, escola: v.escola, tipo: 'Férias',
+                                    periodo: p.anoReferencia,
+                                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                                    status: status, gozo: gozo || '—',
+                                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
+                                });
+                            });
+                        }
+                    }
+
+                    if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'folga') {
+                        const dirG = nascimento ? calcularDireitoFolgaAniversario(nascimento, v.dataAdmissao, hoje) : null;
+                        if (dirG) {
+                            const folgasLanc = regsMat.filter(r => {
+                                const t = (r.tipo || '').toLowerCase();
+                                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+                            });
+
+                            dirG.periodosDetalhados.forEach(p => {
+                                const lanc = folgasLanc.find(r => {
+                                    const anoRef = (r.ano_referencia || r.ano || '');
+                                    if (anoRef) return anoRef === p.anoReferencia;
+                                    const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                                    const dGozo = parseDataParaDate(raw);
+                                    return dGozo && dGozo >= p.dataDisponivel && dGozo < p.dataLimiteGozo;
+                                });
+
+                                let status = p.status, gozo = '';
+                                if (lanc) {
+                                    const raw = lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio;
+                                    gozo = formatarData(raw);
+                                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                                }
+
+                                if (statusFiltro !== 'todos' && statusFiltro !== status) return;
+
+                                linhasFinais.push({
+                                    nome: nome, cpf: cpf, matricula: v.matricula,
+                                    cargo: v.cargo, escola: v.escola, tipo: 'Folga Aniv.',
+                                    periodo: p.anoReferencia,
+                                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                                    status: status, gozo: gozo || '—',
+                                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
+                                });
+                            });
+                        }
+                    }
+                });
+            });
+
+            if (linhasFinais.length === 0) {
+                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                dadosRelatorioGlobal = [];
+                return;
+            }
+
+            dadosRelatorioGlobal = linhasFinais;
+
+            let linhasTabela = "";
+            linhasFinais.forEach(item => {
+                const badgeClass = `badge-${item.status}`;
+                linhasTabela += `
+                    <tr>
+                        <td><b>${item.nome}</b></td>
+                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                        <td>${item.cargo}</td>
+                        <td>${item.escola}</td>
+                        <td>${item.tipo}</td>
+                        <td>${item.periodo}</td>
+                        <td>${item.prazo}</td>
+                        <td><span class="badge-status ${badgeClass}">${item.status}</span>${item.extemporaneo ? ' <span class="badge-status badge-extemporaneo">Fora do prazo</span>' : ''}</td>
+                        <td>${item.gozo}</td>
+                    </tr>`;
+            });
+
+            document.getElementById("tabelaCabecalho").innerHTML = `
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola</th>
+                    <th>Tipo</th>
+                    <th>Período</th>
+                    <th>Prazo Gozo</th>
+                    <th>Status</th>
+                    <th>Data Gozo</th>
+                </tr>
+            `;
+
+            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            document.getElementById("printSubtitulo").textContent = `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}`;
+            document.getElementById("labelSumPeriodo").textContent = "Situação";
+            document.getElementById("sumPeriodo").textContent = "Atual";
+            document.getElementById("labelSumVinculos").textContent = "Total de Registros";
+            document.getElementById("sumVinculos").textContent = linhasFinais.length;
+            document.getElementById("labelSumTotal").textContent = "Pendentes + Vencidos + Parciais";
+            const pendentesVencidosParciais = linhasFinais.filter(l => l.status === 'pendente' || l.status === 'vencido' || l.status === 'parcial').length;
+            document.getElementById("sumTotalPasses").textContent = `${pendentesVencidosParciais} registros`;
+            document.getElementById("sumTotalPasses").style.color = pendentesVencidosParciais > 0 ? 'var(--red)' : 'var(--green)';
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            document.getElementById("summaryContainer").classList.add("ativo");
+            document.getElementById("tableCard").classList.add("ativo");
+
+            btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
+            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
+
+        } catch (erro) {
+            console.error("Erro ao gerar relatório de férias:", erro);
+            mostrarMensagem("Erro ao processar os dados.", "erro");
+        } finally {
+            ocultarLoading();
+        }
+    }
+
+    async function gerarRelatorioVales() {
+        const tipoPeriodo = document.getElementById("tipoPeriodo").value;
+        const cargoFiltro = document.getElementById("filtroCargo").value.trim().toLowerCase();
+        const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
+        const apenasFalta = document.getElementById("filtroApenasFalta").checked;
+
+        const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
+
+        const msgDiv = document.getElementById("mensagem");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnCsv = document.getElementById("btnCsv");
+        const btnXls = document.getElementById("btnXls");
+
+        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
+
+        if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
+            mostrarMensagem("Selecione ao menos uma escola no menu suspenso.", "erro");
+            return;
+        }
+
+        mostrarLoading('Gerando relatório de vales...');
+
+        try {
+            let mesesParaProcessar = [];
+            if (tipoPeriodo === "mensal") {
+                const mesAno = document.getElementById("mesReferencia").value;
+                if (!mesAno) { mostrarMensagem("Selecione o mês de referência.", "erro"); return; }
+                mesesParaProcessar.push(mesAno);
+            } else {
+                const anoSelecionado = document.getElementById("anoReferencia").value;
+                for (let m = 1; m <= 12; m++) {
+                    mesesParaProcessar.push(`${anoSelecionado}-${String(m).padStart(2, '0')}`);
+                }
+            }
+
+            const servidoresSnap = await getDocs(collection(db, "servidores"));
+            if (servidoresSnap.empty) { mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info"); return; }
+
+            let resultadosConsolidados = {};
+
+            for (const mesAno of mesesParaProcessar) {
+                const configSnap = await getDoc(doc(db, "configuracoes", mesAno));
+                if (!configSnap.exists()) continue;
+                const diasSemedDefault = Number(configSnap.data().diasUteis) || 0;
+
+                const diasEscolaMap = {};
+                try {
+                    const escolaConfigsSnap = await getDocs(query(collection(db, "escola_configuracoes_mensais"), where("mesReferencia", "==", mesAno)));
+                    escolaConfigsSnap.forEach(d => {
+                        const data = d.data();
+                        if (data.escola) diasEscolaMap[data.escola] = Number(data.diasUteisEscola) || diasSemedDefault;
+                    });
+                } catch (e) {}
+
+                const afastamentosMap = {};
+                try {
+                    const lancSnap = await getDocs(query(collection(db, "lancamentos_mensais"), where("mesReferencia", "==", mesAno)));
+                    lancSnap.forEach(d => {
+                        const data = d.data();
+                        const dias = Number(data.diasAfastamento) || 0;
+                        if (data.cpf) {
+                            const cpfLimpo = data.cpf.replace(/\D/g, "");
+                            if (data.escola) afastamentosMap[`${data.escola}_${cpfLimpo}`] = dias;
+                            afastamentosMap[cpfLimpo] = dias;
+                        }
+                    });
+                } catch (e) {}
+
+                servidoresSnap.forEach((docServidor) => {
+                    const s = docServidor.data();
+                    const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
+
+                    function processarVinculo(matriculaNum, cargo, escolaObj) {
+                        if (!escolaObj || !escolaObj.nomeEscola) return;
+                        const nomeEscola = escolaObj.nomeEscola;
+                        if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
+                        if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
+                        const empresa = escolaObj.empresa || "";
+                        if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
+
+                        const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
+                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
+                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
+                        const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
+                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        const totalMes = passesDiarios * diasEfetivos;
+
+                        const chaveUnica = `${cpfLimpo}_${nomeEscola}_${matriculaNum}`;
+                        if (!resultadosConsolidados[chaveUnica]) {
+                            resultadosConsolidados[chaveUnica] = {
+                                nome: s.nome, cpf: s.cpf, matricula: matriculaNum,
+                                cargo: cargo || '-', escola: nomeEscola, empresa: empresa || '-',
+                                passesDiarios: passesDiarios, diasEfetivosTotal: 0,
+                                afastamentosTotal: 0, passesTotal: 0
+                            };
+                        }
+                        resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
+                        resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
+                        resultadosConsolidados[chaveUnica].passesTotal += totalMes;
+                    }
+
+                    if (s.matricula1) {
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1);
+                        processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2);
+                    }
+                    if (s.matricula2) {
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1);
+                        processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2);
+                    }
+                });
+            }
+
+            const listaFinal = Object.values(resultadosConsolidados).filter(item => !(apenasFalta && item.afastamentosTotal <= 0));
+
+            let linhasTabela = "";
+            let totalVinculos = 0;
+            let totalGeralPasses = 0;
+
+            listaFinal.forEach(item => {
+                totalVinculos++;
+                totalGeralPasses += item.passesTotal;
+                linhasTabela += `
+                    <tr>
+                        <td><b>${item.nome}</b></td>
+                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                        <td>${item.cargo}</td>
+                        <td>${item.escola}</td>
+                        <td>${item.empresa}</td>
+                        <td>${item.passesDiarios}</td>
+                        <td><b>${item.diasEfetivosTotal} dias</b></td>
+                        <td><span style="color:${item.afastamentosTotal > 0 ? '#c62828' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                        <td><b>${item.passesTotal}</b></td>
+                    </tr>`;
+            });
+
+            if (totalVinculos === 0) {
+                mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
+                document.getElementById("summaryContainer").classList.remove("ativo");
+                document.getElementById("tableCard").classList.remove("ativo");
+                dadosRelatorioGlobal = [];
+                return;
+            }
+
+            dadosRelatorioGlobal = listaFinal;
+
+            document.getElementById("tabelaCabecalho").innerHTML = `
+                <tr>
+                    <th>Servidor</th>
+                    <th>CPF / Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Escola / Lotação</th>
+                    <th>Concessionária</th>
+                    <th>Passes/Dia</th>
+                    <th>Dias Efetivos</th>
+                    <th>Afast. Totais</th>
+                    <th>Total Passes</th>
+                </tr>
+            `;
+
+            const mesAnoFormatado = formatarMesAnoPTBR(document.getElementById("mesReferencia").value);
+            const rotuloPeriodo = tipoPeriodo === "mensal"
+                ? `Mês: ${mesAnoFormatado}`
+                : `Ano: ${document.getElementById("anoReferencia").value}`;
+
+            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
+
+            document.getElementById("labelSumPeriodo").textContent = "Período Analisado";
+            document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal"
+                ? mesAnoFormatado
+                : `Ano ${document.getElementById("anoReferencia").value}`;
+
+            document.getElementById("labelSumVinculos").textContent = "Total de Vínculos";
+            document.getElementById("sumVinculos").textContent = totalVinculos;
+
+            document.getElementById("labelSumTotal").textContent = "Total Geral de Passes";
+            document.getElementById("sumTotalPasses").textContent = totalGeralPasses + " passes";
+            document.getElementById("sumTotalPasses").style.color = "var(--green)";
+
+            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
+            document.getElementById("summaryContainer").classList.add("ativo");
+            document.getElementById("tableCard").classList.add("ativo");
+
+            btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
+            mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
+
+        } catch (erro) {
+            console.error("Erro ao gerar relatório:", erro);
+            mostrarMensagem("Erro ao processar os dados.", "erro");
+        } finally {
+            ocultarLoading();
+        }
+    }
+
+    window.exportarPDF = function() {
+        window.print();
+    }
+
+    window.exportarCSV = function() {
+        if (dadosRelatorioGlobal.length === 0) {
+            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
+            return;
+        }
+
+        let linhas = [];
+        if (tipoRelatorioAtual === "ferias") {
+            const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Tipo", "Periodo", "Prazo Gozo", "Status", "Data Gozo"];
+            linhas.push(header.join(";"));
+            dadosRelatorioGlobal.forEach(item => {
+                linhas.push([
+                    `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
+                    `"${item.cargo}"`, `"${item.escola}"`, `"${item.tipo}"`,
+                    `"${item.periodo}"`, `"${item.prazo}"`, `"${item.status}"`, `"${item.gozo}"`
+                ].join(";"));
+            });
+        } else {
+            const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes"];
+            linhas.push(header.join(";"));
+            dadosRelatorioGlobal.forEach(item => {
+                linhas.push([
+                    `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
+                    `"${item.cargo}"`, `"${item.escola}"`, `"${item.empresa}"`,
+                    item.passesDiarios, item.diasEfetivosTotal,
+                    item.afastamentosTotal, item.passesTotal
+                ].join(";"));
+            });
+        }
+
+        const blob = new Blob(["\ufeff" + linhas.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const nome = tipoRelatorioAtual === "ferias" ? "relatorio_ferias_folgas" : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+        link.href = URL.createObjectURL(blob);
+        link.download = `${nome}.csv`;
+        link.click();
+    }
+
+    window.exportarXLS = async function() {
+        if (dadosRelatorioGlobal.length === 0) {
+            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
+            return;
+        }
+
+        if (typeof XLSX === 'undefined') {
+            mostrarMensagem("Preparando arquivo Excel...", "info");
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("Falha ao carregar biblioteca de Excel"));
+                document.head.appendChild(script);
+            });
+        }
+
+        try {
+            let dados = [];
+            if (tipoRelatorioAtual === "ferias") {
+                dados = dadosRelatorioGlobal.map(item => ({
+                    "Servidor": item.nome,
+                    "CPF": item.cpf,
+                    "Matrícula": item.matricula,
+                    "Cargo": item.cargo,
+                    "Escola": item.escola,
+                    "Tipo": item.tipo,
+                    "Período": item.periodo,
+                    "Prazo Gozo": item.prazo,
+                    "Status": item.status,
+                    "Data Gozo": item.gozo
+                }));
+            } else {
+                dados = dadosRelatorioGlobal.map(item => ({
+                    "Servidor": item.nome,
+                    "CPF": item.cpf,
+                    "Matrícula": item.matricula,
+                    "Cargo": item.cargo,
+                    "Escola / Lotação": item.escola,
+                    "Concessionária": item.empresa,
+                    "Passes/Dia": item.passesDiarios,
+                    "Dias Efetivos": item.diasEfetivosTotal,
+                    "Afastamentos": item.afastamentosTotal,
+                    "Total Passes": item.passesTotal
+                }));
+            }
+
+            const ws = XLSX.utils.json_to_sheet(dados);
+            ws['!cols'] = [
+                { wch: 30 }, { wch: 16 }, { wch: 14 }, { wch: 22 },
+                { wch: 25 }, { wch: 22 }, { wch: 12 }, { wch: 14 },
+                { wch: 14 }, { wch: 14 }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+
+            const nome = tipoRelatorioAtual === "ferias" ? "relatorio_ferias_folgas" : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+            XLSX.writeFile(wb, `${nome}.xlsx`);
+            mostrarMensagem("Arquivo Excel exportado com sucesso!", "sucesso");
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem("Erro ao gerar o arquivo Excel.", "erro");
+        }
+    }
+
+    window.alternarTipoRelatorio = function() {
+        tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
+        const filtrosVales = document.getElementById("filtrosVales");
+        const filtrosFerias = document.getElementById("filtrosFerias");
+        if (tipoRelatorioAtual === "vales") {
+            filtrosVales.style.display = "contents";
+            filtrosFerias.style.display = "none";
+        } else {
+            filtrosVales.style.display = "none";
+            filtrosFerias.style.display = "contents";
+        }
+    }
+
+    window.alternarTipoPeriodo = function() {
+        const tipo = document.getElementById("tipoPeriodo").value;
+        if (tipo === "mensal") {
+            document.getElementById("grupoMes").style.display = "flex";
+            document.getElementById("grupoAno").style.display = "none";
+        } else {
+            document.getElementById("grupoMes").style.display = "none";
+            document.getElementById("grupoAno").style.display = "flex";
+        }
+    }
+
+    window.toggleDropdownEscolas = function() {
+        document.getElementById("dropdownPanel").classList.toggle("ativo");
+    }
+
+    window.toggleTodasEscolas = function(master) {
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]');
+        checkboxes.forEach(cb => { if (cb !== master) cb.checked = master.checked; });
+        atualizarTextoDropdown();
+    }
+
+    window.atualizarTextoDropdown = function() {
+        const master = document.querySelector('input[name="escolaCheck"][value="TODAS"]');
+        const checkboxes = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"])');
+        const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
+        const spanTexto = document.getElementById("dropdownTextoSelecionado");
+
+        if (master && master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
+        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; if(master) master.checked = false; }
+        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; if(master) master.checked = true; }
+        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById("mensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        document.getElementById("anoReferencia").value = ano;
+        atualizarTextoDropdown();
+
+        document.addEventListener("click", function(e) {
+            const container = document.getElementById("dropdownEscolasContainer");
+            const panel = document.getElementById("dropdownPanel");
+            if (!container.contains(e.target)) {
+                panel.classList.remove("ativo");
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
