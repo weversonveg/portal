@@ -1,1 +1,1654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5c1892">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iPhone / iPad -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Vale Transporte">
+
+<!-- Ícone do aplicativo -->
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Acesso - Vale Transporte SEMED</title>
+
+<style>
+
+:root {
+    --primary: #5c1892;
+    --primary-hover: #430d6c;
+    --primary-soft: #f4ecfb;
+    --text-dark: #1e1b26;
+    --text-muted: #676375;
+    --bg-light: #faf8fc;
+    --border-color: #e4dfeb;
+    --error-color: #d32f2f;
+    --success-color: #2e7d32;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans',
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    overflow-x: hidden;
+}
+
+.screen-layout {
+    display: flex;
+    width: 100vw;
+    min-height: 100vh;
+}
+
+.visual-side {
+    flex: 1.2;
+    background: linear-gradient(145deg, #6b1fa9 0%, #4a1178 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 60px;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.visual-side .wave-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.12;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.brand-wrapper {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-wrapper img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 6px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.brand-wrapper .brand-text h1 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+}
+
+.brand-wrapper .brand-text span {
+    font-size: 0.82rem;
+    font-weight: 500;
+    opacity: 0.85;
+    display: block;
+}
+
+.hero-message {
+    position: relative;
+    z-index: 2;
+    max-width: 500px;
+    margin: auto 0;
+}
+
+.hero-message .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.hero-message h2 {
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    letter-spacing: -0.8px;
+}
+
+.hero-message p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+.visual-footer {
+    position: relative;
+    z-index: 2;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background-color: #ffffff;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 410px;
+}
+
+.form-header {
+    margin-bottom: 28px;
+}
+
+.form-header h3 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -0.5px;
+}
+
+.form-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 6px;
+}
+
+.input-group {
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+
+.input-group input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1.8px solid var(--border-color);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+button.btn-submit {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 12px rgba(92, 24, 146, 0.2);
+    margin-top: 4px;
+}
+
+button.btn-submit:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.divider::before {
+    margin-right: 12px;
+}
+
+.divider::after {
+    margin-left: 12px;
+}
+
+button.btn-google {
+    width: 100%;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border: 1.8px solid var(--border-color);
+    border-radius: 14px;
+    background: #ffffff;
+    color: var(--text-dark);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+button.btn-google:hover {
+    background: var(--bg-light);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+button.btn-google img {
+    width: 20px;
+    height: 20px;
+}
+
+.mensagem-erro {
+    color: var(--error-color);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 16px;
+    text-align: center;
+    word-break: break-word;
+}
+
+.mensagem-erro a {
+    color: var(--primary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.esqueci-container {
+    text-align: center;
+    margin-top: 24px;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================
+   BOTÃO INSTALAR APLICATIVO
+   ========================================================== */
+
+.instalar-container {
+    margin-top: 18px;
+}
+
+.btn-instalar {
+    width: 100%;
+    min-height: 52px;
+    border: 1.8px solid #e1d5ea;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #faf7fd, #f3ebf9);
+    color: var(--primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.btn-instalar:hover {
+    background: #eee3f6;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.btn-instalar .material-symbols-outlined {
+    font-size: 23px;
+}
+
+.instalar-subtexto {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-top: 7px;
+}
+
+/* ==========================================================
+   MODAL DE INSTALAÇÃO
+   ========================================================== */
+
+.fundo-instalacao {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 27, 38, 0.65);
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    padding: 16px;
+    z-index: 2000;
+}
+
+.caixa-instalacao {
+    width: 100%;
+    max-width: 390px;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    animation: abrir 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.topo-instalacao {
+    background: linear-gradient(145deg, #6b1fa9, #4a1178);
+    color: #ffffff;
+    padding: 25px 24px;
+    text-align: center;
+}
+
+.icone-app {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    object-fit: cover;
+    background: #ffffff;
+    padding: 5px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+.topo-instalacao h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.topo-instalacao p {
+    font-size: 0.82rem;
+    opacity: 0.85;
+    margin-top: 5px;
+}
+
+.conteudo-instalacao {
+    padding: 24px;
+}
+
+.instrucao {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    margin-bottom: 17px;
+}
+
+.numero-instrucao {
+    min-width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+}
+
+.instrucao-texto {
+    color: var(--text-dark);
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.instrucao-texto strong {
+    color: var(--primary);
+}
+
+.nota-ios {
+    background: #f7f7f8;
+    border-radius: 14px;
+    padding: 13px;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.rodape-instalacao {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-fechar-instalacao {
+    border: none;
+    background: var(--primary);
+    color: #ffffff;
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ==========================================================
+   MODAL DE RECUPERAÇÃO DE SENHA
+   ========================================================== */
+
+.fundo-alerta {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 27, 38, 0.6);
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    padding: 16px;
+    z-index: 1000;
+}
+
+.caixa-alerta {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    animation: abrir 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cabecalho-alerta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.icone-alerta {
+    font-size: 30px;
+    color: var(--primary);
+}
+
+.cabecalho-alerta h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.conteudo-alerta {
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.erro-recuperar {
+    color: var(--error-color);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.sucesso-recuperar {
+    color: var(--success-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.rodape-alerta {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-cancelar-alerta,
+.btn-confirmar-alerta {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-cancelar-alerta {
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--text-muted);
+}
+
+.btn-confirmar-alerta {
+    border: none;
+    background: var(--primary);
+    color: #ffffff;
+}
+
+@keyframes abrir {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 900px) {
+
+    .screen-layout {
+        flex-direction: column;
+    }
+
+    .visual-side {
+        padding: 36px 24px;
+        flex: none;
+    }
+
+    .hero-message h2 {
+        font-size: 1.85rem;
+    }
+
+    .hero-message p {
+        font-size: 0.92rem;
+    }
+
+    .visual-footer {
+        display: none;
+    }
+
+    .form-side {
+        padding: 36px 24px;
+        flex: 1;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .visual-side {
+        padding: 28px 18px;
+    }
+
+    .form-side {
+        padding: 28px 18px;
+    }
+
+    .brand-wrapper img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .brand-wrapper .brand-text h1 {
+        font-size: 1rem;
+    }
+
+    .brand-wrapper .brand-text span {
+        font-size: 0.75rem;
+    }
+
+    .hero-message h2 {
+        font-size: 1.6rem;
+    }
+
+    .form-header h3 {
+        font-size: 1.6rem;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="screen-layout">
+
+    <div class="visual-side">
+
+        <svg class="wave-bg"
+             viewBox="0 0 500 500"
+             preserveAspectRatio="none">
+
+            <path
+                d="M0,100 C150,200 350,0 500,100 L500,0 L0,0 Z"
+                fill="#ffffff">
+            </path>
+
+        </svg>
+
+        <div class="brand-wrapper">
+
+            <img
+                src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ"
+                alt="Logo">
+
+            <div class="brand-text">
+
+                <h1>Vale Transporte</h1>
+
+                <span>SEMED Divinópolis</span>
+
+            </div>
+
+        </div>
+
+        <div class="hero-message">
+
+            <div class="tag">
+
+                <span class="material-symbols-outlined"
+                      style="font-size: 18px;">
+                    admin_panel_settings
+                </span>
+
+                Portal Corporativo
+
+            </div>
+
+            <h2>Gestão simplificada de benefícios.</h2>
+
+            <p>
+                Acesse o sistema oficial utilizando sua conta de e-mail
+                ou com o Google.
+            </p>
+
+        </div>
+
+        <div class="visual-footer">
+
+            &copy; SEMED &bull; Secretaria Municipal de Educação
+
+        </div>
+
+    </div>
+
+
+    <div class="form-side">
+
+        <div class="form-container">
+
+            <div class="form-header">
+
+                <h3>Acessar Conta</h3>
+
+                <p>
+                    Preencha seus dados ou entre com o Google
+                </p>
+
+            </div>
+
+
+            <!-- LOGIN COM E-MAIL E SENHA -->
+
+            <form id="formLogin">
+
+                <div class="input-group">
+
+                    <label for="email">
+                        E-mail
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        required
+                        placeholder="seu.email@educacao.divinopolis.mg.gov.br">
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label for="senha">
+                        Senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="senha"
+                        required
+                        placeholder="••••••••">
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn-submit"
+                    id="btnEntrar">
+
+                    Entrar
+
+                </button>
+
+            </form>
+
+
+            <div class="divider">
+                ou
+            </div>
+
+
+            <!-- LOGIN GOOGLE -->
+
+            <button
+                type="button"
+                class="btn-google"
+                id="btnLoginGoogle">
+
+                <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google">
+
+                Entrar com o Google
+
+            </button>
+
+
+            <div
+                id="mensagemErro"
+                class="mensagem-erro">
+            </div>
+
+
+            <!-- BOTÃO INSTALAR -->
+
+            <div class="instalar-container">
+
+                <button
+                    type="button"
+                    class="btn-instalar"
+                    id="btnInstalar">
+
+                    <span class="material-symbols-outlined">
+                        install_mobile
+                    </span>
+
+                    Instalar aplicativo
+
+                </button>
+
+                <div class="instalar-subtexto">
+                    Acesso rápido pela tela inicial do celular
+                </div>
+
+            </div>
+
+
+            <p class="esqueci-container">
+
+                <a
+                    href="#"
+                    onclick="abrirAlerta(); return false;">
+
+                    Problemas com o acesso? / Esqueci a senha
+
+                </a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     MODAL DE INSTALAÇÃO
+     ========================================================== -->
+
+<div
+    id="modalInstalacao"
+    class="fundo-instalacao">
+
+    <div class="caixa-instalacao">
+
+        <div class="topo-instalacao">
+
+            <img
+                src="icon-192.png"
+                class="icone-app"
+                alt="Vale Transporte">
+
+            <h2>Instalar aplicativo</h2>
+
+            <p>
+                Vale Transporte • SEMED Divinópolis
+            </p>
+
+        </div>
+
+
+        <div
+            class="conteudo-instalacao"
+            id="conteudoInstalacao">
+
+        </div>
+
+
+        <div class="rodape-instalacao">
+
+            <button
+                type="button"
+                class="btn-fechar-instalacao"
+                onclick="fecharInstalacao()">
+
+                Fechar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     MODAL DE RECUPERAÇÃO DE SENHA
+     ========================================================== -->
+
+<div
+    id="alerta"
+    class="fundo-alerta">
+
+    <div class="caixa-alerta">
+
+        <div class="cabecalho-alerta">
+
+            <span
+                class="material-symbols-outlined icone-alerta">
+                lock_reset
+            </span>
+
+            <h2>
+                Recuperar Senha
+            </h2>
+
+        </div>
+
+
+        <div class="conteudo-alerta">
+
+            <p>
+                Digite seu e-mail cadastrado.
+                Enviaremos um link para você definir
+                ou redefinir sua senha de acesso.
+            </p>
+
+
+            <div
+                class="input-group"
+                style="margin-top: 16px; margin-bottom: 0;">
+
+                <label for="emailRecuperar">
+                    E-mail
+                </label>
+
+                <input
+                    type="email"
+                    id="emailRecuperar"
+                    placeholder="seu.email@educacao.divinopolis.mg.gov.br">
+
+            </div>
+
+
+            <div
+                id="erroRecuperar"
+                class="erro-recuperar">
+            </div>
+
+
+            <div
+                id="sucessoRecuperar"
+                class="sucesso-recuperar">
+            </div>
+
+        </div>
+
+
+        <div class="rodape-alerta">
+
+            <button
+                type="button"
+                class="btn-cancelar-alerta"
+                onclick="fecharAlerta()">
+
+                Cancelar
+
+            </button>
+
+
+            <button
+                type="button"
+                class="btn-confirmar-alerta"
+                id="btnEnviarRecuperar">
+
+                Enviar Link
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     SCRIPT DE AUTENTICAÇÃO FIREBASE
+     ========================================================== -->
+
+<script type="module">
+
+import { auth } from "./firebase.js";
+
+import {
+    GoogleAuthProvider,
+    signInWithPopup,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+
+const DOMINIO_EMAIL =
+    "@educacao.divinopolis.mg.gov.br";
+
+
+/* ==========================================================
+   MODAL DE RECUPERAÇÃO DE SENHA
+   ========================================================== */
+
+window.abrirAlerta = function(emailSugestao = "") {
+
+    document.getElementById("erroRecuperar").textContent = "";
+
+    document.getElementById("sucessoRecuperar").textContent = "";
+
+    document.getElementById("emailRecuperar").value =
+        emailSugestao;
+
+    document.getElementById("alerta").style.display =
+        "flex";
+
+    if (emailSugestao) {
+
+        document
+            .getElementById("emailRecuperar")
+            .focus();
+
+    }
+
+};
+
+
+window.fecharAlerta = function() {
+
+    document.getElementById("alerta").style.display =
+        "none";
+
+};
+
+
+/* ==========================================================
+   ENVIO DO LINK DE RECUPERAÇÃO
+   ========================================================== */
+
+document
+.getElementById("btnEnviarRecuperar")
+.addEventListener("click", async function() {
+
+    const emailInput =
+        document.getElementById("emailRecuperar").value.trim();
+
+    const erroEl =
+        document.getElementById("erroRecuperar");
+
+    const sucessoEl =
+        document.getElementById("sucessoRecuperar");
+
+    const btn =
+        document.getElementById("btnEnviarRecuperar");
+
+
+    erroEl.textContent = "";
+
+    sucessoEl.textContent = "";
+
+
+    if (!emailInput) {
+
+        erroEl.textContent =
+            "Por favor, digite seu e-mail.";
+
+        return;
+
+    }
+
+
+    const email =
+        emailInput.includes("@")
+            ? emailInput
+            : emailInput + DOMINIO_EMAIL;
+
+
+    btn.disabled = true;
+
+    btn.textContent = "Enviando...";
+
+
+    try {
+
+        await sendPasswordResetEmail(
+            auth,
+            email
+        );
+
+        sucessoEl.textContent =
+            "E-mail enviado com sucesso! Verifique sua caixa de entrada para criar sua senha.";
+
+        btn.textContent =
+            "Enviado";
+
+
+        setTimeout(() => {
+
+            fecharAlerta();
+
+            btn.disabled = false;
+
+            btn.textContent =
+                "Enviar Link";
+
+        }, 4000);
+
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao enviar e-mail de recuperação:",
+            error
+        );
+
+
+        if (
+            error.code ===
+            "auth/user-not-found"
+        ) {
+
+            erroEl.textContent =
+                "Não encontramos nenhuma conta com este e-mail.";
+
+        } else {
+
+            erroEl.textContent =
+                "Erro ao enviar e-mail. Verifique o endereço digitado.";
+
+        }
+
+
+        btn.disabled = false;
+
+        btn.textContent =
+            "Enviar Link";
+
+    }
+
+});
+
+
+/* ==========================================================
+   LOGIN COM E-MAIL E SENHA
+   ========================================================== */
+
+document
+.getElementById("formLogin")
+.addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+
+    const usuario =
+        document.getElementById("email").value.trim();
+
+    const senha =
+        document.getElementById("senha").value;
+
+
+    const email =
+        usuario.includes("@")
+            ? usuario
+            : usuario + DOMINIO_EMAIL;
+
+
+    const msgErro =
+        document.getElementById("mensagemErro");
+
+    const btnEntrar =
+        document.getElementById("btnEntrar");
+
+
+    msgErro.textContent = "";
+
+    btnEntrar.disabled = true;
+
+    btnEntrar.textContent =
+        "Entrando...";
+
+
+    try {
+
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            senha
+        );
+
+        window.location.href =
+            "inicial.html";
+
+
+    } catch (error) {
+
+        console.error(
+            "Erro no login com e-mail/senha:",
+            error
+        );
+
+        msgErro.textContent =
+            "E-mail ou senha inválidos.";
+
+        btnEntrar.disabled = false;
+
+        btnEntrar.textContent =
+            "Entrar";
+
+    }
+
+});
+
+
+/* ==========================================================
+   LOGIN GOOGLE
+   ========================================================== */
+
+document
+.getElementById("btnLoginGoogle")
+.addEventListener("click", async function() {
+
+    const msgErro =
+        document.getElementById("mensagemErro");
+
+
+    msgErro.textContent = "";
+
+
+    const provider =
+        new GoogleAuthProvider();
+
+
+    provider.setCustomParameters({
+        prompt: "select_account"
+    });
+
+
+    try {
+
+        await signInWithPopup(
+            auth,
+            provider
+        );
+
+        window.location.href =
+            "inicial.html";
+
+
+    } catch (error) {
+
+        console.error(
+            "Erro no login Google:",
+            error
+        );
+
+
+        if (
+            error.code ===
+            "auth/account-exists-with-different-credential"
+        ) {
+
+            const email =
+                error.customData?.email ||
+                error.email;
+
+
+            msgErro.innerHTML =
+                `Este e-mail já possui senha.
+                <a href="#"
+                onclick="abrirAlerta('${email}');
+                return false;">
+                Clique aqui para redefinir sua senha
+                </a>.`;
+
+        }
+
+
+        else if (
+            error.code ===
+            "auth/popup-closed-by-user"
+        ) {
+
+            msgErro.textContent =
+                "A janela de login do Google foi fechada.";
+
+        }
+
+
+        else if (
+            error.code ===
+            "auth/popup-blocked"
+        ) {
+
+            msgErro.textContent =
+                "O navegador bloqueou a janela pop-up. Permita pop-ups para este site.";
+
+        }
+
+
+        else {
+
+            msgErro.textContent =
+                "Não foi possível entrar com o Google. Tente novamente.";
+
+        }
+
+    }
+
+});
+
+
+/* ==========================================================
+   FECHAR MODAL CLICANDO FORA
+   ========================================================== */
+
+document
+.getElementById("alerta")
+.addEventListener("click", function(e) {
+
+    if (e.target === this) {
+
+        fecharAlerta();
+
+    }
+
+});
+
+
+/* ==========================================================
+   PWA - INSTALAÇÃO DO APLICATIVO
+   ========================================================== */
+
+let eventoInstalacao = null;
+
+
+/*
+   Captura o evento de instalação do Android/Chrome.
+*/
+
+window.addEventListener(
+    "beforeinstallprompt",
+    function(event) {
+
+        event.preventDefault();
+
+        eventoInstalacao = event;
+
+    }
+);
+
+
+/*
+   Botão instalar.
+*/
+
+document
+.getElementById("btnInstalar")
+.addEventListener("click", async function() {
+
+    const modal =
+        document.getElementById("modalInstalacao");
+
+    const conteudo =
+        document.getElementById("conteudoInstalacao");
+
+
+    /*
+       ANDROID / CHROME
+    */
+
+    if (eventoInstalacao) {
+
+        eventoInstalacao.prompt();
+
+        const resultado =
+            await eventoInstalacao.userChoice;
+
+
+        if (
+            resultado.outcome ===
+            "accepted"
+        ) {
+
+            eventoInstalacao = null;
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+       DETECTA IOS
+    */
+
+    const ehIOS =
+        /iphone|ipad|ipod/i.test(
+            navigator.userAgent
+        );
+
+
+    const estaNoSafariIOS =
+        ehIOS &&
+        /safari/i.test(
+            navigator.userAgent
+        ) &&
+        !/crios|fxios|edgios/i.test(
+            navigator.userAgent
+        );
+
+
+    if (ehIOS) {
+
+        conteudo.innerHTML = `
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    1
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Toque no botão
+                    <strong>Compartilhar</strong>
+                    do Safari.
+
+                </div>
+
+            </div>
+
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    2
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Role o menu e toque em
+                    <strong>
+                        Adicionar à Tela de Início
+                    </strong>.
+
+                </div>
+
+            </div>
+
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    3
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Toque em
+                    <strong>Adicionar</strong>.
+
+                </div>
+
+            </div>
+
+
+            <div class="nota-ios">
+
+                🍎 No iPhone e iPad, a instalação é feita
+                pelo menu de compartilhamento do Safari.
+
+                ${estaNoSafariIOS
+                    ? " Você já está usando o Safari."
+                    : " Abra este site pelo Safari para instalar."
+                }
+
+            </div>
+
+        `;
+
+    }
+
+
+    /*
+       ANDROID SEM PROMPT
+    */
+
+    else {
+
+        conteudo.innerHTML = `
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    1
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Abra o menu do navegador
+                    <strong>⋮</strong>.
+
+                </div>
+
+            </div>
+
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    2
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Procure por
+                    <strong>
+                        Instalar aplicativo
+                    </strong>
+                    ou
+                    <strong>
+                        Adicionar à tela inicial
+                    </strong>.
+
+                </div>
+
+            </div>
+
+
+            <div class="instrucao">
+
+                <div class="numero-instrucao">
+                    3
+                </div>
+
+                <div class="instrucao-texto">
+
+                    Confirme a instalação.
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    modal.style.display =
+        "flex";
+
+});
+
+
+/*
+   Fechar modal de instalação.
+*/
+
+window.fecharInstalacao = function() {
+
+    document.getElementById(
+        "modalInstalacao"
+    ).style.display = "none";
+
+};
+
+
+/*
+   Fechar modal clicando fora.
+*/
+
+document
+.getElementById("modalInstalacao")
+.addEventListener("click", function(e) {
+
+    if (e.target === this) {
+
+        fecharInstalacao();
+
+    }
+
+});
+
+
+/* ==========================================================
+   SERVICE WORKER
+   ========================================================== */
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            navigator.serviceWorker
+                .register("./service-worker.js")
+                .then(function() {
+
+                    console.log(
+                        "Service Worker registrado."
+                    );
+
+                })
+                .catch(function(error) {
+
+                    console.error(
+                        "Erro ao registrar Service Worker:",
+                        error
+                    );
+
+                });
+
+        }
+    );
+
+}
+
+</script>
+
+
+</body>
+
+</html>
