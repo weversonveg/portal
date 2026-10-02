@@ -6,8 +6,22 @@
 <meta name="theme-color" content="#2E0F4F">
 <title>Painel de Controle — Sistema de Gestão de Vale Transporte</title>
 
-<link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ&sz=w64">
-<link rel="apple-touch-icon" href="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ&sz=w180">
+<!-- ===================== PWA ===================== -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Ícone da aba do navegador -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+<!-- Ícone ao adicionar à tela inicial (iOS) -->
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<!-- Metatags para PWA Android / iOS -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vale Transporte">
+<meta name="application-name" content="Vale Transporte">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +50,6 @@
    ============================================================ */
 :root,
 :root[data-theme="light"] {
-    /* MARCA — roxo escuro profundo */
     --brand: #2E0F4F;
     --brand-hover: #3D1566;
     --brand-soft: #E8DEF4;
@@ -54,7 +67,6 @@
     --gray-800: #27272a;
     --gray-900: #18181b;
 
-    /* Estados — laranja da logo apenas em avisos */
     --ok: #1a6a38;
     --ok-bg: #f1f8f3;
     --ok-bd: #bfdcc6;
@@ -94,7 +106,6 @@
 }
 
 :root[data-theme="dark"] {
-    /* MARCA — roxo claro para contraste no fundo escuro */
     --brand: #A87DD4;
     --brand-hover: #BC97DE;
     --brand-soft: #1A0E2E;
@@ -1956,6 +1967,19 @@ window.invalidarCachePainel = function () {
         localStorage.setItem('cache-painel-versao', String(v + 1));
     } catch (e) {}
 };
+
+/* ============================================================
+   PWA — Registro do Service Worker
+   ============================================================ */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+            console.log('[PWA] Service Worker registrado. Escopo:', reg.scope);
+        }).catch(function (err) {
+            console.warn('[PWA] Falha ao registrar Service Worker:', err);
+        });
+    });
+}
 </script>
 
 <script type="module">
