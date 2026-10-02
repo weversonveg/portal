@@ -205,7 +205,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .filtro-select { height:34px; padding:0 8px; border:1px solid var(--border); border-radius:4px; font-size:12px; background:var(--surface); color:var(--text); outline:none; }
 .filtro-select:focus { border-color:var(--brand); }
 
-/* 👇 WRAPPER DA TABELA COM SCROLL + CABEÇALHO STICKY */
 .table-wrapper {
     overflow: auto;
     max-height: 60vh;
@@ -843,11 +842,17 @@ function verificarSeJaGozado(reg, hoje){
     return dt<=hoje;
 }
 
+/* =========================================================
+   VERIFICA EXTEMPORÂNEO
+   - Ignora formato "15/45 dias" (parcial)
+   - Para gozo com intervalos ("data a data" ou "data + data"),
+     extrai a PRIMEIRA data e compara com o prazo
+========================================================= */
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
-    if (/\(.*partes?\)/i.test(gozoStr)) return false;
-    const dg = parseDataParaDate(gozoStr);
+    const primeiraDataStr = gozoStr.split(' a ')[0].split(' + ')[0].trim();
+    const dg = parseDataParaDate(primeiraDataStr);
     return dg ? dg > dataLimite : false;
 }
 
@@ -944,7 +949,9 @@ function associarRegistroAPeriodo(reg, periodo) {
 
 /* =========================================================
    CONSTRÓI AS LINHAS DA TABELA
-   - Férias: gozado em múltiplas partes mostra "data1 a data2 (N partes)"
+   - Férias gozadas em múltiplas partes: mostra cada intervalo
+     separado por " + " (ex: "01/01/2026 a 15/01/2026 + 01/06/2026 a 30/06/2026")
+   - 1 parte: mostra o intervalo completo "início a término"
 ========================================================= */
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
@@ -965,24 +972,23 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                 let status, gozo;
 
                 if (diasConsumidos >= totalDireito) {
-                    // 👇 Ordena lançamentos por data para pegar 1ª e última parte
                     const lancsOrdenados = [...lancs].sort((a, b) => {
                         const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
                         return (da || 0) - (db2 || 0);
                     });
-                    const primeiro = lancsOrdenados[0];
                     const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
 
-                    if (lancs.length > 1) {
-                        // 👇 Gozado em múltiplas partes
-                        gozo = `${formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data)} a ${formatarData(ultimo.dataInicio || ultimo.data_inicio || ultimo.data)} (${lancs.length} partes)`;
-                    } else {
-                        gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
-                    }
+                    // 👇 Mostra o intervalo de CADA parte separadamente
+                    const intervalos = lancsOrdenados.map(l => {
+                        const ini = formatarData(l.dataInicio || l.data_inicio || l.data);
+                        const fimParte = formatarData(l.dataFim || l.data_fim || l.dataTermino || l.data_termino || l.dataInicio || l.data_inicio || l.data);
+                        return `${ini} a ${fimParte}`;
+                    });
+                    gozo = intervalos.join(' + ');
+
                     status = verificarSeJaGozado(ultimo, hoje) ? 'gozado' : 'programado';
                 } else if (diasConsumidos > 0) {
-                    // 👇 Parcial: pega o lançamento mais recente para checar se já começou
                     const lancsOrdenados = [...lancs].sort((a, b) => {
                         const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
