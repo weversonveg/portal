@@ -488,7 +488,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                         </div>
                     </div>
 
-                    <!-- 👇 WRAPPER DA TABELA COM SCROLL VERTICAL E CABEÇALHO STICKY -->
                     <div class="table-wrapper">
                         <table class="periodos-table">
                             <thead>
@@ -847,6 +846,7 @@ function verificarSeJaGozado(reg, hoje){
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
+    if (/\(.*partes?\)/i.test(gozoStr)) return false;
     const dg = parseDataParaDate(gozoStr);
     return dg ? dg > dataLimite : false;
 }
@@ -942,6 +942,10 @@ function associarRegistroAPeriodo(reg, periodo) {
     return false;
 }
 
+/* =========================================================
+   CONSTRÓI AS LINHAS DA TABELA
+   - Férias: gozado em múltiplas partes mostra "data1 a data2 (N partes)"
+========================================================= */
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
 
@@ -961,13 +965,32 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                 let status, gozo;
 
                 if (diasConsumidos >= totalDireito) {
-                    const primeiro = lancs[0];
-                    gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
-                    status = verificarSeJaGozado(primeiro, hoje) ? 'gozado' : 'programado';
+                    // 👇 Ordena lançamentos por data para pegar 1ª e última parte
+                    const lancsOrdenados = [...lancs].sort((a, b) => {
+                        const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
+                        const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
+                        return (da || 0) - (db2 || 0);
+                    });
+                    const primeiro = lancsOrdenados[0];
+                    const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
+
+                    if (lancs.length > 1) {
+                        // 👇 Gozado em múltiplas partes
+                        gozo = `${formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data)} a ${formatarData(ultimo.dataInicio || ultimo.data_inicio || ultimo.data)} (${lancs.length} partes)`;
+                    } else {
+                        gozo = formatarData(primeiro.dataInicio || primeiro.data_inicio || primeiro.data);
+                    }
+                    status = verificarSeJaGozado(ultimo, hoje) ? 'gozado' : 'programado';
                 } else if (diasConsumidos > 0) {
-                    const primeiro = lancs[0];
+                    // 👇 Parcial: pega o lançamento mais recente para checar se já começou
+                    const lancsOrdenados = [...lancs].sort((a, b) => {
+                        const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
+                        const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
+                        return (db2 || 0) - (da || 0);
+                    });
+                    const ultimoParcial = lancsOrdenados[0];
                     gozo = `${diasConsumidos}/${totalDireito} dias`;
-                    status = verificarSeJaGozado(primeiro, hoje) ? 'parcial' : 'programado';
+                    status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
                     if(p.status==='atual') status='atual';
@@ -1032,12 +1055,6 @@ function badgeTipo(k){
     return k==='ferias'?'<span class="tipo-badge">Férias</span>':'<span class="tipo-badge">Folga Aniv.</span>';
 }
 
-/* =========================================================
-   RESUMO EXECUTIVO — CORRIGIDO
-   - Férias "Adquiridas" = ciclo COMPLETO (status !== 'atual')
-   - Folga "Adquiridas" = aniversário já aconteceu (disponivel/gozado/programado/perdido)
-   - Chip "Em andamento" para mostrar ciclos abertos das férias
-========================================================= */
 function renderizarResumoExecutivo(){
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
@@ -1048,10 +1065,7 @@ function renderizarResumoExecutivo(){
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
 
-        // 👇 FÉRIAS: adquiridas = ciclo COMPLETO (status diferente de 'atual')
         const feriasAdquiridas = f.filter(l => l.status !== 'atual').length;
-
-        // 👇 FOLGA: adquiridas = aniversário já aconteceu
         const folgaAdquiridas = g.filter(l =>
             ['disponivel','gozado','programado','perdido'].includes(l.status)
         ).length;
