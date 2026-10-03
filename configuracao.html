@@ -697,7 +697,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-color: var(--ok-bd) !important;
 }
 
-/* Input do Flatpickr: sempre clicável, com aparência de input normal */
 .form-group input.flatpickr-input {
     cursor: pointer;
     background: var(--surface);
@@ -1569,7 +1568,7 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <input type="text" id="mesReferencia" required
                                        class="campo-mes"
                                        placeholder="AAAA-MM" autocomplete="off"
-                                       onchange="carregarConfiguracao(this.value)">
+                                       onchange="carregarConfiguracao(this.dataset.value || this.value)">
                                 <span class="ajuda">Este é o mês que você está cadastrando ou editando.</span>
                             </div>
 
@@ -1623,13 +1622,15 @@ tbody tr:hover td { background: var(--surface-2); }
                         <div class="campos-grid">
                             <div class="form-group">
                                 <label for="dataAbertura">Data de abertura</label>
-                                <input type="date" id="dataAbertura"
+                                <input type="text" id="dataAbertura" class="campo-data"
+                                       placeholder="DD/MM/AAAA" autocomplete="off"
                                        onchange="atualizarStatusCalculado(); atualizarCorCampo(this)">
                                 <span class="ajuda">A partir desta data, os lançamentos são permitidos.</span>
                             </div>
                             <div class="form-group">
                                 <label for="dataFechamento">Data de fechamento</label>
-                                <input type="date" id="dataFechamento"
+                                <input type="text" id="dataFechamento" class="campo-data"
+                                       placeholder="DD/MM/AAAA" autocomplete="off"
                                        onchange="atualizarStatusCalculado(); atualizarCorCampo(this)">
                                 <span class="ajuda">Depois desta data, os lançamentos são bloqueados.</span>
                             </div>
@@ -1868,7 +1869,7 @@ tbody tr:hover td { background: var(--surface-2); }
     </div>
 </div>
 
-<!-- ===== FLATPICKR — bibliotecas (globais, sem módulo) ===== -->
+<!-- ===== FLATPICKR — bibliotecas ===== -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
@@ -1882,21 +1883,26 @@ tbody tr:hover td { background: var(--surface-2); }
             return;
         }
 
-        // ---- Campos de DATA (type="date") ----
-        flatpickr("input[type='date']", {
-            locale: "pt",
-            dateFormat: "Y-m-d",
-            allowInput: false,
-            clickOpens: true,
-            disableMobile: true,
-            onChange: function (selectedDates, dateStr, instance) {
-                if (window.atualizarCorCampo) window.atualizarCorCampo(instance.element);
-                if (typeof ocultarMensagem === "function") ocultarMensagem();
-                instance.element.dispatchEvent(new Event('change', { bubbles: true }));
-            }
+        // ---- Campos de DATA (.campo-data) — exibe em DD/MM/AAAA ----
+        document.querySelectorAll('.campo-data').forEach(function (input) {
+            flatpickr(input, {
+                locale: "pt",
+                dateFormat: "Y-m-d",     // valor interno (Firestore)
+                altInput: true,          // cria input visual
+                altFormat: "d/m/Y",      // mostra em DD/MM/AAAA
+                allowInput: false,
+                clickOpens: true,
+                disableMobile: true,
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (window.atualizarCorCampo) window.atualizarCorCampo(instance.element);
+                    if (typeof ocultarMensagem === "function") ocultarMensagem();
+                    // usa instance.element (o input real, com o valor Y-m-d)
+                    instance.element.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
         });
 
-        // ---- Campos de MÊS (.campo-mes) ----
+        // ---- Campos de MÊS (.campo-mes) — grade de meses ----
         var plugin = (typeof monthSelectPlugin === 'function') ? [new monthSelectPlugin({
             shorthand: true,
             dateFormat: "Y-m",
@@ -1920,7 +1926,7 @@ tbody tr:hover td { background: var(--surface-2); }
             });
         });
 
-        // Expõe helpers
+        // ---- Helpers globais ----
         window.setValorMes = function (input, valor) {
             if (!input) return;
             input.value = valor;
@@ -1937,6 +1943,19 @@ tbody tr:hover td { background: var(--surface-2); }
         window.lerMes = function (input) {
             if (!input) return '';
             return input.dataset.value || input.value || '';
+        };
+
+        // Define o valor de um campo de DATA respeitando o Flatpickr
+        window.setValorData = function (input, valor) {
+            if (!input) return;
+            input.value = valor || '';  // o instance.element
+            if (input._flatpickr) {
+                try {
+                    if (valor) input._flatpickr.setDate(valor, false);
+                    else input._flatpickr.clear(false);
+                } catch (e) {}
+            }
+            if (window.atualizarCorCampo) window.atualizarCorCampo(input);
         };
     }
 
@@ -2425,6 +2444,27 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return input.dataset.value || input.value || '';
     }
 
+    function setarData(input, valor) {
+        if (!input) return;
+        if (window.setValorData) {
+            window.setValorData(input, valor);
+        } else {
+            input.value = valor || '';
+            if (input._flatpickr) {
+                try {
+                    if (valor) input._flatpickr.setDate(valor, false);
+                    else input._flatpickr.clear(false);
+                } catch (e) {}
+            }
+        }
+    }
+
+    function lerData(input) {
+        if (!input) return '';
+        // o input real (instance.element) tem o valor Y-m-d
+        return input.value || '';
+    }
+
     document.addEventListener("DOMContentLoaded", async function() {
         const hoje = new Date();
         const ano = hoje.getFullYear();
@@ -2866,23 +2906,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         document.getElementById("observacoes").value = obs === 'null' ? '' : obs;
         document.getElementById("toggleCongelado").checked = isCongelado;
 
-        var inpAb = document.getElementById("dataAbertura");
-        var inpFe = document.getElementById("dataFechamento");
-
-        inpAb.value = dataAbertura || '';
-        inpFe.value = dataFechamento || '';
-        if (inpAb._flatpickr) {
-            try {
-                if (dataAbertura) inpAb._flatpickr.setDate(dataAbertura, false);
-                else inpAb._flatpickr.clear(false);
-            } catch (e) {}
-        }
-        if (inpFe._flatpickr) {
-            try {
-                if (dataFechamento) inpFe._flatpickr.setDate(dataFechamento, false);
-                else inpFe._flatpickr.clear(false);
-            } catch (e) {}
-        }
+        setarData(document.getElementById("dataAbertura"), dataAbertura);
+        setarData(document.getElementById("dataFechamento"), dataFechamento);
 
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
         checkboxes.forEach(cb => {
@@ -2955,20 +2980,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 inputObs.value = dados.observacoes || "";
                 toggleCongelado.checked = dados.congelado || false;
 
-                inputDataAbertura.value = dados.dataAbertura || "";
-                inputDataFechamento.value = dados.dataFechamento || "";
-                if (inputDataAbertura._flatpickr) {
-                    try {
-                        if (dados.dataAbertura) inputDataAbertura._flatpickr.setDate(dados.dataAbertura, false);
-                        else inputDataAbertura._flatpickr.clear(false);
-                    } catch (e) {}
-                }
-                if (inputDataFechamento._flatpickr) {
-                    try {
-                        if (dados.dataFechamento) inputDataFechamento._flatpickr.setDate(dados.dataFechamento, false);
-                        else inputDataFechamento._flatpickr.clear(false);
-                    } catch (e) {}
-                }
+                setarData(inputDataAbertura, dados.dataAbertura || "");
+                setarData(inputDataFechamento, dados.dataFechamento || "");
 
                 const escolasReabertas = dados.escolasReabertas || [];
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
@@ -3014,23 +3027,15 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     const dataAbertura = `${ano}-${mes}-${String(padraoGlobal.diaAbertura).padStart(2, '0')}`;
                     const dataFechamento = `${ano}-${mes}-${String(padraoGlobal.diaFechamento).padStart(2, '0')}`;
 
-                    inputDataAbertura.value = dataAbertura;
-                    inputDataFechamento.value = dataFechamento;
-                    if (inputDataAbertura._flatpickr) {
-                        try { inputDataAbertura._flatpickr.setDate(dataAbertura, false); } catch (e) {}
-                    }
-                    if (inputDataFechamento._flatpickr) {
-                        try { inputDataFechamento._flatpickr.setDate(dataFechamento, false); } catch (e) {}
-                    }
+                    setarData(inputDataAbertura, dataAbertura);
+                    setarData(inputDataFechamento, dataFechamento);
 
                     atualizarCorCampo(inputDataAbertura);
                     atualizarCorCampo(inputDataFechamento);
                     mostrarMensagem(`Padrão global aplicado automaticamente: ${formatarData(dataAbertura)} até ${formatarData(dataFechamento)}.`, "sucesso");
                 } else {
-                    inputDataAbertura.value = "";
-                    inputDataFechamento.value = "";
-                    if (inputDataAbertura._flatpickr) try { inputDataAbertura._flatpickr.clear(false); } catch (e) {}
-                    if (inputDataFechamento._flatpickr) try { inputDataFechamento._flatpickr.clear(false); } catch (e) {}
+                    setarData(inputDataAbertura, '');
+                    setarData(inputDataFechamento, '');
                 }
 
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
@@ -3059,8 +3064,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const diasUteis = document.getElementById("diasUteis").value;
         const observacoes = document.getElementById("observacoes").value.trim();
         const isCongelado = document.getElementById("toggleCongelado").checked;
-        const dataAbertura = document.getElementById("dataAbertura").value;
-        const dataFechamento = document.getElementById("dataFechamento").value;
+        const dataAbertura = lerData(document.getElementById("dataAbertura"));
+        const dataFechamento = lerData(document.getElementById("dataFechamento"));
 
         if (!mesReferencia || !diasUteis) {
             mostrarMensagem("Preencha o mês de referência e os dias úteis (seção 2).", "erro");
@@ -3121,11 +3126,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     window.limparFormulario = function() {
         document.getElementById("diasUteis").value = "";
         document.getElementById("observacoes").value = "";
-        document.getElementById("dataAbertura").value = "";
-        document.getElementById("dataFechamento").value = "";
-
-        if (document.getElementById("dataAbertura")._flatpickr) try { document.getElementById("dataAbertura")._flatpickr.clear(false); } catch (e) {}
-        if (document.getElementById("dataFechamento")._flatpickr) try { document.getElementById("dataFechamento")._flatpickr.clear(false); } catch (e) {}
+        setarData(document.getElementById("dataAbertura"), '');
+        setarData(document.getElementById("dataFechamento"), '');
 
         document.getElementById("diasUteis").classList.remove("preenchido");
         document.getElementById("dataAbertura").classList.remove("preenchido");
