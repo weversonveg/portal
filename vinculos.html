@@ -1072,7 +1072,7 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 .busca-input { flex: 1; min-width: 200px; }
 
-/* Grid de campos — 2 colunas principais + sub-colunas internas */
+/* Grid de campos */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1314,22 +1314,33 @@ tbody tr:hover td { background: var(--surface-2); }
 /* Área de vínculos — escondida inicialmente */
 #areaVinculos { display: none; }
 
-/* Botões do rodapé (paleta da página cadastro) */
-.btn-cancelar-pagina {
+/* ============================================================
+   MODAL DE CONFIRMAÇÃO PERSONALIZADO
+   ============================================================ */
+.modal-header-danger {
+    background: var(--danger-bg);
+    border-bottom-color: var(--danger-bd);
+}
+.modal-header-danger .reabertura-title { color: var(--danger); }
+.modal-header-danger .modal-fechar { color: var(--danger); }
+.modal-header-danger .modal-fechar:hover { background: rgba(153,27,27,.1); }
+
+.modal-btn-perigo {
     background: #7F1D1D;
     color: #ffffff;
     border-color: #7F1D1D;
     box-shadow: 0 1px 2px rgba(127, 29, 29, .3);
 }
-.btn-cancelar-pagina:hover {
+.modal-btn-perigo:hover {
     background: #6B1414;
     border-color: #6B1414;
     box-shadow: 0 2px 4px rgba(127, 29, 29, .35);
 }
-.btn-cancelar-pagina:active {
+.modal-btn-perigo:active {
     background: #591010;
     border-color: #591010;
 }
+.modal-btn-perigo .material-symbols-outlined { font-size: 16px; }
 
 /* ============================================================
    RESPONSIVO
@@ -1495,7 +1506,6 @@ tbody tr:hover td { background: var(--surface-2); }
                 <nav class="menu-section">
                     <div class="menu-section-title">Configuração</div>
                     <ul class="menu">
-                        <!-- ▼ ATIVO apenas quando estiver em configuracao.html (auto-detectado via JS) -->
                         <li class="menu-item" id="menuItemConfigurarPeriodos">
                             <a href="configuracao.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
@@ -2000,11 +2010,6 @@ tbody tr:hover td { background: var(--surface-2); }
                             Voltar
                         </button>
 
-                        <button type="button" class="btn-cancelar-pagina" onclick="limparFormulario()">
-                            <span class="material-symbols-outlined">refresh</span>
-                            Limpar
-                        </button>
-
                         <button type="button" class="btn-primario" id="btnSalvar" onclick="salvarVinculos()">
                             <span class="material-symbols-outlined">save</span>
                             Salvar alterações
@@ -2036,6 +2041,38 @@ tbody tr:hover td { background: var(--surface-2); }
             <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
                 <span class="material-symbols-outlined" aria-hidden="true">logout</span>
                 Sim, sair
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL DE CONFIRMAÇÃO (Limpar / Remover lotação)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="modalConfirm" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+        <div class="modal-header modal-header-danger">
+            <div class="reabertura-title">
+                <span class="material-symbols-outlined" id="modalConfirmIconeSimbolo">delete</span>
+                <span id="modalConfirmTitulo">Confirmar ação</span>
+            </div>
+            <button type="button" class="modal-fechar" id="btnModalConfirmFechar" aria-label="Fechar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p id="modalConfirmMensagem"
+               style="font-size:13.5px; color:var(--text-secondary); line-height:1.6; white-space:pre-line; text-align:center;">
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancelar" id="btnModalCancelar">
+                <span class="material-symbols-outlined">close</span>
+                Fechar
+            </button>
+            <button type="button" class="modal-btn-perigo" id="btnModalConfirmar">
+                <span class="material-symbols-outlined">check</span>
+                Confirmar
             </button>
         </div>
     </div>
@@ -2395,19 +2432,78 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return valor;
     }
 
+    /* ============================================================
+       MODAL DE CONFIRMAÇÃO PERSONALIZADO
+       ============================================================ */
+    function mostrarConfirmacao(titulo, mensagem, textoConfirmar) {
+        return new Promise(function (resolve) {
+            var modal = document.getElementById("modalConfirm");
+            var iconeSimbolo = document.getElementById("modalConfirmIconeSimbolo");
+            var tituloEl = document.getElementById("modalConfirmTitulo");
+            var mensagemEl = document.getElementById("modalConfirmMensagem");
+            var btnFechar = document.getElementById("btnModalConfirmFechar");
+            var btnCancelar = document.getElementById("btnModalCancelar");
+            var btnConfirmar = document.getElementById("btnModalConfirmar");
+
+            tituloEl.textContent = titulo;
+            mensagemEl.textContent = mensagem;
+            iconeSimbolo.textContent = "delete";
+            btnConfirmar.innerHTML = '<span class="material-symbols-outlined">check</span> ' + textoConfirmar;
+
+            modal.classList.add("ativo");
+            document.body.style.overflow = "hidden";
+
+            var ultimoFoco = document.activeElement;
+
+            function fechar() {
+                modal.classList.remove("ativo");
+                document.body.style.overflow = "";
+                document.removeEventListener("keydown", handleEsc);
+                if (ultimoFoco && typeof ultimoFoco.focus === "function") ultimoFoco.focus();
+            }
+
+            function onCancelar() { fechar(); resolve(false); }
+            function onConfirmar() { fechar(); resolve(true); }
+            function handleEsc(e) { if (e.key === "Escape") onCancelar(); }
+
+            var novoCancelar = btnCancelar.cloneNode(true);
+            var novoConfirmar = btnConfirmar.cloneNode(true);
+            var novoFechar = btnFechar.cloneNode(true);
+            btnCancelar.parentNode.replaceChild(novoCancelar, btnCancelar);
+            btnConfirmar.parentNode.replaceChild(novoConfirmar, btnConfirmar);
+            btnFechar.parentNode.replaceChild(novoFechar, btnFechar);
+
+            novoCancelar.addEventListener("click", onCancelar);
+            novoFechar.addEventListener("click", onCancelar);
+            novoConfirmar.addEventListener("click", onConfirmar);
+            document.addEventListener("keydown", handleEsc);
+
+            modal.addEventListener("click", function handler(e) {
+                if (e.target === modal) {
+                    modal.removeEventListener("click", handler);
+                    onCancelar();
+                }
+            });
+
+            requestAnimationFrame(function () {
+                if (novoCancelar) novoCancelar.focus();
+            });
+        });
+    }
+
     async function carregarServidorPorId(id) {
         try {
             const docRef = doc(db, "servidores", id);
             const docSnap = await getDoc(docRef);
-            
+
             if (docSnap.exists()) {
                 const dados = docSnap.data();
                 servidorEncontradoId = docSnap.id;
-                
+
                 document.getElementById("cpfBusca").value = dados.cpf || "";
                 preencherFormulario(dados);
                 document.getElementById("areaVinculos").style.display = "block";
-                
+
                 mostrarMensagem(`Servidor "${dados.nome || ''}" carregado para edição.`, "sucesso");
             } else {
                 mostrarMensagem("Servidor não encontrado no banco de dados.", "erro");
@@ -2500,7 +2596,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         document.getElementById("cpf").value = dados.cpf || "";
 
         const m1 = dados.matricula1 || {};
-        
+
         document.getElementById("vinculo1").value = m1.vinculo || "";
         document.getElementById("matricula1").value = m1.numeroMatricula || "";
         document.getElementById("cargo1").value = m1.cargo || "";
@@ -2537,7 +2633,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             labelSegundo.classList.remove("disabled-label");
 
             document.getElementById("areaMatricula2").style.display = "block";
-            
+
             document.getElementById("vinculo2").value = m2.vinculo || "";
             document.getElementById("matricula2").value = m2.numeroMatricula || "";
             document.getElementById("cargo2").value = m2.cargo || "";
@@ -2581,7 +2677,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             cargoItem1.style.display = "flex";
             document.getElementById("cargoNum1").textContent = m1.numeroMatricula || "-";
             document.getElementById("cargoNome1").textContent = m1.cargo || "Cargo não informado";
-            
+
             if (m1.vinculo) {
                 vinculoBadge1.textContent = m1.vinculo;
                 vinculoBadge1.style.display = "inline-block";
@@ -2596,7 +2692,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             cargoItem2.style.display = "flex";
             document.getElementById("cargoNum2").textContent = m2.numeroMatricula || "-";
             document.getElementById("cargoNome2").textContent = m2.cargo || "Cargo não informado";
-            
+
             if (m2.vinculo) {
                 vinculoBadge2.textContent = m2.vinculo;
                 vinculoBadge2.style.display = "inline-block";
@@ -2701,9 +2797,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             }
 
             await updateDoc(doc(db, "servidores", servidorEncontradoId), dadosAtualizar);
-            
+
             marcarCacheInvalido();
-            
+
             mostrarMensagemSalvar("Vínculos atualizados com sucesso!", "sucesso");
 
         } catch (error) {
@@ -2721,61 +2817,47 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return Number(valor);
     }
 
-    window.limparLotacao = function(idEscola, idEmpresa, idPasses) {
-        if (confirm("Deseja limpar esta lotação? Os campos escola, concessionária e passes serão apagados.")) {
-            document.getElementById(idEscola).value = "";
-            document.getElementById(idEmpresa).value = "";
-            document.getElementById(idPasses).value = "";
-            
-            atualizarCoresCampos();
-            mostrarMensagemSalvar("Lotação limpa. Lembre-se de salvar para confirmar.", "info");
-        }
-    };
+    /* ============================================================
+       LIMPAR LOTAÇÃO — com modal personalizado
+       ============================================================ */
+    window.limparLotacao = async function(idEscola, idEmpresa, idPasses) {
+        var confirmado = await mostrarConfirmacao(
+            "Limpar lotação?",
+            "Os campos de escola, concessionária e passes serão apagados.\n\nLembre-se de salvar para confirmar a alteração.",
+            "Sim, limpar"
+        );
 
-    window.removerLotacaoEscola2 = function(numMatricula) {
-        if (confirm("Deseja remover esta lotação? Os campos serão apagados e a escola 2 será ocultada.")) {
-            document.getElementById(`escola2_${numMatricula}`).value = "";
-            document.getElementById(`empresa2_${numMatricula}`).value = "";
-            document.getElementById(`passes2_${numMatricula}`).value = "";
-            
-            document.getElementById(`possuiEscola2_${numMatricula}`).checked = false;
-            document.getElementById(`boxEscola2_${numMatricula}`).style.display = "none";
-            
-            atualizarCoresCampos();
-            mostrarMensagemSalvar("Lotação removida. Lembre-se de salvar para confirmar.", "info");
-        }
-    };
+        if (!confirmado) return;
 
-    window.limparFormulario = function () {
-        if (!servidorEncontradoId) return;
-
-        document.getElementById("escola1_1").value = "";
-        document.getElementById("empresa1_1").value = "";
-        document.getElementById("passes1_1").value = "";
-
-        document.getElementById("possuiEscola2_1").checked = false;
-        document.getElementById("boxEscola2_1").style.display = "none";
-        document.getElementById("escola2_1").value = "";
-        document.getElementById("empresa2_1").value = "";
-        document.getElementById("passes2_1").value = "";
-
-        if (servidorTemMatricula2) {
-            document.getElementById("escola1_2").value = "";
-            document.getElementById("empresa1_2").value = "";
-            document.getElementById("passes1_2").value = "";
-            document.getElementById("possuiEscola2_2").checked = false;
-            document.getElementById("boxEscola2_2").style.display = "none";
-            document.getElementById("escola2_2").value = "";
-            document.getElementById("empresa2_2").value = "";
-            document.getElementById("passes2_2").value = "";
-        }
+        document.getElementById(idEscola).value = "";
+        document.getElementById(idEmpresa).value = "";
+        document.getElementById(idPasses).value = "";
 
         atualizarCoresCampos();
+        mostrarMensagemSalvar("Lotação limpa. Lembre-se de salvar para confirmar.", "info");
+    };
 
-        mostrarMensagemSalvar(
-            "Campos de escola, concessionária e passes foram limpos. Os demais dados foram preservados.",
-            "info"
+    /* ============================================================
+       REMOVER LOTAÇÃO ESCOLA 2 — com modal personalizado
+       ============================================================ */
+    window.removerLotacaoEscola2 = async function(numMatricula) {
+        var confirmado = await mostrarConfirmacao(
+            "Remover lotação?",
+            "Os campos serão apagados e a escola 2 será ocultada.\n\nLembre-se de salvar para confirmar a alteração.",
+            "Sim, remover"
         );
+
+        if (!confirmado) return;
+
+        document.getElementById("escola2_" + numMatricula).value = "";
+        document.getElementById("empresa2_" + numMatricula).value = "";
+        document.getElementById("passes2_" + numMatricula).value = "";
+
+        document.getElementById("possuiEscola2_" + numMatricula).checked = false;
+        document.getElementById("boxEscola2_" + numMatricula).style.display = "none";
+
+        atualizarCoresCampos();
+        mostrarMensagemSalvar("Lotação removida. Lembre-se de salvar para confirmar.", "info");
     };
 
     window.voltar = function () {
