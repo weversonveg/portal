@@ -4,16 +4,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Cadastro e edição de servidores — Vale Transporte SEMED.">
+<meta name="description" content="Painel de controle — Sistema de Gestão de Vale Transporte SEMED.">
 <meta name="theme-color" content="#1f3a5f">
-<title>Novo Cadastro — Vale Transporte</title>
+<title>Painel de Controle — Vale Transporte</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,person_search,work,work_history,progress_activity,search,trending_up,pie_chart,insights">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
 (function () {
@@ -96,6 +96,18 @@
     --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
 
     --brand-contrast: #ffffff;
+
+    /* Cores dos gráficos */
+    --chart-1: #2E0F4F;
+    --chart-2: #5b2a86;
+    --chart-3: #7ba3cd;
+    --chart-4: #b45309;
+    --chart-5: #1a6a38;
+    --chart-6: #9a1e1e;
+    --chart-7: #4d5560;
+    --chart-8: #a1a1aa;
+    --chart-grid: rgba(20,25,35,.06);
+    --chart-text: #4d5560;
 }
 
 :root[data-theme="dark"] {
@@ -152,6 +164,18 @@
     --overlay: rgba(0,0,0,.65);
 
     --brand-contrast: #1a1a1c;
+
+    /* Cores dos gráficos */
+    --chart-1: #a87dd4;
+    --chart-2: #7ba3cd;
+    --chart-3: #86c79a;
+    --chart-4: #e4c56c;
+    --chart-5: #f0a1a1;
+    --chart-6: #a1a5ab;
+    --chart-7: #d4d7db;
+    --chart-8: #52555b;
+    --chart-grid: rgba(255,255,255,.06);
+    --chart-text: #a1a5ab;
 }
 
 /* ============================================================
@@ -173,7 +197,6 @@ html, body {
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
 }
 
 body { overflow: hidden; }
@@ -194,7 +217,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
-   LAYOUT GERAL
+   LAYOUT
    ============================================================ */
 .layout {
     display: flex;
@@ -770,145 +793,13 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 }
 .btn-icone .material-symbols-outlined { font-size: 18px; }
 
-/* ============================================================
-   STATUS CALCULADO
-   ============================================================ */
-.status-calculado {
-    padding: 14px 18px; border-radius: 6px;
-    display: flex; align-items: center; gap: 12px;
-    border: 1px solid; margin-top: 16px;
+.btn-texto {
+    background: transparent;
+    color: var(--brand);
+    border-color: transparent;
+    padding: 0 8px;
 }
-.status-calculado .material-symbols-outlined { font-size: 24px; flex-shrink: 0; }
-.status-calculado .status-info { flex: 1; min-width: 0; }
-.status-calculado .status-label {
-    font-size: 10.5px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px; opacity: .85;
-}
-.status-calculado .status-valor {
-    font-size: 14px; font-weight: 600; margin-top: 2px;
-}
-.status-calculado .status-detalhe {
-    font-size: 12px; margin-top: 2px; opacity: .9;
-}
-
-.status-aberto-calc     { background: var(--ok-bg);     border-color: var(--ok-bd);     color: var(--ok); }
-.status-fechado-calc    { background: var(--danger-bg); border-color: var(--danger-bd); color: var(--danger); }
-.status-aguardando-calc { background: var(--warn-bg);   border-color: var(--warn-bd);   color: var(--warn); }
-.status-indefinido-calc { background: var(--info-bg);   border-color: var(--info-bd);   color: var(--info); }
-
-/* ============================================================
-   TOGGLE
-   ============================================================ */
-.toggle-container {
-    display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
-}
-.switch {
-    position: relative; display: inline-block;
-    width: 46px; height: 26px; flex-shrink: 0;
-}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute; cursor: pointer; inset: 0;
-    background-color: var(--gray-400);
-    transition: .25s; border-radius: 999px;
-}
-.slider:before {
-    position: absolute; content: "";
-    height: 18px; width: 18px; left: 4px; top: 4px;
-    background-color: #fff; transition: .25s;
-    border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.15);
-}
-input:checked + .slider { background-color: var(--danger); }
-input:checked + .slider:before { transform: translateX(20px); }
-
-.toggle-info { flex: 1; min-width: 200px; }
-.toggle-info .toggle-label {
-    font-size: 13px; font-weight: 600; color: var(--text);
-}
-.toggle-info .toggle-description {
-    font-size: 12px; color: var(--text-secondary);
-    margin-top: 2px; line-height: 1.5;
-}
-
-/* ============================================================
-   TRIGGER REABERTURA
-   ============================================================ */
-.reabertura-trigger {
-    background: var(--warn-bg);
-    border: 1px solid var(--warn-bd);
-    border-radius: 5px; padding: 12px 14px;
-    display: none; align-items: center; justify-content: space-between;
-    gap: 12px; flex-wrap: wrap; margin-top: 16px;
-}
-.reabertura-trigger.visivel { display: flex; }
-.reabertura-trigger-info {
-    display: flex; align-items: flex-start; gap: 10px;
-    flex: 1 1 220px; min-width: 0;
-}
-.reabertura-trigger-info > .material-symbols-outlined {
-    font-size: 20px; color: var(--warn);
-    flex-shrink: 0; margin-top: 1px;
-}
-.reabertura-trigger-text {
-    display: flex; flex-direction: column; min-width: 0; flex: 1;
-}
-.reabertura-trigger-text strong {
-    font-size: 13px; font-weight: 600;
-    color: var(--warn); line-height: 1.35;
-}
-.reabertura-trigger-text span {
-    font-size: 12px; color: var(--text-secondary);
-    margin-top: 2px; line-height: 1.45;
-    overflow-wrap: anywhere; word-break: break-word;
-}
-.btn-abrir-modal {
-    background: var(--warn); color: #fff;
-    border-color: var(--warn); flex-shrink: 0;
-}
-.btn-abrir-modal:hover { background: #6b3e0b; border-color: #6b3e0b; }
-.btn-abrir-modal .material-symbols-outlined { font-size: 16px; }
-
-/* ============================================================
-   MENSAGENS
-   ============================================================ */
-.mensagem {
-    display: none;
-    margin: 0 0 20px;
-    padding: 12px 14px; border-radius: 5px;
-    font-size: 13px; font-weight: 500;
-    border: 1px solid;
-}
-.mensagem.sucesso {
-    display: block;
-    background: var(--ok-bg); border-color: var(--ok-bd);
-    color: var(--ok);
-    animation: fadeInMsg .2s ease;
-}
-.mensagem.erro {
-    display: block;
-    background: var(--danger-bg); border-color: var(--danger-bd);
-    color: var(--danger);
-    animation: fadeInMsg .2s ease;
-}
-@keyframes fadeInMsg {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================================
-   RODAPÉ DO FORM
-   ============================================================ */
-.form-footer {
-    padding: 16px 24px;
-    background: var(--surface-2);
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 14px; flex-wrap: wrap;
-}
-.footer-info { font-size: 12px; color: var(--text-muted); }
-.footer-buttons {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
+.btn-texto:hover { background: var(--brand-soft); }
 
 /* ============================================================
    TABELA
@@ -936,397 +827,537 @@ td {
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
 
-.acoes-grupo { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.status-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 500;
-    padding: 3px 8px; border-radius: 4px;
-    border: 1px solid; white-space: nowrap;
-    background: transparent;
-}
-.status-badge .material-symbols-outlined { font-size: 13px; }
-.badge-aberto     { color: var(--ok);     border-color: var(--ok-bd); }
-.badge-fechado    { color: var(--danger); border-color: var(--danger-bd); }
-.badge-aguardando { color: var(--warn);   border-color: var(--warn-bd); }
-
-.periodo-texto {
-    font-size: 12px; color: var(--text-secondary); margin-top: 4px;
-}
-
-.reabertura-badges {
-    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
-}
-.reabertura-badge {
-    display: inline-flex; align-items: center; gap: 3px;
-    font-size: 10.5px; font-weight: 500;
-    padding: 2px 8px; border-radius: 999px;
-    background: var(--warn-bg); color: var(--warn);
-    border: 1px solid var(--warn-bd); white-space: nowrap;
-}
-.reabertura-badge .material-symbols-outlined { font-size: 11px; }
-.reabertura-badge.expirada {
-    background: var(--surface-3);
-    color: var(--text-muted);
-    border-color: var(--border);
-    text-decoration: line-through;
-}
-
-/* ============================================================
-   MODAIS (reabertura + excluir)
-   ============================================================ */
-.modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: var(--overlay);
-    z-index: 9999; align-items: center; justify-content: center;
-    padding: 16px;
-}
-.modal-overlay.ativo { display: flex; animation: fadeIn .18s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideDown {
-    from { transform: translateY(-10px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-
-.modal-box {
-    background: var(--surface); border-radius: 6px;
-    width: 100%; max-width: 760px; max-height: 90vh;
-    display: flex; flex-direction: column;
-    overflow: hidden; box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border);
-    animation: slideDown .2s ease;
-}
-.modal-header {
-    padding: 14px 18px;
-    background: var(--warn-bg);
-    border-bottom: 1px solid var(--warn-bd);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; flex-shrink: 0; flex-wrap: wrap;
-}
-.reabertura-title {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 13.5px; font-weight: 600; color: var(--warn);
-}
-.reabertura-title .material-symbols-outlined { font-size: 20px; }
-.modal-fechar {
-    background: transparent;
-    width: 34px; height: 34px; padding: 0;
-    border: 1px solid transparent; border-radius: 5px;
-    color: var(--warn); flex-shrink: 0;
-}
-.modal-fechar:hover { background: rgba(180,83,9,.1); }
-.modal-body {
-    padding: 18px 20px; overflow-y: auto; flex: 1;
-}
-.modal-footer {
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
-    background: var(--surface-2);
-    display: flex; justify-content: flex-end;
-    gap: 10px; flex-shrink: 0; flex-wrap: wrap;
-}
-.modal-btn-cancelar {
-    background: var(--surface); color: var(--text-secondary);
-    border-color: var(--border-strong);
-}
-.modal-btn-cancelar:hover {
-    background: var(--surface-2); color: var(--text);
-    border-color: var(--gray-400);
-}
-.modal-btn-confirmar {
-    background: var(--warn); color: #fff;
-    border-color: var(--warn);
-}
-.modal-btn-confirmar:hover { background: #6b3e0b; border-color: #6b3e0b; }
-
-.escolas-checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 10px;
-}
-.escola-checkbox {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface); padding: 10px 14px;
-    border-radius: 5px; border: 1px solid var(--border);
-    transition: border-color .15s ease, background-color .15s ease;
-    flex-wrap: wrap; min-width: 0;
-}
-.escola-checkbox:hover {
-    border-color: var(--warn); background: var(--warn-bg);
-}
-.escola-checkbox input[type="checkbox"] {
-    width: 18px; height: 18px; margin: 0;
-    cursor: pointer; accent-color: var(--warn); flex-shrink: 0;
-}
-.escola-checkbox label {
-    font-size: 13px; font-weight: 500; cursor: pointer;
-    flex: 1; margin: 0; min-width: 0;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.escola-checkbox .dias-permitidos {
-    display: none; align-items: center; gap: 6px;
-    width: 100%; margin-top: 8px; padding-top: 8px;
-    border-top: 1px dashed var(--border);
-}
-.escola-checkbox.marcado .dias-permitidos { display: flex; }
-.escola-checkbox .dias-permitidos label {
-    font-size: 11px; color: var(--text-secondary);
-    font-weight: 600; white-space: nowrap; flex: 0 0 auto;
-}
-.escola-checkbox .dias-permitidos input {
-    width: 60px; height: 30px; padding: 0 6px;
-    border: 1px solid var(--border-strong); border-radius: 4px;
-    text-align: center; font-size: 12.5px; font-weight: 600;
-    color: var(--warn); background: var(--warn-bg);
-}
-.escola-checkbox .dias-permitidos .explicacao {
-    font-size: 10.5px; color: var(--text-muted);
-    flex: 1; font-style: italic; min-width: 0;
-}
-.escolas-selecionadas-info {
-    margin-top: 12px; padding: 10px 14px;
-    background: var(--warn-bg); border-radius: 5px;
-    border: 1px solid var(--warn-bd);
-    font-size: 12.5px; color: var(--warn);
-    display: flex; align-items: center; gap: 8px;
-}
-.escolas-selecionadas-info .material-symbols-outlined { font-size: 16px; flex-shrink: 0; }
-
-/* Modal de excluir */
-.modal-excluir .modal-box { max-width: 440px; }
-.modal-excluir .modal-header {
-    background: var(--danger-bg);
-    border-bottom-color: var(--danger-bd);
-}
-.modal-excluir .reabertura-title { color: var(--danger); }
-.modal-excluir .modal-fechar { color: var(--danger); }
-.modal-excluir .modal-fechar:hover { background: rgba(153,27,27,.1); }
-
-.excluir-body {
-    padding: 24px 24px 20px; text-align: center;
-}
-.excluir-icone {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--danger-bg); color: var(--danger);
-    display: inline-flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px; border: 1px solid var(--danger-bd);
-}
-.excluir-icone .material-symbols-outlined { font-size: 30px; }
-.excluir-titulo {
-    font-size: 15px; font-weight: 600;
-    color: var(--text); margin-bottom: 8px;
-    letter-spacing: -.005em;
-}
-.excluir-texto {
-    font-size: 13px; color: var(--text-secondary);
-    line-height: 1.55; margin-bottom: 16px;
-}
-.excluir-mes {
-    display: inline-block;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 5px; padding: 8px 14px;
-    font-size: 13.5px; font-weight: 600; color: var(--text);
-    margin-bottom: 4px;
-}
-.excluir-aviso {
-    display: flex; align-items: flex-start; gap: 8px;
-    text-align: left;
-    background: var(--warn-bg); border: 1px solid var(--warn-bd);
-    border-radius: 5px; padding: 10px 12px;
-    font-size: 12px; color: var(--warn);
-    line-height: 1.5; margin-top: 16px;
-}
-.excluir-aviso .material-symbols-outlined {
-    font-size: 16px; flex-shrink: 0; margin-top: 1px;
-}
-.modal-excluir .modal-footer {
-    justify-content: center; gap: 12px; padding: 14px 24px 20px;
-}
-.modal-excluir .modal-footer button { min-width: 120px; }
-
-/* ============================================================
-   ESTILOS ESPECÍFICOS DA PÁGINA cadastro.html
-   ============================================================ */
-
-.content-page,
-.form-card,
-.form,
-.form-body,
-.form-grid,
-.form-group,
-.form-group.full {
-    max-width: 100%;
-    min-width: 0;
-}
-
-.card-header {
-    min-height: 68px;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    flex-wrap: wrap;
-}
-.card-icon {
-    width: 38px; height: 38px; border-radius: 7px;
-    background: var(--brand-soft); color: var(--brand);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.card-icon .material-symbols-outlined { font-size: 22px; }
-.card-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.card-description { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
-
-.form { width: 100%; }
-.form-body { padding: 24px; }
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px 22px;
-    width: 100%;
-}
-
-.form-section-title {
-    grid-column: 1/-1;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    margin-top: 10px;
-    margin-bottom: -4px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    overflow-wrap: anywhere;
-}
-.form-section-title:first-child { margin-top: 0; }
-
-.bloco-segundo-vinculo { display: none; }
-.bloco-segundo-vinculo.ativo { display: contents; }
-
-.escola-extra {
-    display: none;
-    grid-column: 1/-1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px 22px;
-    background: var(--surface-2);
-    padding: 16px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-}
-.escola-extra.ativo { display: grid; }
-
-.btn-link-adicionar {
-    grid-column: 1/-1;
-    background: none;
-    border: none;
-    color: var(--brand);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    width: fit-content;
-    max-width: 100%;
-    height: auto;
-    padding: 4px 0;
-    text-align: left;
-    white-space: normal;
-    line-height: 1.35;
-    transition: opacity 0.2s;
-}
-.btn-link-adicionar:hover { opacity: 0.8; }
-
-.form-group input,
-.form-group select {
-    max-width: 100%;
-    min-width: 0;
-}
-
-.form-group input.erro-input {
-    background: var(--danger-bg) !important;
-    border-color: var(--danger) !important;
-    color: var(--danger) !important;
-}
-
-.dias-ferias-wrapper {
-    grid-column: 1/-1;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    gap: 12px;
-    align-items: start;
-    background: var(--surface-2);
-    padding: 12px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    margin-top: -6px;
-    max-width: 100%;
-}
-.dias-ferias-input { display: flex; flex-direction: column; min-width: 0; }
-.dias-ferias-input input {
-    height: 40px;
-    text-align: center;
-    font-weight: 600;
-    font-size: 15px;
-}
-.dias-ferias-hint {
-    font-size: 12px;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-top: 4px;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-.dias-ferias-hint strong {
-    color: var(--brand);
-    font-size: 12px;
+.badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    flex-wrap: wrap;
-}
-.dias-ferias-hint .material-symbols-outlined { font-size: 14px; }
-.dias-ferias-hint code {
-    background: var(--surface-3);
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 3px;
     font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+    white-space: nowrap;
+}
+.badge-ok     { color: var(--ok);     border-color: var(--ok-bd); }
+.badge-warn   { color: var(--warn);   border-color: var(--warn-bd); }
+.badge-danger { color: var(--danger); border-color: var(--danger-bd); }
+.badge-info   { color: var(--brand);  border-color: var(--brand-soft); }
+.badge-neutro { color: var(--text-secondary); border-color: var(--border-strong); }
+
+/* ============================================================
+   ESTILOS ESPECÍFICOS DA PÁGINA inicial.html (Painel)
+   ============================================================ */
+
+.content-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.page-header h1 {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
     color: var(--text);
-    font-family: 'Courier New', monospace;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    margin-bottom: 4px;
+}
+.page-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    max-width: 720px;
 }
 
-.form-group label[style*="display:flex"] {
+/* Aviso carregamento */
+.aviso-carregamento {
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-soft);
+    color: var(--brand);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.aviso-carregamento.ativo { display: flex; }
+.aviso-carregamento .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+.aviso-carregamento.carregando .material-symbols-outlined { animation: girar 1.2s linear infinite; }
+
+/* Faixa de status */
+.faixa-status {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gray-400);
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
-    overflow-wrap: anywhere;
+    box-shadow: var(--shadow-sm);
+}
+.faixa-status.ok      { border-left-color: var(--ok); }
+.faixa-status.warn    { border-left-color: var(--warn); }
+.faixa-status.danger  { border-left-color: var(--danger); }
+.faixa-status.info    { border-left-color: var(--brand); }
+
+.faixa-status-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1 1 340px;
+}
+.faixa-icone {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+}
+.faixa-status.ok     .faixa-icone { background: var(--ok-bg);     color: var(--ok); }
+.faixa-status.warn   .faixa-icone { background: var(--warn-bg);   color: var(--warn); }
+.faixa-status.danger .faixa-icone { background: var(--danger-bg); color: var(--danger); }
+.faixa-status.info   .faixa-icone { background: var(--brand-soft); color: var(--brand); }
+.faixa-icone .material-symbols-outlined { font-size: 20px; }
+
+.faixa-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.faixa-label {
+    font-size: 10.5px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: .6px;
+}
+.faixa-titulo { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.25; }
+.faixa-detalhe { font-size: 12.5px; color: var(--text-secondary); }
+.faixa-acoes { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+
+.btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-size: 12.5px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.btn .material-symbols-outlined { font-size: 16px; }
+
+/* KPIs */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+    box-shadow: var(--shadow-sm);
+}
+.kpi-card:hover {
+    border-color: var(--brand);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.kpi-icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-soft);
+    color: var(--brand);
+    flex-shrink: 0;
+}
+.kpi-icone.ok      { background: var(--ok-bg);     color: var(--ok); }
+.kpi-icone.warn    { background: var(--warn-bg);   color: var(--warn); }
+.kpi-icone.danger  { background: var(--danger-bg); color: var(--danger); }
+.kpi-icone.info    { background: var(--info-bg);   color: var(--info); }
+.kpi-icone .material-symbols-outlined { font-size: 22px; }
+
+.kpi-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.kpi-valor {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+.kpi-sub {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    line-height: 1.35;
 }
 
-.btn-cancelar-pagina {
-    background: var(--danger); color: #fff;
-    border-color: var(--danger);
+/* Grid de gráficos */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
 }
-.btn-cancelar-pagina:hover { background: #7f1616; border-color: #7f1616; }
-.btn-salvar-pagina {
-    background: var(--ok); color: #fff;
-    border-color: var(--ok);
+
+.chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
 }
-.btn-salvar-pagina:hover { background: #14532d; border-color: #14532d; }
-.btn-voltar-pagina {
-    background: var(--surface); color: var(--text-secondary);
-    border-color: var(--border-strong);
+.chart-card.full { grid-column: 1 / -1; }
+
+.chart-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
-.btn-voltar-pagina:hover { background: var(--surface-2); color: var(--text); }
+.chart-card-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.chart-card-titulo .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+.chart-card-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.chart-card-body {
+    padding: 16px 18px;
+    flex: 1;
+    position: relative;
+    min-height: 260px;
+}
+.chart-card-body.curto { min-height: 200px; }
+.chart-card-body canvas { max-width: 100%; }
+
+/* Legenda customizada de donut */
+.donut-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 220px;
+}
+.donut-canvas-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+}
+.donut-centro {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.donut-centro-valor {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.donut-centro-label {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-top: 3px;
+    font-weight: 600;
+}
+.donut-legenda {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 20px;
+    min-width: 0;
+}
+.donut-legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+.donut-legenda-cor {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.donut-legenda-valor {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Colunas inferiores */
+.colunas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 20px;
+    align-items: start;
+}
+.coluna { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.card-header {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.card-header-esq { display: flex; align-items: center; gap: 8px; }
+.card-header-esq .material-symbols-outlined { font-size: 16px; color: var(--text-muted); }
+.card-header h2 {
+    font-size: 12.5px; font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.card-body { padding: 16px 18px; }
+.card-body.sem-padding { padding: 0; }
+
+/* Pendências */
+.lista-pendencias { list-style: none; padding: 0; }
+.pendencia-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+    transition: background-color .12s ease;
+}
+.pendencia-item:last-child { border-bottom: none; }
+.pendencia-item:hover { background: var(--surface-2); }
+.pendencia-icone {
+    width: 32px; height: 32px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.pendencia-icone.info   { background: var(--brand-soft); color: var(--brand); }
+.pendencia-icone.warn   { background: var(--warn-bg);   color: var(--warn); }
+.pendencia-icone.danger { background: var(--danger-bg); color: var(--danger); }
+.pendencia-icone.ok     { background: var(--ok-bg);     color: var(--ok); }
+.pendencia-icone .material-symbols-outlined { font-size: 17px; }
+.pendencia-conteudo { flex: 1; min-width: 0; }
+.pendencia-titulo {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    line-height: 1.3; margin-bottom: 3px; display: block;
+}
+.pendencia-descricao {
+    font-size: 12.5px; color: var(--text-secondary); display: block;
+}
+.pendencia-cta {
+    color: var(--brand); text-decoration: none; font-weight: 500;
+    font-size: 12.5px; display: inline-flex; align-items: center;
+    gap: 3px; margin-top: 6px;
+}
+.pendencia-cta .material-symbols-outlined { font-size: 14px; }
+
+.vazio {
+    padding: 40px 20px; text-align: center;
+    color: var(--text-muted); font-size: 13px;
+}
+.vazio .material-symbols-outlined {
+    font-size: 32px; color: var(--ok);
+    background: var(--ok-bg); border: 1px solid var(--ok-bd);
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+}
+.vazio strong {
+    font-size: 13.5px; color: var(--text);
+    font-weight: 600; display: block; margin-bottom: 2px;
+}
+
+/* Módulos */
+.modulos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+.modulo-card {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none; color: inherit;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+.modulo-card:hover { border-color: var(--brand); background: var(--brand-soft); }
+.modulo-icone {
+    width: 36px; height: 36px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface-3); color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: background-color .15s ease, color .15s ease;
+}
+.modulo-card:hover .modulo-icone { background: var(--brand); color: var(--brand-contrast); }
+.modulo-icone .material-symbols-outlined { font-size: 19px; }
+.modulo-texto { min-width: 0; flex: 1; }
+.modulo-titulo {
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text); margin-bottom: 3px; display: block;
+}
+.modulo-descricao {
+    font-size: 12px; color: var(--text-secondary); display: block;
+}
+
+/* Tabela pequena */
+.tabela-wrapper { width: 100%; overflow-x: auto; }
+.tabela {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; min-width: 300px;
+}
+.tabela th {
+    background: var(--surface-2); padding: 10px 14px;
+    text-align: left; font-weight: 600;
+    color: var(--text-secondary); border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: .5px; white-space: nowrap;
+}
+.tabela td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+.tabela tbody tr:last-child td { border-bottom: none; }
+.tabela tbody tr:hover td { background: var(--surface-2); }
+.tabela-vazia {
+    text-align: center; color: var(--text-muted);
+    padding: 32px 16px !important;
+}
+.tabela-cta {
+    color: var(--brand); text-decoration: none; font-weight: 500;
+}
+.tabela-cta:hover { text-decoration: underline; }
+
+/* Timeline */
+.linha-tempo { list-style: none; padding: 4px 18px 12px; }
+.linha-tempo-item {
+    position: relative;
+    padding: 10px 0 10px 18px;
+    border-left: 1px solid var(--border);
+    margin-left: 4px;
+}
+.linha-tempo-item:last-child { border-left-color: transparent; }
+.linha-tempo-item::before {
+    content: ""; position: absolute;
+    left: -4.5px; top: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--gray-400);
+    box-sizing: border-box;
+}
+.linha-tempo-item.ok::before     { border-color: var(--ok); }
+.linha-tempo-item.warn::before   { border-color: var(--warn); }
+.linha-tempo-item.danger::before { border-color: var(--danger); }
+.linha-tempo-item.info::before   { border-color: var(--brand); }
+.linha-tempo-titulo {
+    font-size: 13px; font-weight: 600;
+    color: var(--text); margin-bottom: 2px;
+}
+.linha-tempo-descricao {
+    font-size: 12px; color: var(--text-secondary); margin-bottom: 3px;
+}
+.linha-tempo-meta {
+    font-size: 11px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px;
+}
+.linha-tempo-meta .material-symbols-outlined { font-size: 12px; }
+
+/* Cache badge */
+.cache-info {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; color: var(--text-muted);
+    padding: 3px 8px; border-radius: 999px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    font-weight: 500;
+}
+.cache-info .material-symbols-outlined { font-size: 13px; }
+.cache-info.fresco  { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-bd); }
+.cache-info.aviso   { background: var(--brand-soft); color: var(--brand); border-color: var(--brand-soft); }
 
 /* ============================================================
    RESPONSIVO
    ============================================================ */
+@media (max-width: 1200px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-card.full { grid-column: auto; }
+}
+
+@media (max-width: 1100px) {
+    .colunas { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 900px) {
     .sidebar {
         position: fixed; top: 0; left: 0;
@@ -1356,94 +1387,29 @@ tbody tr:hover td { background: var(--surface-2); }
     .rede-indicador { padding: 0 6px; }
 
     .content-page { padding: 20px; }
-    .bloco { padding: 18px; }
-    .form-body { padding: 20px 18px; }
-    .card-header { padding: 16px 18px; }
-    .form-grid { gap: 16px 18px; }
-    .escola-extra { padding: 14px; gap: 16px 18px; }
-    .form-footer { padding: 14px 18px; }
-    .mensagem { margin: 0 0 16px; }
-}
-
-@media (max-width: 700px) {
-    .content-page { padding: 16px 12px 32px; }
-    .page-header-page { flex-direction: column; align-items: stretch; }
-
-    .form-body { padding: 18px 14px; }
-    .card-header { padding: 14px 16px; }
-    .card-title { font-size: 14.5px; }
-    .card-description { font-size: 12px; }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    .form-group.full { grid-column: 1; }
-    .form-section-title {
-        grid-column: 1;
-        font-size: 13.5px;
-        margin-bottom: 0;
-    }
-    .escola-extra {
-        grid-template-columns: 1fr;
-        padding: 14px 12px;
-        gap: 14px;
-    }
-    .dias-ferias-wrapper {
-        grid-template-columns: 1fr;
-        padding: 12px;
-        gap: 10px;
-    }
-    .dias-ferias-hint { padding-top: 0; }
-
-    .form-footer {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-        padding: 16px 14px;
-    }
-    .footer-info { text-align: center; }
-    .footer-buttons {
-        display: grid;
-        grid-template-columns: 1fr;
-        width: 100%;
-        gap: 8px;
-    }
-    .footer-buttons button { width: 100%; }
-
-    .modal-overlay { padding: 0; align-items: flex-end; }
-    .modal-box {
-        max-width: 100%; max-height: 92vh;
-        border-radius: 12px 12px 0 0;
-    }
-    .modal-footer { flex-direction: column-reverse; }
-    .modal-footer button { width: 100%; }
+    .page-header h1 { font-size: 21px; }
 }
 
 @media (max-width: 640px) {
+    .content-page { padding: 16px 12px 32px; }
+    .page-header h1 { font-size: 19px; }
+    .faixa-status { padding: 12px 14px; }
+    .faixa-acoes { width: 100%; }
+    .faixa-acoes .btn { flex: 1; min-width: 0; }
     .topbar { padding: 0 12px; gap: 8px; }
     .topbar-btn { padding: 0 8px; height: 32px; }
     .topbar-user { display: none; }
     .topbar-right { gap: 4px; }
     .rede-indicador { display: none; }
-    .page-header-page h1 { font-size: 20px; }
-    .page-header-page p { font-size: 12.5px; }
-    .bloco-titulo { font-size: 14px; }
-    .bloco-subtitulo { font-size: 12px; }
+    .modulos-grid { grid-template-columns: 1fr; }
+    .card-header { padding: 10px 14px; }
+    .card-body { padding: 14px; }
+    .pendencia-item { padding: 12px 14px; }
+    .kpi-valor { font-size: 20px; }
+    .donut-wrapper { flex-direction: column; gap: 16px; }
+    .donut-legenda { margin-left: 0; width: 100%; }
 }
 
-@media (max-width: 400px) {
-    .form-body { padding: 16px 12px; }
-    .card-header { padding: 12px 14px; gap: 10px; }
-    .card-icon { width: 34px; height: 34px; }
-    .card-icon .material-symbols-outlined { font-size: 20px; }
-    .dias-ferias-hint { font-size: 11.5px; }
-    .btn-link-adicionar { font-size: 12.5px; }
-}
-
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1453,24 +1419,17 @@ tbody tr:hover td { background: var(--surface-2); }
     }
 }
 
-/* ============================================================
-   IMPRESSÃO
-   ============================================================ */
 @media print {
     @page { margin: 1.5cm; }
     body { background: #fff !important; color: #000 !important; overflow: visible !important; }
     .layout { display: block; height: auto; overflow: visible; }
     .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
-    .topbar-sair, .modal-sair-overlay, .modal-overlay, .rede-indicador,
-    .btn-abrir-modal, .bloco-acoes, .form-footer { display: none !important; }
+    .topbar-sair, .modal-sair-overlay, .modal-overlay, .rede-indicador { display: none !important; }
     .main { overflow: visible; }
     .content-page { overflow: visible; padding: 0; }
-    .form-card, .table-card { box-shadow: none; border: 1px solid #999; }
-    .bloco { border-bottom: 1px solid #999; }
-    table { font-size: 9pt; min-width: 0; }
-    th, td { border-color: #999; }
-    thead { display: table-header-group; }
-    tr { page-break-inside: avoid; }
+    .card, .faixa-status, .chart-card, .kpi-card { box-shadow: none !important; border: 1px solid #999; page-break-inside: avoid; }
+    .modulo-card { border: 1px solid #999; background: #fff !important; }
+    .page-header h1 { font-family: Georgia, serif; }
 }
 </style>
 </head>
@@ -1500,15 +1459,14 @@ tbody tr:hover td { background: var(--surface-2); }
                 <nav class="menu-section">
                     <div class="menu-section-title">Principal</div>
                     <ul class="menu">
-                        <li class="menu-item">
-                            <a href="inicial.html">
+                        <li class="menu-item ativo">
+                            <a href="inicial.html" aria-current="page">
                                 <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
                                 <span>Painel de controle</span>
                             </a>
                         </li>
-                        <!-- ▼ ATIVO NESTA PÁGINA -->
-                        <li class="menu-item ativo">
-                            <a href="servidores.html" aria-current="page">
+                        <li class="menu-item">
+                            <a href="servidores.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">badge</span>
                                 <span>Servidores e vínculos</span>
                             </a>
@@ -1519,14 +1477,12 @@ tbody tr:hover td { background: var(--surface-2); }
                 <nav class="menu-section">
                     <div class="menu-section-title">Configuração</div>
                     <ul class="menu">
-                        <!-- ▼ ATIVO apenas quando estiver em configuracao.html (auto-detectado via JS) -->
                         <li class="menu-item" id="menuItemConfigurarPeriodos">
                             <a href="configuracao.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                                 <span>Configurar Períodos</span>
                             </a>
 
-                            <!-- Submenu de âncoras apontando para seções da configuracao.html -->
                             <ul class="submenu">
                                 <li class="submenu-item">
                                     <a href="configuracao.html#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
@@ -1633,8 +1589,8 @@ tbody tr:hover td { background: var(--surface-2); }
                 </button>
 
                 <div class="topbar-title">
-                    <strong>Servidores</strong>
-                    <span>SEMED — Novo cadastro</span>
+                    <strong>Painel de Controle</strong>
+                    <span>SEMED — Painel de Controle</span>
                 </div>
             </div>
 
@@ -1677,358 +1633,336 @@ tbody tr:hover td { background: var(--surface-2); }
              CONTEÚDO DA PÁGINA
              ═══════════════════════════════════════════════════════ -->
         <div class="content-page">
+            <div class="content-inner">
 
-            <div class="breadcrumb">
-                <span class="material-symbols-outlined">home</span>
-                <a href="inicial.html">Início</a>
-                <span class="sep">/</span>
-                <a href="servidores.html">Servidores</a>
-                <span class="sep">/</span>
-                <span id="breadcrumbAtual">Novo Cadastro</span>
-            </div>
-
-            <div class="page-header-page">
-                <div>
-                    <h1 id="tituloPagina">Novo cadastro</h1>
-                    <p id="subtituloPagina">Adicione novo servidor no sistema.</p>
-                </div>
-            </div>
-
-            <section class="form-card">
-
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-symbols-outlined" id="iconeCard">person_add</span>
-                    </div>
-                    <div>
-                        <div class="card-title" id="tituloCard">Dados do servidor</div>
-                        <div class="card-description">Informe os dados cadastrais abaixo.</div>
-                    </div>
+                <div class="aviso-carregamento" id="avisoCarregamento" role="status" aria-live="polite">
+                    <span class="material-symbols-outlined" id="avisoIcone">sync</span>
+                    <span id="avisoTexto">Carregando informações…</span>
                 </div>
 
-                <form class="form" id="formServidor" onsubmit="salvarServidor(event)">
+                <div class="breadcrumb">
+                    <span class="material-symbols-outlined">home</span>
+                    <a href="inicial.html">Início</a>
+                </div>
 
-                    <div class="form-body">
-                        <div class="form-grid">
+                <div class="page-header">
+                    <h1>Painel de controle</h1>
+                    <p>
+                        Visão analítica consolidada do sistema. Acompanhe indicadores, distribuição de servidores,
+                        situação dos vínculos e movimentação mensal.
+                    </p>
+                </div>
 
-                            <div class="form-section-title">Dados Pessoais e Contato</div>
+                <!-- Faixa de status -->
+                <div class="faixa-status info" id="faixaStatus" role="status" aria-live="polite">
+                    <div class="faixa-status-info">
+                        <div class="faixa-icone" aria-hidden="true">
+                            <span class="material-symbols-outlined" id="faixaIcone">schedule</span>
+                        </div>
+                        <div class="faixa-texto">
+                            <span class="faixa-label">Mês corrente</span>
+                            <span class="faixa-titulo" id="faixaTitulo">—</span>
+                            <span class="faixa-detalhe" id="faixaDetalhe">Carregando informações…</span>
+                        </div>
+                    </div>
+                    <div class="faixa-acoes">
+                        <a href="configuracao.html" class="btn btn-secundario">
+                            <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                            Configurar mês
+                        </a>
+                        <a href="calculo.html" class="btn btn-primario">
+                            <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                            Fechar cálculo
+                        </a>
+                    </div>
+                </div>
 
-                            <div class="form-group full">
-                                <label for="nome">Nome completo <span>*</span></label>
-                                <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" autocomplete="name" required>
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <a href="servidores.html" class="kpi-card">
+                        <div class="kpi-icone">
+                            <span class="material-symbols-outlined">badge</span>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Servidores</span>
+                            <span class="kpi-valor" id="kpiServidores">—</span>
+                            <span class="kpi-sub" id="kpiServidoresSub">cadastrados no sistema</span>
+                        </div>
+                    </a>
+
+                    <a href="configuracao.html" class="kpi-card">
+                        <div class="kpi-icone info">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Meses</span>
+                            <span class="kpi-valor" id="kpiMeses">—</span>
+                            <span class="kpi-sub" id="kpiMesesSub">configurados</span>
+                        </div>
+                    </a>
+
+                    <a href="escola.html" class="kpi-card">
+                        <div class="kpi-icone ok">
+                            <span class="material-symbols-outlined">school</span>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Escolas</span>
+                            <span class="kpi-valor" id="kpiEscolas">—</span>
+                            <span class="kpi-sub" id="kpiEscolasSub">unidades com lotação</span>
+                        </div>
+                    </a>
+
+                    <a href="linha_tempo.html" class="kpi-card">
+                        <div class="kpi-icone warn">
+                            <span class="material-symbols-outlined">event_note</span>
+                        </div>
+                        <div class="kpi-info">
+                            <span class="kpi-label">Férias</span>
+                            <span class="kpi-valor" id="kpiFerias">—</span>
+                            <span class="kpi-sub" id="kpiFeriasSub">pendências</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Grid de gráficos -->
+                <div class="charts-grid">
+
+                    <!-- 1. Donut — Status dos meses -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div class="chart-card-titulo">
+                                <span class="material-symbols-outlined">pie_chart</span>
+                                Status dos meses
                             </div>
-
-                            <div class="form-group">
-                                <label for="cpf">CPF <span>*</span></label>
-                                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="off" required oninput="formatarCPF(this)" onblur="verificarCpfDuplicado(this)">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="email">E-mail <span>*</span></label>
-                                <input type="email" id="email" name="email" placeholder="servidor@exemplo.com" autocomplete="email" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dataNascimento">Data de nascimento <span>*</span></label>
-                                <input type="date" id="dataNascimento" name="dataNascimento" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="telefone">Telefone para contato <span>*</span></label>
-                                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" autocomplete="tel" required oninput="formatarTelefone(this)">
-                            </div>
-
-                            <div class="form-section-title">Endereço Residencial</div>
-
-                            <div class="form-group">
-                                <label for="cep">CEP <span>*</span></label>
-                                <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric" required oninput="formatarCEP(this)" onblur="buscarCEP(this)">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="bairro">Bairro <span>*</span></label>
-                                <input type="text" id="bairro" name="bairro" placeholder="Digite o bairro" required>
-                            </div>
-
-                            <div class="form-group full">
-                                <label for="logradouro">Logradouro (Rua, Av.) <span>*</span></label>
-                                <input type="text" id="logradouro" name="logradouro" placeholder="Digite o logradouro" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="numero">Número <span>*</span></label>
-                                <input type="text" id="numero" name="numero" placeholder="Ex: 123, S/N" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="complemento">Complemento</label>
-                                <input type="text" id="complemento" name="complemento" placeholder="Apto, Bloco, etc.">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="cidade">Cidade <span>*</span></label>
-                                <input type="text" id="cidade" name="cidade" placeholder="Digite a cidade" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="uf">UF <span>*</span></label>
-                                <input type="text" id="uf" name="uf" placeholder="Ex: MG" maxlength="2" required>
-                            </div>
-
-                            <div class="form-section-title">Matrícula 1 (Cargo Principal)</div>
-
-                            <div class="form-group">
-                                <label for="vinculo1">Vínculo 1 <span>*</span></label>
-                                <select id="vinculo1" name="vinculo1" required>
-                                    <option value="">Selecione o vínculo</option>
-                                    <option value="Efetivo">Efetivo</option>
-                                    <option value="Contratado">Contratado</option>
-                                    <option value="Comissionado">Comissionado</option>
-                                    <option value="Estagiário">Estagiário</option>
-                                    <option value="Terceirizado">Terceirizado</option>
-                                    <option value="Emop">Emop</option>
-                                    <option value="Maxwell">Maxwell</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="numeroMatricula1">Nº da Matrícula 1 <span>*</span></label>
-                                <input type="text" id="numeroMatricula1" name="numeroMatricula1" placeholder="Ex: 12345" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="cargo1">Cargo / Função (Matrícula 1) <span>*</span></label>
-                                <input type="text" id="cargo1" name="cargo1" placeholder="Digite o cargo" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="dataAdmissao1">Data de Admissão (Matrícula 1) <span>*</span></label>
-                                <input type="date" id="dataAdmissao1" name="dataAdmissao1" required>
-                            </div>
-
-                            <div class="dias-ferias-wrapper">
-                                <div class="dias-ferias-input">
-                                    <label for="diasFerias1" style="font-size:12px;">Dias de Férias / Período</label>
-                                    <input type="number" id="diasFerias1" name="diasFerias1" placeholder="30" min="1" max="60" inputmode="numeric" oninput="atualizarCorCampo(this)">
-                                </div>
-                                <div class="dias-ferias-hint">
-                                    <strong><span class="material-symbols-outlined">info</span> Direito de férias por período aquisitivo</strong>
-                                    <span>Preencha com o número de dias que este vínculo tem direito. <b>Se vazio, o sistema usa <code>30 dias</code> como padrão</b>.</span>
-                                    <span style="font-size:11px; color:var(--text-secondary);">Exemplos: <code>30</code> (administrativo), <code>45</code> (professor), <code>60</code> (casos especiais)</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group full">
-                                <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
-                                <select id="escola1_m1" name="escola1_m1" required>
-                                    <option value="">Selecione a escola</option>
-                                    <option value="CEAE">CEAE</option>
-                                    <option value="CETEPE">CETEPE</option>
-                                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="empresa1_m1">Concessionária (Linha de Ônibus) <span>*</span></label>
-                                <select id="empresa1_m1" name="empresa1_m1" required>
-                                    <option value="">Selecione a empresa</option>
-                                    <option value="Trancid">Trancid</option>
-                                    <option value="Transpratur">Transpratur</option>
-                                    <option value="Exdil">Exdil</option>
-                                    <option value="Teixeira">Teixeira</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="qtdPassagens1_m1">Passes Diários <span>*</span></label>
-                                <input type="number" id="qtdPassagens1_m1" name="qtdPassagens1_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" required oninput="atualizarCorCampo(this)">
-                            </div>
-
-                            <button type="button" id="btnToggleEscola1" class="btn-link-adicionar" onclick="toggleEscolaExtra(1)">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
-                                Adicionar segunda escola / lotação para esta matrícula
-                            </button>
-
-                            <div id="escolaExtra1" class="escola-extra">
-                                <div class="form-group full">
-                                    <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
-                                    <select id="escola2_m1" name="escola2_m1">
-                                        <option value="">Selecione a segunda escola</option>
-                                        <option value="CEAE">CEAE</option>
-                                        <option value="CETEPE">CETEPE</option>
-                                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="empresa_escola2_m1">Concessionária (Escola 2)</label>
-                                    <select id="empresa_escola2_m1" name="empresa_escola2_m1">
-                                        <option value="">Selecione a empresa</option>
-                                        <option value="Trancid">Trancid</option>
-                                        <option value="Transpratur">Transpratur</option>
-                                        <option value="Exdil">Exdil</option>
-                                        <option value="Teixeira">Teixeira</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="qtdPassagens_escola2_m1">Passes Diários (Escola 2)</label>
-                                    <input type="number" id="qtdPassagens_escola2_m1" name="qtdPassagens_escola2_m1" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric" oninput="atualizarCorCampo(this)">
-                                </div>
-                            </div>
-
-                            <div class="form-group full" style="margin-top: 10px;">
-                                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; font-weight:600; color:var(--brand);">
-                                    <input type="checkbox" id="possuiSegundoVinculo" onchange="toggleSegundoVinculo()" style="width:20px; height:20px; accent-color:var(--brand); cursor:pointer;">
-                                    <span>Este servidor possui segunda matrícula?</span>
-                                </label>
-                            </div>
-
-                            <div id="blocoSegundoVinculo" class="bloco-segundo-vinculo">
-
-                                <div class="form-section-title">Matrícula 2 (Segunda Matrícula)</div>
-
-                                <div class="form-group">
-                                    <label for="vinculo2">Vínculo 2 <span>*</span></label>
-                                    <select id="vinculo2" name="vinculo2">
-                                        <option value="">Selecione o vínculo</option>
-                                        <option value="Efetivo">Efetivo</option>
-                                        <option value="Contratado">Contratado</option>
-                                        <option value="Comissionado">Comissionado</option>
-                                        <option value="Estagiário">Estagiário</option>
-                                        <option value="Terceirizado">Terceirizado</option>
-                                        <option value="Emop">Emop</option>
-                                        <option value="Maxwell">Maxwell</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="numeroMatricula2">Nº da Matrícula 2 <span>*</span></label>
-                                    <input type="text" id="numeroMatricula2" name="numeroMatricula2" placeholder="Ex: 67890">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="cargo2">Cargo / Função (Matrícula 2) <span>*</span></label>
-                                    <input type="text" id="cargo2" name="cargo2" placeholder="Digite o cargo">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="dataAdmissao2">Data de Admissão (Matrícula 2) <span>*</span></label>
-                                    <input type="date" id="dataAdmissao2" name="dataAdmissao2">
-                                </div>
-
-                                <div class="dias-ferias-wrapper">
-                                    <div class="dias-ferias-input">
-                                        <label for="diasFerias2" style="font-size:12px;">Dias de Férias / Período</label>
-                                        <input type="number" id="diasFerias2" name="diasFerias2" placeholder="30" min="1" max="60" inputmode="numeric" oninput="atualizarCorCampo(this)">
-                                    </div>
-                                    <div class="dias-ferias-hint">
-                                        <strong><span class="material-symbols-outlined">info</span> Direito de férias por período aquisitivo</strong>
-                                        <span>Preencha com o número de dias que este vínculo tem direito. <b>Se vazio, o sistema usa <code>30 dias</code> como padrão</b>.</span>
-                                        <span style="font-size:11px; color:var(--text-secondary);">Exemplos: <code>30</code> (administrativo), <code>45</code> (professor), <code>60</code> (casos especiais)</span>
+                            <span class="chart-card-sub" id="subStatusMeses">—</span>
+                        </div>
+                        <div class="chart-card-body">
+                            <div class="donut-wrapper">
+                                <div class="donut-canvas-wrapper">
+                                    <canvas id="chartStatusMeses"></canvas>
+                                    <div class="donut-centro">
+                                        <span class="donut-centro-valor" id="donutTotalMeses">—</span>
+                                        <span class="donut-centro-label">Total</span>
                                     </div>
                                 </div>
-
-                                <div class="form-group full">
-                                    <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
-                                    <select id="escola1_m2" name="escola1_m2">
-                                        <option value="">Selecione a escola</option>
-                                        <option value="CEAE">CEAE</option>
-                                        <option value="CETEPE">CETEPE</option>
-                                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="empresa1_m2">Concessionária (Linha de Ônibus) <span>*</span></label>
-                                    <select id="empresa1_m2" name="empresa1_m2">
-                                        <option value="">Selecione a empresa</option>
-                                        <option value="Trancid">Trancid</option>
-                                        <option value="Transpratur">Transpratur</option>
-                                        <option value="Exdil">Exdil</option>
-                                        <option value="Teixeira">Teixeira</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="qtdPassagens1_m2">Passes Diários <span>*</span></label>
-                                    <input type="number" id="qtdPassagens1_m2" name="qtdPassagens1_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric">
-                                </div>
-
-                                <button type="button" id="btnToggleEscola2" class="btn-link-adicionar" onclick="toggleEscolaExtra(2)">
-                                    <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
-                                    Adicionar segunda escola / lotação para esta matrícula
-                                </button>
-
-                                <div id="escolaExtra2" class="escola-extra">
-                                    <div class="form-group full">
-                                        <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
-                                        <select id="escola2_m2" name="escola2_m2">
-                                            <option value="">Selecione a segunda escola</option>
-                                            <option value="CEAE">CEAE</option>
-                                            <option value="CETEPE">CETEPE</option>
-                                            <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                            <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                            <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="empresa_escola2_m2">Concessionária (Escola 2)</label>
-                                        <select id="empresa_escola2_m2" name="empresa_escola2_m2">
-                                            <option value="">Selecione a empresa</option>
-                                            <option value="Trancid">Trancid</option>
-                                            <option value="Transpratur">Transpratur</option>
-                                            <option value="Exdil">Exdil</option>
-                                            <option value="Teixeira">Teixeira</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="qtdPassagens_escola2_m2">Passes Diários (Escola 2)</label>
-                                        <input type="number" id="qtdPassagens_escola2_m2" name="qtdPassagens_escola2_m2" placeholder="Ex: 2 ou 4" min="0" inputmode="numeric">
-                                    </div>
-                                </div>
-
+                                <div class="donut-legenda" id="legendaStatusMeses"></div>
                             </div>
-
                         </div>
                     </div>
 
-                    <div id="mensagem" class="mensagem" style="margin: 0 24px 20px;"></div>
-
-                    <div class="form-footer">
-                        <div class="footer-info">
-                            <span style="color:var(--danger);">*</span> Campos obrigatórios
+                    <!-- 2. Barras horizontais — Servidores por unidade -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div class="chart-card-titulo">
+                                <span class="material-symbols-outlined">school</span>
+                                Servidores por unidade
+                            </div>
+                            <span class="chart-card-sub" id="subServidoresEscola">—</span>
                         </div>
-
-                        <div class="footer-buttons">
-                            <button type="button" class="btn-voltar-pagina" onclick="voltarParaServidores()">
-                                <span class="material-symbols-outlined">arrow_back</span>
-                                Voltar
-                            </button>
-
-                            <button type="submit" id="btnSalvar" class="btn-salvar-pagina">
-                                <span class="material-symbols-outlined" id="iconeSalvar">save</span>
-                                <span id="textoBotao">Salvar</span>
-                            </button>
-
-                            <button type="button" class="btn-cancelar-pagina" onclick="cancelar()">
-                                Cancelar
-                            </button>
+                        <div class="chart-card-body">
+                            <canvas id="chartServidoresEscola"></canvas>
                         </div>
                     </div>
 
-                </form>
+                    <!-- 3. Barras verticais — Vínculos por tipo -->
+                    <div class="chart-card">
+                        <div class="chart-card-titulo" style="padding:14px 18px; border-bottom:1px solid var(--border); background:var(--surface-2); display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px;">
+                            <span class="material-symbols-outlined" style="font-size:16px; color:var(--text-muted);">badge</span>
+                            Vínculos por tipo
+                        </div>
+                        <div class="chart-card-body curto">
+                            <canvas id="chartVinculos"></canvas>
+                        </div>
+                    </div>
 
-            </section>
+                    <!-- 4. Linha — Dias úteis por mês -->
+                    <div class="chart-card">
+                        <div class="chart-card-titulo" style="padding:14px 18px; border-bottom:1px solid var(--border); background:var(--surface-2); display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px;">
+                            <span class="material-symbols-outlined" style="font-size:16px; color:var(--text-muted);">trending_up</span>
+                            Dias úteis por mês
+                        </div>
+                        <div class="chart-card-body curto">
+                            <canvas id="chartDiasUteis"></canvas>
+                        </div>
+                    </div>
 
+                    <!-- 5. Donut — Férias: prazo vs vencidas -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div class="chart-card-titulo">
+                                <span class="material-symbols-outlined">event_note</span>
+                                Situação das férias
+                            </div>
+                            <span class="chart-card-sub" id="subFerias">—</span>
+                        </div>
+                        <div class="chart-card-body">
+                            <div class="donut-wrapper">
+                                <div class="donut-canvas-wrapper">
+                                    <canvas id="chartFerias"></canvas>
+                                    <div class="donut-centro">
+                                        <span class="donut-centro-valor" id="donutTotalFerias">—</span>
+                                        <span class="donut-centro-label">Pendências</span>
+                                    </div>
+                                </div>
+                                <div class="donut-legenda" id="legendaFerias"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Barras horizontais — Ocorrências por tipo -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div class="chart-card-titulo">
+                                <span class="material-symbols-outlined">insights</span>
+                                Ocorrências por tipo
+                            </div>
+                            <span class="chart-card-sub" id="subOcorrencias">—</span>
+                        </div>
+                        <div class="chart-card-body">
+                            <canvas id="chartOcorrencias"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Colunas inferiores -->
+                <div class="colunas">
+
+                    <div class="coluna">
+
+                        <!-- Pendências -->
+                        <section class="card" aria-labelledby="pendTitulo">
+                            <header class="card-header">
+                                <div class="card-header-esq">
+                                    <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                                    <h2 id="pendTitulo">Pendências identificadas</h2>
+                                </div>
+                                <span class="badge badge-neutro" id="pendContador">—</span>
+                            </header>
+
+                            <ul class="lista-pendencias" id="listaPendencias">
+                                <li class="vazio">
+                                    <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                                    Carregando pendências…
+                                </li>
+                            </ul>
+                        </section>
+
+                        <!-- Módulos -->
+                        <section class="card" aria-labelledby="modTitulo">
+                            <header class="card-header">
+                                <div class="card-header-esq">
+                                    <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+                                    <h2 id="modTitulo">Módulos do sistema</h2>
+                                </div>
+                            </header>
+
+                            <div class="card-body">
+                                <div class="modulos-grid">
+                                    <a href="servidores.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">badge</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Servidores e vínculos</span>
+                                            <span class="modulo-descricao">Cadastro, lotações e linhas de transporte</span>
+                                        </span>
+                                    </a>
+
+                                    <a href="configuracao.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">calendar_month</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Dias úteis e meses</span>
+                                            <span class="modulo-descricao">Calendário oficial e período de lançamento</span>
+                                        </span>
+                                    </a>
+
+                                    <a href="escola.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">edit_note</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Lançamentos da unidade</span>
+                                            <span class="modulo-descricao">Faltas e afastamentos por escola</span>
+                                        </span>
+                                    </a>
+
+                                    <a href="linha_tempo.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">event_note</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Férias, folgas e licenças</span>
+                                            <span class="modulo-descricao">Histórico por período aquisitivo</span>
+                                        </span>
+                                    </a>
+
+                                    <a href="calculo.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">calculate</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Cálculo e vales</span>
+                                            <span class="modulo-descricao">Fechamento financeiro mensal</span>
+                                        </span>
+                                    </a>
+
+                                    <a href="relatorios.html" class="modulo-card">
+                                        <span class="modulo-icone"><span class="material-symbols-outlined">description</span></span>
+                                        <span class="modulo-texto">
+                                            <span class="modulo-titulo">Relatórios gerais</span>
+                                            <span class="modulo-descricao">Exportação de consolidados e listagens</span>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <div class="coluna">
+
+                        <!-- Últimos meses -->
+                        <section class="card" aria-labelledby="ultimosTitulo">
+                            <header class="card-header">
+                                <div class="card-header-esq">
+                                    <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                                    <h2 id="ultimosTitulo">Últimos meses</h2>
+                                </div>
+                                <a href="configuracao.html" class="btn btn-texto">Ver todos</a>
+                            </header>
+
+                            <div class="card-body sem-padding">
+                                <div class="tabela-wrapper">
+                                    <table class="tabela" aria-label="Últimos meses configurados">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Mês</th>
+                                                <th scope="col">Dias</th>
+                                                <th scope="col">Situação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabelaUltimosMeses">
+                                            <tr><td colspan="3" class="tabela-vazia">Carregando…</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Atividade recente -->
+                        <section class="card" aria-labelledby="ativTitulo">
+                            <header class="card-header">
+                                <div class="card-header-esq">
+                                    <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                                    <h2 id="ativTitulo">Atividade recente</h2>
+                                </div>
+                            </header>
+
+                            <ul class="linha-tempo" id="linhaTempo">
+                                <li class="linha-tempo-item info">
+                                    <div class="linha-tempo-titulo">Carregando…</div>
+                                </li>
+                            </ul>
+                        </section>
+
+                    </div>
+
+                </div>
+
+            </div>
         </div>
         <!-- ▲▲▲ FIM DO CONTEÚDO DA PÁGINA ▲▲▲ -->
 
@@ -2044,42 +1978,16 @@ tbody tr:hover td { background: var(--surface-2); }
         <div class="modal-sair-icone" aria-hidden="true">
             <span class="material-symbols-outlined" id="modalSairIconeSimbolo">logout</span>
         </div>
+
         <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
+
         <div class="modal-sair-acoes">
-            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">Cancelar</button>
+            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">
+                Cancelar
+            </button>
             <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
                 <span class="material-symbols-outlined" aria-hidden="true">logout</span>
                 Sim, sair
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     MODAL DE CONFIRMAÇÃO (específico desta página)
-     ═══════════════════════════════════════════════════════════ -->
-<div id="modalConfirm" class="modal-overlay">
-    <div class="modal-box" style="max-width: 420px;">
-        <div class="modal-header" style="background: var(--warn-bg); border-bottom-color: var(--warn-bd);">
-            <div class="reabertura-title">
-                <span class="material-symbols-outlined" id="modalConfirmIconeSimbolo">warning</span>
-                <span id="modalConfirmTitulo">Atenção</span>
-            </div>
-            <button type="button" class="modal-fechar" id="btnModalConfirmFechar" aria-label="Fechar">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <p id="modalConfirmMensagem" style="font-size:13.5px; color:var(--text-secondary); line-height:1.6; white-space:pre-line; text-align:center;"></p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="modal-btn-cancelar" id="btnModalCancelar">
-                <span class="material-symbols-outlined">close</span>
-                Cancelar
-            </button>
-            <button type="button" class="modal-btn-confirmar" id="btnModalConfirmar">
-                <span class="material-symbols-outlined">check</span>
-                Confirmar
             </button>
         </div>
     </div>
@@ -2095,13 +2003,10 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* ============================================================
-   AUTO-DETECÇÃO DO ITEM ATIVO "CONFIGURAR PERÍODOS"
-   ============================================================ */
+/* AUTO-DETECÇÃO DO ITEM ATIVO "CONFIGURAR PERÍODOS" */
 (function () {
     var item = document.getElementById('menuItemConfigurarPeriodos');
     if (!item) return;
-
     var path = (window.location.pathname.split('/').pop() || '').toLowerCase();
     if (path === 'configuracao.html' || path === '') {
         item.classList.add('ativo');
@@ -2110,9 +2015,7 @@ import {
     }
 })();
 
-/* ============================================================
-   TEMA CLARO / ESCURO
-   ============================================================ */
+/* TEMA CLARO / ESCURO */
 (function () {
     var btn = document.getElementById('btnTema');
     if (btn) {
@@ -2123,13 +2026,16 @@ import {
             var meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
             try { localStorage.setItem('tema-vt', novo); } catch (e) {}
+
+            /* Re-renderiza os gráficos com as cores novas */
+            if (typeof window.redesenharGraficos === 'function') {
+                setTimeout(window.redesenharGraficos, 60);
+            }
         });
     }
 })();
 
-/* ============================================================
-   MENU LATERAL
-   ============================================================ */
+/* MENU LATERAL */
 (function () {
     var sidebar   = document.getElementById('sidebarMenu');
     var backdrop  = document.getElementById('sidebarBackdrop');
@@ -2209,9 +2115,7 @@ import {
     }
 })();
 
-/* ============================================================
-   AUTENTICAÇÃO
-   ============================================================ */
+/* AUTENTICAÇÃO */
 onAuthStateChanged(auth, function (user) {
     if (user) {
         var email = user.email || '';
@@ -2231,9 +2135,7 @@ onAuthStateChanged(auth, function (user) {
     }
 });
 
-/* ============================================================
-   MODAL DE SAIR
-   ============================================================ */
+/* MODAL DE SAIR */
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -2284,9 +2186,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     if (e.target === this) fecharModalSair();
 });
 
-/* ============================================================
-   BOTÃO ATUALIZAR
-   ============================================================ */
+/* BOTÃO ATUALIZAR (cache + reload) */
 (function () {
     var btnAtualizar = document.getElementById('btnAtualizar');
     if (!btnAtualizar) return;
@@ -2425,661 +2325,1073 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
-     SCRIPTS ESPECÍFICOS DA PÁGINA cadastro.html
+     SCRIPTS ESPECÍFICOS DA PÁGINA inicial.html (Dashboard)
      ═══════════════════════════════════════════════════════════ -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-
 <script type="module">
-
-import { db } from "./firebase.js";
-
+import { db, auth } from "./firebase.js";
 import {
-  collection,
-  addDoc,
-  doc,
-  getDoc,
-  updateDoc,
-  deleteField,
-  getDocs,
-  query,
-  where,
-  limit
+    collection,
+    getDocs,
+    getDoc,
+    doc,
+    setDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-import { marcarCacheInvalido } from "./cache.js";
+const CACHE_KEY      = 'cache-painel-dados-v1';
+const CACHE_VERSAO   = 'cache-painel-versao';
+const CACHE_TTL_MS   = 30 * 60 * 1000;
+const DOC_RESUMO     = ['_estatisticas', 'resumo'];
 
+let dadosAtuais = null;
+const graficos = {};
 
-const urlParams = new URLSearchParams(window.location.search);
-const servidorId = urlParams.get('id');
-
-
-let ultimoCpfVerificado = "";
-let cpfDuplicado = false;
-let verificacaoCpfEmAndamento = false;
-
-
-/* Modal de confirmação */
-function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = 'Confirmar') {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("modalConfirm");
-    const iconeSimbolo = document.getElementById("modalConfirmIconeSimbolo");
-    const tituloEl = document.getElementById("modalConfirmTitulo");
-    const mensagemEl = document.getElementById("modalConfirmMensagem");
-    const header = modal.querySelector(".modal-header");
-    const btnCancelar = document.getElementById("btnModalCancelar");
-    const btnConfirmar = document.getElementById("btnModalConfirmar");
-    const btnFechar = document.getElementById("btnModalConfirmFechar");
-
-    tituloEl.textContent = titulo;
-    mensagemEl.textContent = mensagem;
-    btnConfirmar.innerHTML = `<span class="material-symbols-outlined">check</span> ${textoConfirmar}`;
-
-    if (tipo === 'perigo') {
-      header.style.background = 'var(--danger-bg)';
-      header.style.borderBottomColor = 'var(--danger-bd)';
-      header.querySelector('.reabertura-title').style.color = 'var(--danger)';
-      btnFechar.style.color = 'var(--danger)';
-      iconeSimbolo.textContent = 'error';
-      btnConfirmar.className = 'modal-btn-confirmar';
-      btnConfirmar.style.background = 'var(--danger)';
-      btnConfirmar.style.borderColor = 'var(--danger)';
-    } else {
-      header.style.background = 'var(--warn-bg)';
-      header.style.borderBottomColor = 'var(--warn-bd)';
-      header.querySelector('.reabertura-title').style.color = 'var(--warn)';
-      btnFechar.style.color = 'var(--warn)';
-      iconeSimbolo.textContent = 'warning';
-      btnConfirmar.className = 'modal-btn-confirmar';
-      btnConfirmar.style.background = 'var(--ok)';
-      btnConfirmar.style.borderColor = 'var(--ok)';
-    }
-
-    modal.classList.add("ativo");
-
-    const limpar = () => {
-      modal.classList.remove("ativo");
-      document.removeEventListener('keydown', handleEsc);
-      novoBtnCancelar.removeEventListener('click', onCancelar);
-      novoBtnConfirmar.removeEventListener('click', onConfirmar);
-      novoBtnFechar.removeEventListener('click', onCancelar);
-    };
-
-    const onCancelar = () => { limpar(); resolve(false); };
-    const onConfirmar = () => { limpar(); resolve(true); };
-    const handleEsc = (e) => { if (e.key === 'Escape') onCancelar(); };
-
-    const novoBtnCancelar = btnCancelar.cloneNode(true);
-    const novoBtnConfirmar = btnConfirmar.cloneNode(true);
-    const novoBtnFechar = btnFechar.cloneNode(true);
-    btnCancelar.parentNode.replaceChild(novoBtnCancelar, btnCancelar);
-    btnConfirmar.parentNode.replaceChild(novoBtnConfirmar, btnConfirmar);
-    btnFechar.parentNode.replaceChild(novoBtnFechar, btnFechar);
-
-    novoBtnCancelar.addEventListener('click', onCancelar);
-    novoBtnConfirmar.addEventListener('click', onConfirmar);
-    novoBtnFechar.addEventListener('click', onCancelar);
-    document.addEventListener('keydown', handleEsc);
-
-    modal.addEventListener('click', function handler(e) {
-      if (e.target === modal) {
-        modal.removeEventListener('click', handler);
-        onCancelar();
-      }
-    });
-  });
+function mostrarAviso(texto, icone, carregando) {
+    const aviso = document.getElementById('avisoCarregamento');
+    document.getElementById('avisoTexto').textContent = texto;
+    document.getElementById('avisoIcone').textContent = icone || 'info';
+    aviso.classList.add('ativo');
+    aviso.classList.toggle('carregando', !!carregando);
+}
+function esconderAviso() {
+    document.getElementById('avisoCarregamento').classList.remove('ativo', 'carregando');
 }
 
-
-document.addEventListener("DOMContentLoaded", async function() {
-
-  flatpickr("input[type='date']", {
-    locale: "pt",
-    dateFormat: "Y-m-d",
-    allowInput: false,
-    onChange: function(selectedDates, dateStr, instance) {
-      window.atualizarCorCampo(instance.element);
-      ocultarMensagem();
-    }
-  });
-
-  const campos = document.querySelectorAll("#formServidor input, #formServidor select");
-
-  campos.forEach(function(campo) {
-    campo.addEventListener("input", function() {
-      atualizarCorCampo(campo);
-      ocultarMensagem();
-    });
-    campo.addEventListener("change", function() {
-      atualizarCorCampo(campo);
-      ocultarMensagem();
-    });
-    atualizarCorCampo(campo);
-  });
-
-  if (servidorId) {
-    document.title = "Editar Servidor — Vale Transporte";
-    document.getElementById("breadcrumbAtual").textContent = "Editar cadastro";
-    document.getElementById("tituloPagina").textContent = "Editar servidor";
-    document.getElementById("subtituloPagina").textContent = "Atualize os dados cadastrais do servidor no sistema.";
-    document.getElementById("tituloCard").textContent = "Editar dados do servidor";
-    document.getElementById("iconeCard").textContent = "edit";
-    document.getElementById("textoBotao").textContent = "Atualizar";
-    document.getElementById("iconeSalvar").textContent = "update";
-
-    await carregarDadosServidor(servidorId);
-  }
-});
-
-
-async function carregarDadosServidor(id) {
-  try {
-    const docRef = doc(db, "servidores", id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const d = docSnap.data();
-
-      document.getElementById("nome").value = d.nome || "";
-      document.getElementById("cpf").value = d.cpf || "";
-      document.getElementById("email").value = d.email || "";
-      document.getElementById("dataNascimento").value = d.dataNascimento || "";
-      document.getElementById("telefone").value = d.telefone || "";
-
-      if (d.dataNascimento && document.getElementById("dataNascimento")._flatpickr) {
-        document.getElementById("dataNascimento")._flatpickr.setDate(d.dataNascimento);
-      }
-
-      document.getElementById("cep").value = d.cep || "";
-      document.getElementById("bairro").value = d.bairro || "";
-      document.getElementById("logradouro").value = d.logradouro || "";
-      document.getElementById("numero").value = d.numero || "";
-      document.getElementById("complemento").value = d.complemento || "";
-      document.getElementById("cidade").value = d.cidade || "";
-      document.getElementById("uf").value = d.uf || "";
-
-      if (d.matricula1) {
-        document.getElementById("vinculo1").value = d.matricula1.vinculo || "";
-        document.getElementById("numeroMatricula1").value = d.matricula1.numeroMatricula || "";
-        document.getElementById("cargo1").value = d.matricula1.cargo || "";
-        document.getElementById("dataAdmissao1").value = d.matricula1.dataAdmissao || "";
-
-        if (d.matricula1.diasFerias) {
-          document.getElementById("diasFerias1").value = d.matricula1.diasFerias;
-        }
-
-        if (d.matricula1.dataAdmissao && document.getElementById("dataAdmissao1")._flatpickr) {
-          document.getElementById("dataAdmissao1")._flatpickr.setDate(d.matricula1.dataAdmissao);
-        }
-
-        if (d.matricula1.escola1) {
-          document.getElementById("escola1_m1").value = d.matricula1.escola1.nomeEscola || "";
-          document.getElementById("empresa1_m1").value = d.matricula1.escola1.empresa || "";
-          document.getElementById("qtdPassagens1_m1").value = d.matricula1.escola1.qtdPassagensDiarias || "";
-        }
-
-        if (d.matricula1.escola2) {
-          toggleEscolaExtra(1);
-          document.getElementById("escola2_m1").value = d.matricula1.escola2.nomeEscola || "";
-          document.getElementById("empresa_escola2_m1").value = d.matricula1.escola2.empresa || "";
-          document.getElementById("qtdPassagens_escola2_m1").value = d.matricula1.escola2.qtdPassagensDiarias || "";
-        }
-      }
-
-      if (d.matricula2) {
-        document.getElementById("possuiSegundoVinculo").checked = true;
-        await toggleSegundoVinculo(true);
-
-        document.getElementById("vinculo2").value = d.matricula2.vinculo || "";
-        document.getElementById("numeroMatricula2").value = d.matricula2.numeroMatricula || "";
-        document.getElementById("cargo2").value = d.matricula2.cargo || "";
-        document.getElementById("dataAdmissao2").value = d.matricula2.dataAdmissao || "";
-
-        if (d.matricula2.diasFerias) {
-          document.getElementById("diasFerias2").value = d.matricula2.diasFerias;
-        }
-
-        if (d.matricula2.dataAdmissao && document.getElementById("dataAdmissao2")._flatpickr) {
-          document.getElementById("dataAdmissao2")._flatpickr.setDate(d.matricula2.dataAdmissao);
-        }
-
-        if (d.matricula2.escola1) {
-          document.getElementById("escola1_m2").value = d.matricula2.escola1.nomeEscola || "";
-          document.getElementById("empresa1_m2").value = d.matricula2.escola1.empresa || "";
-          document.getElementById("qtdPassagens1_m2").value = d.matricula2.escola1.qtdPassagensDiarias || "";
-        }
-
-        if (d.matricula2.escola2) {
-          toggleEscolaExtra(2);
-          document.getElementById("escola2_m2").value = d.matricula2.escola2.nomeEscola || "";
-          document.getElementById("empresa_escola2_m2").value = d.matricula2.escola2.empresa || "";
-          document.getElementById("qtdPassagens_escola2_m2").value = d.matricula2.escola2.qtdPassagensDiarias || "";
-        }
-      }
-
-      const camposPreenchidos = document.querySelectorAll("#formServidor input, #formServidor select");
-      camposPreenchidos.forEach(c => atualizarCorCampo(c));
-
-      ultimoCpfVerificado = normalizarCPF(document.getElementById("cpf").value);
-      cpfDuplicado = false;
-
-    } else {
-      mostrarMensagem("Servidor não encontrado.", "erro");
-    }
-  } catch (erro) {
-    console.error("Erro ao carregar dados do servidor para edição:", erro);
-    mostrarMensagem("Erro ao carregar os dados.", "erro");
-  }
+function lerCache() {
+    try {
+        const bruto = localStorage.getItem(CACHE_KEY);
+        if (!bruto) return null;
+        const obj = JSON.parse(bruto);
+        if (Date.now() > obj.expiresAt) { localStorage.removeItem(CACHE_KEY); return null; }
+        const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
+        if (obj.versao !== versaoAtual) { localStorage.removeItem(CACHE_KEY); return null; }
+        return obj;
+    } catch (e) { return null; }
+}
+function salvarCache(dados) {
+    try {
+        const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            dados: dados,
+            expiresAt: Date.now() + CACHE_TTL_MS,
+            versao: versaoAtual,
+            cachedAt: Date.now()
+        }));
+    } catch (e) {}
+}
+function limparCache() {
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
 }
 
+/* Aguarda o usuário estar logado */
+function aguardarAuth() {
+    const check = setInterval(() => {
+        const el = document.getElementById('userEmailLabel');
+        if (el && el.textContent !== 'Carregando…') {
+            clearInterval(check);
+            iniciarPainel();
+        }
+    }, 100);
+    setTimeout(() => { clearInterval(check); iniciarPainel(); }, 4000);
+}
+setTimeout(aguardarAuth, 500);
 
-function normalizarCPF(valor) {
-  return valor.replace(/\D/g, "").substring(0, 11);
+async function iniciarPainel() {
+    const cache = lerCache();
+    if (cache) {
+        atualizarInfoCache('aviso', 'em cache');
+        dadosAtuais = cache.dados;
+        renderizarTudo(cache.dados);
+        return;
+    }
+
+    atualizarInfoCache('aviso', 'verificando…');
+    mostrarAviso('Carregando resumo do sistema…', 'sync', true);
+
+    let resumo = null;
+    try {
+        const snap = await getDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]));
+        if (snap.exists()) resumo = snap.data();
+    } catch (e) {}
+
+    if (!resumo) {
+        mostrarAviso('Primeira execução: calculando indicadores…', 'sync', true);
+        resumo = await calcularResumoCompleto();
+        if (resumo) {
+            try {
+                await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
+                    ...resumo,
+                    _recalculo: 'auto',
+                    atualizadoEm: serverTimestamp()
+                });
+            } catch (e) {}
+        }
+    }
+
+    if (!resumo) resumo = resumoVazio();
+
+    dadosAtuais = resumo;
+    salvarCache(resumo);
+    atualizarInfoCache('fresco', 'atualizado agora');
+    renderizarTudo(resumo);
+    esconderAviso();
 }
 
+async function calcularResumoCompleto() {
+    try {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
 
-window.verificarCpfDuplicado = async function(input) {
-  const cpf = normalizarCPF(input.value);
+        /* CONFIGURAÇÕES */
+        const snapConfig = await getDocs(collection(db, 'configuracoes'));
+        const meses = [];
+        snapConfig.forEach(d => {
+            if (d.id !== '_padraoGlobal') meses.push({ ...d.data(), _id: d.id });
+        });
+        meses.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
 
-  if (cpf.length !== 11) {
-    cpfDuplicado = false;
-    input.classList.remove("erro-input");
-    atualizarCorCampo(input);
-    return;
-  }
+        /* SERVIDORES */
+        const snapServ = await getDocs(collection(db, 'servidores'));
+        const servidores = [];
+        snapServ.forEach(d => servidores.push({ id: d.id, ...d.data() }));
 
-  if (cpf === ultimoCpfVerificado && !verificacaoCpfEmAndamento) return;
-
-  verificacaoCpfEmAndamento = true;
-
-  try {
-    const cpfFormatado = input.value;
-    const consulta = query(
-      collection(db, "servidores"),
-      where("cpf", "==", cpfFormatado),
-      limit(1)
-    );
-    const resultado = await getDocs(consulta);
-
-    ultimoCpfVerificado = cpf;
-    cpfDuplicado = false;
-
-    if (!resultado.empty) {
-      const documentoEncontrado = resultado.docs[0];
-      if (!servidorId || documentoEncontrado.id !== servidorId) {
-        cpfDuplicado = true;
-        input.classList.remove("preenchido");
-        input.classList.add("erro-input");
-        mostrarMensagem("Este CPF já está cadastrado para outro servidor.", "erro");
-        return;
-      }
-    }
-
-    input.classList.remove("erro-input");
-    atualizarCorCampo(input);
-
-    if (document.getElementById("mensagem").textContent.includes("CPF já está cadastrado")) {
-      ocultarMensagem();
-    }
-
-  } catch (erro) {
-    console.error("Erro ao verificar CPF:", erro);
-    cpfDuplicado = false;
-    input.classList.remove("erro-input");
-    atualizarCorCampo(input);
-  } finally {
-    verificacaoCpfEmAndamento = false;
-  }
-};
-
-
-window.atualizarCorCampo = function(campo) {
-  if (campo.value && campo.value.trim() !== "") {
-    if (!campo.classList.contains("erro-input")) {
-      campo.classList.add("preenchido");
-    }
-  } else {
-    campo.classList.remove("preenchido");
-    campo.classList.remove("erro-input");
-  }
-};
-
-
-window.formatarCPF = function(input) {
-  let valor = input.value.replace(/\D/g, "");
-  valor = valor.substring(0, 11);
-
-  const cpfAtual = valor;
-
-  if (cpfAtual !== ultimoCpfVerificado) {
-    cpfDuplicado = false;
-    input.classList.remove("erro-input");
-  }
-
-  if (valor.length > 9) {
-    valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, "$1.$2.$3-$4");
-  } else if (valor.length > 6) {
-    valor = valor.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, "$1.$2.$3");
-  } else if (valor.length > 3) {
-    valor = valor.replace(/^(\d{3})(\d{0,3}).*/, "$1.$2");
-  }
-
-  input.value = valor;
-  atualizarCorCampo(input);
-};
-
-
-window.formatarTelefone = function(input) {
-  let valor = input.value.replace(/\D/g, "");
-  valor = valor.substring(0, 11);
-
-  if (valor.length > 10) {
-    valor = valor.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
-  } else if (valor.length > 6) {
-    valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
-  } else if (valor.length > 2) {
-    valor = valor.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
-  } else if (valor.length > 0) {
-    valor = valor.replace(/^(\d{0,2})/, "($1");
-  }
-
-  input.value = valor;
-  atualizarCorCampo(input);
-};
-
-
-window.formatarCEP = function(input) {
-  let valor = input.value.replace(/\D/g, "");
-  valor = valor.substring(0, 8);
-
-  if (valor.length > 5) {
-    valor = valor.replace(/^(\d{5})(\d{0,3}).*/, "$1-$2");
-  }
-
-  input.value = valor;
-  atualizarCorCampo(input);
-};
-
-
-window.buscarCEP = async function(input) {
-  let cep = input.value.replace(/\D/g, "");
-  if (cep.length !== 8) return;
-
-  try {
-    const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const dados = await resposta.json();
-
-    if (!dados.erro) {
-      document.getElementById("bairro").value = dados.bairro || "";
-      document.getElementById("logradouro").value = dados.logradouro || "";
-      document.getElementById("cidade").value = dados.localidade || "";
-      document.getElementById("uf").value = dados.uf || "";
-
-      document.querySelectorAll("#bairro, #logradouro, #cidade, #uf")
-        .forEach(c => atualizarCorCampo(c));
-    }
-  } catch (e) {
-    console.error("Erro ao buscar CEP:", e);
-  }
-};
-
-
-window.toggleEscolaExtra = function(numMatricula) {
-  const bloco = document.getElementById(`escolaExtra${numMatricula}`);
-  bloco.classList.toggle('ativo');
-
-  if (bloco.classList.contains('ativo')) {
-    document.getElementById(`escola2_m${numMatricula}`).setAttribute('required', 'required');
-    document.getElementById(`empresa_escola2_m${numMatricula}`).setAttribute('required', 'required');
-    document.getElementById(`qtdPassagens_escola2_m${numMatricula}`).setAttribute('required', 'required');
-  } else {
-    document.getElementById(`escola2_m${numMatricula}`).removeAttribute('required');
-    document.getElementById(`empresa_escola2_m${numMatricula}`).removeAttribute('required');
-    document.getElementById(`qtdPassagens_escola2_m${numMatricula}`).removeAttribute('required');
-  }
-};
-
-
-window.toggleSegundoVinculo = async function(skipConfirm = false) {
-  const bloco = document.getElementById("blocoSegundoVinculo");
-  const checkBox = document.getElementById("possuiSegundoVinculo");
-
-  const camposM2 = [
-    "vinculo2", "numeroMatricula2", "cargo2", "dataAdmissao2",
-    "escola1_m2", "empresa1_m2", "qtdPassagens1_m2", "diasFerias2"
-  ];
-
-  const camposEscolaExtra2 = [
-    "escola2_m2", "empresa_escola2_m2", "qtdPassagens_escola2_m2"
-  ];
-
-  if (checkBox.checked) {
-    bloco.classList.add("ativo");
-    camposM2.forEach(id => document.getElementById(id).setAttribute("required", "required"));
-  } else {
-    if (!skipConfirm && !bloco.classList.contains("ativo")) {
-      return;
-    }
-
-    if (!skipConfirm) {
-      const confirmacao = await mostrarConfirmacao(
-        "Remover Segunda Matrícula",
-        "Isso irá remover todos os dados da Segunda Matrícula deste servidor.\n\nDeseja realmente continuar?",
-        "perigo",
-        "Sim, remover"
-      );
-
-      if (!confirmacao) {
-        checkBox.checked = true;
-        return;
-      }
-    }
-
-    bloco.classList.remove("ativo");
-
-    camposM2.forEach(id => {
-      const campo = document.getElementById(id);
-      campo.removeAttribute("required");
-      campo.value = "";
-      atualizarCorCampo(campo);
-    });
-
-    const escolaExtra2 = document.getElementById("escolaExtra2");
-    if (escolaExtra2.classList.contains("ativo")) {
-      toggleEscolaExtra(2);
-    }
-
-    camposEscolaExtra2.forEach(id => {
-      const campo = document.getElementById(id);
-      campo.removeAttribute("required");
-      campo.value = "";
-      atualizarCorCampo(campo);
-    });
-
-    const dataAdmissao2 = document.getElementById("dataAdmissao2");
-    if (dataAdmissao2._flatpickr) dataAdmissao2._flatpickr.clear();
-  }
-};
-
-
-window.salvarServidor = async function(event) {
-  event.preventDefault();
-
-  if (cpfDuplicado) {
-    const campoCPF = document.getElementById("cpf");
-    campoCPF.focus();
-    mostrarMensagem("Não é possível salvar: este CPF já está cadastrado para outro servidor.", "erro");
-    return;
-  }
-
-  const btnSalvar = document.getElementById("btnSalvar");
-  btnSalvar.disabled = true;
-
-  try {
-    const cpfCampo = document.getElementById("cpf");
-    const cpfAtual = normalizarCPF(cpfCampo.value);
-
-    if (cpfAtual.length !== 11) {
-      mostrarMensagem("Informe um CPF válido com 11 dígitos.", "erro");
-      cpfCampo.focus();
-      return;
-    }
-
-    if (cpfAtual !== ultimoCpfVerificado) {
-      await verificarCpfDuplicado(cpfCampo);
-      if (cpfDuplicado) {
-        cpfCampo.focus();
-        return;
-      }
-    }
-
-    const diasFerias1Raw = document.getElementById("diasFerias1").value;
-    const diasFerias1 = diasFerias1Raw ? Number(diasFerias1Raw) : null;
-
-    const dadosServidor = {
-      nome: document.getElementById("nome").value.trim(),
-      cpf: document.getElementById("cpf").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      dataNascimento: document.getElementById("dataNascimento").value,
-      telefone: document.getElementById("telefone").value.trim(),
-      cep: document.getElementById("cep").value.trim(),
-      bairro: document.getElementById("bairro").value.trim(),
-      logradouro: document.getElementById("logradouro").value.trim(),
-      numero: document.getElementById("numero").value.trim(),
-      complemento: document.getElementById("complemento").value.trim(),
-      cidade: document.getElementById("cidade").value.trim(),
-      uf: document.getElementById("uf").value.trim(),
-
-      matricula1: {
-        vinculo: document.getElementById("vinculo1").value,
-        numeroMatricula: document.getElementById("numeroMatricula1").value.trim(),
-        cargo: document.getElementById("cargo1").value.trim(),
-        dataAdmissao: document.getElementById("dataAdmissao1").value,
-        diasFerias: diasFerias1,
-        escola1: {
-          nomeEscola: document.getElementById("escola1_m1").value,
-          empresa: document.getElementById("empresa1_m1").value,
-          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens1_m1").value)
+        /* REGISTROS DE FÉRIAS/FOLGAS/LICENÇAS */
+        let registros = [];
+        try {
+            const snapReg = await getDocs(collection(db, 'registro_ferias_folgas'));
+            snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
+        } catch (e) {
+            /* Coleção pode não existir ainda */
         }
-      }
-    };
 
-    const escolaExtra1Ativa = document.getElementById("escolaExtra1").classList.contains("ativo");
-    if (escolaExtra1Ativa) {
-      dadosServidor.matricula1.escola2 = {
-        nomeEscola: document.getElementById("escola2_m1").value,
-        empresa: document.getElementById("empresa_escola2_m1").value,
-        qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m1").value)
-      };
-    }
+        /* EXCEÇÕES E ESCOLAS */
+        let excecoesAtivas = 0;
+        const escolasUnicas = new Set();
+        meses.forEach(m => {
+            (m.escolasReabertas || []).forEach(e => {
+                escolasUnicas.add(typeof e === 'string' ? e : e.escola);
+                if (typeof e === 'object' && e.dataExpiracao) {
+                    if (new Date(e.dataExpiracao + 'T23:59:59') >= hoje) excecoesAtivas++;
+                } else {
+                    excecoesAtivas++;
+                }
+            });
+        });
 
-    const temSegundaMatricula = document.getElementById("possuiSegundoVinculo").checked;
-    if (temSegundaMatricula) {
-      const diasFerias2Raw = document.getElementById("diasFerias2").value;
-      const diasFerias2 = diasFerias2Raw ? Number(diasFerias2Raw) : null;
+        /* FÉRIAS */
+        const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
 
-      dadosServidor.matricula2 = {
-        vinculo: document.getElementById("vinculo2").value,
-        numeroMatricula: document.getElementById("numeroMatricula2").value.trim(),
-        cargo: document.getElementById("cargo2").value.trim(),
-        dataAdmissao: document.getElementById("dataAdmissao2").value,
-        diasFerias: diasFerias2,
-        escola1: {
-          nomeEscola: document.getElementById("escola1_m2").value,
-          empresa: document.getElementById("empresa1_m2").value,
-          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens1_m2").value)
-        }
-      };
+        /* CONTAGEM DE SERVIDORES POR ESCOLA */
+        const porEscola = {};
+        servidores.forEach(s => {
+            const escolas = [];
+            const m1 = s.matricula1 || {};
+            const m2 = s.matricula2 || {};
+            if (m1.escola1?.nomeEscola) escolas.push(m1.escola1.nomeEscola);
+            if (m1.escola2?.nomeEscola) escolas.push(m1.escola2.nomeEscola);
+            if (m2.escola1?.nomeEscola) escolas.push(m2.escola1.nomeEscola);
+            if (m2.escola2?.nomeEscola) escolas.push(m2.escola2.nomeEscola);
+            /* Fallback: campos antigos */
+            if (s.escola || s.nomeEscola) escolas.push(s.escola || s.nomeEscola);
 
-      const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
-      if (escolaExtra2Ativa) {
-        dadosServidor.matricula2.escola2 = {
-          nomeEscola: document.getElementById("escola2_m2").value,
-          empresa: document.getElementById("empresa_escola2_m2").value,
-          qtdPassagensDiarias: Number(document.getElementById("qtdPassagens_escola2_m2").value)
+            escolas.forEach(e => {
+                porEscola[e] = (porEscola[e] || 0) + 1;
+            });
+        });
+
+        /* CONTAGEM POR VÍNCULO */
+        const porVinculo = {};
+        servidores.forEach(s => {
+            const v1 = s.matricula1?.vinculo;
+            const v2 = s.matricula2?.vinculo;
+            if (v1) porVinculo[v1] = (porVinculo[v1] || 0) + 1;
+            if (v2) porVinculo[v2] = (porVinculo[v2] || 0) + 1;
+        });
+
+        /* DIAS ÚTEIS POR MÊS (últimos 6) */
+        const diasUteisPorMes = meses.slice(0, 6).reverse().map(m => ({
+            mes: m.mesReferencia,
+            dias: Number(m.diasUteis) || 0
+        }));
+
+        /* CONTAGEM DE OCORRÊNCIAS POR TIPO */
+        const porTipo = {};
+        registros.forEach(r => {
+            const t = (r.tipo || r.Tipo || '').toString().trim() || 'Não informado';
+            porTipo[t] = (porTipo[t] || 0) + 1;
+        });
+
+        /* STATUS DOS MESES */
+        let abertos = 0, fechados = 0, aguardando = 0;
+        meses.forEach(m => {
+            if (m.congelado) { fechados++; return; }
+            if (!m.dataAbertura && !m.dataFechamento) { abertos++; return; }
+            if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { fechados++; return; }
+            if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { aguardando++; return; }
+            abertos++;
+        });
+
+        /* ESCOLAS ÚNICAS (para KPI) */
+        const escolasKPI = new Set(Object.keys(porEscola));
+
+        return {
+            totalServidores: servidores.length,
+            totalMesesConfigurados: meses.length,
+            totalEscolas: escolasKPI.size,
+            excecoesAtivas,
+            feriasPendentes: resultadoFerias.pendentes,
+            feriasVencidas: resultadoFerias.vencidas,
+            servidoresComPendencia: resultadoFerias.servidores,
+            mesesParaExibir: meses.slice(0, 5).map(m => ({
+                mesReferencia: m.mesReferencia,
+                diasUteis: m.diasUteis || null,
+                congelado: !!m.congelado,
+                dataAbertura: m.dataAbertura || '',
+                dataFechamento: m.dataFechamento || '',
+                escolasReabertas: (m.escolasReabertas || []).length,
+                dataAtualizacao: m.dataAtualizacao || ''
+            })),
+            mesAtual: (() => {
+                const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+                const m = meses.find(x => x.mesReferencia === mesAtualStr);
+                if (!m) return null;
+                return {
+                    mesReferencia: m.mesReferencia,
+                    diasUteis: m.diasUteis || null,
+                    congelado: !!m.congelado,
+                    dataAbertura: m.dataAbertura || '',
+                    dataFechamento: m.dataFechamento || '',
+                    escolasReabertas: (m.escolasReabertas || []).length
+                };
+            })(),
+            /* Dados para gráficos */
+            porEscola,
+            porVinculo,
+            porTipo,
+            diasUteisPorMes,
+            statusMeses: { abertos, fechados, aguardando },
+            dataAtualizacao: new Date().toISOString()
         };
-      }
+    } catch (e) {
+        console.error('[Painel] Erro ao calcular:', e);
+        return null;
     }
+}
 
-    if (servidorId) {
-      await updateDoc(doc(db, "servidores", servidorId), dadosServidor);
+function resumoVazio() {
+    return {
+        totalServidores: 0,
+        totalMesesConfigurados: 0,
+        totalEscolas: 0,
+        excecoesAtivas: 0,
+        feriasPendentes: 0,
+        feriasVencidas: 0,
+        servidoresComPendencia: 0,
+        mesesParaExibir: [],
+        mesAtual: null,
+        porEscola: {},
+        porVinculo: {},
+        porTipo: {},
+        diasUteisPorMes: [],
+        statusMeses: { abertos: 0, fechados: 0, aguardando: 0 },
+        dataAtualizacao: new Date().toISOString()
+    };
+}
 
-      const camposParaRemover = {};
-      if (!temSegundaMatricula) camposParaRemover["matricula2"] = deleteField();
-      if (!escolaExtra1Ativa) camposParaRemover["matricula1.escola2"] = deleteField();
-      if (temSegundaMatricula) {
-        const escolaExtra2Ativa = document.getElementById("escolaExtra2").classList.contains("ativo");
-        if (!escolaExtra2Ativa) camposParaRemover["matricula2.escola2"] = deleteField();
-      }
-      if (!diasFerias1) camposParaRemover["matricula1.diasFerias"] = deleteField();
-      if (!temSegundaMatricula) {
-        camposParaRemover["matricula2.diasFerias"] = deleteField();
-      } else if (temSegundaMatricula && !document.getElementById("diasFerias2").value) {
-        camposParaRemover["matricula2.diasFerias"] = deleteField();
-      }
+function parseDataParaDate(v) {
+    if (!v) return null;
+    if (typeof v === 'object' && v.toDate) return v.toDate();
+    const s = v.toString().trim();
+    if (s.includes('/')) {
+        const p = s.split('/');
+        return new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+    if (s.includes('-')) {
+        const p = s.substring(0, 10).split('-');
+        return p[0].length === 4
+            ? new Date(+p[0], +p[1] - 1, +p[2])
+            : new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+    return null;
+}
 
-      if (Object.keys(camposParaRemover).length > 0) {
-        await updateDoc(doc(db, "servidores", servidorId), camposParaRemover);
-      }
+function periodosFechados(dataAdmissao, hoje) {
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!adm) return [];
+    hoje.setHours(0, 0, 0, 0);
 
-      marcarCacheInvalido();
-      mostrarMensagem("Servidor atualizado com sucesso!", "sucesso");
+    const out = [];
+    let ini = new Date(adm);
+    for (let i = 0; i < 40; i++) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        if (fim <= hoje) {
+            out.push({
+                inicio: new Date(ini),
+                fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`
+            });
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+        } else break;
+    }
+    return out;
+}
+
+function calcularFeriasPendentes(servidores, registros, hoje) {
+    const porCpf = new Map();
+    const porMatricula = new Map();
+
+    registros.forEach(r => {
+        const tipo = (r.tipo || '').toLowerCase();
+        if (!(tipo.includes('ferias') || tipo.includes('férias'))) return;
+        const ano = r.ano_referencia || r.ano || '';
+        if (!ano) return;
+
+        const cpf = (r.cpf || r.CPF || '').toString().replace(/\D/g, '');
+        if (cpf) {
+            if (!porCpf.has(cpf)) porCpf.set(cpf, new Set());
+            porCpf.get(cpf).add(ano);
+        }
+        const mat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+        if (mat) {
+            if (!porMatricula.has(mat)) porMatricula.set(mat, new Set());
+            porMatricula.get(mat).add(ano);
+        }
+    });
+
+    let pendentes = 0, vencidas = 0, servidoresComPendencia = 0;
+
+    servidores.forEach(s => {
+        const cpf = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
+        const mats = [];
+        const m1 = s.matricula || s.Matricula || s.matricula_servidor;
+        if (m1) mats.push(m1.toString().trim().replace(/^0+/, ''));
+        if (s.matricula1?.numeroMatricula) mats.push(s.matricula1.numeroMatricula.toString().trim().replace(/^0+/, ''));
+        if (s.matricula2?.numeroMatricula) mats.push(s.matricula2.numeroMatricula.toString().trim().replace(/^0+/, ''));
+
+        const admissoes = [];
+        const adm1 = s.data_admissao || s.dataAdmissao || s.matricula1?.dataAdmissao;
+        if (adm1) admissoes.push(adm1);
+        if (s.matricula2?.dataAdmissao || s.matricula2?.data_admissao) {
+            admissoes.push(s.matricula2.dataAdmissao || s.matricula2.data_admissao);
+        }
+
+        if (admissoes.length === 0) return;
+
+        const lancados = new Set();
+        if (cpf && porCpf.has(cpf)) porCpf.get(cpf).forEach(a => lancados.add(a));
+        mats.forEach(m => {
+            if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
+        });
+
+        let temPendencia = false;
+        admissoes.forEach(adm => {
+            periodosFechados(adm, hoje).forEach(p => {
+                if (lancados.has(p.anoReferencia)) return;
+                const limite = new Date(p.fim);
+                limite.setFullYear(limite.getFullYear() + 1);
+                if (limite < hoje) { vencidas++; temPendencia = true; }
+                else { pendentes++; temPendencia = true; }
+            });
+        });
+        if (temPendencia) servidoresComPendencia++;
+    });
+
+    return { pendentes, vencidas, servidores: servidoresComPendencia };
+}
+
+function atualizarInfoCache(tipo, texto) {
+    const el = document.getElementById('cacheInfo');
+    const txt = document.getElementById('cacheInfoTexto');
+    if (!el || !txt) return;
+    el.classList.remove('fresco', 'aviso');
+    el.classList.add(tipo === 'fresco' ? 'fresco' : 'aviso');
+    const icone = tipo === 'fresco' ? 'check_circle' : 'schedule';
+    el.querySelector('.material-symbols-outlined').textContent = icone;
+    txt.textContent = texto;
+}
+
+/* ============================================================
+   RENDERIZAÇÃO
+   ============================================================ */
+function renderizarTudo(dados) {
+    renderizarKPIs(dados);
+    renderizarFaixaStatus(dados);
+    renderizarGraficos(dados);
+    renderizarPendencias(dados);
+    renderizarUltimosMeses(dados);
+    renderizarTimeline(dados);
+}
+
+function renderizarKPIs(dados) {
+    document.getElementById('kpiServidores').textContent = dados.totalServidores || 0;
+    document.getElementById('kpiMeses').textContent = dados.totalMesesConfigurados || 0;
+    document.getElementById('kpiEscolas').textContent = dados.totalEscolas || 0;
+
+    const totalFerias = (dados.feriasPendentes || 0) + (dados.feriasVencidas || 0);
+    document.getElementById('kpiFerias').textContent = totalFerias;
+
+    const sub = document.getElementById('kpiFeriasSub');
+    if (dados.feriasVencidas > 0) {
+        sub.textContent = `${dados.feriasVencidas} vencida${dados.feriasVencidas === 1 ? '' : 's'}`;
+    } else if (dados.feriasPendentes > 0) {
+        sub.textContent = `${dados.feriasPendentes} no prazo`;
     } else {
-      if (!diasFerias1) delete dadosServidor.matricula1.diasFerias;
-      if (!temSegundaMatricula) {
-        delete dadosServidor.matricula2;
-      } else if (dadosServidor.matricula2 && !document.getElementById("diasFerias2").value) {
-        delete dadosServidor.matricula2.diasFerias;
-      }
+        sub.textContent = 'sem pendências';
+    }
+}
 
-      await addDoc(collection(db, "servidores"), dadosServidor);
-      marcarCacheInvalido();
-      mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
+function renderizarFaixaStatus(dados) {
+    const faixa = document.getElementById('faixaStatus');
+    const icone = document.getElementById('faixaIcone');
+    const titulo = document.getElementById('faixaTitulo');
+    const detalhe = document.getElementById('faixaDetalhe');
 
-      document.getElementById("formServidor").reset();
-      ultimoCpfVerificado = "";
-      cpfDuplicado = false;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    const m = dados.mesAtual;
+
+    titulo.textContent = formatarMesAno(mesAtualStr);
+
+    if (!m) {
+        faixa.className = 'faixa-status info';
+        icone.textContent = 'schedule';
+        detalhe.textContent = 'Mês corrente não configurado no sistema.';
+        return;
+    }
+    if (m.congelado) {
+        faixa.className = 'faixa-status danger';
+        icone.textContent = 'error';
+        detalhe.textContent = `Fechado manualmente · ${m.diasUteis || '—'} dias úteis definidos.`;
+        return;
+    }
+    if (!m.dataAbertura && !m.dataFechamento) {
+        faixa.className = 'faixa-status ok';
+        icone.textContent = 'check_circle';
+        detalhe.textContent = `Aberto para lançamentos · ${m.diasUteis || '—'} dias úteis.`;
+        return;
+    }
+    if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) {
+        faixa.className = 'faixa-status danger';
+        icone.textContent = 'error';
+        detalhe.textContent = `Período encerrado em ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis.`;
+        return;
+    }
+    if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) {
+        faixa.className = 'faixa-status warn';
+        icone.textContent = 'schedule';
+        detalhe.textContent = `Abre em ${formatarData(m.dataAbertura)} · ${m.diasUteis || '—'} dias úteis.`;
+        return;
+    }
+    faixa.className = 'faixa-status ok';
+    icone.textContent = 'check_circle';
+    detalhe.textContent = `Aberto até ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis definidos.`;
+}
+
+/* ============================================================
+   GRÁFICOS (Chart.js)
+   ============================================================ */
+function getCores() {
+    const cs = getComputedStyle(document.documentElement);
+    return {
+        c1: cs.getPropertyValue('--chart-1').trim() || '#2E0F4F',
+        c2: cs.getPropertyValue('--chart-2').trim() || '#5b2a86',
+        c3: cs.getPropertyValue('--chart-3').trim() || '#7ba3cd',
+        c4: cs.getPropertyValue('--chart-4').trim() || '#b45309',
+        c5: cs.getPropertyValue('--chart-5').trim() || '#1a6a38',
+        c6: cs.getPropertyValue('--chart-6').trim() || '#9a1e1e',
+        c7: cs.getPropertyValue('--chart-7').trim() || '#4d5560',
+        c8: cs.getPropertyValue('--chart-8').trim() || '#a1a1aa',
+        grid: cs.getPropertyValue('--chart-grid').trim() || 'rgba(20,25,35,.06)',
+        text: cs.getPropertyValue('--chart-text').trim() || '#4d5560',
+        surface: cs.getPropertyValue('--surface').trim() || '#fff'
+    };
+}
+
+function destruirGrafico(id) {
+    if (graficos[id]) {
+        graficos[id].destroy();
+        delete graficos[id];
+    }
+}
+
+function renderizarGraficos(dados) {
+    if (typeof Chart === 'undefined') {
+        console.warn('[Painel] Chart.js não carregou.');
+        return;
     }
 
-  } catch (erro) {
-    console.error("Erro ao salvar:", erro);
-    mostrarMensagem("Erro ao salvar os dados no banco: " + erro.message, "erro");
-  } finally {
-    btnSalvar.disabled = false;
-  }
-};
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.font.size = 11;
 
+    const cores = getCores();
 
-window.voltarParaServidores = function() {
-  window.location.href = "servidores.html";
-};
+    /* ------- 1) Donut: Status dos meses ------- */
+    const st = dados.statusMeses || { abertos: 0, fechados: 0, aguardando: 0 };
+    const totalMeses = st.abertos + st.fechados + st.aguardando;
 
+    document.getElementById('donutTotalMeses').textContent = totalMeses;
+    document.getElementById('subStatusMeses').textContent = `${totalMeses} ${totalMeses === 1 ? 'mês' : 'meses'}`;
 
-window.cancelar = async function() {
-  const confirmacao = await mostrarConfirmacao(
-    "Cancelar cadastro",
-    "Deseja realmente cancelar?\n\nOs dados não salvos serão perdidos.",
-    "aviso",
-    "Sim, cancelar"
-  );
+    const legendaMeses = document.getElementById('legendaStatusMeses');
+    legendaMeses.innerHTML = `
+        <div class="donut-legenda-item">
+            <span class="donut-legenda-cor" style="background:${cores.c5}"></span>
+            <span>Abertos</span>
+            <span class="donut-legenda-valor">${st.abertos}</span>
+        </div>
+        <div class="donut-legenda-item">
+            <span class="donut-legenda-cor" style="background:${cores.c6}"></span>
+            <span>Fechados</span>
+            <span class="donut-legenda-valor">${st.fechados}</span>
+        </div>
+        <div class="donut-legenda-item">
+            <span class="donut-legenda-cor" style="background:${cores.c4}"></span>
+            <span>Aguardando</span>
+            <span class="donut-legenda-valor">${st.aguardando}</span>
+        </div>
+    `;
 
-  if (confirmacao) {
-    window.location.href = "servidores.html";
-  }
-};
+    destruirGrafico('statusMeses');
+    graficos.statusMeses = new Chart(document.getElementById('chartStatusMeses'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Abertos', 'Fechados', 'Aguardando'],
+            datasets: [{
+                data: [st.abertos, st.fechados, st.aguardando],
+                backgroundColor: [cores.c5, cores.c6, cores.c4],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: cores.surface,
+                    titleColor: cores.text,
+                    bodyColor: cores.text,
+                    borderColor: cores.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: function (ctx) {
+                            return ` ${ctx.label}: ${ctx.parsed}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 
+    /* ------- 2) Barras horizontais: Servidores por unidade ------- */
+    const escolas = Object.entries(dados.porEscola || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
 
-function mostrarMensagem(texto, tipo) {
-  const msg = document.getElementById("mensagem");
-  msg.textContent = texto;
-  msg.className = `mensagem ${tipo}`;
+    document.getElementById('subServidoresEscola').textContent =
+        escolas.length ? `Top ${escolas.length}` : 'sem dados';
+
+    destruirGrafico('servidoresEscola');
+    if (escolas.length === 0) {
+        graficos.servidoresEscola = new Chart(document.getElementById('chartServidoresEscola'), {
+            type: 'bar',
+            data: { labels: ['Sem dados'], datasets: [{ data: [0], backgroundColor: cores.c8 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { color: cores.grid }, ticks: { color: cores.text } },
+                          y: { grid: { display: false }, ticks: { color: cores.text } } }
+            }
+        });
+    } else {
+        graficos.servidoresEscola = new Chart(document.getElementById('chartServidoresEscola'), {
+            type: 'bar',
+            data: {
+                labels: escolas.map(e => e[0]),
+                datasets: [{
+                    label: 'Servidores',
+                    data: escolas.map(e => e[1]),
+                    backgroundColor: cores.c2,
+                    borderRadius: 4,
+                    barThickness: 18
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: cores.surface,
+                        titleColor: cores.text,
+                        bodyColor: cores.text,
+                        borderColor: cores.grid,
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: cores.grid },
+                        ticks: { color: cores.text, precision: 0 }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: cores.text, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ------- 3) Barras verticais: Vínculos por tipo ------- */
+    const vinculos = Object.entries(dados.porVinculo || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+    destruirGrafico('vinculos');
+    graficos.vinculos = new Chart(document.getElementById('chartVinculos'), {
+        type: 'bar',
+        data: {
+            labels: vinculos.length ? vinculos.map(v => v[0]) : ['Sem dados'],
+            datasets: [{
+                label: 'Quantidade',
+                data: vinculos.length ? vinculos.map(v => v[1]) : [0],
+                backgroundColor: cores.c3,
+                borderRadius: 4,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: cores.surface,
+                    titleColor: cores.text,
+                    bodyColor: cores.text,
+                    borderColor: cores.grid,
+                    borderWidth: 1,
+                    padding: 10
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: cores.text, font: { size: 10 }, maxRotation: 0, autoSkip: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: cores.grid },
+                    ticks: { color: cores.text, precision: 0 }
+                }
+            }
+        }
+    });
+
+    /* ------- 4) Linha: Dias úteis por mês ------- */
+    const diasUteis = dados.diasUteisPorMes || [];
+
+    destruirGrafico('diasUteis');
+    graficos.diasUteis = new Chart(document.getElementById('chartDiasUteis'), {
+        type: 'line',
+        data: {
+            labels: diasUteis.length ? diasUteis.map(d => formatarMesAnoCurto(d.mes)) : ['Sem dados'],
+            datasets: [{
+                label: 'Dias úteis',
+                data: diasUteis.length ? diasUteis.map(d => d.dias) : [0],
+                borderColor: cores.c2,
+                backgroundColor: cores.c2 + '22',
+                tension: 0.35,
+                fill: true,
+                pointBackgroundColor: cores.c2,
+                pointBorderColor: cores.surface,
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: cores.surface,
+                    titleColor: cores.text,
+                    bodyColor: cores.text,
+                    borderColor: cores.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: function (ctx) {
+                            return ` ${ctx.parsed.y} dias úteis`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: cores.text, font: { size: 10 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: cores.grid },
+                    ticks: { color: cores.text, precision: 0 }
+                }
+            }
+        }
+    });
+
+    /* ------- 5) Donut: Situação das férias ------- */
+    const totalFerias = (dados.feriasPendentes || 0) + (dados.feriasVencidas || 0);
+    document.getElementById('donutTotalFerias').textContent = totalFerias;
+
+    const subFerias = document.getElementById('subFerias');
+    if (dados.servidoresComPendencia > 0) {
+        subFerias.textContent = `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'}`;
+    } else {
+        subFerias.textContent = 'sem pendências';
+    }
+
+    const legendaFerias = document.getElementById('legendaFerias');
+    legendaFerias.innerHTML = `
+        <div class="donut-legenda-item">
+            <span class="donut-legenda-cor" style="background:${cores.c4}"></span>
+            <span>No prazo</span>
+            <span class="donut-legenda-valor">${dados.feriasPendentes || 0}</span>
+        </div>
+        <div class="donut-legenda-item">
+            <span class="donut-legenda-cor" style="background:${cores.c6}"></span>
+            <span>Vencidas</span>
+            <span class="donut-legenda-valor">${dados.feriasVencidas || 0}</span>
+        </div>
+    `;
+
+    destruirGrafico('ferias');
+    graficos.ferias = new Chart(document.getElementById('chartFerias'), {
+        type: 'doughnut',
+        data: {
+            labels: ['No prazo', 'Vencidas'],
+            datasets: [{
+                data: [dados.feriasPendentes || 0, dados.feriasVencidas || 0],
+                backgroundColor: [cores.c4, cores.c6],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: cores.surface,
+                    titleColor: cores.text,
+                    bodyColor: cores.text,
+                    borderColor: cores.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: function (ctx) {
+                            return ` ${ctx.label}: ${ctx.parsed}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    /* ------- 6) Barras horizontais: Ocorrências por tipo ------- */
+    const tipos = Object.entries(dados.porTipo || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+    document.getElementById('subOcorrencias').textContent =
+        tipos.length ? `${tipos.length} tipo${tipos.length === 1 ? '' : 's'}` : 'sem dados';
+
+    destruirGrafico('ocorrencias');
+    graficos.ocorrencias = new Chart(document.getElementById('chartOcorrencias'), {
+        type: 'bar',
+        data: {
+            labels: tipos.length ? tipos.map(t => t[0]) : ['Sem dados'],
+            datasets: [{
+                label: 'Ocorrências',
+                data: tipos.length ? tipos.map(t => t[1]) : [0],
+                backgroundColor: cores.c4,
+                borderRadius: 4,
+                barThickness: 18
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: cores.surface,
+                    titleColor: cores.text,
+                    bodyColor: cores.text,
+                    borderColor: cores.grid,
+                    borderWidth: 1,
+                    padding: 10
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: cores.grid },
+                    ticks: { color: cores.text, precision: 0 }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: cores.text, font: { size: 11 } }
+                }
+            }
+        }
+    });
 }
 
-function ocultarMensagem() {
-  const msg = document.getElementById("mensagem");
-  msg.className = "mensagem";
+/* Redesenha todos os gráficos (chamado quando o tema muda) */
+window.redesenharGraficos = function () {
+    if (dadosAtuais) renderizarGraficos(dadosAtuais);
+};
+
+/* ============================================================
+   RENDERIZAÇÃO — Pendências, Últimos meses, Timeline
+   ============================================================ */
+function renderizarPendencias(dados) {
+    const lista = document.getElementById('listaPendencias');
+    const contador = document.getElementById('pendContador');
+
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const pendencias = [];
+    const m = dados.mesAtual;
+
+    if (!m) {
+        pendencias.push({
+            tipo: 'warn', icone: 'calendar_month',
+            titulo: 'Mês corrente ainda não foi configurado',
+            descricao: 'Defina os dias úteis e o período de lançamento para habilitar o módulo de cálculo.',
+            cta: 'Configurar agora', link: 'configuracao.html'
+        });
+    } else {
+        if (m.congelado && (m.escolasReabertas || 0) === 0) {
+            pendencias.push({
+                tipo: 'danger', icone: 'schedule',
+                titulo: 'Mês corrente congelado',
+                descricao: 'O período está fechado para todas as unidades e nenhuma exceção foi cadastrada.',
+                cta: 'Revisar configuração', link: 'configuracao.html'
+            });
+        }
+        if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) {
+            pendencias.push({
+                tipo: 'warn', icone: 'event',
+                titulo: 'Período de lançamento encerrado',
+                descricao: `O mês corrente encerrou em ${formatarData(m.dataFechamento)}. Reabra por unidade se necessário.`,
+                cta: 'Abrir exceções', link: 'configuracao.html'
+            });
+        }
+    }
+
+    if (dados.servidoresComPendencia > 0) {
+        const partes = [];
+        if (dados.feriasPendentes > 0) partes.push(`${dados.feriasPendentes} no prazo`);
+        if (dados.feriasVencidas > 0) partes.push(`${dados.feriasVencidas} vencida${dados.feriasVencidas === 1 ? '' : 's'}`);
+        pendencias.push({
+            tipo: dados.feriasVencidas > 0 ? 'danger' : 'warn',
+            icone: 'event_note',
+            titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com férias pendentes`,
+            descricao: `${partes.join(' · ')}. Revise a linha do tempo para regularizar.`,
+            cta: 'Ver linha do tempo', link: 'linha_tempo.html'
+        });
+    }
+
+    contador.textContent = `${pendencias.length} ${pendencias.length === 1 ? 'item' : 'itens'}`;
+
+    if (pendencias.length === 0) {
+        lista.innerHTML = `
+            <li class="vazio">
+                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                <div>
+                    <strong>Nenhuma pendência identificada</strong>
+                    Todas as configurações necessárias estão em conformidade.
+                </div>
+            </li>
+        `;
+        return;
+    }
+
+    lista.innerHTML = pendencias.map(p => `
+        <li>
+            <a href="${p.link}" class="pendencia-item">
+                <span class="pendencia-icone ${p.tipo}" aria-hidden="true">
+                    <span class="material-symbols-outlined">${p.icone}</span>
+                </span>
+                <span class="pendencia-conteudo">
+                    <span class="pendencia-titulo">${p.titulo}</span>
+                    <span class="pendencia-descricao">${p.descricao}</span>
+                    <span class="pendencia-cta">
+                        ${p.cta}
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                    </span>
+                </span>
+            </a>
+        </li>
+    `).join('');
 }
 
+function renderizarUltimosMeses(dados) {
+    const tbody = document.getElementById('tabelaUltimosMeses');
+    const meses = dados.mesesParaExibir || [];
+
+    if (meses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="tabela-vazia">Nenhum mês configurado.</td></tr>`;
+        return;
+    }
+
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+    tbody.innerHTML = meses.map(m => {
+        let classe = 'badge-info', rotulo = 'Indefinido';
+        if (m.congelado) { classe = 'badge-danger'; rotulo = 'Congelado'; }
+        else if (!m.dataAbertura && !m.dataFechamento) { classe = 'badge-ok'; rotulo = 'Aberto'; }
+        else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { classe = 'badge-danger'; rotulo = 'Encerrado'; }
+        else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { classe = 'badge-warn'; rotulo = 'Aguardando'; }
+        else { classe = 'badge-ok'; rotulo = 'Aberto'; }
+
+        return `
+            <tr>
+                <td><a href="configuracao.html" class="tabela-cta">${formatarMesAno(m.mesReferencia)}</a></td>
+                <td>${m.diasUteis || '—'}</td>
+                <td><span class="badge ${classe}">${rotulo}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderizarTimeline(dados) {
+    const ul = document.getElementById('linhaTempo');
+    const meses = dados.mesesParaExibir || [];
+
+    if (meses.length === 0) {
+        ul.innerHTML = `<li class="linha-tempo-item info"><div class="linha-tempo-titulo">Nenhuma atividade registrada.</div></li>`;
+        return;
+    }
+
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+    ul.innerHTML = meses.map(m => {
+        let tipo = 'info', descricao = '';
+        if (m.congelado) { tipo = 'danger'; descricao = 'Mês congelado manualmente.'; }
+        else if (!m.dataAbertura && !m.dataFechamento) { tipo = 'warn'; descricao = 'Sem período definido — sempre aberto.'; }
+        else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { tipo = 'danger'; descricao = `Encerrado em ${formatarData(m.dataFechamento)}.`; }
+        else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { tipo = 'warn'; descricao = `Abre em ${formatarData(m.dataAbertura)}.`; }
+        else { tipo = 'ok'; descricao = `Aberto até ${formatarData(m.dataFechamento) || 'indeterminado'}.`; }
+
+        const ex = m.escolasReabertas || 0;
+        if (ex > 0) descricao += ` ${ex} exceç${ex === 1 ? 'ão' : 'ões'}.`;
+
+        return `
+            <li class="linha-tempo-item ${tipo}">
+                <div class="linha-tempo-titulo">${formatarMesAno(m.mesReferencia)}</div>
+                <div class="linha-tempo-descricao">${descricao}</div>
+                <div class="linha-tempo-meta">
+                    <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                    ${m.dataAtualizacao ? formatarDataHora(m.dataAtualizacao) : (m.mesReferencia || '')}
+                </div>
+            </li>
+        `;
+    }).join('');
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function formatarMesAno(str) {
+    if (!str) return '';
+    const [ano, mes] = str.split('-');
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    return `${meses[parseInt(mes, 10) - 1] || mes} / ${ano}`;
+}
+
+function formatarMesAnoCurto(str) {
+    if (!str) return '';
+    const [ano, mes] = str.split('-');
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${meses[parseInt(mes, 10) - 1] || mes}/${ano.substring(2)}`;
+}
+
+function formatarData(dataStr) {
+    if (!dataStr) return '—';
+    const partes = dataStr.split('-');
+    if (partes.length !== 3) return dataStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatarDataHora(iso) {
+    if (!iso) return '—';
+    try {
+        const d = new Date(iso);
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${dia}/${mes}/${d.getFullYear()} ${h}:${m}`;
+    } catch (e) { return '—'; }
+}
+
+/* ============================================================
+   BOTÃO ATUALIZAR (recalcula e redesenha)
+   ============================================================ */
+document.getElementById('btnAtualizar').addEventListener('click', async function () {
+    const btn = this;
+    if (btn.classList.contains('carregando')) return;
+    btn.classList.add('carregando');
+    btn.disabled = true;
+    limparCache();
+    atualizarInfoCache('aviso', 'recalculando…');
+    mostrarAviso('Recalculando indicadores…', 'sync', true);
+
+    try {
+        const resumo = await calcularResumoCompleto();
+        if (resumo) {
+            resumo._recalculo = 'manual';
+            try {
+                await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
+                    ...resumo,
+                    atualizadoEm: serverTimestamp()
+                });
+            } catch (e) {}
+
+            dadosAtuais = resumo;
+            salvarCache(resumo);
+            renderizarTudo(resumo);
+            atualizarInfoCache('fresco', 'atualizado agora');
+        }
+    } catch (e) {
+        console.error('[Painel] Erro ao recalcular:', e);
+        mostrarAviso('Não foi possível recalcular. Tente novamente.', 'error', false);
+        setTimeout(esconderAviso, 3000);
+    } finally {
+        btn.classList.remove('carregando');
+        btn.disabled = false;
+        setTimeout(esconderAviso, 800);
+    }
+});
 </script>
 
 </body>
