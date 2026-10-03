@@ -704,6 +704,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .form-group input.flatpickr-input[readonly] {
     background: var(--surface);
 }
+.form-group input.flatpickr-alt {
+    cursor: pointer;
+}
 
 .caixa-info {
     background: var(--surface-2);
@@ -1567,7 +1570,7 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <label for="mesReferencia">Mês de referência <span aria-hidden="true">*</span></label>
                                 <input type="text" id="mesReferencia" required
                                        class="campo-mes"
-                                       placeholder="AAAA-MM" autocomplete="off"
+                                       placeholder="Mês Ano" autocomplete="off"
                                        onchange="carregarConfiguracao(this.dataset.value || this.value)">
                                 <span class="ajuda">Este é o mês que você está cadastrando ou editando.</span>
                             </div>
@@ -1615,7 +1618,7 @@ tbody tr:hover td { background: var(--surface-2); }
                             <div class="form-group">
                                 <label for="mesReferenciaEspelho3">Mês de referência</label>
                                 <input type="text" id="mesReferenciaEspelho3" class="espelho-mes campo-mes"
-                                       placeholder="AAAA-MM" autocomplete="off">
+                                       placeholder="Mês Ano" autocomplete="off">
                             </div>
                         </div>
 
@@ -1691,7 +1694,7 @@ tbody tr:hover td { background: var(--surface-2); }
                             <div class="form-group">
                                 <label for="mesReferenciaEspelho4">Mês de referência</label>
                                 <input type="text" id="mesReferenciaEspelho4" class="espelho-mes campo-mes"
-                                       placeholder="AAAA-MM" autocomplete="off">
+                                       placeholder="Mês Ano" autocomplete="off">
                             </div>
                         </div>
 
@@ -1887,24 +1890,23 @@ tbody tr:hover td { background: var(--surface-2); }
         document.querySelectorAll('.campo-data').forEach(function (input) {
             flatpickr(input, {
                 locale: "pt",
-                dateFormat: "Y-m-d",     // valor interno (Firestore)
-                altInput: true,          // cria input visual
-                altFormat: "d/m/Y",      // mostra em DD/MM/AAAA
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
                 allowInput: false,
                 clickOpens: true,
                 disableMobile: true,
                 onChange: function (selectedDates, dateStr, instance) {
                     if (window.atualizarCorCampo) window.atualizarCorCampo(instance.element);
                     if (typeof ocultarMensagem === "function") ocultarMensagem();
-                    // usa instance.element (o input real, com o valor Y-m-d)
                     instance.element.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
         });
 
-        // ---- Campos de MÊS (.campo-mes) — grade de meses ----
+        // ---- Campos de MÊS (.campo-mes) — exibe em "Mês Ano" ----
         var plugin = (typeof monthSelectPlugin === 'function') ? [new monthSelectPlugin({
-            shorthand: true,
+            shorthand: false,
             dateFormat: "Y-m",
             altFormat: "F Y"
         })] : [];
@@ -1913,6 +1915,8 @@ tbody tr:hover td { background: var(--surface-2); }
             flatpickr(input, {
                 locale: "pt",
                 dateFormat: "Y-m",
+                altInput: true,          // cria input visual separado
+                altFormat: "F Y",        // mostra "Outubro 2026"
                 allowInput: false,
                 clickOpens: true,
                 disableMobile: true,
@@ -1945,10 +1949,9 @@ tbody tr:hover td { background: var(--surface-2); }
             return input.dataset.value || input.value || '';
         };
 
-        // Define o valor de um campo de DATA respeitando o Flatpickr
         window.setValorData = function (input, valor) {
             if (!input) return;
-            input.value = valor || '';  // o instance.element
+            input.value = valor || '';
             if (input._flatpickr) {
                 try {
                     if (valor) input._flatpickr.setDate(valor, false);
@@ -2461,7 +2464,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     function lerData(input) {
         if (!input) return '';
-        // o input real (instance.element) tem o valor Y-m-d
         return input.value || '';
     }
 
