@@ -1,1334 +1,290 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1f3a5f">
-<title>Férias, folgas e licenças — Vale Transporte</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,verified_user,block,list_alt,date_range,save,search">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
 
-<script>
-(function () {
-    try {
-        var t = localStorage.getItem('tema-vt') || 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
-
-        var menuFechado = localStorage.getItem('menu-vt-fechado');
-        if (menuFechado === '1') {
-            document.documentElement.classList.add('menu-inicial-fechado');
-        }
-    } catch (e) {}
-})();
-</script>
+<title>Controle de Férias, Folgas e Licenças - Vale Transporte</title>
 
 <style>
-/* ============================================================
-   LAYOUT — TOKENS (padrão servidores.html)
-   ============================================================ */
-:root,
-:root[data-theme="light"] {
-    --brand: #1f3a5f;
-    --brand-hover: #2c4d77;
-    --brand-soft: #e8eef5;
-
-    --gray-50:  #fafafa;
-    --gray-100: #f5f5f6;
-    --gray-200: #e4e4e7;
-    --gray-300: #d4d4d8;
-    --gray-400: #a1a1aa;
-    --gray-500: #71717a;
-    --gray-600: #52525b;
-    --gray-700: #3f3f46;
-    --gray-800: #27272a;
-    --gray-900: #18181b;
-
-    --ok: #1a6a38;
-    --ok-bg: #f1f8f3;
-    --ok-bd: #bfdcc6;
-    --warn: #8a5610;
-    --warn-bg: #fbf7ef;
-    --warn-bd: #e6d3ac;
-    --danger: #9a1e1e;
-    --danger-bg: #fbf3f3;
-    --danger-bd: #e0c2c2;
-    --info: #1a4d8f;
-    --info-bg: #f0f5fb;
-    --info-bd: #c3d5e9;
-
-    --background: #eef0f3;
-    --surface: #ffffff;
-    --surface-2: #f7f8fa;
-    --surface-3: #eef0f3;
-
-    --text: #1a1d21;
-    --text-secondary: #4d5560;
-    --text-muted: #7b8490;
-
-    --border: #d8dce0;
-    --border-strong: #b8bfc7;
-
-    --shadow-sm: 0 1px 2px rgba(20,25,35,.05);
-    --shadow-md: 0 2px 6px rgba(20,25,35,.08);
-
-    --sidebar-width: 268px;
-    --topbar-height: 56px;
-
-    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-
-    /* Aliases p/ compatibilidade */
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-hover: #155329;
-    --green-light: var(--ok-bg);
-    --green-border: var(--ok-bd);
-    --red: var(--danger);
-    --red-hover: #7d1717;
-    --red-light: var(--danger-bg);
-    --red-border: var(--danger-bd);
-    --yellow: var(--warn);
-    --yellow-light: var(--warn-bg);
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f5f2f8;
+    --green: #2e7d32;
+    --green-hover: #1b5e20;
+    --green-light: #eaf6ec;
+    --green-border: #72b879;
+    --red: #c62828;
+    --red-hover: #a51f1f;
+    --red-light: #fff0f0;
+    --red-border: #efc5c5;
+    --yellow: #b45309;
+    --yellow-light: #fef3c7;
+    --text: #263238;
+    --text-secondary: #68737d;
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-:root[data-theme="dark"] {
-    --brand: #7ba3cd;
-    --brand-hover: #96b8db;
-    --brand-soft: #1a2634;
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; min-height: 100%; }
+body { min-height: 100vh; background: var(--background); color: var(--text); }
 
-    --gray-50:  #1a1c20;
-    --gray-100: #1e2024;
-    --gray-200: #2a2d31;
-    --gray-300: #3a3d42;
-    --gray-400: #52555b;
-    --gray-500: #71757c;
-    --gray-600: #a1a5ab;
-    --gray-700: #d4d7db;
-    --gray-800: #e4e6e9;
-    --gray-900: #f4f5f7;
+.topbar { width: 100%; max-width: 1116px; height: 68px; margin: 16px auto 0; background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; padding: 0 20px; }
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 12px; }
+.logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 22px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); flex-grow: 1; }
 
-    --ok: #86c79a;
-    --ok-bg: #13251a;
-    --ok-bd: #2f5c3f;
-    --warn: #e4c56c;
-    --warn-bg: #26200f;
-    --warn-bd: #5c4d2a;
-    --danger: #f0a1a1;
-    --danger-bg: #241515;
-    --danger-bd: #5c3434;
-    --info: #a3b8dd;
-    --info-bg: #141b28;
-    --info-bd: #33405a;
+.info-usuario-logado { display: none; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--primary); background: var(--primary-light); padding: 6px 12px; border-radius: 20px; border: 1px solid #e0d5ec; flex-shrink: 0; }
+.info-usuario-logado.ativo { display: flex; }
+.info-usuario-logado .material-symbols-outlined { font-size: 16px; }
 
-    --background: #0f1114;
-    --surface: #171a1e;
-    --surface-2: #1c1f23;
-    --surface-3: #23262b;
-
-    --text: #eceef1;
-    --text-secondary: #a1a5ab;
-    --text-muted: #71757c;
-
-    --border: #2a2d32;
-    --border-strong: #3a3d42;
-
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-    --shadow-md: 0 2px 6px rgba(0,0,0,.5);
-
-    --primary: var(--brand);
-    --primary-hover: var(--brand-hover);
-    --primary-light: var(--brand-soft);
-    --green: var(--ok);
-    --green-hover: #6fb886;
-    --green-light: var(--ok-bg);
-    --green-border: var(--ok-bd);
-    --red: var(--danger);
-    --red-hover: #ffc0c0;
-    --red-light: var(--danger-bg);
-    --red-border: var(--danger-bd);
-    --yellow: var(--warn);
-    --yellow-light: var(--warn-bg);
-    --white: var(--surface);
-    --shadow: var(--shadow-md);
-}
-
-/* ============================================================
-   RESET
-   ============================================================ */
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font);
-    -webkit-tap-highlight-color: transparent;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    background: var(--background);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
-body { overflow: hidden; }
-button { font: inherit; color: inherit; cursor: pointer; }
-
-:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-    border-radius: 3px;
-}
-
-.visually-hidden {
-    position: absolute !important;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0);
-    white-space: nowrap; border: 0;
-}
-
-/* ============================================================
-   LAYOUT
-   ============================================================ */
-.layout {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-}
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-.sidebar {
-    width: var(--sidebar-width);
-    min-width: var(--sidebar-width);
-    height: 100%;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    transition: width .25s ease, min-width .25s ease, transform .25s ease;
-    overflow: hidden;
-    z-index: 100;
-}
-.sidebar.fechado { width: 0; min-width: 0; border-right: none; }
-:root.menu-inicial-fechado .sidebar { width: 0; min-width: 0; border-right: none; }
-
-.sidebar-inner {
-    width: var(--sidebar-width);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    height: var(--topbar-height);
-    padding: 0 12px 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    background: var(--surface);
-}
-
-.sidebar-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
-.sidebar-brand { display: flex; flex-direction: column; gap: 0; min-width: 0; flex: 1; }
-.sidebar-brand strong { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
-.sidebar-brand span {
-    font-size: 10.5px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .4px;
-    line-height: 1.2; margin-top: 1px;
-}
-
-.btn-fechar-sidebar {
-    display: none; width: 32px; height: 32px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    align-items: center; justify-content: center; flex-shrink: 0;
-}
-.btn-fechar-sidebar .material-symbols-outlined { font-size: 20px; }
-@media (max-width: 900px) {
-    .sidebar.aberta-mobile .btn-fechar-sidebar { display: inline-flex; }
-}
-
-.sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-
-.menu-section { padding: 16px 0 8px; }
-.menu-section-title {
-    padding: 0 20px; font-size: 10.5px; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: .7px; margin-bottom: 6px;
-}
-.menu { list-style: none; padding: 0 10px; display: flex; flex-direction: column; gap: 1px; }
-.menu-item a {
-    display: flex; align-items: center; gap: 11px;
-    padding: 9px 12px; border-radius: 4px;
-    text-decoration: none; color: var(--text-secondary);
-    font-size: 13.5px; font-weight: 500;
-    position: relative; white-space: nowrap;
-}
-.menu-item a:hover { background: var(--surface-2); color: var(--text); }
-.menu-item.ativo a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
-.menu-item.ativo a::before {
-    content: ""; position: absolute; left: -10px; top: 50%;
-    transform: translateY(-50%); width: 3px; height: 20px;
-    background: var(--brand); border-radius: 0 3px 3px 0;
-}
-.menu-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-.menu-item.ativo .material-symbols-outlined { opacity: 1; }
-
-.menu-item .menu-badge {
-    margin-left: auto; font-size: 10.5px; font-weight: 600;
-    color: var(--warn); background: var(--warn-bg);
-    border: 1px solid var(--warn-bd);
-    padding: 1px 7px; border-radius: 999px; line-height: 1.4;
-}
-
-.menu-section-sair {
-    margin-top: 8px; padding-top: 16px;
-    border-top: 1px solid var(--border); padding-bottom: 8px;
-}
-.menu-item-sair button {
-    display: flex; align-items: center; gap: 11px;
-    width: 100%; padding: 9px 12px; border-radius: 4px;
-    background: transparent; border: none;
-    color: var(--text-secondary); font-size: 13.5px;
-    font-weight: 500; text-align: left; white-space: nowrap;
-}
-.menu-item-sair button:hover { background: var(--danger-bg); color: var(--danger); }
-.menu-item-sair button .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
-
-.sidebar-info { padding: 16px 22px 22px; font-size: 10.5px; color: var(--text-muted); line-height: 1.5; }
-.sidebar-info strong { color: var(--text-secondary); font-weight: 600; display: block; font-size: 11px; margin-bottom: 2px; }
-
-.sidebar-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .45);
-    z-index: 150; opacity: 0; transition: opacity .2s ease;
-}
-.sidebar-backdrop.ativo { display: block; opacity: 1; }
-@media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
-
-/* ============================================================
-   MAIN
-   ============================================================ */
-.main {
-    flex: 1 1 auto; min-width: 0; min-height: 0;
-    display: flex; flex-direction: column; height: 100%;
-    overflow: hidden; background: var(--background);
-}
-
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    height: var(--topbar-height);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; gap: 16px; flex-shrink: 0; z-index: 50;
-}
-.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; }
-.btn-menu {
-    width: 34px; height: 34px; flex-shrink: 0;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-}
-.btn-menu:hover { background: var(--surface-2); color: var(--text); }
-.btn-menu .material-symbols-outlined { font-size: 20px; }
-
-.topbar-title { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.topbar-title strong {
-    font-size: 13.5px; font-weight: 600; color: var(--text);
-    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-title span {
-    font-size: 11px; color: var(--text-muted); line-height: 1.2;
-    margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.topbar-btn {
-    height: 34px; padding: 0 12px;
-    background: transparent; border: 1px solid transparent;
-    border-radius: 4px; color: var(--text-secondary);
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12.5px; font-weight: 500;
-}
-.topbar-btn:hover { background: var(--surface-2); color: var(--text); }
-.topbar-btn .material-symbols-outlined { font-size: 18px; }
-.topbar-btn.carregando .material-symbols-outlined { animation: girar 1s linear infinite; }
-@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.topbar-user-group { display: flex; align-items: center; gap: 4px; }
-.topbar-user {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 10px 4px 4px; border-radius: 999px;
-    border: 1px solid var(--border); background: var(--surface-2);
-    max-width: 220px; min-width: 0;
-}
-.user-avatar {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--brand); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600; flex-shrink: 0;
-}
-.user-info { display: flex; flex-direction: column; gap: 0; min-width: 0; line-height: 1.15; }
-.user-info strong {
-    font-size: 12px; font-weight: 600; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.user-info span {
-    font-size: 10.5px; color: var(--text-muted);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.topbar-sair {
-    width: 34px; height: 34px; padding: 0;
-    background: transparent; border: none; border-radius: 4px;
-    color: var(--text-secondary);
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: background-color .12s ease, color .12s ease;
-}
-.topbar-sair:hover { background: var(--danger-bg); color: var(--danger); }
-.topbar-sair .material-symbols-outlined { font-size: 20px; }
-
-.btn-tema .icon-dark  { display: none; }
-.btn-tema .icon-light { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
-:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
-
-/* ============================================================
-   MODAL DE SAIR
-   ============================================================ */
-.modal-sair-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(20, 25, 35, .55);
-    z-index: 9999; align-items: center; justify-content: center;
-    padding: 20px; opacity: 0; transition: opacity .18s ease;
-}
-.modal-sair-overlay.ativo { display: flex; opacity: 1; }
-.modal-sair {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; max-width: 400px; width: 100%;
-    padding: 28px 28px 22px;
-    box-shadow: 0 20px 50px rgba(20, 25, 35, .28);
-    text-align: center; animation: modalSairEntrar .22s ease;
-}
-@keyframes modalSairEntrar {
-    from { transform: translateY(-12px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-.modal-sair-icone {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--danger-bg); color: var(--danger);
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-bottom: 16px; border: 1px solid var(--danger-bd);
-}
-.modal-sair-icone .material-symbols-outlined { font-size: 28px; }
-.modal-sair-titulo {
-    font-size: 17px; font-weight: 600; color: var(--text);
-    letter-spacing: -.01em; margin-bottom: 22px; line-height: 1.25;
-}
-.modal-sair-acoes { display: flex; gap: 10px; justify-content: center; }
-.modal-sair-btn {
-    height: 38px; padding: 0 18px; border-radius: 5px;
-    border: 1px solid transparent; font-size: 13.5px; font-weight: 500;
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; white-space: nowrap; min-width: 110px;
-}
-.modal-sair-btn .material-symbols-outlined { font-size: 17px; }
-.modal-sair-btn-cancelar {
-    background: var(--surface); color: var(--text);
-    border-color: var(--border-strong); order: 1;
-}
-.modal-sair-btn-cancelar:hover { background: var(--surface-2); border-color: var(--gray-400); }
-.modal-sair-btn-confirmar {
-    background: var(--danger); color: #fff;
-    border-color: var(--danger); order: 2;
-}
-.modal-sair-btn-confirmar:hover { background: #7d1717; border-color: #7d1717; }
-.modal-sair-btn:disabled { opacity: .65; cursor: not-allowed; }
-
-@media (max-width: 480px) {
-    .modal-sair-overlay { padding: 0; align-items: flex-end; }
-    .modal-sair {
-        padding: 24px 20px 18px; border-radius: 12px 12px 0 0;
-        max-width: 100%; align-self: flex-end; margin: 0;
-    }
-    .modal-sair-acoes { flex-direction: column-reverse; width: 100%; }
-    .modal-sair-btn { width: 100%; min-width: 0; }
-}
-
-/* ============================================================
-   CONTENT PAGE
-   ============================================================ */
-.content-page {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 24px 28px 32px;
-}
-
-.breadcrumb {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 13px; color: var(--text-muted);
-    margin-bottom: 12px;
-}
+.main { width: 100%; max-width: 1116px; margin: 0 auto; padding: 24px 16px; }
+.page-header { margin-bottom: 24px; }
+.breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b858e; margin-bottom: 8px; }
 .breadcrumb .material-symbols-outlined { font-size: 17px; }
-.breadcrumb a { text-decoration: none; color: inherit; }
-.breadcrumb a:hover { color: var(--brand); }
-.breadcrumb .sep { opacity: .5; }
+.page-header h1 { font-size: 24px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 14px; color: var(--text-secondary); }
 
-.page-header-page {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
-}
-.page-header-page h1 {
-    font-family: var(--font-serif);
-    font-size: 24px; font-weight: 600; color: var(--text);
-    margin-bottom: 4px;
-}
-.page-header-page p { font-size: 13px; color: var(--text-secondary); }
-
-/* ============================================================
-   ACESSO NEGADO / LOADING AUTH
-   ============================================================ */
-.acesso-negado-banner {
-    display: none; background: var(--danger-bg);
-    border: 1px solid var(--danger-bd); color: var(--danger);
-    padding: 20px 24px; border-radius: 8px;
-    margin-bottom: 20px; font-size: 14px;
-    align-items: flex-start; gap: 14px;
-    box-shadow: var(--shadow-sm);
-}
+.acesso-negado-banner { display: none; background: var(--red-light); border: 1px solid var(--red-border); color: var(--red); padding: 20px 24px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; align-items: flex-start; gap: 14px; box-shadow: var(--shadow); }
 .acesso-negado-banner.ativo { display: flex; }
-.acesso-negado-banner .material-symbols-outlined {
-    font-size: 28px; flex-shrink: 0;
-}
+.acesso-negado-banner .material-symbols-outlined { font-size: 28px; flex-shrink: 0; }
 .acesso-negado-banner strong { display: block; font-size: 15px; margin-bottom: 4px; }
 .acesso-negado-banner p { margin: 0; line-height: 1.6; }
-.acesso-negado-banner code { word-break: break-all; }
 
-.conteudo-bloqueado { opacity: .4; pointer-events: none; filter: grayscale(30%); }
-
-.loading-auth {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 60px 20px; gap: 16px;
-    color: var(--text-secondary);
-}
-.loading-auth .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--brand);
-    border-radius: 50%; animation: spin .8s linear infinite;
-}
+.conteudo-bloqueado { opacity: 0.4; pointer-events: none; filter: grayscale(30%); }
+.loading-auth { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 16px; color: var(--text-secondary); }
+.loading-auth .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ============================================================
-   FORM
-   ============================================================ */
-.form-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: var(--shadow-sm);
-    padding: 20px; margin-bottom: 20px;
-}
-.card-title {
-    font-size: 16px; font-weight: 700;
-    color: var(--brand); margin-bottom: 16px;
-    display: flex; align-items: center; gap: 8px;
-}
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px; margin-bottom: 18px;
-}
+.form-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; }
+.card-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 18px; }
 .form-group { display: flex; flex-direction: column; }
 .form-group.full-width { grid-column: 1 / -1; }
-.form-group label {
-    font-size: 13px; font-weight: 600;
-    color: var(--text-secondary); margin-bottom: 6px;
-}
-.form-group label span { color: var(--red); }
-.form-group input,
-.form-group select {
-    height: 42px; padding: 0 12px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; outline: none;
-    font-size: 14px; color: var(--text); width: 100%;
-}
-.form-group input:focus,
-.form-group select:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px var(--brand-soft);
-}
-.form-group input[type="date"]:disabled {
-    background-color: var(--surface-3);
-    color: var(--text-muted); cursor: not-allowed;
-    border-color: var(--border-strong); opacity: 1;
-}
-.form-group input[type="date"].campo-automatico {
-    background-color: var(--brand-soft);
-    border-color: var(--brand);
-    color: var(--brand); font-weight: 600;
-}
-.info-campo-automatico {
-    display: none; font-size: 11px;
-    color: var(--brand); margin-top: 4px; font-weight: 500;
-}
+.form-group label { font-size: 13px; font-weight: 600; color: #455a64; margin-bottom: 6px; }
+.form-group input, .form-group select { height: 42px; padding: 0 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 14px; color: #263238; width: 100%; }
+.form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,42,134,.10); }
+.form-group input[type="date"]:disabled { background-color: #f1f3f5; color: #68737d; cursor: not-allowed; border-color: #cbd5e1; opacity: 1; }
+.form-group input[type="date"].campo-automatico { background-color: #f5f2f8; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+.info-campo-automatico { display: none; font-size: 11px; color: var(--primary); margin-top: 4px; font-weight: 500; }
 .info-campo-automatico.visivel { display: block; }
 
-.periodo-info-box {
-    display: none; background: var(--brand-soft);
-    border: 1px solid var(--brand-soft);
-    border-radius: 6px; padding: 10px 14px;
-    margin-top: 6px; font-size: 12px; color: var(--text);
-}
+.periodo-info-box { display: none; background: #f5f2f8; border: 1px solid #e0d5ec; border-radius: 6px; padding: 10px 14px; margin-top: 6px; font-size: 12px; color: var(--text); }
 .periodo-info-box.visivel { display: block; }
-.periodo-info-box strong { color: var(--brand); }
-.periodo-info-box.vencido {
-    background: var(--danger-bg); border-color: var(--danger-bd);
-}
-.periodo-info-box.vencido strong { color: var(--danger); }
+.periodo-info-box strong { color: var(--primary); }
+.periodo-info-box.vencido { background: var(--red-light); border-color: var(--red-border); }
+.periodo-info-box.vencido strong { color: var(--red); }
 
-select option.vencido { color: var(--danger); font-weight: 600; }
-select option.atual { color: var(--brand); font-weight: 700; }
+select option.vencido { color: var(--red); font-weight: 600; }
+select option.atual { color: var(--primary); font-weight: 700; }
 
-.alerta-periodo-vencido {
-    display: none; background: var(--warn-bg);
-    border: 1px solid var(--warn-bd); color: var(--warn);
-    padding: 10px 14px; border-radius: 6px;
-    font-size: 12px; font-weight: 500; margin-top: 8px;
-    align-items: flex-start; gap: 8px;
-}
+.alerta-periodo-vencido { display: none; background: var(--yellow-light); border: 1px solid #fde68a; color: var(--yellow); padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; margin-top: 8px; align-items: flex-start; gap: 8px; }
 .alerta-periodo-vencido.visivel { display: flex; }
-.alerta-periodo-vencido .material-symbols-outlined {
-    font-size: 18px; flex-shrink: 0;
-}
+.alerta-periodo-vencido .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
 
 .cpf-search-wrapper { display: flex; gap: 8px; width: 100%; }
-.btn-acao {
-    height: 42px; background: var(--brand); color: #fff;
-    border: none; border-radius: 6px; padding: 0 16px;
-    font-weight: 600; cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; font-size: 13px; transition: background .15s;
-    flex-shrink: 0;
-}
-.btn-acao:hover { background: var(--brand-hover); }
-.btn-salvar { background: var(--ok); width: 100%; }
+.btn-acao { height: 42px; background: var(--primary); color: white; border: none; border-radius: 6px; padding: 0 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; transition: background 0.15s; flex-shrink: 0; }
+.btn-acao:hover { background: var(--primary-hover); }
+.btn-salvar { background: var(--green); width: 100%; }
 .btn-salvar:hover { background: var(--green-hover); }
-.btn-salvar:disabled { opacity: .5; cursor: not-allowed; }
+.btn-salvar:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ============================================================
-   TABELA
-   ============================================================ */
-.table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; box-shadow: var(--shadow-sm);
-    overflow: hidden;
-}
-.table-header-actions {
-    padding: 16px 20px; display: flex;
-    justify-content: space-between; align-items: center;
-    gap: 16px; border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; background: var(--surface-2);
-}
-.table-title {
-    font-size: 16px; font-weight: 700;
-    color: var(--brand); display: flex; align-items: center; gap: 8px;
-}
-.search-table-wrapper {
-    position: relative; width: 100%;
-    max-width: 360px; min-width: 0; flex: 1;
-}
-.search-table-wrapper input {
-    width: 100%; height: 38px;
-    padding: 0 12px 0 38px;
-    border: 1px solid var(--border);
-    border-radius: 6px; font-size: 13px;
-    outline: none; background: var(--surface); color: var(--text);
-}
-.search-table-wrapper .material-symbols-outlined {
-    position: absolute; left: 10px; top: 50%;
-    transform: translateY(-50%); font-size: 18px;
-    color: var(--text-secondary);
-}
+.table-card { background: var(--white); border: 1px solid #e0e4e7; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.table-header-actions { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid #e5e8eb; flex-wrap: wrap; background: #fafbfc; }
+.table-title { font-size: 16px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.search-table-wrapper { position: relative; width: 100%; max-width: 360px; min-width: 0; flex: 1; }
+.search-table-wrapper input { width: 100%; height: 38px; padding: 0 12px 0 38px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background: #ffffff; color: var(--text); }
+.search-table-wrapper .material-symbols-outlined { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-secondary); }
 
 .table-responsive { width: 100%; overflow-x: auto; }
-table {
-    width: 100%; border-collapse: collapse;
-    text-align: left; white-space: nowrap;
-}
-th {
-    background: var(--surface-2); padding: 12px 16px;
-    font-size: 11px; font-weight: 700;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: .4px;
-}
-td {
-    padding: 12px 16px; font-size: 13px;
-    color: var(--text); border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-}
-tr:hover td { background: var(--surface-2); }
+table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+th { background: #fafbfc; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #455a64; border-bottom: 1px solid #e5e8eb; text-transform: uppercase; }
+td { padding: 12px 16px; font-size: 13px; color: #263238; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+tr:hover td { background: #f8fafc; }
 
-.btn-excluir {
-    background: var(--danger); color: #fff;
-    border: none; padding: 6px 10px;
-    border-radius: 4px; cursor: pointer;
-    font-size: 12px; display: inline-flex;
-    align-items: center; gap: 4px;
-}
+.btn-excluir { background: var(--red); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
 .btn-excluir:hover { background: var(--red-hover); }
 
-/* ============================================================
-   MENSAGENS
-   ============================================================ */
-.mensagem {
-    display: none; padding: 12px 14px;
-    border-radius: 6px; font-size: 13px;
-    font-weight: 500; margin-bottom: 16px;
-}
-.mensagem.sucesso {
-    display: block; background: var(--ok-bg);
-    border: 1px solid var(--ok-bd); color: var(--ok);
-}
-.mensagem.erro {
-    display: block; background: var(--danger-bg);
-    border: 1px solid var(--danger-bd); color: var(--danger);
-}
+.mensagem { display: none; padding: 12px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
+.mensagem.sucesso { display: block; background: #edf7ee; border: 1px solid #c8e6c9; color: #2e7d32; }
+.mensagem.erro { display: block; background: #fff0f0; border: 1px solid #efc5c5; color: #c62828; }
 
-/* ============================================================
-   RESPONSIVO
-   ============================================================ */
-@media (max-width: 900px) {
-    .sidebar {
-        position: fixed; top: 0; left: 0;
-        height: 100vh; height: 100dvh;
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-        transition: transform .25s ease;
-        box-shadow: var(--shadow-md);
-        border-right: 1px solid var(--border); z-index: 200;
-    }
-    .sidebar.aberta-mobile { transform: translateX(0); }
-    .sidebar.fechado {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-        border-right: 1px solid var(--border);
-    }
-    :root.menu-inicial-fechado .sidebar {
-        width: var(--sidebar-width); min-width: var(--sidebar-width);
-        transform: translateX(-100%);
-    }
-    .topbar { padding: 0 16px; gap: 12px; }
-    .topbar-title span { display: none; }
-    .topbar-user .user-info span { display: none; }
-    .topbar-btn .btn-texto { display: none; }
-    .topbar-btn { padding: 0 10px; }
-}
-
-@media (max-width: 768px) {
-    .content-page { padding: 16px 12px 32px; }
+@media (max-width: 600px) {
+    .topbar { margin-top: 0; border-radius: 0; }
+    .main { padding: 16px 12px; }
     .cpf-search-wrapper { flex-direction: column; }
     .btn-acao { width: 100%; }
     .table-header-actions { flex-direction: column; align-items: stretch; gap: 12px; }
     .search-table-wrapper { max-width: 100%; }
-}
-
-@media (max-width: 640px) {
-    .topbar { padding: 0 12px; gap: 8px; }
-    .topbar-btn { padding: 0 8px; height: 32px; }
-    .topbar-user { display: none; }
-    .topbar-right { gap: 4px; }
-    .page-header-page h1 { font-size: 20px; }
-}
-
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-/* ============================================================
-   IMPRESSÃO
-   ============================================================ */
-@media print {
-    @page { margin: 1.5cm; }
-    body { background: #fff !important; color: #000 !important; overflow: visible !important; }
-    .layout { display: block; height: auto; overflow: visible; }
-    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
-    .topbar-sair, .modal-sair-overlay, .acesso-negado-banner,
-    .loading-auth, .form-card, .breadcrumb, .page-header-page { display: none !important; }
-    .main { overflow: visible; }
-    .content-page { overflow: visible; padding: 0; }
-    .table-card {
-        border: none !important; box-shadow: none !important;
-        overflow: visible !important;
-    }
-    table { font-size: 10px !important; white-space: normal !important; }
-    th, td { padding: 6px 8px !important; }
+    .info-usuario-logado { display: none !important; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="layout">
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Férias, Folgas e Licenças</span>
+        <div class="info-usuario-logado" id="infoUsuarioLogado">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span id="textoUsuarioLogado">Administrador</span>
+        </div>
+    </div>
+</header>
 
-    <!-- ==================================================
-         SIDEBAR (padrão servidores.html)
-         ================================================== -->
-    <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
-        <div class="sidebar-inner">
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+            <span>/</span>
+            <span>Controle de Ausências</span>
+        </div>
+        <h1>Lançamento de Férias, Folga e Licenças</h1>
+        <p>Busque por CPF, selecione a matrícula/escola, escolha o período aquisitivo e registre.</p>
+    </div>
 
-            <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
-                <div class="sidebar-brand">
-                    <strong>Vale Transporte</strong>
-                    <span>SEMED · RH</span>
-                </div>
-                <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
-                </button>
+    <div class="acesso-negado-banner" id="acessoNegadoBanner">
+        <span class="material-symbols-outlined">block</span>
+        <div style="flex:1;"><p id="textoAcessoNegado">Verificando permissões de acesso...</p></div>
+    </div>
+
+    <div class="loading-auth" id="loadingAuth">
+        <div class="spinner"></div>
+        <span>Verificando permissões de acesso...</span>
+    </div>
+
+    <div id="conteudoPrincipal" class="conteudo-bloqueado" style="display: none;">
+        <section class="form-card">
+            <div class="card-title">
+                <span class="material-symbols-outlined">event_note</span>
+                Registrar Período de Ausência
             </div>
 
-            <div class="sidebar-scroll">
-                <nav class="menu-section">
-                    <div class="menu-section-title">Principal</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="inicial.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                                <span>Painel de controle</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="servidores.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                                <span>Servidores e vínculos</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Configuração</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="configuracao.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                <span>Dias úteis e meses</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades escolares</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Operação</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                                <span>Lançamentos da unidade</span>
-                            </a>
-                        </li>
-                        <li class="menu-item ativo">
-                            <a href="lancamentos.html" aria-current="page">
-                                <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                                <span>Férias, folgas e licenças</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="calculo.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                                <span>Cálculo e vales</span>
-                                <span class="menu-badge">Mensal</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section">
-                    <div class="menu-section-title">Consultas</div>
-                    <ul class="menu">
-                        <li class="menu-item">
-                            <a href="relatorios.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                                <span>Relatórios gerais</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="linha_tempo.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
-                                <span>Linha do tempo</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <nav class="menu-section menu-section-sair">
-                    <ul class="menu">
-                        <li class="menu-item menu-item-sair">
-                            <button type="button" id="btnSairSidebar">
-                                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                                <span>Sair do sistema</span>
+            <form id="formFerias" onsubmit="salvarRegistro(event)">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
+                        <div class="cpf-search-wrapper">
+                            <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
+                            <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
                             </button>
-                        </li>
-                    </ul>
-                </nav>
+                        </div>
+                        <small id="nomeServidorEncontrado" style="margin-top: 6px; font-weight: 600; color: var(--primary);"></small>
+                    </div>
 
-                <div class="sidebar-info">
-                    <strong>Versão 1.0.0</strong>
-                    Sistema de gestão de vale transporte
+                    <div class="form-group full-width" id="grupoVinculo" style="display:none;">
+                        <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
+                        <select id="selectVinculo" required onchange="carregarPeriodosAbertos()">
+                            <option value="">Selecione o vínculo...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
+                        <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
+                            <option value="FERIAS">Férias Regulamentares</option>
+                            <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
+                            <option value="LICENCA_MEDICA">Licença Médica</option>
+                            <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width" id="grupoPeriodoAquisitivo" style="display:none;">
+                        <label for="selectPeriodo">
+                            <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">date_range</span>
+                            Período Aquisitivo (Referência) <span>*</span>
+                        </label>
+                        <select id="selectPeriodo" required onchange="atualizarInfoPeriodo()">
+                            <option value="">Selecione o vínculo primeiro...</option>
+                        </select>
+                        <div class="periodo-info-box" id="periodoInfoBox"></div>
+                        <div class="alerta-periodo-vencido" id="alertaPeriodoVencido">
+                            <span class="material-symbols-outlined">warning</span>
+                            <div>
+                                <strong>Atenção:</strong> Este período está vencido. O gozo será registrado como <b>extemporâneo</b> (fora do prazo legal).
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="grupoDuracaoFerias">
+                        <label for="duracaoFerias">Duração das Férias <span>*</span></label>
+                        <select id="duracaoFerias" onchange="calcularDataFim()">
+                            <option value="30">30 Dias Corridos</option>
+                            <option value="15">15 Dias Corridos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupoDataInicio">
+                        <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
+                        <input type="date" id="dataInicio" required onchange="calcularDataFim()">
+                    </div>
+
+                    <div class="form-group" id="grupoDataFim">
+                        <label for="dataFim">Data de Término <span>*</span></label>
+                        <input type="date" id="dataFim" required>
+                        <small class="info-campo-automatico" id="infoDataFimAuto">🔒 Calculado automaticamente (15 ou 30 dias)</small>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </aside>
 
-    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+                <div id="mensagem" class="mensagem"></div>
 
-    <!-- ==================================================
-         MAIN
-         ================================================== -->
-    <div class="main">
-
-        <header class="topbar">
-            <div class="topbar-left">
-                <button type="button" class="btn-menu" id="btnMenuToggle" aria-label="Abrir ou fechar menu lateral" aria-controls="sidebarMenu" aria-expanded="true" title="Abrir / fechar menu">
-                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+                <button type="submit" class="btn-acao btn-salvar" id="btnSalvar">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
+                    Salvar Lançamento
                 </button>
+            </form>
+        </section>
 
-                <div class="topbar-title">
-                    <strong>Lançamentos</strong>
-                    <span>SEMED — Férias, Folgas e Licenças</span>
+        <section class="table-card">
+            <div class="table-header-actions">
+                <div class="table-title">
+                    <span class="material-symbols-outlined">list_alt</span>
+                    Registros Cadastrados
+                </div>
+                <div class="search-table-wrapper">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="filtroTabela" placeholder="Filtrar por nome, CPF, escola..." oninput="filtrarTabela()">
                 </div>
             </div>
-
-            <div class="topbar-right">
-                <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
-                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
-                    <span class="btn-texto">Atualizar</span>
-                </button>
-
-                <button type="button" class="topbar-btn btn-tema" id="btnTema" title="Alternar tema claro/escuro">
-                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
-                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
-                    <span class="btn-texto">Tema</span>
-                </button>
-
-                <div class="topbar-user-group">
-                    <div class="topbar-user" title="Usuário logado">
-                        <div class="user-avatar" id="userAvatar">—</div>
-                        <div class="user-info">
-                            <strong id="userNameLabel">Usuário</strong>
-                            <span id="userEmailLabel">Carregando…</span>
-                        </div>
-                    </div>
-
-                    <button type="button" class="topbar-sair" id="btnSairTopbar" title="Sair do sistema" aria-label="Sair do sistema">
-                        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    </button>
-                </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Servidor</th>
+                            <th>CPF / Matrícula</th>
+                            <th>Escola</th>
+                            <th>Tipo</th>
+                            <th>Período</th>
+                            <th>Início</th>
+                            <th>Término</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaRegistros">
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td></tr>
+                    </tbody>
+                </table>
             </div>
-        </header>
-
-        <!-- ==================================================
-             CONTEÚDO DA PÁGINA
-             ================================================== -->
-        <div class="content-page">
-
-            <div class="breadcrumb">
-                <span class="material-symbols-outlined">home</span>
-                <a href="inicial.html">Início</a>
-                <span class="sep">/</span>
-                <span>Férias, folgas e licenças</span>
-            </div>
-
-            <div class="page-header-page">
-                <div>
-                    <h1>Lançamento de Férias, Folga e Licenças</h1>
-                    <p>Busque por CPF, selecione a matrícula/escola, escolha o período aquisitivo e registre.</p>
-                </div>
-            </div>
-
-            <div class="acesso-negado-banner" id="acessoNegadoBanner">
-                <span class="material-symbols-outlined">block</span>
-                <div style="flex:1;"><p id="textoAcessoNegado">Verificando permissões de acesso...</p></div>
-            </div>
-
-            <div class="loading-auth" id="loadingAuth">
-                <div class="spinner"></div>
-                <span>Verificando permissões de acesso...</span>
-            </div>
-
-            <div id="conteudoPrincipal" class="conteudo-bloqueado" style="display: none;">
-                <section class="form-card">
-                    <div class="card-title">
-                        <span class="material-symbols-outlined">event_note</span>
-                        Registrar Período de Ausência
-                    </div>
-
-                    <form id="formFerias" onsubmit="salvarRegistro(event)">
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label for="inputCpf">Buscar Servidor por CPF <span>*</span></label>
-                                <div class="cpf-search-wrapper">
-                                    <input type="text" id="inputCpf" placeholder="000.000.000-00" maxlength="14" required>
-                                    <button type="button" class="btn-acao" onclick="buscarServidorPorCpf()">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">search</span> Buscar
-                                    </button>
-                                </div>
-                                <small id="nomeServidorEncontrado" style="margin-top: 6px; font-weight: 600; color: var(--primary);"></small>
-                            </div>
-
-                            <div class="form-group full-width" id="grupoVinculo" style="display:none;">
-                                <label for="selectVinculo">Selecione a Matrícula e Escola Afetada <span>*</span></label>
-                                <select id="selectVinculo" required onchange="carregarPeriodosAbertos()">
-                                    <option value="">Selecione o vínculo...</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="tipoAusencia">Tipo de Ausência <span>*</span></label>
-                                <select id="tipoAusencia" required onchange="mudarTipoAusencia()">
-                                    <option value="FERIAS">Férias Regulamentares</option>
-                                    <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
-                                    <option value="LICENCA_MEDICA">Licença Médica</option>
-                                    <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group full-width" id="grupoPeriodoAquisitivo" style="display:none;">
-                                <label for="selectPeriodo">
-                                    <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">date_range</span>
-                                    Período Aquisitivo (Referência) <span>*</span>
-                                </label>
-                                <select id="selectPeriodo" required onchange="atualizarInfoPeriodo()">
-                                    <option value="">Selecione o vínculo primeiro...</option>
-                                </select>
-                                <div class="periodo-info-box" id="periodoInfoBox"></div>
-                                <div class="alerta-periodo-vencido" id="alertaPeriodoVencido">
-                                    <span class="material-symbols-outlined">warning</span>
-                                    <div>
-                                        <strong>Atenção:</strong> Este período está vencido. O gozo será registrado como <b>extemporâneo</b> (fora do prazo legal).
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group" id="grupoDuracaoFerias">
-                                <label for="duracaoFerias">Duração das Férias <span>*</span></label>
-                                <select id="duracaoFerias" onchange="calcularDataFim()">
-                                    <option value="30">30 Dias Corridos</option>
-                                    <option value="15">15 Dias Corridos</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group" id="grupoDataInicio">
-                                <label for="dataInicio" id="labelDataInicio">Data de Início <span>*</span></label>
-                                <input type="date" id="dataInicio" required onchange="calcularDataFim()">
-                            </div>
-
-                            <div class="form-group" id="grupoDataFim">
-                                <label for="dataFim">Data de Término <span>*</span></label>
-                                <input type="date" id="dataFim" required>
-                                <small class="info-campo-automatico" id="infoDataFimAuto">🔒 Calculado automaticamente (15 ou 30 dias)</small>
-                            </div>
-                        </div>
-
-                        <div id="mensagem" class="mensagem"></div>
-
-                        <button type="submit" class="btn-acao btn-salvar" id="btnSalvar">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
-                            Salvar Lançamento
-                        </button>
-                    </form>
-                </section>
-
-                <section class="table-card">
-                    <div class="table-header-actions">
-                        <div class="table-title">
-                            <span class="material-symbols-outlined">list_alt</span>
-                            Registros Cadastrados
-                        </div>
-                        <div class="search-table-wrapper">
-                            <span class="material-symbols-outlined">search</span>
-                            <input type="text" id="filtroTabela" placeholder="Filtrar por nome, CPF, escola..." oninput="filtrarTabela()">
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Servidor</th>
-                                    <th>CPF / Matrícula</th>
-                                    <th>Escola</th>
-                                    <th>Tipo</th>
-                                    <th>Período</th>
-                                    <th>Início</th>
-                                    <th>Término</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaRegistros">
-                                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Carregando registros...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
-
-        </div>
-
+        </section>
     </div>
+</main>
 
-</div>
-
-<!-- ==================================================
-     MODAL DE SAIR
-     ================================================== -->
-<div class="modal-sair-overlay" id="modalSair" role="presentation">
-    <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
-        <div class="modal-sair-icone" aria-hidden="true">
-            <span class="material-symbols-outlined" id="modalSairIconeSimbolo">logout</span>
-        </div>
-        <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
-        <div class="modal-sair-acoes">
-            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">Cancelar</button>
-            <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
-                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                Sim, sair
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================
-     SCRIPT DO LAYOUT
-     ============================================================ -->
-<script type="module">
-import { auth } from "./firebase.js";
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-(function () {
-    var btn = document.getElementById('btnTema');
-    if (btn) {
-        btn.addEventListener('click', function () {
-            var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-            var novo  = atual === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', novo);
-            var meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
-            try { localStorage.setItem('tema-vt', novo); } catch (e) {}
-        });
-    }
-})();
-
-(function () {
-    var sidebar   = document.getElementById('sidebarMenu');
-    var backdrop  = document.getElementById('sidebarBackdrop');
-    var btn       = document.getElementById('btnMenuToggle');
-    var btnFechar = document.getElementById('btnFecharSidebar');
-    var CHAVE     = 'menu-vt-fechado';
-
-    function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
-
-    var salvo = null;
-    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
-    var iniciarFechadoDesktop = salvo === '1';
-
-    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-    else fecharMobile(false);
-
-    if (btn) {
-        btn.addEventListener('click', function () {
-            if (isMobile()) {
-                var aberta = sidebar.classList.contains('aberta-mobile');
-                if (aberta) fecharMobile(true); else abrirMobile();
-            } else {
-                var fechado = sidebar.classList.contains('fechado');
-                aplicarEstadoDesktop(!fechado, true);
-            }
-        });
-    }
-    if (btnFechar) btnFechar.addEventListener('click', function () { fecharMobile(true); });
-    if (backdrop) backdrop.addEventListener('click', function () { fecharMobile(true); });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) fecharMobile(true);
-        if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); }
-    });
-
-    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
-        link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); });
-    });
-
-    var ultimoMobile = isMobile();
-    window.addEventListener('resize', function () {
-        var agoraMobile = isMobile();
-        if (agoraMobile !== ultimoMobile) {
-            ultimoMobile = agoraMobile;
-            if (agoraMobile) fecharMobile(false);
-            else {
-                sidebar.classList.remove('aberta-mobile');
-                document.body.style.overflow = '';
-                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-            }
-        }
-    });
-
-    function aplicarEstadoDesktop(fechado, animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.toggle('fechado', fechado);
-        document.documentElement.classList.remove('menu-inicial-fechado');
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-        if (btn) btn.setAttribute('aria-expanded', String(!fechado));
-        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
-    }
-    function abrirMobile() {
-        sidebar.classList.add('aberta-mobile');
-        sidebar.classList.remove('fechado');
-        if (backdrop) backdrop.classList.add('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-    }
-    function fecharMobile(animar) {
-        if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.remove('aberta-mobile');
-        sidebar.classList.add('fechado');
-        if (backdrop) backdrop.classList.remove('ativo');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
-    }
-})();
-
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean)
-            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
-            .slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
-var ultimoFocoSair = null;
-function abrirModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    ultimoFocoSair = document.activeElement;
-    modal.classList.add('ativo');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () {
-        var b = document.getElementById('btnCancelarSair');
-        if (b) b.focus();
-    });
-}
-function fecharModalSair() {
-    var modal = document.getElementById('modalSair');
-    if (!modal) return;
-    modal.classList.remove('ativo');
-    document.body.style.overflow = '';
-    if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') ultimoFocoSair.focus();
-    ultimoFocoSair = null;
-}
-async function confirmarSaida() {
-    var btn = document.getElementById('btnConfirmarSair');
-    if (!btn) return;
-    var btnOriginal = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
-    try {
-        try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
-        try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
-        await signOut(auth);
-        window.location.href = 'index.html';
-    } catch (e) {
-        console.error('[Sair] Erro:', e);
-        btn.disabled = false;
-        btn.innerHTML = btnOriginal;
-    }
-}
-
-var btnSairTopbar  = document.getElementById('btnSairTopbar');
-var btnSairSidebar = document.getElementById('btnSairSidebar');
-if (btnSairTopbar)  btnSairTopbar.addEventListener('click', abrirModalSair);
-if (btnSairSidebar) btnSairSidebar.addEventListener('click', abrirModalSair);
-var b1 = document.getElementById('btnCancelarSair');
-var b2 = document.getElementById('btnConfirmarSair');
-var modalSair = document.getElementById('modalSair');
-if (b1) b1.addEventListener('click', fecharModalSair);
-if (b2) b2.addEventListener('click', confirmarSaida);
-if (modalSair) modalSair.addEventListener('click', function (e) {
-    if (e.target === this) fecharModalSair();
-});
-
-(function () {
-    var btnAtualizar = document.getElementById('btnAtualizar');
-    if (!btnAtualizar) return;
-    btnAtualizar.addEventListener('click', function () {
-        if (btnAtualizar.classList.contains('carregando')) return;
-        btnAtualizar.classList.add('carregando');
-        btnAtualizar.disabled = true;
-        try {
-            Object.keys(localStorage)
-                .filter(function (k) { return k.startsWith('cache-'); })
-                .forEach(function (k) { localStorage.removeItem(k); });
-        } catch (e) {}
-        window.location.reload();
-    });
-})();
-</script>
-
-<!-- ============================================================
-     SCRIPT PRINCIPAL — Lançamentos (Férias / Folgas / Licenças)
-     (lógica original preservada, sem alterações)
-     ============================================================ -->
 <script type="module">
     import { db, auth } from "./firebase.js";
     import { collection, getDocs, getDoc, query, where, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1396,6 +352,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             .reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
     }
 
+    /* =========================================================
+       PERÍODOS ABERTOS — REGRA FINAL
+       FÉRIAS: só lista períodos ADQUIRIDOS (ciclo completo)
+               Períodos "em andamento" NÃO aparecem no dropdown
+       FOLGA: disponível a partir do PRÓPRIO ANIVERSÁRIO;
+              prazo = aniv + 12 meses
+    ========================================================= */
     function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
         if (!dtAdm) return [];
@@ -1443,8 +406,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const restantes = totalDireito - consumidos;
 
             if (restantes > 0) {
+                // Folga: não lista se ainda não chegou o aniversário
                 if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje < dataDisponivel) {
-                    // aguardando aniversário — não lista
+                    // aguardando o aniversário — não lista
                 } else {
                     let status = 'pendente';
                     if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje >= prazoGozo) {
@@ -1455,18 +419,24 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         status = 'atual';
                     }
 
-                    periodos.push({
-                        anoReferencia: anoRef,
-                        inicio: new Date(ini),
-                        fim: new Date(fim),
-                        dataLimite: prazoGozo,
-                        dataDisponivel: dataDisponivel,
-                        aniversarioNoPeriodo: aniversarioNoPeriodo,
-                        status: status,
-                        consumidos: consumidos,
-                        restantes: restantes,
-                        totalDireito: totalDireito
-                    });
+                    // 👇 FÉRIAS: só lista períodos ADQUIRIDOS (ciclo completo)
+                    // Períodos "atual" (em andamento) NÃO aparecem no dropdown
+                    if (tipo === 'FERIAS' && status === 'atual') {
+                        // Pula este período — ciclo aquisitivo ainda não fechou
+                    } else {
+                        periodos.push({
+                            anoReferencia: anoRef,
+                            inicio: new Date(ini),
+                            fim: new Date(fim),
+                            dataLimite: prazoGozo,
+                            dataDisponivel: dataDisponivel,
+                            aniversarioNoPeriodo: aniversarioNoPeriodo,
+                            status: status,
+                            consumidos: consumidos,
+                            restantes: restantes,
+                            totalDireito: totalDireito
+                        });
+                    }
                 }
             }
 
@@ -1520,7 +490,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo);
 
         if (periodosAbertos.length === 0) {
-            selectPeriodo.innerHTML = `<option value="">✓ Não há períodos em aberto (todos gozados)</option>`;
+            // 👇 Mensagem mais precisa quando não há períodos adquiridos
+            const temPeriodoEmAndamento = tipo === 'FERIAS';
+            if (temPeriodoEmAndamento) {
+                selectPeriodo.innerHTML = `<option value="">⏳ Nenhum período adquirido ainda (ciclo aquisitivo em andamento)</option>`;
+            } else {
+                selectPeriodo.innerHTML = `<option value="">✓ Não há períodos disponíveis para gozo</option>`;
+            }
             grupoPeriodo.style.display = "flex";
             document.getElementById('btnSalvar').disabled = true;
             return;
@@ -1635,8 +611,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 acessoNegadoBanner.classList.remove("ativo");
                 conteudoPrincipal.style.display = "block";
                 conteudoPrincipal.classList.remove("conteudo-bloqueado");
-                if (infoUsuarioLogado) infoUsuarioLogado.classList.add("ativo");
-                if (textoUsuarioLogado) textoUsuarioLogado.textContent = dadosUsuario.nome || "Administrador";
+                infoUsuarioLogado.classList.add("ativo");
+                textoUsuarioLogado.textContent = dadosUsuario.nome || "Administrador";
                 carregarRegistros();
                 return;
             }
@@ -2045,8 +1021,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         msg.textContent = texto;
         msg.className = "mensagem " + tipo;
     }
-
-    window.mostrarMensagem = mostrarMensagem;
 </script>
 
 </body>
