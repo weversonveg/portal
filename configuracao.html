@@ -1170,7 +1170,6 @@ tbody tr:hover td { background: var(--surface-2); }
     color: #ffffff !important;
 }
 
-/* Mês selecionado (para os campos type="month") */
 .flatpickr-calendar .flatpickr-monthSelect-month.selected {
     background: #2E0F4F !important;
     border-color: #2E0F4F !important;
@@ -1871,13 +1870,14 @@ tbody tr:hover td { background: var(--surface-2); }
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
-<!-- ===== FLATPICKR — inicialização (com monthSelectPlugin via módulo) ===== -->
+<!-- ===== FLATPICKR — inicialização (com monthSelectPlugin) ===== -->
 <script type="module">
 import monthSelectPlugin from "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.es.js";
 
 function initFlatpickr() {
     if (typeof flatpickr === 'undefined') {
         console.warn('[Flatpickr] biblioteca não carregada');
+        setTimeout(initFlatpickr, 100);
         return;
     }
 
@@ -1895,14 +1895,12 @@ function initFlatpickr() {
     });
 
     // ---------- Campos de MÊS (type="text" com classe .campo-mes) ----------
-    var camposMes = document.querySelectorAll('.campo-mes');
-
-    camposMes.forEach(function (input) {
+    document.querySelectorAll('.campo-mes').forEach(function (input) {
         var fp = flatpickr(input, {
             locale: "pt",
-            dateFormat: "Y-m",       // o value real fica "2026-10"
+            dateFormat: "Y-m",
             altInput: true,
-            altFormat: "F Y",        // o que aparece visualmente: "Outubro 2026"
+            altFormat: "F Y",
             allowInput: false,
             clickOpens: true,
             plugins: [new monthSelectPlugin({
@@ -1911,25 +1909,35 @@ function initFlatpickr() {
                 altFormat: "F Y"
             })],
             onChange: function (selectedDates, dateStr, instance) {
-                // Guarda o valor cru "AAAA-MM" no data-value
                 input.dataset.value = dateStr;
-
                 if (window.atualizarCorCampo) window.atualizarCorCampo(input);
                 if (typeof ocultarMensagem === "function") ocultarMensagem();
-
-                // Dispara o onchange inline (para carregarConfiguracao)
                 input.dispatchEvent(new Event('change', { bubbles: true }));
+            },
+            onReady: function (selectedDates, dateStr, instance) {
+                var alt = instance.altInput || instance.input;
+                if (!alt) return;
+                // Garante que clicar em qualquer parte do campo abre o calendário
+                alt.style.cursor = 'pointer';
+                alt.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    instance.open();
+                });
+                alt.addEventListener('focus', function () {
+                    // Abre também ao focar via Tab
+                    setTimeout(function () { instance.open(); }, 0);
+                });
             }
         });
 
-        // Se a página já tiver valor inicial no input, aplica
         if (input.value) {
             input.dataset.value = input.value;
             try { fp.setDate(input.value, false); } catch (e) {}
         }
     });
 
-    // ---------- Mantém o campo em sincronia quando o código define value via JS ----------
+    // ---------- Sincroniza .value com a instância ----------
     document.querySelectorAll('.campo-mes').forEach(function (input) {
         var inst = input._flatpickr;
         if (!inst) return;
@@ -1959,10 +1967,10 @@ function initFlatpickr() {
         });
     });
 
-    // Expõe uma função global de sincronização usada pelo script principal
+    // Expõe função global
     window.setValorMes = function (input, valor) {
         if (!input) return;
-        input.value = valor;                     // dispara o setter acima
+        input.value = valor;
         input.dataset.value = valor;
         if (input._flatpickr) {
             try {
@@ -2380,7 +2388,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     function setarValor(campo, valor) {
         if (!campo) return;
-        // Usa a função global do Flatpickr para sincronizar instância + altInput
         if (window.setValorMes) {
             window.setValorMes(campo, valor);
         } else {
@@ -2444,7 +2451,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     let padraoGlobal = { diaAbertura: null, diaFechamento: null };
     let mesParaExcluir = null;
 
-    // Helper: define o valor do mês respeitando o Flatpickr
     function setarMes(input, valor) {
         if (!input) return;
         if (window.setValorMes) {
@@ -2895,14 +2901,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     window.selecionarMes = function(mesAno, dias, obs, isCongelado, dataAbertura, dataFechamento, escolasReabertas) {
-        // Usa os helpers para sincronizar com Flatpickr
+        // 1) Preenche tudo
         setarMes(document.getElementById("mesReferencia"), mesAno);
 
         document.getElementById("diasUteis").value = dias;
         document.getElementById("observacoes").value = obs === 'null' ? '' : obs;
         document.getElementById("toggleCongelado").checked = isCongelado;
 
-        // Datas também via Flatpickr
         var inpAb = document.getElementById("dataAbertura");
         var inpFe = document.getElementById("dataFechamento");
 
@@ -2955,7 +2960,25 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarCorCampo(document.getElementById("dataFechamento"));
 
         atualizarStatusCalculado();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 2) Rola até a Seção 1 (Período Aquisitivo)
+        const secao1 = document.getElementById("secao-periodo-aquisitivo");
+        if (secao1) {
+            secao1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            secao1.classList.add('destacada');
+            setTimeout(function () {
+                secao1.classList.remove('destacada');
+            }, 1400);
+
+            // Foca o primeiro campo da seção para acessibilidade/UX
+            const primeiroCampo = secao1.querySelector('input');
+            if (primeiroCampo) {
+                setTimeout(function () {
+                    try { primeiroCampo.focus({ preventScroll: true }); } catch (e) {}
+                }, 400);
+            }
+        }
+
         mostrarMensagem(`Carregado ${formatarMesAno(mesAno)} para edição.`, "sucesso");
     };
 
@@ -2979,7 +3002,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 inputObs.value = dados.observacoes || "";
                 toggleCongelado.checked = dados.congelado || false;
 
-                // Datas via Flatpickr
                 inputDataAbertura.value = dados.dataAbertura || "";
                 inputDataFechamento.value = dados.dataFechamento || "";
                 if (inputDataAbertura._flatpickr) {
