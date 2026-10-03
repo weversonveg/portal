@@ -610,7 +610,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <option value="gozado">Gozado</option>
                                 <option value="parcial">Parcial</option>
                                 <option value="disponivel">Disponível</option>
-                                <option value="pendente">Pendente</option>
                                 <option value="programado">Programado</option>
                                 <option value="vencido">Vencido</option>
                                 <option value="perdido">Perdido</option>
@@ -1041,7 +1040,7 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
             dataLimiteGozo:prazoGozo,status:'pendente'};
 
         if(ref < dataDisponivel){
-            p.status='pendente';
+            p.status='atual';   // ✅ ciclo ainda em formação — direito ainda não nasceu
             det.push(p);
             break;
         }
@@ -1130,7 +1129,7 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     gozo = '';
                     if(p.status==='atual') status='atual';
                     else if(p.dataLimiteGozo<hoje) status='vencido';
-                    else status='pendente';
+                    else status='disponivel';   // ✅ ciclo fechou, prazo ok, nada lançado → Disponível
                 }
 
                 linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
@@ -1221,7 +1220,7 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(f,'gozado')}</span></span>
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
-                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(f,'pendente')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f,'disponivel')}</span></span>
                             <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
                             <span class="chip">Em andamento <span class="num chip-num-cinza">${c(f,'atual')}</span></span>
                         </div>
@@ -1235,8 +1234,8 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Gozadas <span class="num chip-num-verde">${c(g,'gozado')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(g,'programado')}</span></span>
                             <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g,'disponivel')}</span></span>
-                            <span class="chip">Pendentes <span class="num chip-num-amarelo">${c(g,'pendente')}</span></span>
                             <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g,'perdido')}</span></span>
+                            <span class="chip">Em andamento <span class="num chip-num-cinza">${c(g,'atual')}</span></span>
                         </div>
                     </div>
                 </div>
@@ -1327,7 +1326,6 @@ function renderizarGrafico() {
         return;
     }
 
-    // Agrupar por período (anoReferencia) mantendo a ordem decrescente
     const periodosMap = new Map();
     linhasUnificadas.forEach(l => {
         if (!periodosMap.has(l.periodo)) {
@@ -1336,7 +1334,6 @@ function renderizarGrafico() {
         periodosMap.get(l.periodo).push(l);
     });
 
-    // Ordenar períodos do mais recente para o mais antigo (ordem decrescente)
     const periodosOrdenados = [...periodosMap.keys()].sort((a, b) => {
         const aNum = parseInt(a.split('/')[0], 10);
         const bNum = parseInt(b.split('/')[0], 10);
@@ -1350,7 +1347,6 @@ function renderizarGrafico() {
         const ferias = linhasPeriodo.filter(l => l.tipoKey === 'ferias');
         const folgas = linhasPeriodo.filter(l => l.tipoKey === 'folga');
 
-        // Total de dias direitos do período (pegar do primeiro registro de férias)
         const totalDireito = ferias.length > 0 ? (ferias[0].totalDireito || DIAS_PADRAO) : DIAS_PADRAO;
 
         html += `<div class="grafico-periodo-bloco">`;
@@ -1369,9 +1365,9 @@ function renderizarGrafico() {
                 : statusFerias.includes('programado') ? 'programado'
                 : statusFerias.includes('vencido') ? 'vencido'
                 : statusFerias.includes('atual') ? 'atual'
+                : statusFerias.includes('disponivel') ? 'disponivel'
                 : 'pendente';
 
-            // Calcular percentual baseado no status e dias
             let percentual = 0;
             let labelPercentual = '';
 
@@ -1395,6 +1391,9 @@ function renderizarGrafico() {
             } else if (statusPrincipal === 'atual') {
                 percentual = 0;
                 labelPercentual = 'Em andamento';
+            } else if (statusPrincipal === 'disponivel') {
+                percentual = 60;
+                labelPercentual = 'Disponível';
             } else if (statusPrincipal === 'vencido') {
                 percentual = 0;
                 labelPercentual = 'Vencido';
@@ -1426,7 +1425,7 @@ function renderizarGrafico() {
 
         // --- Linha de Folga Aniversário ---
         if (folgas.length > 0) {
-            const folga = folgas[0]; // geralmente uma por período
+            const folga = folgas[0];
             const statusFolga = folga.status;
             let percentualFolga = 0;
             let labelFolga = '';
@@ -1443,9 +1442,9 @@ function renderizarGrafico() {
             } else if (statusFolga === 'perdido') {
                 percentualFolga = 100;
                 labelFolga = 'Perdida';
-            } else if (statusFolga === 'pendente') {
+            } else if (statusFolga === 'atual') {
                 percentualFolga = 0;
-                labelFolga = 'Pendente';
+                labelFolga = 'Em andamento';
             } else {
                 percentualFolga = 0;
                 labelFolga = statusFolga;
@@ -1472,11 +1471,10 @@ function renderizarGrafico() {
                     </div>`;
         }
 
-        html += `</div>`; // fecha grafico-barras
-        html += `</div>`; // fecha grafico-periodo-bloco
+        html += `</div>`;
+        html += `</div>`;
     });
 
-    // Legenda geral
     html += `<div class="grafico-legenda">
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--ok);"></span> Gozado / Disponível</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
