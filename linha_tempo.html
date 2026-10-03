@@ -310,6 +310,138 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .periodos-table th { position:static !important; box-shadow:none !important; }
     .periodos-table tr { page-break-inside:avoid; }
 }
+
+/* ========== GRÁFICO DE PERÍODOS ========== */
+.grafico-periodos {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+.grafico-periodo-bloco {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+}
+.grafico-periodo-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.grafico-periodo-titulo .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand);
+}
+.grafico-periodo-titulo .periodo-ref {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+}
+.grafico-barras {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.grafico-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.grafico-linha-rotulo {
+    min-width: 90px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+.grafico-linha-rotulo .material-symbols-outlined {
+    font-size: 14px;
+}
+.grafico-trilha {
+    flex: 1;
+    height: 26px;
+    background: var(--surface-3);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    min-width: 120px;
+}
+.grafico-segmento {
+    height: 100%;
+    transition: width .3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 0;
+}
+.grafico-segmento.seg-gozado { background: var(--ok); }
+.grafico-segmento.seg-parcial { background: var(--info); }
+.grafico-segmento.seg-programado { background: var(--purple); }
+.grafico-segmento.seg-disponivel { background: var(--ok); }
+.grafico-segmento.seg-pendente { background: var(--warn); }
+.grafico-segmento.seg-vencido { background: var(--danger); }
+.grafico-segmento.seg-perdido { background: var(--gray-500); }
+.grafico-segmento.seg-atual { background: var(--brand); }
+.grafico-segmento.seg-fora-prazo { background: var(--danger); }
+.grafico-legenda {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--text-muted);
+}
+.grafico-legenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.grafico-legenda-cor {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.grafico-vazio {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 20px;
+}
+@media (max-width: 640px) {
+    .grafico-linha {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    .grafico-trilha {
+        width: 100%;
+    }
+}
 </style>
 </head>
 
@@ -505,6 +637,16 @@ button { font:inherit; color:inherit; cursor:pointer; }
                         </table>
                     </div>
                 </section>
+
+                <!-- ================= GRÁFICO VISUAL ================= -->
+                <section class="form-card" id="graficoContainer">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+                        Visualização Gráfica por Período
+                    </div>
+                    <div id="graficoPeriodos" class="grafico-periodos"></div>
+                </section>
+                <!-- ================================================== -->
             </div>
         </div>
     </div>
@@ -842,12 +984,6 @@ function verificarSeJaGozado(reg, hoje){
     return dt<=hoje;
 }
 
-/* =========================================================
-   VERIFICA EXTEMPORÂNEO
-   - Ignora formato "15/45 dias" (parcial)
-   - Para gozo com intervalos ("data a data" ou "data + data"),
-     extrai a PRIMEIRA data e compara com o prazo
-========================================================= */
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
@@ -947,12 +1083,6 @@ function associarRegistroAPeriodo(reg, periodo) {
     return false;
 }
 
-/* =========================================================
-   CONSTRÓI AS LINHAS DA TABELA
-   - Férias gozadas em múltiplas partes: mostra cada intervalo
-     separado por " + " (ex: "01/01/2026 a 15/01/2026 + 01/06/2026 a 30/06/2026")
-   - 1 parte: mostra o intervalo completo "início a término"
-========================================================= */
 function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
     const linhas=[];
 
@@ -979,7 +1109,6 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     });
                     const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
 
-                    // 👇 Mostra o intervalo de CADA parte separadamente
                     const intervalos = lancsOrdenados.map(l => {
                         const ini = formatarData(l.dataInicio || l.data_inicio || l.data);
                         const fimParte = formatarData(l.dataFim || l.data_fim || l.dataTermino || l.data_termino || l.dataInicio || l.data_inicio || l.data);
@@ -1158,6 +1287,208 @@ function renderizarTabelaUnica(linhas){
     `).join('');
 }
 
+/* =========================================================
+   GRÁFICO VISUAL POR PERÍODO
+   ========================================================= */
+function obterClasseSegmento(status) {
+    const mapa = {
+        gozado: 'seg-gozado',
+        parcial: 'seg-parcial',
+        programado: 'seg-programado',
+        disponivel: 'seg-disponivel',
+        pendente: 'seg-pendente',
+        vencido: 'seg-vencido',
+        perdido: 'seg-perdido',
+        atual: 'seg-atual'
+    };
+    return mapa[status] || 'seg-pendente';
+}
+
+function obterRotuloStatus(status) {
+    const mapa = {
+        gozado: 'Gozado',
+        parcial: 'Parcial',
+        programado: 'Programado',
+        disponivel: 'Disponível',
+        pendente: 'Pendente',
+        vencido: 'Vencido',
+        perdido: 'Perdido',
+        atual: 'Em andamento'
+    };
+    return mapa[status] || status;
+}
+
+function renderizarGrafico() {
+    const container = document.getElementById('graficoPeriodos');
+    if (!container) return;
+
+    if (linhasUnificadas.length === 0) {
+        container.innerHTML = '<div class="grafico-vazio">Nenhum período para exibir.</div>';
+        return;
+    }
+
+    // Agrupar por período (anoReferencia) mantendo a ordem decrescente
+    const periodosMap = new Map();
+    linhasUnificadas.forEach(l => {
+        if (!periodosMap.has(l.periodo)) {
+            periodosMap.set(l.periodo, []);
+        }
+        periodosMap.get(l.periodo).push(l);
+    });
+
+    // Ordenar períodos do mais recente para o mais antigo (ordem decrescente)
+    const periodosOrdenados = [...periodosMap.keys()].sort((a, b) => {
+        const aNum = parseInt(a.split('/')[0], 10);
+        const bNum = parseInt(b.split('/')[0], 10);
+        return bNum - aNum;
+    });
+
+    let html = '';
+
+    periodosOrdenados.forEach(periodo => {
+        const linhasPeriodo = periodosMap.get(periodo);
+        const ferias = linhasPeriodo.filter(l => l.tipoKey === 'ferias');
+        const folgas = linhasPeriodo.filter(l => l.tipoKey === 'folga');
+
+        // Total de dias direitos do período (pegar do primeiro registro de férias)
+        const totalDireito = ferias.length > 0 ? (ferias[0].totalDireito || DIAS_PADRAO) : DIAS_PADRAO;
+
+        html += `<div class="grafico-periodo-bloco">`;
+        html += `<div class="grafico-periodo-titulo">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    Período ${periodo}
+                    <span class="periodo-ref">— ciclo aquisitivo</span>
+                 </div>`;
+        html += `<div class="grafico-barras">`;
+
+        // --- Linha de Férias ---
+        if (ferias.length > 0) {
+            const statusFerias = ferias.map(f => f.status);
+            const statusPrincipal = statusFerias.includes('gozado') ? 'gozado'
+                : statusFerias.includes('parcial') ? 'parcial'
+                : statusFerias.includes('programado') ? 'programado'
+                : statusFerias.includes('vencido') ? 'vencido'
+                : statusFerias.includes('atual') ? 'atual'
+                : 'pendente';
+
+            // Calcular percentual baseado no status e dias
+            let percentual = 0;
+            let labelPercentual = '';
+
+            if (statusPrincipal === 'gozado') {
+                percentual = 100;
+                labelPercentual = `${totalDireito}/${totalDireito} dias`;
+            } else if (statusPrincipal === 'parcial') {
+                const gozoTexto = ferias[0]?.gozo || '';
+                const match = gozoTexto.match(/(\d+)\/(\d+)/);
+                if (match) {
+                    const diasConsumidos = parseInt(match[1], 10);
+                    percentual = Math.round((diasConsumidos / totalDireito) * 100);
+                    labelPercentual = gozoTexto;
+                } else {
+                    percentual = 50;
+                    labelPercentual = 'Parcial';
+                }
+            } else if (statusPrincipal === 'programado') {
+                percentual = 100;
+                labelPercentual = 'Programado';
+            } else if (statusPrincipal === 'atual') {
+                percentual = 0;
+                labelPercentual = 'Em andamento';
+            } else if (statusPrincipal === 'vencido') {
+                percentual = 0;
+                labelPercentual = 'Vencido';
+            } else {
+                percentual = 0;
+                labelPercentual = 'Pendente';
+            }
+
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--brand);">beach_access</span> Férias
+                        </div>
+                        <div class="grafico-trilha">
+                            <div class="grafico-segmento ${obterClasseSegmento(statusPrincipal)}" style="width:${percentual}%;">
+                                ${percentual > 15 ? labelPercentual : ''}
+                            </div>
+                        </div>
+                    </div>`;
+        } else {
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--brand);">beach_access</span> Férias
+                        </div>
+                        <div class="grafico-trilha" style="opacity:.4;">
+                            <div class="grafico-segmento seg-pendente" style="width:100%;background:var(--surface-3);color:var(--text-muted);">—</div>
+                        </div>
+                    </div>`;
+        }
+
+        // --- Linha de Folga Aniversário ---
+        if (folgas.length > 0) {
+            const folga = folgas[0]; // geralmente uma por período
+            const statusFolga = folga.status;
+            let percentualFolga = 0;
+            let labelFolga = '';
+
+            if (statusFolga === 'gozado') {
+                percentualFolga = 100;
+                labelFolga = 'Gozada';
+            } else if (statusFolga === 'programado') {
+                percentualFolga = 100;
+                labelFolga = 'Programada';
+            } else if (statusFolga === 'disponivel') {
+                percentualFolga = 60;
+                labelFolga = 'Disponível';
+            } else if (statusFolga === 'perdido') {
+                percentualFolga = 100;
+                labelFolga = 'Perdida';
+            } else if (statusFolga === 'pendente') {
+                percentualFolga = 0;
+                labelFolga = 'Pendente';
+            } else {
+                percentualFolga = 0;
+                labelFolga = statusFolga;
+            }
+
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--purple);">cake</span> Folga Aniv.
+                        </div>
+                        <div class="grafico-trilha">
+                            <div class="grafico-segmento ${obterClasseSegmento(statusFolga)}" style="width:${percentualFolga}%;">
+                                ${percentualFolga > 20 ? labelFolga : ''}
+                            </div>
+                        </div>
+                    </div>`;
+        } else {
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--purple);">cake</span> Folga Aniv.
+                        </div>
+                        <div class="grafico-trilha" style="opacity:.4;">
+                            <div class="grafico-segmento seg-pendente" style="width:100%;background:var(--surface-3);color:var(--text-muted);">—</div>
+                        </div>
+                    </div>`;
+        }
+
+        html += `</div>`; // fecha grafico-barras
+        html += `</div>`; // fecha grafico-periodo-bloco
+    });
+
+    // Legenda geral
+    html += `<div class="grafico-legenda">
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--ok);"></span> Gozado / Disponível</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--purple);"></span> Programado</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Pendente</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido / Fora do prazo</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--gray-500);"></span> Perdido</span>
+             </div>`;
+
+    container.innerHTML = html;
+}
+
 async function buscarServidor(){
     if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
     const termo=document.getElementById('termoBusca').value.trim();
@@ -1287,6 +1618,7 @@ async function processarServidores(docs){
     document.getElementById('filtroTipo').value='';
     document.getElementById('filtroStatus').value='';
     renderizarTabelaUnica(linhasUnificadas);
+    renderizarGrafico();
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
