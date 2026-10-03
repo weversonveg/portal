@@ -1149,7 +1149,6 @@ tbody tr:hover td { background: var(--surface-2); }
    ESTILOS ESPECÍFICOS DA PÁGINA cadastro.html
    ============================================================ */
 
-/* Garante que nada estoure a largura do container */
 .content-page,
 .form-card,
 .form,
@@ -1240,7 +1239,6 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 .btn-link-adicionar:hover { opacity: 0.8; }
 
-/* Inputs e selects: impedem overflow */
 .form-group input,
 .form-group select {
     max-width: 100%;
@@ -1253,7 +1251,6 @@ tbody tr:hover td { background: var(--surface-2); }
     color: var(--danger) !important;
 }
 
-/* Campo dias de férias */
 .dias-ferias-wrapper {
     grid-column: 1/-1;
     display: grid;
@@ -1306,13 +1303,11 @@ tbody tr:hover td { background: var(--surface-2); }
     word-break: break-word;
 }
 
-/* Label do checkbox "segunda matrícula" — evita estourar */
 .form-group label[style*="display:flex"] {
     flex-wrap: wrap;
     overflow-wrap: anywhere;
 }
 
-/* Botões específicos desta página */
 .btn-cancelar-pagina {
     background: var(--danger); color: #fff;
     border-color: var(--danger);
@@ -1524,11 +1519,40 @@ tbody tr:hover td { background: var(--surface-2); }
                 <nav class="menu-section">
                     <div class="menu-section-title">Configuração</div>
                     <ul class="menu">
-                        <li class="menu-item">
+                        <!-- ▼ ATIVO apenas quando estiver em configuracao.html (auto-detectado via JS) -->
+                        <li class="menu-item" id="menuItemConfigurarPeriodos">
                             <a href="configuracao.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                <span>Dias úteis e meses</span>
+                                <span>Configurar Períodos</span>
                             </a>
+
+                            <!-- Submenu de âncoras apontando para seções da configuracao.html -->
+                            <ul class="submenu">
+                                <li class="submenu-item">
+                                    <a href="configuracao.html#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
+                                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                                        <span>1. Período aquisitivo</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="configuracao.html#secao-dias-uteis" data-secao="secao-dias-uteis">
+                                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                                        <span>2. Dias úteis letivos</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="configuracao.html#secao-abrir-fechar" data-secao="secao-abrir-fechar">
+                                        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                                        <span>3. Abrir / fechar mês</span>
+                                    </a>
+                                </li>
+                                <li class="submenu-item">
+                                    <a href="configuracao.html#secao-reabrir" data-secao="secao-reabrir">
+                                        <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
+                                        <span>4. Reabrir período</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="menu-item">
                             <a href="escola.html">
@@ -2071,6 +2095,24 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+/* ============================================================
+   AUTO-DETECÇÃO DO ITEM ATIVO "CONFIGURAR PERÍODOS"
+   ============================================================ */
+(function () {
+    var item = document.getElementById('menuItemConfigurarPeriodos');
+    if (!item) return;
+
+    var path = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    if (path === 'configuracao.html' || path === '') {
+        item.classList.add('ativo');
+    } else {
+        item.classList.remove('ativo');
+    }
+})();
+
+/* ============================================================
+   TEMA CLARO / ESCURO
+   ============================================================ */
 (function () {
     var btn = document.getElementById('btnTema');
     if (btn) {
@@ -2085,6 +2127,9 @@ import {
     }
 })();
 
+/* ============================================================
+   MENU LATERAL
+   ============================================================ */
 (function () {
     var sidebar   = document.getElementById('sidebarMenu');
     var backdrop  = document.getElementById('sidebarBackdrop');
@@ -2120,7 +2165,7 @@ import {
         if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); }
     });
 
-    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
+    sidebar.querySelectorAll('.menu-item a, .submenu-item a').forEach(function (link) {
         link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); });
     });
 
@@ -2164,6 +2209,9 @@ import {
     }
 })();
 
+/* ============================================================
+   AUTENTICAÇÃO
+   ============================================================ */
 onAuthStateChanged(auth, function (user) {
     if (user) {
         var email = user.email || '';
@@ -2183,6 +2231,9 @@ onAuthStateChanged(auth, function (user) {
     }
 });
 
+/* ============================================================
+   MODAL DE SAIR
+   ============================================================ */
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -2233,6 +2284,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     if (e.target === this) fecharModalSair();
 });
 
+/* ============================================================
+   BOTÃO ATUALIZAR
+   ============================================================ */
 (function () {
     var btnAtualizar = document.getElementById('btnAtualizar');
     if (!btnAtualizar) return;
@@ -2251,7 +2305,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
-     SCRIPT DO INDICADOR DE REDE (layout)
+     SCRIPT DO INDICADOR DE REDE
      ═══════════════════════════════════════════════════════════ -->
 <script>
 (function () {
@@ -2405,7 +2459,7 @@ let cpfDuplicado = false;
 let verificacaoCpfEmAndamento = false;
 
 
-/* Modal de confirmação — usa a estrutura do modal-overlay do esqueleto */
+/* Modal de confirmação */
 function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = 'Confirmar') {
   return new Promise((resolve) => {
     const modal = document.getElementById("modalConfirm");
