@@ -1565,8 +1565,10 @@ tbody tr:hover td { background: var(--surface-2); }
                         <div class="campos-grid">
                             <div class="form-group">
                                 <label for="mesReferencia">Mês de referência <span aria-hidden="true">*</span></label>
-                                <input type="month" id="mesReferencia" required
-                                       onchange="carregarConfiguracao(this.value)">
+                                <input type="text" id="mesReferencia" required
+                                       class="campo-mes"
+                                       placeholder="AAAA-MM" autocomplete="off"
+                                       onchange="carregarConfiguracao(this.dataset.value || this.value)">
                                 <span class="ajuda">Este é o mês que você está cadastrando ou editando.</span>
                             </div>
 
@@ -1612,7 +1614,8 @@ tbody tr:hover td { background: var(--surface-2); }
                         <div class="campos-grid" style="margin-bottom: 16px;">
                             <div class="form-group">
                                 <label for="mesReferenciaEspelho3">Mês de referência</label>
-                                <input type="month" id="mesReferenciaEspelho3" class="espelho-mes">
+                                <input type="text" id="mesReferenciaEspelho3" class="espelho-mes campo-mes"
+                                       placeholder="AAAA-MM" autocomplete="off">
                             </div>
                         </div>
 
@@ -1685,7 +1688,8 @@ tbody tr:hover td { background: var(--surface-2); }
                         <div class="campos-grid" style="margin-bottom: 16px;">
                             <div class="form-group">
                                 <label for="mesReferenciaEspelho4">Mês de referência</label>
-                                <input type="month" id="mesReferenciaEspelho4" class="espelho-mes">
+                                <input type="text" id="mesReferenciaEspelho4" class="espelho-mes campo-mes"
+                                       placeholder="AAAA-MM" autocomplete="off">
                             </div>
                         </div>
 
@@ -1866,17 +1870,16 @@ tbody tr:hover td { background: var(--surface-2); }
 <!-- ===== FLATPICKR — bibliotecas ===== -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
-<!-- ===== FLATPICKR — inicialização ===== -->
-<script>
-(function () {
+<!-- ===== FLATPICKR — inicialização (com monthSelectPlugin via módulo) ===== -->
+<script type="module">
+import monthSelectPlugin from "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.es.js";
+
+function initFlatpickr() {
     if (typeof flatpickr === 'undefined') {
         console.warn('[Flatpickr] biblioteca não carregada');
         return;
     }
-
-    var hasMonthSelect = (typeof monthSelectPlugin !== 'undefined');
 
     // ---------- Campos de DATA (type="date") ----------
     flatpickr("input[type='date']", {
@@ -1891,34 +1894,50 @@ tbody tr:hover td { background: var(--surface-2); }
         }
     });
 
-    // ---------- Campos de MÊS (type="month") ----------
-    var cfgMes = {
-        locale: "pt",
-        dateFormat: "Y-m",
-        allowInput: false,
-        clickOpens: true,
-        onChange: function (selectedDates, dateStr, instance) {
-            if (window.atualizarCorCampo) window.atualizarCorCampo(instance.element);
-            if (typeof ocultarMensagem === "function") ocultarMensagem();
-            instance.element.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    };
-    if (hasMonthSelect) {
-        cfgMes.plugins = [new monthSelectPlugin({
-            shorthand: true,
-            dateFormat: "Y-m",
-            altFormat: "F Y"
-        })];
-    }
-    flatpickr("input[type='month']", cfgMes);
+    // ---------- Campos de MÊS (type="text" com classe .campo-mes) ----------
+    var camposMes = document.querySelectorAll('.campo-mes');
 
-    // ---------- Sincroniza .value com a instância ----------
-    document.querySelectorAll('.flatpickr-input').forEach(function (input) {
+    camposMes.forEach(function (input) {
+        var fp = flatpickr(input, {
+            locale: "pt",
+            dateFormat: "Y-m",       // o value real fica "2026-10"
+            altInput: true,
+            altFormat: "F Y",        // o que aparece visualmente: "Outubro 2026"
+            allowInput: false,
+            clickOpens: true,
+            plugins: [new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y-m",
+                altFormat: "F Y"
+            })],
+            onChange: function (selectedDates, dateStr, instance) {
+                // Guarda o valor cru "AAAA-MM" no data-value
+                input.dataset.value = dateStr;
+
+                if (window.atualizarCorCampo) window.atualizarCorCampo(input);
+                if (typeof ocultarMensagem === "function") ocultarMensagem();
+
+                // Dispara o onchange inline (para carregarConfiguracao)
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        // Se a página já tiver valor inicial no input, aplica
+        if (input.value) {
+            input.dataset.value = input.value;
+            try { fp.setDate(input.value, false); } catch (e) {}
+        }
+    });
+
+    // ---------- Mantém o campo em sincronia quando o código define value via JS ----------
+    document.querySelectorAll('.campo-mes').forEach(function (input) {
         var inst = input._flatpickr;
         if (!inst) return;
+
         var proto = HTMLInputElement.prototype;
         var desc = Object.getOwnPropertyDescriptor(proto, 'value');
         if (!desc) return;
+
         Object.defineProperty(input, 'value', {
             configurable: true,
             get: function () { return desc.get.call(this); },
@@ -1927,14 +1946,39 @@ tbody tr:hover td { background: var(--surface-2); }
                 desc.set.call(this, v);
                 if (v !== antigo) {
                     try {
-                        if (v) inst.setDate(v, false);
-                        else inst.clear(false);
+                        if (v) {
+                            inst.setDate(v, false);
+                            this.dataset.value = v;
+                        } else {
+                            inst.clear(false);
+                            this.dataset.value = '';
+                        }
                     } catch (e) {}
                 }
             }
         });
     });
-})();
+
+    // Expõe uma função global de sincronização usada pelo script principal
+    window.setValorMes = function (input, valor) {
+        if (!input) return;
+        input.value = valor;                     // dispara o setter acima
+        input.dataset.value = valor;
+        if (input._flatpickr) {
+            try {
+                if (valor) input._flatpickr.setDate(valor, false);
+                else input._flatpickr.clear(false);
+            } catch (e) {}
+        }
+        if (window.atualizarCorCampo) window.atualizarCorCampo(input);
+    };
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlatpickr);
+} else {
+    initFlatpickr();
+}
 </script>
 
 <!-- SCRIPT DO LAYOUT -->
@@ -2329,22 +2373,21 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     function aplicarCor(campo) {
         if (!campo) return;
-        if (campo.value && campo.value.trim() !== '') campo.classList.add('preenchido');
+        var v = campo.dataset.value || campo.value;
+        if (v && v.trim() !== '') campo.classList.add('preenchido');
         else campo.classList.remove('preenchido');
     }
 
     function setarValor(campo, valor) {
         if (!campo) return;
-        if (campo.value !== valor) {
+        // Usa a função global do Flatpickr para sincronizar instância + altInput
+        if (window.setValorMes) {
+            window.setValorMes(campo, valor);
+        } else {
             campo.value = valor;
-            if (campo._flatpickr) {
-                try {
-                    if (valor) campo._flatpickr.setDate(valor, false);
-                    else campo._flatpickr.clear(false);
-                } catch (e) {}
-            }
+            campo.dataset.value = valor;
+            if (window.atualizarCorCampo) window.atualizarCorCampo(campo);
         }
-        aplicarCor(campo);
     }
 
     function atualizarEspelhos(valor) {
@@ -2352,33 +2395,34 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     original.addEventListener('change', function () {
-        atualizarEspelhos(original.value);
+        var v = original.dataset.value || original.value;
+        atualizarEspelhos(v);
     });
 
     espelhos.forEach(function (e) {
         e.addEventListener('change', function () {
-            if (original.value !== e.value) {
-                original.value = e.value;
-                if (original._flatpickr) {
-                    try { original._flatpickr.setDate(e.value, false); } catch (err) {}
-                }
+            var v = e.dataset.value || e.value;
+            var vOrig = original.dataset.value || original.value;
+            if (vOrig !== v) {
+                setarValor(original, v);
                 original.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            atualizarEspelhos(e.value);
+            atualizarEspelhos(v);
         });
     });
 
-    var ultimoValor = original.value;
+    var ultimoValor = original.dataset.value || original.value;
     setInterval(function () {
-        if (original.value !== ultimoValor) {
-            ultimoValor = original.value;
-            atualizarEspelhos(original.value);
+        var atual = original.dataset.value || original.value;
+        if (atual !== ultimoValor) {
+            ultimoValor = atual;
+            atualizarEspelhos(atual);
             aplicarCor(original);
         }
     }, 300);
 
     window.addEventListener('load', function () {
-        atualizarEspelhos(original.value);
+        atualizarEspelhos(original.dataset.value || original.value);
         aplicarCor(original);
     });
 })();
@@ -2400,6 +2444,22 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     let padraoGlobal = { diaAbertura: null, diaFechamento: null };
     let mesParaExcluir = null;
 
+    // Helper: define o valor do mês respeitando o Flatpickr
+    function setarMes(input, valor) {
+        if (!input) return;
+        if (window.setValorMes) {
+            window.setValorMes(input, valor);
+        } else {
+            input.value = valor;
+            input.dataset.value = valor;
+        }
+    }
+
+    function lerMes(input) {
+        if (!input) return '';
+        return input.dataset.value || input.value || '';
+    }
+
     document.addEventListener("DOMContentLoaded", async function() {
         const hoje = new Date();
         const ano = hoje.getFullYear();
@@ -2407,11 +2467,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const mesAtualStr = `${ano}-${mes}`;
 
         const inputMes = document.getElementById("mesReferencia");
-        inputMes.value = mesAtualStr;
-        if (inputMes._flatpickr) {
-            try { inputMes._flatpickr.setDate(mesAtualStr, false); } catch (e) {}
-        }
-        atualizarCorCampo(inputMes);
+        setarMes(inputMes, mesAtualStr);
+        if (window.atualizarCorCampo) window.atualizarCorCampo(inputMes);
 
         montarCheckboxesEscolas();
 
@@ -2715,7 +2772,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     };
 
     window.atualizarCorCampo = function(campo) {
-        if (campo.value && campo.value.trim() !== "") campo.classList.add("preenchido");
+        if (!campo) return;
+        var v = campo.dataset.value || campo.value;
+        if (v && v.trim() !== "") campo.classList.add("preenchido");
         else campo.classList.remove("preenchido");
     };
 
@@ -2836,12 +2895,31 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     window.selecionarMes = function(mesAno, dias, obs, isCongelado, dataAbertura, dataFechamento, escolasReabertas) {
-        document.getElementById("mesReferencia").value = mesAno;
+        // Usa os helpers para sincronizar com Flatpickr
+        setarMes(document.getElementById("mesReferencia"), mesAno);
+
         document.getElementById("diasUteis").value = dias;
         document.getElementById("observacoes").value = obs === 'null' ? '' : obs;
         document.getElementById("toggleCongelado").checked = isCongelado;
-        document.getElementById("dataAbertura").value = dataAbertura || '';
-        document.getElementById("dataFechamento").value = dataFechamento || '';
+
+        // Datas também via Flatpickr
+        var inpAb = document.getElementById("dataAbertura");
+        var inpFe = document.getElementById("dataFechamento");
+
+        inpAb.value = dataAbertura || '';
+        inpFe.value = dataFechamento || '';
+        if (inpAb._flatpickr) {
+            try {
+                if (dataAbertura) inpAb._flatpickr.setDate(dataAbertura, false);
+                else inpAb._flatpickr.clear(false);
+            } catch (e) {}
+        }
+        if (inpFe._flatpickr) {
+            try {
+                if (dataFechamento) inpFe._flatpickr.setDate(dataFechamento, false);
+                else inpFe._flatpickr.clear(false);
+            } catch (e) {}
+        }
 
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
         checkboxes.forEach(cb => {
@@ -2900,8 +2978,22 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 inputDias.value = dados.diasUteis || "";
                 inputObs.value = dados.observacoes || "";
                 toggleCongelado.checked = dados.congelado || false;
+
+                // Datas via Flatpickr
                 inputDataAbertura.value = dados.dataAbertura || "";
                 inputDataFechamento.value = dados.dataFechamento || "";
+                if (inputDataAbertura._flatpickr) {
+                    try {
+                        if (dados.dataAbertura) inputDataAbertura._flatpickr.setDate(dados.dataAbertura, false);
+                        else inputDataAbertura._flatpickr.clear(false);
+                    } catch (e) {}
+                }
+                if (inputDataFechamento._flatpickr) {
+                    try {
+                        if (dados.dataFechamento) inputDataFechamento._flatpickr.setDate(dados.dataFechamento, false);
+                        else inputDataFechamento._flatpickr.clear(false);
+                    } catch (e) {}
+                }
 
                 const escolasReabertas = dados.escolasReabertas || [];
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
@@ -2946,14 +3038,24 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     const [ano, mes] = mesAno.split("-");
                     const dataAbertura = `${ano}-${mes}-${String(padraoGlobal.diaAbertura).padStart(2, '0')}`;
                     const dataFechamento = `${ano}-${mes}-${String(padraoGlobal.diaFechamento).padStart(2, '0')}`;
+
                     inputDataAbertura.value = dataAbertura;
                     inputDataFechamento.value = dataFechamento;
+                    if (inputDataAbertura._flatpickr) {
+                        try { inputDataAbertura._flatpickr.setDate(dataAbertura, false); } catch (e) {}
+                    }
+                    if (inputDataFechamento._flatpickr) {
+                        try { inputDataFechamento._flatpickr.setDate(dataFechamento, false); } catch (e) {}
+                    }
+
                     atualizarCorCampo(inputDataAbertura);
                     atualizarCorCampo(inputDataFechamento);
                     mostrarMensagem(`Padrão global aplicado automaticamente: ${formatarData(dataAbertura)} até ${formatarData(dataFechamento)}.`, "sucesso");
                 } else {
                     inputDataAbertura.value = "";
                     inputDataFechamento.value = "";
+                    if (inputDataAbertura._flatpickr) try { inputDataAbertura._flatpickr.clear(false); } catch (e) {}
+                    if (inputDataFechamento._flatpickr) try { inputDataFechamento._flatpickr.clear(false); } catch (e) {}
                 }
 
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
@@ -2978,7 +3080,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     window.salvarConfiguracao = async function(event) {
         event.preventDefault();
 
-        const mesReferencia = document.getElementById("mesReferencia").value;
+        const mesReferencia = lerMes(document.getElementById("mesReferencia"));
         const diasUteis = document.getElementById("diasUteis").value;
         const observacoes = document.getElementById("observacoes").value.trim();
         const isCongelado = document.getElementById("toggleCongelado").checked;
@@ -3046,6 +3148,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         document.getElementById("observacoes").value = "";
         document.getElementById("dataAbertura").value = "";
         document.getElementById("dataFechamento").value = "";
+
+        if (document.getElementById("dataAbertura")._flatpickr) try { document.getElementById("dataAbertura")._flatpickr.clear(false); } catch (e) {}
+        if (document.getElementById("dataFechamento")._flatpickr) try { document.getElementById("dataFechamento")._flatpickr.clear(false); } catch (e) {}
 
         document.getElementById("diasUteis").classList.remove("preenchido");
         document.getElementById("dataAbertura").classList.remove("preenchido");
