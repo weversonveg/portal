@@ -1018,6 +1018,46 @@ select option.atual { color: var(--brand); font-weight: 700; }
     pointer-events: none;
 }
 
+/* ============================================================
+   BOTÃO EDITAR — APENAS O ÍCONE (sem moldura)
+   ============================================================ */
+.btn-editar {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color .15s ease, transform .1s ease;
+    color: var(--brand);
+}
+.btn-editar:hover {
+    background: rgba(31, 58, 95, .12);
+    transform: scale(1.08);
+}
+.btn-editar:active {
+    background: rgba(31, 58, 95, .2);
+    transform: scale(0.95);
+}
+.btn-editar .material-symbols-outlined {
+    font-size: 22px;
+    color: inherit;
+    pointer-events: none;
+}
+
+/* Alinhamento dos botões de ação na tabela */
+.acoes-tabela {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
 /* Badges de tipo */
 .tipo-badge {
     display: inline-flex;
@@ -1207,6 +1247,69 @@ td[data-label="Ações"] { text-align: right; }
 .modal-btn-confirmar .material-symbols-outlined,
 .modal-btn-cancelar .material-symbols-outlined { font-size: 16px; }
 
+/* ============================================================
+   MODAL DE EDIÇÃO
+   ============================================================ */
+.modal-editar-header {
+    background: var(--brand-soft) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+.modal-editar-header .reabertura-title {
+    color: var(--brand) !important;
+}
+.modal-editar-header .modal-fechar {
+    color: var(--brand) !important;
+}
+.modal-editar-header .modal-fechar:hover {
+    background: rgba(31, 58, 95, .1) !important;
+}
+
+.modal-editar-body .campos-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.modal-editar-info-servidor {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+.modal-editar-info-servidor strong {
+    color: var(--text);
+}
+
+.modal-btn-salvar {
+    background: #0F3D22;
+    color: #fff;
+    border: 1px solid #0F3D22;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+    box-shadow: 0 1px 2px rgba(15, 61, 34, .3);
+}
+.modal-btn-salvar:hover {
+    background: #0A2918;
+    border-color: #0A2918;
+    box-shadow: 0 2px 4px rgba(15, 61, 34, .4);
+}
+.modal-btn-salvar:active {
+    background: #061A0F;
+    border-color: #061A0F;
+}
+.modal-btn-salvar:disabled { opacity: .6; cursor: not-allowed; }
+.modal-btn-salvar .material-symbols-outlined { font-size: 16px; }
+
 /* Responsivo */
 @media (max-width: 900px) {
     .sidebar {
@@ -1292,6 +1395,7 @@ td[data-label="Ações"] { text-align: right; }
     th, td { border-color: #999; }
     thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
+    .acoes-tabela { display: none !important; }
 }
 </style>
 </head>
@@ -1717,6 +1821,92 @@ td[data-label="Ações"] { text-align: right; }
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
+     MODAL DE EDIÇÃO DE REGISTRO
+     ═══════════════════════════════════════════════════════════ -->
+<div id="modalEditar" class="modal-overlay">
+    <div class="modal-box" style="max-width: 640px;">
+        <div class="modal-header modal-editar-header">
+            <div class="reabertura-title">
+                <span class="material-symbols-outlined">edit</span>
+                <span>Editar registro de ausência</span>
+            </div>
+            <button type="button" class="modal-fechar" id="btnModalEditarFechar" aria-label="Fechar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="modal-body modal-editar-body">
+            <div class="modal-editar-info-servidor" id="editarInfoServidor">
+                <!-- preenchido via JS -->
+            </div>
+
+            <form id="formEditar" onsubmit="salvarEdicao(event)">
+                <div class="campos-grid">
+
+                    <div class="form-group full">
+                        <label for="editTipo">Tipo de Ausência <span>*</span></label>
+                        <select id="editTipo" required onchange="mudarTipoEdicao()">
+                            <option value="FERIAS">Férias Regulamentares</option>
+                            <option value="FOLGA_ANIVERSARIO">Folga Aniversário</option>
+                            <option value="LICENCA_MEDICA">Licença Médica</option>
+                            <option value="LICENCA_OUTRAS">Outras Licenças / Afastamentos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full" id="editGrupoPeriodo" style="display:none;">
+                        <label for="editPeriodo">Período Aquisitivo (Referência)</label>
+                        <input type="text" id="editPeriodo" placeholder="Ex.: 2023/2024">
+                        <small class="ajuda">Deixe em branco se não se aplicar.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editDataInicio" id="editLabelDataInicio">Data de Início <span>*</span></label>
+                        <input type="date" id="editDataInicio" required onchange="calcularDataFimEdicao()">
+                    </div>
+
+                    <div class="form-group" id="editGrupoDataFim">
+                        <label for="editDataFim">Data de Término <span>*</span></label>
+                        <input type="date" id="editDataFim" required>
+                    </div>
+
+                    <div class="form-group" id="editGrupoDuracao" style="display:none;">
+                        <label for="editDuracao">Duração das Férias <span>*</span></label>
+                        <select id="editDuracao" onchange="calcularDataFimEdicao()">
+                            <option value="30">30 Dias Corridos</option>
+                            <option value="15">15 Dias Corridos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="editEscola">Escola</label>
+                        <input type="text" id="editEscola" placeholder="Nome da escola">
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="editObservacao">Observação</label>
+                        <input type="text" id="editObservacao" placeholder="Opcional">
+                    </div>
+
+                </div>
+
+                <div id="editMensagem" class="mensagem" style="margin-top:16px;"></div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancelar" id="btnModalEditarCancelar">
+                <span class="material-symbols-outlined">close</span>
+                Cancelar
+            </button>
+            <button type="submit" form="formEditar" class="modal-btn-salvar" id="btnModalEditarSalvar">
+                <span class="material-symbols-outlined">save</span>
+                Salvar alterações
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      SCRIPTS DO LAYOUT
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
@@ -2047,7 +2237,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, getDocs, getDoc, query, where, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, getDoc, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let usuarioLogado = null;
     let perfilUsuario = "";
@@ -2056,6 +2246,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     let registrosCache = [];
     let periodosAbertos = [];
     let diasDireitoCache = 30;
+    let registroEmEdicao = null;
 
     const DIAS_PADRAO = 30;
 
@@ -2447,6 +2638,26 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             });
         }
         mudarTipoAusencia();
+
+        /* Listeners do modal de edição */
+        const btnFechar = document.getElementById("btnModalEditarFechar");
+        const btnCancelar = document.getElementById("btnModalEditarCancelar");
+        const modal = document.getElementById("modalEditar");
+
+        if (btnFechar) btnFechar.addEventListener("click", fecharModalEditar);
+        if (btnCancelar) btnCancelar.addEventListener("click", fecharModalEditar);
+
+        if (modal) {
+            modal.addEventListener("click", function(e) {
+                if (e.target === modal) fecharModalEditar();
+            });
+        }
+
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape" && modal && modal.classList.contains("ativo")) {
+                fecharModalEditar();
+            }
+        });
     });
 
     window.mudarTipoAusencia = function() {
@@ -2808,9 +3019,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     <td>${inicioFormatado}</td>
                     <td>${terminoFormatado}</td>
                     <td style="text-align:right;">
-                        <button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')" title="Excluir registro" aria-label="Excluir registro">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
+                        <div class="acoes-tabela">
+                            <button type="button" class="btn-editar" onclick="abrirModalEditar('${r.id}')" title="Editar registro" aria-label="Editar registro">
+                                <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button type="button" class="btn-excluir" onclick="excluirRegistro('${r.id}')" title="Excluir registro" aria-label="Excluir registro">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -2840,6 +3056,283 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             mostrarMensagem("Erro ao excluir o registro.", "erro");
         }
     };
+
+    /* ============================================================
+       EDIÇÃO DE REGISTRO
+       ============================================================ */
+    window.abrirModalEditar = function(id) {
+        if (!acessoAutorizado) {
+            mostrarMensagem("Acesso negado. Você não possui permissão para editar registros.", "erro");
+            return;
+        }
+
+        const reg = registrosCache.find(r => r.id === id);
+        if (!reg) {
+            mostrarMensagem("Registro não encontrado.", "erro");
+            return;
+        }
+
+        registroEmEdicao = reg;
+
+        // Info do servidor
+        document.getElementById("editarInfoServidor").innerHTML = `
+            <strong>${reg.nome || 'Servidor não identificado'}</strong><br>
+            CPF: ${reg.cpf || '—'} &nbsp;•&nbsp; Matrícula: ${reg.matricula || '—'}
+        `;
+
+        // Preencher campos
+        document.getElementById("editTipo").value = reg.tipo || "FERIAS";
+        document.getElementById("editPeriodo").value = reg.ano_referencia || "";
+        document.getElementById("editDataInicio").value = reg.dataInicio || "";
+        document.getElementById("editDataFim").value = reg.dataFim || reg.dataInicio || "";
+        document.getElementById("editEscola").value = reg.escola || "";
+        document.getElementById("editObservacao").value = reg.observacao || "";
+
+        // Duração das férias
+        if (reg.tipo === "FERIAS" && reg.dataInicio && reg.dataFim) {
+            const dias = calcularDiasRegistro(reg);
+            document.getElementById("editDuracao").value = (dias === 15) ? "15" : "30";
+        } else {
+            document.getElementById("editDuracao").value = "30";
+        }
+
+        // Ajusta visibilidade dos grupos conforme o tipo
+        mudarTipoEdicao();
+
+        // Limpa mensagem
+        const msg = document.getElementById("editMensagem");
+        msg.textContent = "";
+        msg.className = "mensagem";
+
+        // Abre o modal
+        const modal = document.getElementById("modalEditar");
+        modal.classList.add("ativo");
+        document.body.style.overflow = "hidden";
+
+        requestAnimationFrame(() => {
+            document.getElementById("editTipo").focus();
+        });
+    };
+
+    window.fecharModalEditar = function() {
+        const modal = document.getElementById("modalEditar");
+        if (!modal) return;
+        modal.classList.remove("ativo");
+        document.body.style.overflow = "";
+        registroEmEdicao = null;
+    };
+
+    window.mudarTipoEdicao = function() {
+        const tipo = document.getElementById("editTipo").value;
+        const grupoPeriodo = document.getElementById("editGrupoPeriodo");
+        const grupoDataFim = document.getElementById("editGrupoDataFim");
+        const grupoDuracao = document.getElementById("editGrupoDuracao");
+        const inputDataFim = document.getElementById("editDataFim");
+        const labelInicio = document.getElementById("editLabelDataInicio");
+
+        const tiposComPeriodo = ["FERIAS", "FOLGA_ANIVERSARIO"];
+        const precisaPeriodo = tiposComPeriodo.includes(tipo);
+
+        grupoPeriodo.style.display = precisaPeriodo ? "flex" : "none";
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            grupoDataFim.style.display = "none";
+            grupoDuracao.style.display = "none";
+            inputDataFim.removeAttribute("required");
+            inputDataFim.value = document.getElementById("editDataInicio").value;
+            labelInicio.innerHTML = "Data da Folga <span>*</span>";
+        } else if (tipo === "FERIAS") {
+            grupoDataFim.style.display = "flex";
+            grupoDuracao.style.display = "flex";
+            inputDataFim.setAttribute("required", "true");
+            inputDataFim.readOnly = true;
+            labelInicio.innerHTML = "Data de Início <span>*</span>";
+            calcularDataFimEdicao();
+        } else {
+            grupoDataFim.style.display = "flex";
+            grupoDuracao.style.display = "none";
+            inputDataFim.setAttribute("required", "true");
+            inputDataFim.readOnly = false;
+            labelInicio.innerHTML = "Data de Início <span>*</span>";
+        }
+    };
+
+    window.calcularDataFimEdicao = function() {
+        const tipo = document.getElementById("editTipo").value;
+        if (tipo !== "FERIAS") return;
+
+        const dataInicioStr = document.getElementById("editDataInicio").value;
+        const duracao = parseInt(document.getElementById("editDuracao").value) || 30;
+        const inputFim = document.getElementById("editDataFim");
+
+        if (!dataInicioStr) return;
+
+        const dt = new Date(dataInicioStr + "T00:00:00");
+        dt.setDate(dt.getDate() + (duracao - 1));
+
+        const ano = dt.getFullYear();
+        const mes = String(dt.getMonth() + 1).padStart(2, '0');
+        const dia = String(dt.getDate()).padStart(2, '0');
+        inputFim.value = `${ano}-${mes}-${dia}`;
+    };
+
+    window.salvarEdicao = async function(event) {
+        event.preventDefault();
+
+        if (!acessoAutorizado) {
+            mostrarMensagemEdicao("Acesso negado. Você não possui permissão para editar registros.", "erro");
+            return;
+        }
+
+        if (!registroEmEdicao) {
+            mostrarMensagemEdicao("Nenhum registro selecionado para edição.", "erro");
+            return;
+        }
+
+        const tipo = document.getElementById("editTipo").value;
+        const dataInicio = document.getElementById("editDataInicio").value;
+        let dataFim = document.getElementById("editDataFim").value;
+        const escola = document.getElementById("editEscola").value.trim();
+        const observacao = document.getElementById("editObservacao").value.trim();
+        const anoReferencia = document.getElementById("editPeriodo").value.trim();
+
+        if (!tipo || !dataInicio) {
+            mostrarMensagemEdicao("Preencha todos os campos obrigatórios.", "erro");
+            return;
+        }
+
+        if (tipo === "FOLGA_ANIVERSARIO") {
+            dataFim = dataInicio;
+        } else if (!dataFim) {
+            mostrarMensagemEdicao("Preencha a data de término.", "erro");
+            return;
+        }
+
+        if (dataInicio > dataFim) {
+            mostrarMensagemEdicao("A data de início não pode ser posterior à data de término.", "erro");
+            return;
+        }
+
+        const btn = document.getElementById("btnModalEditarSalvar");
+        const btnOriginal = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">sync</span> Salvando…';
+
+        try {
+            const cpfLimpo = (registroEmEdicao.cpf || "").replace(/\D/g, '');
+            const matricula = registroEmEdicao.matricula;
+
+            // Verifica conflito com outros registros da mesma matrícula
+            const qExistente = query(
+                collection(db, "registro_ferias_folgas"),
+                where("cpf", "==", cpfLimpo),
+                where("matricula", "==", matricula)
+            );
+            const existentesSnap = await getDocs(qExistente);
+
+            let temConflito = false;
+            existentesSnap.forEach(docSnap => {
+                if (docSnap.id === registroEmEdicao.id) return;
+                const r = docSnap.data();
+                if (!(dataFim < r.dataInicio || dataInicio > r.dataFim)) {
+                    temConflito = true;
+                }
+            });
+
+            if (temConflito) {
+                mostrarMensagemEdicao("Já existe outro registro para esta matrícula que conflita com as datas informadas.", "erro");
+                btn.disabled = false;
+                btn.innerHTML = btnOriginal;
+                return;
+            }
+
+            // Validação de dias para FÉRIAS no mesmo período
+            if (tipo === "FERIAS" && anoReferencia) {
+                const duracao = Math.round(
+                    (new Date(dataFim + 'T00:00:00') - new Date(dataInicio + 'T00:00:00')) / 86400000
+                ) + 1;
+
+                const consumidosOutros = registrosCache
+                    .filter(r =>
+                        r.id !== registroEmEdicao.id &&
+                        (r.matricula || '').toString() === matricula.toString() &&
+                        r.tipo === 'FERIAS' &&
+                        (r.ano_referencia || '') === anoReferencia
+                    )
+                    .reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
+
+                const totalDireito = diasDireitoCache || DIAS_PADRAO;
+
+                if (consumidosOutros + duracao > totalDireito) {
+                    mostrarMensagemEdicao(
+                        `O período ${anoReferencia} já possui ${consumidosOutros} dia(s) lançado(s) em outros registros. ` +
+                        `Restam apenas ${totalDireito - consumidosOutros} dia(s), mas você está tentando salvar ${duracao}.`,
+                        "erro"
+                    );
+                    btn.disabled = false;
+                    btn.innerHTML = btnOriginal;
+                    return;
+                }
+            }
+
+            // Validação de duplicidade para FOLGA_ANIVERSARIO
+            if (tipo === "FOLGA_ANIVERSARIO" && anoReferencia) {
+                const duplicado = registrosCache.some(r =>
+                    r.id !== registroEmEdicao.id &&
+                    (r.cpf || '').replace(/\D/g,'') === cpfLimpo &&
+                    r.matricula === matricula &&
+                    r.ano_referencia === anoReferencia &&
+                    r.tipo === 'FOLGA_ANIVERSARIO'
+                );
+                if (duplicado) {
+                    mostrarMensagemEdicao(`Já existe folga lançada para o período ${anoReferencia}.`, "erro");
+                    btn.disabled = false;
+                    btn.innerHTML = btnOriginal;
+                    return;
+                }
+            }
+
+            // Monta objeto de atualização
+            const dadosAtualizados = {
+                tipo: tipo,
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                escola: escola,
+                observacao: observacao,
+                dataEdicao: new Date().toISOString()
+            };
+
+            if (anoReferencia) {
+                dadosAtualizados.ano_referencia = anoReferencia;
+            } else {
+                dadosAtualizados.ano_referencia = null;
+            }
+
+            // Preserva gozo_extemporaneo existente (ou desliga se não houver período)
+            if (tipo === "FERIAS" || tipo === "FOLGA_ANIVERSARIO") {
+                dadosAtualizados.gozo_extemporaneo = registroEmEdicao.gozo_extemporaneo || false;
+            } else {
+                dadosAtualizados.gozo_extemporaneo = false;
+            }
+
+            await updateDoc(doc(db, "registro_ferias_folgas", registroEmEdicao.id), dadosAtualizados);
+
+            mostrarMensagem("Registro atualizado com sucesso.", "sucesso");
+            fecharModalEditar();
+            carregarRegistros();
+        } catch (e) {
+            console.error("Erro ao editar:", e);
+            mostrarMensagemEdicao("Erro ao salvar as alterações.", "erro");
+            btn.disabled = false;
+            btn.innerHTML = btnOriginal;
+        }
+    };
+
+    function mostrarMensagemEdicao(texto, tipo) {
+        const msg = document.getElementById("editMensagem");
+        msg.textContent = texto;
+        msg.className = "mensagem " + tipo;
+    }
 
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
