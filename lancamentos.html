@@ -694,18 +694,6 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 .btn-secundario:hover { background: var(--surface-2); border-color: var(--gray-400); }
 .btn-secundario .material-symbols-outlined { font-size: 16px; }
 
-.btn-perigo {
-    background: var(--surface); color: var(--danger);
-    border-color: var(--danger-bd);
-}
-.btn-perigo:hover { background: var(--danger-bg); border-color: var(--danger); }
-
-.btn-perigo-solido {
-    background: var(--danger); color: #fff;
-    border-color: var(--danger);
-}
-.btn-perigo-solido:hover { background: #7f1616; border-color: #7f1616; }
-
 /* ============================================================
    TABELA
    ============================================================ */
@@ -736,7 +724,6 @@ tbody tr:hover td { background: var(--surface-2); }
    ESTILOS ESPECÍFICOS DA PÁGINA lancamentos.html
    ============================================================ */
 
-/* Cabeçalho do form */
 .card-title {
     font-size: 15px;
     font-weight: 700;
@@ -748,9 +735,7 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 .card-title .material-symbols-outlined { font-size: 20px; }
 
-/* ============================================================
-   CPF + botão Buscar
-   ============================================================ */
+/* CPF + botão Buscar */
 .cpf-search-wrapper {
     display: flex;
     gap: 10px;
@@ -869,7 +854,7 @@ select option.atual { color: var(--brand); font-weight: 700; }
     margin-top: 1px;
 }
 
-/* Info campo automático (data fim) */
+/* Info campo automático */
 .info-campo-automatico {
     display: none;
     font-size: 11px;
@@ -886,7 +871,6 @@ select option.atual { color: var(--brand); font-weight: 700; }
     font-weight: 600;
 }
 
-/* Info servidor encontrado */
 #nomeServidorEncontrado {
     margin-top: 8px;
     font-weight: 600;
@@ -919,10 +903,7 @@ select option.atual { color: var(--brand); font-weight: 700; }
     font-size: 14.5px;
     margin-bottom: 4px;
 }
-.acesso-negado-banner p {
-    margin: 0;
-    line-height: 1.6;
-}
+.acesso-negado-banner p { margin: 0; line-height: 1.6; }
 
 /* Loading auth */
 .loading-auth {
@@ -1006,42 +987,38 @@ select option.atual { color: var(--brand); font-weight: 700; }
 }
 
 /* ============================================================
-   BOTÃO EXCLUIR — APENAS ÍCONE (LIXEIRINHA)
+   BOTÃO EXCLUIR — APENAS O ÍCONE (sem moldura)
    ============================================================ */
 .btn-excluir {
-    background: #7F1D1D;
-    color: #ffffff;
-    border: 1px solid #7F1D1D;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    padding: 0;
-    border-radius: 5px;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 6px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all .15s ease;
-    box-shadow: 0 1px 2px rgba(127, 29, 29, .3);
+    transition: background-color .15s ease, transform .1s ease;
+    color: #7F1D1D;
 }
 .btn-excluir:hover {
-    background: #6B1414;
-    border-color: #6B1414;
-    box-shadow: 0 2px 4px rgba(127, 29, 29, .4);
-    transform: translateY(-1px);
+    background: rgba(127, 29, 29, .12);
+    transform: scale(1.08);
 }
 .btn-excluir:active {
-    background: #591010;
-    border-color: #591010;
-    box-shadow: 0 1px 2px rgba(127, 29, 29, .3);
-    transform: translateY(0);
+    background: rgba(127, 29, 29, .2);
+    transform: scale(0.95);
 }
 .btn-excluir .material-symbols-outlined {
-    font-size: 18px;
-    color: #ffffff;
+    font-size: 22px;
+    color: inherit;
+    pointer-events: none;
 }
 
-/* Badges de tipo de ausência na tabela */
+/* Badges de tipo */
 .tipo-badge {
     display: inline-flex;
     align-items: center;
@@ -1073,7 +1050,6 @@ select option.atual { color: var(--brand); font-weight: 700; }
     border: 1px solid var(--brand-soft);
 }
 
-/* Badge "fora do prazo" */
 .badge-extemporaneo {
     background: var(--warn-bg);
     color: var(--warn);
@@ -1087,14 +1063,151 @@ select option.atual { color: var(--brand); font-weight: 700; }
     vertical-align: middle;
 }
 
-/* Ações da tabela */
-td[data-label="Ações"] {
-    text-align: right;
-}
+td[data-label="Ações"] { text-align: right; }
 
 /* ============================================================
-   RESPONSIVO
+   MODAL DE CONFIRMAÇÃO PERSONALIZADO
    ============================================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.modal-overlay.ativo {
+    display: flex;
+    animation: fadeIn .18s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-box {
+    background: var(--surface);
+    border-radius: 6px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    animation: slideDown .2s ease;
+}
+
+.modal-header {
+    padding: 14px 18px;
+    background: var(--danger-bg);
+    border-bottom: 1px solid var(--danger-bd);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.reabertura-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--danger);
+}
+.reabertura-title .material-symbols-outlined { font-size: 20px; }
+.modal-fechar {
+    background: transparent;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--danger);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-fechar:hover { background: rgba(153,27,27,.1); }
+
+.modal-body {
+    padding: 20px 22px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.modal-btn-cancelar {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-strong);
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.modal-btn-cancelar:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--gray-400);
+}
+
+.modal-btn-confirmar {
+    background: #7F1D1D;
+    color: #fff;
+    border: 1px solid #7F1D1D;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+    box-shadow: 0 1px 2px rgba(127, 29, 29, .3);
+}
+.modal-btn-confirmar:hover {
+    background: #6B1414;
+    border-color: #6B1414;
+    box-shadow: 0 2px 4px rgba(127, 29, 29, .4);
+}
+.modal-btn-confirmar:active {
+    background: #591010;
+    border-color: #591010;
+}
+.modal-btn-confirmar .material-symbols-outlined,
+.modal-btn-cancelar .material-symbols-outlined { font-size: 16px; }
+
+/* Responsivo */
 @media (max-width: 900px) {
     .sidebar {
         position: fixed; top: 0; left: 0;
@@ -1136,6 +1249,14 @@ td[data-label="Ações"] {
     .table-header-actions { flex-direction: column; align-items: stretch; gap: 12px; }
     .search-table-wrapper { max-width: 100%; }
     .btn-salvar { width: 100%; }
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-box {
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 12px 12px 0 0;
+    }
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer button { width: 100%; }
 }
 
 @media (max-width: 640px) {
@@ -1148,9 +1269,6 @@ td[data-label="Ações"] {
     .page-header-page p { font-size: 12.5px; }
 }
 
-/* ============================================================
-   PREFERÊNCIAS
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1160,15 +1278,12 @@ td[data-label="Ações"] {
     }
 }
 
-/* ============================================================
-   IMPRESSÃO
-   ============================================================ */
 @media print {
     @page { margin: 1.5cm; }
     body { background: #fff !important; color: #000 !important; overflow: visible !important; }
     .layout { display: block; height: auto; overflow: visible; }
     .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user,
-    .topbar-sair, .modal-sair-overlay, .rede-indicador,
+    .topbar-sair, .modal-sair-overlay, .rede-indicador, .modal-overlay,
     .acesso-negado-banner, .loading-auth { display: none !important; }
     .main { overflow: visible; }
     .content-page { overflow: visible; padding: 0; }
@@ -1561,6 +1676,41 @@ td[data-label="Ações"] {
             <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
                 <span class="material-symbols-outlined" aria-hidden="true">logout</span>
                 Sim, sair
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
+     ═══════════════════════════════════════════════════════════ -->
+<div id="modalConfirm" class="modal-overlay">
+    <div class="modal-box" style="max-width: 420px;">
+        <div class="modal-header">
+            <div class="reabertura-title">
+                <span class="material-symbols-outlined">delete</span>
+                <span>Confirmar exclusão</span>
+            </div>
+            <button type="button" class="modal-fechar" id="btnModalConfirmFechar" aria-label="Fechar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p id="modalConfirmMensagem"
+               style="font-size:13.5px; color:var(--text-secondary); line-height:1.6; text-align:center; margin: 4px 0;">
+                Deseja realmente excluir este registro de ausência?
+                <br><br>
+                <strong style="color:var(--danger);">Esta ação não poderá ser desfeita.</strong>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancelar" id="btnModalCancelar">
+                <span class="material-symbols-outlined">close</span>
+                Fechar
+            </button>
+            <button type="button" class="modal-btn-confirmar" id="btnModalConfirmar">
+                <span class="material-symbols-outlined">check</span>
+                Sim, excluir
             </button>
         </div>
     </div>
@@ -2167,6 +2317,60 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     };
 
+    /* ============================================================
+       MODAL DE CONFIRMAÇÃO PERSONALIZADO
+       ============================================================ */
+    function mostrarConfirmacao(mensagem) {
+        return new Promise(function (resolve) {
+            var modal = document.getElementById("modalConfirm");
+            var mensagemEl = document.getElementById("modalConfirmMensagem");
+            var btnFechar = document.getElementById("btnModalConfirmFechar");
+            var btnCancelar = document.getElementById("btnModalCancelar");
+            var btnConfirmar = document.getElementById("btnModalConfirmar");
+
+            mensagemEl.innerHTML = mensagem;
+
+            modal.classList.add("ativo");
+            document.body.style.overflow = "hidden";
+
+            var ultimoFoco = document.activeElement;
+
+            function fechar() {
+                modal.classList.remove("ativo");
+                document.body.style.overflow = "";
+                document.removeEventListener("keydown", handleEsc);
+                if (ultimoFoco && typeof ultimoFoco.focus === "function") ultimoFoco.focus();
+            }
+
+            function onCancelar() { fechar(); resolve(false); }
+            function onConfirmar() { fechar(); resolve(true); }
+            function handleEsc(e) { if (e.key === "Escape") onCancelar(); }
+
+            var novoCancelar = btnCancelar.cloneNode(true);
+            var novoConfirmar = btnConfirmar.cloneNode(true);
+            var novoFechar = btnFechar.cloneNode(true);
+            btnCancelar.parentNode.replaceChild(novoCancelar, btnCancelar);
+            btnConfirmar.parentNode.replaceChild(novoConfirmar, btnConfirmar);
+            btnFechar.parentNode.replaceChild(novoFechar, btnFechar);
+
+            novoCancelar.addEventListener("click", onCancelar);
+            novoFechar.addEventListener("click", onCancelar);
+            novoConfirmar.addEventListener("click", onConfirmar);
+            document.addEventListener("keydown", handleEsc);
+
+            modal.addEventListener("click", function handler(e) {
+                if (e.target === modal) {
+                    modal.removeEventListener("click", handler);
+                    onCancelar();
+                }
+            });
+
+            requestAnimationFrame(function () {
+                if (novoCancelar) novoCancelar.focus();
+            });
+        });
+    }
+
     /* AUTENTICAÇÃO: verifica permissão de ADMIN */
     (async function verificarPermissoes() {
         const loadingAuth = document.getElementById("loadingAuth");
@@ -2619,15 +2823,21 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             mostrarMensagem("Acesso negado. Você não possui permissão para excluir registros.", "erro");
             return;
         }
-        if (confirm("Deseja realmente excluir este registro de ausência?")) {
-            try {
-                await deleteDoc(doc(db, "registro_ferias_folgas", id));
-                mostrarMensagem("Registro excluído com sucesso.", "sucesso");
-                carregarRegistros();
-            } catch (e) {
-                console.error("Erro ao excluir:", e);
-                mostrarMensagem("Erro ao excluir o registro.", "erro");
-            }
+
+        var confirmado = await mostrarConfirmacao(
+            'Deseja realmente excluir este registro de ausência?<br><br>' +
+            '<strong style="color:var(--danger);">Esta ação não poderá ser desfeita.</strong>'
+        );
+
+        if (!confirmado) return;
+
+        try {
+            await deleteDoc(doc(db, "registro_ferias_folgas", id));
+            mostrarMensagem("Registro excluído com sucesso.", "sucesso");
+            carregarRegistros();
+        } catch (e) {
+            console.error("Erro ao excluir:", e);
+            mostrarMensagem("Erro ao excluir o registro.", "erro");
         }
     };
 
