@@ -44,6 +44,9 @@
     --shadow-sm:0 1px 2px rgba(20,25,35,.05);--shadow-md:0 2px 6px rgba(20,25,35,.08);--shadow-lg:0 20px 50px rgba(20,25,35,.16);
     --sidebar-width:268px;--topbar-height:56px;
     --focus-ring:0 0 0 3px rgba(82,82,91,.15);--focus-border:#52525b;--accent:#52525b;
+    /* NOVO: contraste do select customizado */
+    --cs-sel-bg:#d4d4d8;
+    --cs-sel-text:#18181b;
     --overlay:rgba(20,25,35,.5);
     --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
     --font-serif:'Source Serif 4',Georgia,'Times New Roman',serif;
@@ -63,6 +66,8 @@
     --border:#2a2d32;--border-strong:#3a3d42;
     --shadow-sm:0 1px 2px rgba(0,0,0,.4);--shadow-md:0 2px 6px rgba(0,0,0,.5);--shadow-lg:0 20px 50px rgba(0,0,0,.6);
     --focus-ring:0 0 0 3px rgba(161,165,171,.22);--focus-border:#a1a5ab;--accent:#a1a5ab;
+    --cs-sel-bg:#3a3d42;
+    --cs-sel-text:#f4f5f7;
     --overlay:rgba(0,0,0,.65);
 }
 
@@ -129,8 +134,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
     cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     transition:background-color .1s ease;
 }
-.cs-opcao:hover{background:var(--surface-2);color:var(--text);}
-.cs-opcao.selecionada{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+.cs-opcao:hover:not(.selecionada){background:var(--surface-3);color:var(--text);}
+.cs-opcao.selecionada{
+    background:var(--cs-sel-bg);
+    color:var(--cs-sel-text);
+    font-weight:600;
+}
 .cs-opcao.vencido{color:var(--danger);}
 .cs-opcao.disponivel{color:var(--ok);}
 .cs-opcao.vazia{color:var(--text-muted);font-style:italic;cursor:default;}
@@ -906,7 +915,6 @@ tbody tr:hover td{background:var(--surface-2);}
 import { auth } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* AUTO-DETECÇÃO DO ITEM ATIVO */
 (function () {
     var item = document.getElementById('menuItemConfigurarPeriodos');
     if (!item) return;
@@ -915,7 +923,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
     else item.classList.remove('ativo');
 })();
 
-/* TEMA */
 (function () {
     var btn = document.getElementById('btnTema');
     if (btn) {
@@ -930,7 +937,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
     }
 })();
 
-/* MENU LATERAL */
 (function () {
     var sidebar = document.getElementById('sidebarMenu');
     var backdrop = document.getElementById('sidebarBackdrop');
@@ -1002,7 +1008,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
     }
 })();
 
-/* AUTENTICAÇÃO E USUÁRIO */
 onAuthStateChanged(auth, function (user) {
     if (user) {
         var email = user.email || '';
@@ -1020,7 +1025,6 @@ onAuthStateChanged(auth, function (user) {
     }
 });
 
-/* MODAL SAIR */
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -1070,7 +1074,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     if (e.target === this) fecharModalSair();
 });
 
-/* BOTÃO ATUALIZAR */
 (function () {
     var btnAtualizar = document.getElementById('btnAtualizar');
     if (!btnAtualizar) return;
@@ -1096,8 +1099,6 @@ function inicializarSelectsCustom() {
         var trigger = wrap.querySelector('.cs-trigger');
         var textoEl = wrap.querySelector('.cs-texto');
         var inputHidden = wrap.querySelector('input[type="hidden"]');
-
-        function getOpcoes() { return wrap.querySelectorAll('.cs-opcao'); }
 
         function fechar() {
             wrap.classList.remove('aberto');
@@ -1128,7 +1129,7 @@ function inicializarSelectsCustom() {
             var op = e.target.closest('.cs-opcao');
             if (!op || op.classList.contains('vazia')) return;
             e.stopPropagation();
-            getOpcoes().forEach(function (o) { o.classList.remove('selecionada'); });
+            wrap.querySelectorAll('.cs-opcao').forEach(function (o) { o.classList.remove('selecionada'); });
             op.classList.add('selecionada');
             var valor = op.dataset.value;
             wrap.dataset.value = valor;
@@ -1213,7 +1214,6 @@ inicializarSelectsCustom();
 window.inicializarSelectsCustom = inicializarSelectsCustom;
 window.atualizarSelectCustom = atualizarSelectCustom;
 
-/* Cliques do select custom que dispara "onchange" */
 document.getElementById('csTipoAusencia').addEventListener('click', function (e) {
     var op = e.target.closest('.cs-opcao');
     if (op) setTimeout(function () { window.mudarTipoAusencia && window.mudarTipoAusencia(); }, 0);
@@ -1239,9 +1239,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     if (op) setTimeout(function () { window.calcularDataFimEdicao && window.calcularDataFimEdicao(); }, 0);
 });
 
-/* ============================================================
-   INDICADOR DE REDE
-   ============================================================ */
+/* INDICADOR DE REDE */
 (function () {
     var el = document.getElementById('redeIndicador');
     var texto = document.getElementById('redeTexto');
@@ -1479,9 +1477,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                 label += ' — ' + p.restantes + '/' + p.totalDireito + ' dias livres';
             }
             return {
-                value: p.anoReferencia,
-                label: label,
-                classe: classe,
+                value: p.anoReferencia, label: label, classe: classe,
                 dataInicio: p.inicio.toISOString().split('T')[0],
                 dataFim: p.fim.toISOString().split('T')[0],
                 dataLimite: p.dataLimite.toISOString().split('T')[0],
@@ -1973,7 +1969,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             '<strong>' + (reg.nome || 'Servidor não identificado') + '</strong><br>' +
             'CPF: ' + (reg.cpf || '—') + ' &nbsp;•&nbsp; Matrícula: ' + (reg.matricula || '—');
 
-        // Seta tipo
         const csEditTipo = document.getElementById('csEditTipo');
         const tipoVal = reg.tipo || 'FERIAS';
         csEditTipo.dataset.value = tipoVal;
