@@ -86,8 +86,11 @@
     --sidebar-width: 268px;
     --topbar-height: 56px;
 
-    --focus-ring: 0 0 0 3px rgba(31,58,95,.16);
-    --focus-border: #1f3a5f;
+    /* FOCO CINZA CORPORATIVO */
+    --focus-ring: 0 0 0 3px rgba(82, 82, 91, .15);
+    --focus-border: #52525b;
+    --accent: #52525b;
+
     --overlay: rgba(20,25,35,.5);
 
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -145,8 +148,11 @@
     --shadow-md: 0 2px 6px rgba(0,0,0,.5);
     --shadow-lg: 0 20px 50px rgba(0,0,0,.6);
 
-    --focus-ring: 0 0 0 3px rgba(123,163,205,.22);
-    --focus-border: #7ba3cd;
+    /* FOCO CINZA CORPORATIVO (dark) */
+    --focus-ring: 0 0 0 3px rgba(161, 165, 171, .22);
+    --focus-border: #a1a5ab;
+    --accent: #a1a5ab;
+
     --overlay: rgba(0,0,0,.65);
 
     --brand-contrast: #1a1a1c;
@@ -177,10 +183,31 @@ html, body {
 body { overflow: hidden; }
 button { font: inherit; color: inherit; cursor: pointer; }
 
+/* Controles nativos (calendário, checkbox, radio) em cinza */
+input, select, textarea {
+    accent-color: var(--accent);
+    caret-color: var(--text);
+}
+
 :focus-visible {
     outline: 2px solid var(--focus-border);
     outline-offset: 2px;
     border-radius: 3px;
+}
+
+/* Remove o "ring" azul padrão do Chrome em inputs */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 2px;
 }
 
 /* ============================================================
@@ -659,7 +686,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .form-group input:hover { border-color: var(--gray-400); }
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--brand);
+    border-color: var(--focus-border);
     box-shadow: var(--focus-ring);
 }
 
@@ -758,7 +785,7 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 .cpf-search-wrapper input:hover { border-color: var(--gray-400); }
 .cpf-search-wrapper input:focus {
-    border-color: var(--brand);
+    border-color: var(--focus-border);
     box-shadow: var(--focus-ring);
 }
 
@@ -971,7 +998,7 @@ select option.vencido { color: var(--danger); font-weight: 600; }
     width: 40px;
     height: 40px;
     border: 3px solid var(--border);
-    border-top-color: var(--brand);
+    border-top-color: var(--focus-border);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -1026,7 +1053,7 @@ select option.vencido { color: var(--danger); font-weight: 600; }
 }
 .search-table-wrapper input:hover { border-color: var(--gray-400); }
 .search-table-wrapper input:focus {
-    border-color: var(--brand);
+    border-color: var(--focus-border);
     box-shadow: var(--focus-ring);
 }
 .search-table-wrapper .material-symbols-outlined {
@@ -2413,15 +2440,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             if (restantes > 0) {
 
                 if (tipo === 'FOLGA_ANIVERSARIO') {
-                    // ============================================================
                     // FOLGA ANIVERSÁRIO — só duas situações: DISPONÍVEL ou PERDIDA
-                    // ============================================================
                     if (!dataDisponivel) {
                         // sem aniversário dentro do período → não lista
                     } else if (hoje < dataDisponivel) {
                         // aniversário ainda não chegou → não lista
                     } else {
-                        // aniversário já passou → verifica prazo (1 ano após o aniversário)
                         const prazoFinal = new Date(dataDisponivel);
                         prazoFinal.setFullYear(prazoFinal.getFullYear() + 1);
 
@@ -2444,9 +2468,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         // se passou do prazo → PERDIDA → não lista
                     }
                 } else {
-                    // ============================================================
                     // FÉRIAS — não prescreve, lista sempre que houver saldo
-                    // ============================================================
                     let status = 'disponivel';
                     if (fim < hoje) {
                         status = prazoGozo < hoje ? 'vencido' : 'disponivel';
