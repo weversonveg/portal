@@ -189,25 +189,99 @@ input, select, textarea {
     caret-color: var(--text);
 }
 
-:focus-visible {
-    outline: 2px solid var(--focus-border);
-    outline-offset: 2px;
-    border-radius: 3px;
-}
+/* ============================================================
+   KILL AZUL NATIVO — PC (Chrome / Edge / Firefox)
+   ============================================================ */
 
-/* Remove o "ring" azul padrão do Chrome em inputs */
+/* 1. Mata outline azul padrão em QUALQUER input/select/button */
 input:focus,
 select:focus,
 textarea:focus,
-button:focus {
-    outline: none;
-}
+button:focus,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 button:focus-visible {
-    outline: 2px solid var(--focus-border);
-    outline-offset: 2px;
+    outline: none !important;
+    outline-offset: 0 !important;
+}
+
+/* 2. Reaplica o cinza corporativo como borda + anel */
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--focus-border) !important;
+    box-shadow: var(--focus-ring) !important;
+}
+
+/* 3. Select nativo — remove setinha azul e usa SVG cinza */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    padding-right: 36px;
+    color: var(--text);
+}
+:root[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a5ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+select::-ms-expand { display: none; }
+select option {
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* 4. Autofill do Chrome — remove fundo azul */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+    box-shadow: 0 0 0 1000px var(--surface) inset !important;
+    transition: background-color 9999s ease-in-out 0s;
+    caret-color: var(--text);
+}
+
+/* 5. Ícone do calendário (input date) — cinza */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: grayscale(100%) brightness(0.4);
+    opacity: .75;
+    cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: grayscale(100%) brightness(2.2);
+    opacity: .85;
+}
+
+/* 6. Texto selecionado — cinza em vez de azul */
+::selection {
+    background: var(--focus-border);
+    color: #fff;
+}
+::-moz-selection {
+    background: var(--focus-border);
+    color: #fff;
+}
+
+/* 7. Remove ícones azuis de autofill do Chrome */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+}
+
+/* 8. Fallback final — outline cinza em qualquer elemento */
+*:focus {
+    outline-color: var(--focus-border);
 }
 
 /* ============================================================
@@ -2440,7 +2514,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             if (restantes > 0) {
 
                 if (tipo === 'FOLGA_ANIVERSARIO') {
-                    // FOLGA ANIVERSÁRIO — só duas situações: DISPONÍVEL ou PERDIDA
                     if (!dataDisponivel) {
                         // sem aniversário dentro do período → não lista
                     } else if (hoje < dataDisponivel) {
@@ -2468,7 +2541,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         // se passou do prazo → PERDIDA → não lista
                     }
                 } else {
-                    // FÉRIAS — não prescreve, lista sempre que houver saldo
                     let status = 'disponivel';
                     if (fim < hoje) {
                         status = prazoGozo < hoje ? 'vencido' : 'disponivel';
