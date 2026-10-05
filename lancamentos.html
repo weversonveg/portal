@@ -878,6 +878,58 @@ select option.vencido { color: var(--danger); font-weight: 600; }
     font-size: 13px;
 }
 
+/* ============================================================
+   MENSAGENS — CARDS DE FEEDBACK (erro / sucesso / aviso)
+   ============================================================ */
+.mensagem {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.55;
+    border: 1px solid transparent;
+    align-items: flex-start;
+    gap: 8px;
+}
+.mensagem.visivel { display: flex; }
+
+.mensagem::before {
+    font-family: 'Material Symbols Outlined';
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    line-height: 1;
+}
+
+.mensagem.erro {
+    background: var(--danger-bg);
+    border-color: var(--danger-bd);
+    color: var(--danger);
+}
+.mensagem.erro::before { content: "error"; }
+
+.mensagem.sucesso {
+    background: var(--ok-bg);
+    border-color: var(--ok-bd);
+    color: var(--ok);
+}
+.mensagem.sucesso::before { content: "check_circle"; }
+
+.mensagem.aviso {
+    background: var(--warn-bg);
+    border-color: var(--warn-bd);
+    color: var(--warn);
+}
+.mensagem.aviso::before { content: "warning"; }
+
+.mensagem.info {
+    background: var(--info-bg);
+    border-color: var(--info-bd);
+    color: var(--info);
+}
+.mensagem.info::before { content: "info"; }
+
 /* Acesso negado */
 .acesso-negado-banner {
     display: none;
@@ -2400,7 +2452,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         status = prazoGozo < hoje ? 'vencido' : 'disponivel';
                     }
 
-                    // só ignora se o ciclo aquisitivo ainda não fechou
                     if (!(tipo === 'FERIAS' && status === 'atual')) {
                         periodos.push({
                             anoReferencia: anoRef,
@@ -2424,7 +2475,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             if (fim > hoje) break;
         }
 
-        // Ordena: disponíveis primeiro, vencidos depois (só se aplica às férias)
         periodos.sort((a,b) => {
             const ordem = { disponivel: 0, vencido: 1 };
             return (ordem[a.status] ?? 0) - (ordem[b.status] ?? 0);
@@ -2492,11 +2542,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             let classe = '';
 
             if (tipo === 'FOLGA_ANIVERSARIO') {
-                // só existe disponível
                 label += ` — Disponível`;
                 classe = 'disponivel';
             } else {
-                // FÉRIAS
                 if (p.status === 'vencido') {
                     label += ` — Vencido (gozo extemporâneo)`;
                     classe = 'vencido';
@@ -2693,7 +2741,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
         mudarTipoAusencia();
 
-        /* Listeners do modal de edição */
         const btnFechar = document.getElementById("btnModalEditarFechar");
         const btnCancelar = document.getElementById("btnModalEditarCancelar");
         const modal = document.getElementById("modalEditar");
@@ -2908,8 +2955,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const statusPeriodo = opt.getAttribute('data-status');
             const dataLimite = opt.getAttribute('data-limite');
 
-            // Só FÉRIAS podem ser lançadas vencidas (extemporâneo).
-            // Folga Aniversário vencida nem aparece na lista.
             if (tipo === 'FERIAS' && statusPeriodo === 'vencido' && dataLimite) {
                 const dtInicio = new Date(dataInicio);
                 const dtLimite = new Date(dataLimite);
@@ -3376,13 +3421,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     function mostrarMensagemEdicao(texto, tipo) {
         const msg = document.getElementById("editMensagem");
         msg.textContent = texto;
-        msg.className = "mensagem " + tipo;
+        msg.className = "mensagem visivel " + tipo;
     }
 
     function mostrarMensagem(texto, tipo) {
         const msg = document.getElementById("mensagem");
         msg.textContent = texto;
-        msg.className = "mensagem " + tipo;
+        msg.className = "mensagem visivel " + tipo;
     }
 </script>
 
