@@ -829,8 +829,8 @@ tbody tr:hover td { background: var(--surface-2); }
 .periodo-info-box.vencido strong { color: var(--danger); }
 
 /* Selects com option colorida */
+select option.disponivel { color: var(--ok); font-weight: 700; }
 select option.vencido { color: var(--danger); font-weight: 600; }
-select option.atual { color: var(--brand); font-weight: 700; }
 
 /* Alerta período vencido */
 .alerta-periodo-vencido {
@@ -1683,7 +1683,7 @@ td[data-label="Ações"] { text-align: right; }
                                     <div class="alerta-periodo-vencido" id="alertaPeriodoVencido">
                                         <span class="material-symbols-outlined">warning</span>
                                         <div>
-                                            <strong>Atenção:</strong> Este período está vencido. O gozo será registrado como <b>extemporâneo</b> (fora do prazo legal).
+                                            <strong>Atenção:</strong> Este período está vencido. O gozo será registrado como <b>extemporâneo</b> (fora do prazo legal). As férias não prescrevem.
                                         </div>
                                     </div>
                                 </div>
@@ -2302,6 +2302,16 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             .reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
     }
 
+    /* ============================================================
+       CÁLCULO DE PERÍODOS
+
+       REGRAS:
+       - FÉRIAS REGULAMENTARES: NÃO prescrevem.
+         Lista sempre que houver saldo (mesmo vencido → gozo extemporâneo).
+       - FOLGA ANIVERSÁRIO: PRESCREVE 1 ano após o aniversário.
+         Só lista se estiver DENTRO do prazo (disponível).
+         Se passou do prazo, NÃO lista (perdeu o direito).
+       ============================================================ */
     function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
         if (!dtAdm) return [];
@@ -2349,21 +2359,49 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const restantes = totalDireito - consumidos;
 
             if (restantes > 0) {
-                if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje < dataDisponivel) {
-                    // aguardando o aniversário — não lista
-                } else {
-                    let status = 'pendente';
-                    if (tipo === 'FOLGA_ANIVERSARIO' && dataDisponivel && hoje >= prazoGozo) {
-                        status = 'vencido';
-                    } else if (fim < hoje) {
-                        status = prazoGozo < hoje ? 'vencido' : 'pendente';
+
+                if (tipo === 'FOLGA_ANIVERSARIO') {
+                    // ============================================================
+                    // FOLGA ANIVERSÁRIO — só duas situações: DISPONÍVEL ou PERDIDA
+                    // ============================================================
+                    if (!dataDisponivel) {
+                        // sem aniversário dentro do período → não lista
+                    } else if (hoje < dataDisponivel) {
+                        // aniversário ainda não chegou → não lista
                     } else {
-                        status = 'atual';
+                        // aniversário já passou → verifica prazo (1 ano após o aniversário)
+                        const prazoFinal = new Date(dataDisponivel);
+                        prazoFinal.setFullYear(prazoFinal.getFullYear() + 1);
+
+                        const disponivel = hoje <= prazoFinal;
+
+                        if (disponivel) {
+                            periodos.push({
+                                anoReferencia: anoRef,
+                                inicio: new Date(ini),
+                                fim: new Date(fim),
+                                dataLimite: prazoFinal,
+                                dataDisponivel: dataDisponivel,
+                                aniversarioNoPeriodo: aniversarioNoPeriodo,
+                                status: 'disponivel',
+                                consumidos: consumidos,
+                                restantes: restantes,
+                                totalDireito: totalDireito
+                            });
+                        }
+                        // se passou do prazo → PERDIDA → não lista
+                    }
+                } else {
+                    // ============================================================
+                    // FÉRIAS — não prescreve, lista sempre que houver saldo
+                    // ============================================================
+                    let status = 'disponivel';
+                    if (fim < hoje) {
+                        status = prazoGozo < hoje ? 'vencido' : 'disponivel';
                     }
 
-                    if (tipo === 'FERIAS' && status === 'atual') {
-                        // Pula — ciclo aquisitivo ainda não fechou
-                    } else {
+                    // só ignora se o ciclo aquisitivo ainda não fechou
+                    if (!(tipo === 'FERIAS' && status === 'atual')) {
                         periodos.push({
                             anoReferencia: anoRef,
                             inicio: new Date(ini),
@@ -2386,9 +2424,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             if (fim > hoje) break;
         }
 
+        // Ordena: disponíveis primeiro, vencidos depois (só se aplica às férias)
         periodos.sort((a,b) => {
-            const ordem = { vencido: 0, pendente: 1, atual: 2 };
-            return ordem[a.status] - ordem[b.status];
+            const ordem = { disponivel: 0, vencido: 1 };
+            return (ordem[a.status] ?? 0) - (ordem[b.status] ?? 0);
         });
 
         return periodos;
@@ -2399,9 +2438,11 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const grupoPeriodo = document.getElementById("grupoPeriodoAquisitivo");
         const selectPeriodo = document.getElementById("selectPeriodo");
         const tipo = document.getElementById("tipoAusencia").value;
+        const btnSalvar = document.getElementById('btnSalvar');
 
         if (!vinculoSelect || tipo === 'LICENCA_MEDICA' || tipo === 'LICENCA_OUTRAS') {
             grupoPeriodo.style.display = "none";
+            btnSalvar.disabled = false;
             return;
         }
 
@@ -2424,42 +2465,45 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (!dataAdmissao) {
             selectPeriodo.innerHTML = `<option value="">Data de admissão não informada nesta matrícula</option>`;
             grupoPeriodo.style.display = "flex";
+            btnSalvar.disabled = true;
             return;
         }
 
         periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo);
 
         if (periodosAbertos.length === 0) {
-            const temPeriodoEmAndamento = tipo === 'FERIAS';
-            if (temPeriodoEmAndamento) {
-                selectPeriodo.innerHTML = `<option value="">Nenhum período adquirido ainda (ciclo aquisitivo em andamento)</option>`;
+            if (tipo === 'FOLGA_ANIVERSARIO') {
+                selectPeriodo.innerHTML = `<option value="">Nenhuma folga aniversário disponível (períodos anteriores prescreveram)</option>`;
             } else {
-                selectPeriodo.innerHTML = `<option value="">Não há períodos disponíveis para gozo</option>`;
+                selectPeriodo.innerHTML = `<option value="">Nenhum período adquirido ainda (ciclo aquisitivo em andamento)</option>`;
             }
             grupoPeriodo.style.display = "flex";
-            document.getElementById('btnSalvar').disabled = true;
+            btnSalvar.disabled = true;
+            document.getElementById('periodoInfoBox').classList.remove('visivel');
+            document.getElementById('alertaPeriodoVencido').classList.remove('visivel');
             return;
         }
 
-        document.getElementById('btnSalvar').disabled = false;
+        btnSalvar.disabled = false;
 
         let options = `<option value="">Selecione o período aquisitivo...</option>`;
         periodosAbertos.forEach(p => {
             let label = `${p.anoReferencia}`;
             let classe = '';
 
-            if (p.status === 'vencido') {
-                label += ` — VENCIDO (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
-                classe = 'vencido';
-            } else if (p.status === 'pendente') {
-                label += ` — Pendente (prazo: ${formatarDataBr(p.dataLimite.toISOString().split('T')[0])})`;
-                classe = 'pendente';
+            if (tipo === 'FOLGA_ANIVERSARIO') {
+                // só existe disponível
+                label += ` — Disponível`;
+                classe = 'disponivel';
             } else {
-                label += ` — Em andamento`;
-                classe = 'atual';
-            }
-
-            if (tipo === 'FERIAS') {
+                // FÉRIAS
+                if (p.status === 'vencido') {
+                    label += ` — Vencido (gozo extemporâneo)`;
+                    classe = 'vencido';
+                } else {
+                    label += ` — Disponível`;
+                    classe = 'disponivel';
+                }
                 label += ` — ${p.restantes}/${p.totalDireito} dias livres`;
             }
 
@@ -2484,6 +2528,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             return;
         }
 
+        const tipo = document.getElementById('tipoAusencia').value;
         const inicio = opt.getAttribute('data-inicio');
         const fim = opt.getAttribute('data-fim');
         const limite = opt.getAttribute('data-limite');
@@ -2491,20 +2536,29 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const restantes = opt.getAttribute('data-restantes');
         const total = opt.getAttribute('data-total') || DIAS_PADRAO;
 
-        infoBox.innerHTML = `
-            <strong>Ciclo aquisitivo:</strong> ${formatarDataBr(inicio)} a ${formatarDataBr(fim)}<br>
-            <strong>Prazo para gozar:</strong> até ${formatarDataBr(limite)}<br>
-            <strong>Dias disponíveis:</strong> ${restantes} de ${total} dias<br>
-            <strong>Status:</strong> ${status === 'vencido' ? 'Vencido' : status === 'pendente' ? 'Pendente' : 'Em andamento'}
-        `;
-        infoBox.classList.add('visivel');
-
-        if (status === 'vencido') {
-            infoBox.classList.add('vencido');
-            alertaVencido.classList.add('visivel');
-        } else {
+        if (tipo === 'FOLGA_ANIVERSARIO') {
+            infoBox.innerHTML = `
+                <strong>Ciclo aquisitivo:</strong> ${formatarDataBr(inicio)} a ${formatarDataBr(fim)}<br>
+                <strong>Prazo para gozar:</strong> até ${formatarDataBr(limite)}<br>
+                <strong>Status:</strong> Disponível
+            `;
             infoBox.classList.remove('vencido');
             alertaVencido.classList.remove('visivel');
+        } else {
+            infoBox.innerHTML = `
+                <strong>Ciclo aquisitivo:</strong> ${formatarDataBr(inicio)} a ${formatarDataBr(fim)}<br>
+                <strong>Prazo para gozar:</strong> até ${formatarDataBr(limite)}<br>
+                <strong>Dias disponíveis:</strong> ${restantes} de ${total} dias<br>
+                <strong>Status:</strong> ${status === 'vencido' ? 'Vencido — gozo extemporâneo' : 'Disponível'}
+            `;
+
+            if (status === 'vencido') {
+                infoBox.classList.add('vencido');
+                alertaVencido.classList.add('visivel');
+            } else {
+                infoBox.classList.remove('vencido');
+                alertaVencido.classList.remove('visivel');
+            }
         }
     };
 
@@ -2854,7 +2908,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const statusPeriodo = opt.getAttribute('data-status');
             const dataLimite = opt.getAttribute('data-limite');
 
-            if (statusPeriodo === 'vencido' && dataLimite) {
+            // Só FÉRIAS podem ser lançadas vencidas (extemporâneo).
+            // Folga Aniversário vencida nem aparece na lista.
+            if (tipo === 'FERIAS' && statusPeriodo === 'vencido' && dataLimite) {
                 const dtInicio = new Date(dataInicio);
                 const dtLimite = new Date(dataLimite);
                 if (dtInicio > dtLimite) {
@@ -2929,7 +2985,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             await addDoc(collection(db, "registro_ferias_folgas"), docParaSalvar);
 
             const msgSucesso = gozoExtemporaneo
-                ? "Lançamento salvo com sucesso. ATENÇÃO: gozo registrado FORA do prazo (extemporâneo)."
+                ? "Lançamento salvo com sucesso. ATENÇÃO: férias registradas FORA do prazo (extemporâneo)."
                 : "Período registrado com sucesso!";
 
             mostrarMensagem(msgSucesso, "sucesso");
@@ -3074,13 +3130,11 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         registroEmEdicao = reg;
 
-        // Info do servidor
         document.getElementById("editarInfoServidor").innerHTML = `
             <strong>${reg.nome || 'Servidor não identificado'}</strong><br>
             CPF: ${reg.cpf || '—'} &nbsp;•&nbsp; Matrícula: ${reg.matricula || '—'}
         `;
 
-        // Preencher campos
         document.getElementById("editTipo").value = reg.tipo || "FERIAS";
         document.getElementById("editPeriodo").value = reg.ano_referencia || "";
         document.getElementById("editDataInicio").value = reg.dataInicio || "";
@@ -3088,7 +3142,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         document.getElementById("editEscola").value = reg.escola || "";
         document.getElementById("editObservacao").value = reg.observacao || "";
 
-        // Duração das férias
         if (reg.tipo === "FERIAS" && reg.dataInicio && reg.dataFim) {
             const dias = calcularDiasRegistro(reg);
             document.getElementById("editDuracao").value = (dias === 15) ? "15" : "30";
@@ -3096,15 +3149,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("editDuracao").value = "30";
         }
 
-        // Ajusta visibilidade dos grupos conforme o tipo
         mudarTipoEdicao();
 
-        // Limpa mensagem
         const msg = document.getElementById("editMensagem");
         msg.textContent = "";
         msg.className = "mensagem";
 
-        // Abre o modal
         const modal = document.getElementById("modalEditar");
         modal.classList.add("ativo");
         document.body.style.overflow = "hidden";
@@ -3222,7 +3272,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const cpfLimpo = (registroEmEdicao.cpf || "").replace(/\D/g, '');
             const matricula = registroEmEdicao.matricula;
 
-            // Verifica conflito com outros registros da mesma matrícula
             const qExistente = query(
                 collection(db, "registro_ferias_folgas"),
                 where("cpf", "==", cpfLimpo),
@@ -3246,7 +3295,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 return;
             }
 
-            // Validação de dias para FÉRIAS no mesmo período
             if (tipo === "FERIAS" && anoReferencia) {
                 const duracao = Math.round(
                     (new Date(dataFim + 'T00:00:00') - new Date(dataInicio + 'T00:00:00')) / 86400000
@@ -3275,7 +3323,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 }
             }
 
-            // Validação de duplicidade para FOLGA_ANIVERSARIO
             if (tipo === "FOLGA_ANIVERSARIO" && anoReferencia) {
                 const duplicado = registrosCache.some(r =>
                     r.id !== registroEmEdicao.id &&
@@ -3292,7 +3339,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 }
             }
 
-            // Monta objeto de atualização
             const dadosAtualizados = {
                 tipo: tipo,
                 dataInicio: dataInicio,
@@ -3308,7 +3354,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 dadosAtualizados.ano_referencia = null;
             }
 
-            // Preserva gozo_extemporaneo existente (ou desliga se não houver período)
             if (tipo === "FERIAS" || tipo === "FOLGA_ANIVERSARIO") {
                 dadosAtualizados.gozo_extemporaneo = registroEmEdicao.gozo_extemporaneo || false;
             } else {
