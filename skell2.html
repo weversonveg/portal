@@ -1074,14 +1074,34 @@ tbody tr:hover td { background: var(--surface-2); }
     letter-spacing: 0;
 }
 
+/* ============================================================
+   CORREÇÃO PRINCIPAL — contêineres de gráfico com altura fixa
+   ============================================================ */
 .chart-card-body {
     padding: 16px 18px;
-    flex: 1;
     position: relative;
-    min-height: 260px;
+    height: 300px;
+    min-height: 300px;
 }
-.chart-card-body.curto { min-height: 200px; }
-.chart-card-body canvas { max-width: 100%; }
+.chart-card-body.curto {
+    height: 220px;
+    min-height: 220px;
+}
+
+/* O canvas precisa ocupar 100% do contêiner para o Chart.js
+   com maintainAspectRatio:false conseguir renderizar. */
+.chart-card-body > canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Exceção: o donut usa wrapper próprio e maintainAspectRatio:true */
+.chart-card-body > .donut-wrapper > .donut-canvas-wrapper > canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
 
 /* Legenda customizada de donut */
 .donut-wrapper {
@@ -1408,6 +1428,8 @@ tbody tr:hover td { background: var(--surface-2); }
     .kpi-valor { font-size: 20px; }
     .donut-wrapper { flex-direction: column; gap: 16px; }
     .donut-legenda { margin-left: 0; width: 100%; }
+    .chart-card-body { height: 260px; min-height: 260px; }
+    .chart-card-body.curto { height: 200px; min-height: 200px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
