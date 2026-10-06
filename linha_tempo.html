@@ -975,10 +975,6 @@ function verificarExtemporaneo(status, gozoStr, dataLimite) {
     return dg ? dg > dataLimite : false;
 }
 
-/* ============================================================
-   CÁLCULO DE FÉRIAS — apenas períodos JÁ ADQUIRIDOS
-   (sem "Em andamento")
-   ============================================================ */
 function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
@@ -990,7 +986,6 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
         fim.setFullYear(fim.getFullYear()+1);
         fim.setDate(fim.getDate()-1);
 
-        // ✅ Só considera o período se o ciclo JÁ FECHOU
         if(fim > ref) break;
 
         const prazoGozo = new Date(fim);
@@ -1015,10 +1010,6 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
     return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
 }
 
-/* ============================================================
-   CÁLCULO DE FOLGA ANIVERSÁRIO — apenas quando o aniversário JÁ PASSOU
-   (sem "Em andamento")
-   ============================================================ */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
@@ -1040,9 +1031,7 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
         const prazoGozo = new Date(aniv);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-        // ✅ Só considera o período se o aniversário JÁ PASSOU
         if(ref < dataDisponivel){
-            // aniversário ainda não chegou → período em formação → NÃO lista
             break;
         }
 
@@ -1145,7 +1134,6 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
-                    // ✅ Sem "atual": ciclo fechou, então é disponível ou vencido
                     if(p.dataLimiteGozo<hoje) status='vencido';
                     else status='disponivel';
                 }
@@ -1155,6 +1143,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                     status,gozo:gozo||'—',ordem:p.inicio.getTime(),
+                    admissao: vinculo.dataAdmissao,
+                    diasDireito: totalDireito,
                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)});
             });
         }
@@ -1178,7 +1168,7 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
                 } else {
                     gozo='—';
-                    status = p.status; // 'disponivel' ou 'perdido'
+                    status = p.status;
                 }
 
                 linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
@@ -1186,6 +1176,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                     status,gozo:gozo||'—',ordem:p.inicio.getTime(),
+                    admissao: vinculo.dataAdmissao,
+                    diasDireito: null,
                     extemporaneo: false});
             });
         }
@@ -1222,7 +1214,6 @@ function renderizarResumoExecutivo(){
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
 
-        // Férias: adquiridas = todas (não existe mais "atual")
         const feriasAdquiridas = f.length;
         const folgaAdquiridas = g.length;
 
@@ -1306,9 +1297,6 @@ function renderizarTabelaUnica(linhas){
     `).join('');
 }
 
-/* =========================================================
-   GRÁFICO VISUAL POR PERÍODO
-   ========================================================= */
 function obterClasseSegmento(status) {
     const mapa = {
         gozado: 'seg-gozado',
@@ -1352,7 +1340,7 @@ function renderizarGrafico() {
         const ferias = linhasPeriodo.filter(l => l.tipoKey === 'ferias');
         const folgas = linhasPeriodo.filter(l => l.tipoKey === 'folga');
 
-        const totalDireito = ferias.length > 0 ? (ferias[0].totalDireito || DIAS_PADRAO) : DIAS_PADRAO;
+        const totalDireito = ferias.length > 0 ? (ferias[0].diasDireito || DIAS_PADRAO) : DIAS_PADRAO;
 
         html += `<div class="grafico-periodo-bloco">`;
         html += `<div class="grafico-periodo-titulo">
@@ -1362,7 +1350,6 @@ function renderizarGrafico() {
                  </div>`;
         html += `<div class="grafico-barras">`;
 
-        // --- Linha de Férias ---
         if (ferias.length > 0) {
             const statusFerias = ferias.map(f => f.status);
             const statusPrincipal = statusFerias.includes('gozado') ? 'gozado'
@@ -1424,7 +1411,6 @@ function renderizarGrafico() {
                     </div>`;
         }
 
-        // --- Linha de Folga Aniversário ---
         if (folgas.length > 0) {
             const folga = folgas[0];
             const statusFolga = folga.status;
@@ -1601,9 +1587,11 @@ async function processarServidores(docs){
     document.getElementById('nomeServidor').textContent=nome;
     document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
     document.getElementById('nascimentoServidor').textContent=formatarData(nascimento)||'—';
-    document.getElementById('matriculasServidor').textContent=vinculos.map(v=>{
-        const dias = v.diasFerias ? ` • ${v.diasFerias}d/per` : ' • 30d/per';
-        return `${v.matricula} (Adm ${formatarData(v.dataAdmissao)||'—'}${dias})`;
+
+    /* ===== AQUI: rótulos "Admissão" e "dias/período" por extenso ===== */
+    document.getElementById('matriculasServidor').textContent = vinculos.map(v => {
+        const dias = v.diasFerias ? `${v.diasFerias} dias/período` : '30 dias/período';
+        return `${v.matricula} (Admissão ${formatarData(v.dataAdmissao) || '—'} • ${dias})`;
     }).join('  ·  ');
 
     const hoje=new Date();hoje.setHours(0,0,0,0);
