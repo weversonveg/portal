@@ -298,43 +298,12 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 /* ============================================================
    TABELA COM CABEÇALHO CONGELADO
    ============================================================ */
-.table-scroll {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: 560px;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-}
-table {
-    width: 100%; border-collapse: collapse;
-    text-align: left; min-width: 780px;
-}
-th {
-    background: var(--surface-2);
-    padding: 12px 16px;
-    font-size: 10.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    box-shadow: 0 1px 0 var(--border);
-}
-td {
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    background: var(--surface);
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--surface-2); }
+.table-scroll{width:100%;overflow-x:auto;overflow-y:auto;max-height:560px;-webkit-overflow-scrolling:touch;position:relative;}
+table{width:100%;border-collapse:collapse;text-align:left;min-width:780px;}
+th{background:var(--surface-2);padding:12px 16px;font-size:10.5px;font-weight:600;color:var(--text-secondary);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;position:sticky;top:0;z-index:5;box-shadow:0 1px 0 var(--border);}
+td{padding:12px 16px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--surface-2);}
 
 .btn-excluir{background:transparent;border:none;padding:6px;width:32px;height:32px;min-width:32px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background-color .15s ease,transform .1s ease;color:#7F1D1D;}
 .btn-excluir:hover{background:rgba(127,29,29,.12);transform:scale(1.08);}
@@ -462,7 +431,8 @@ input.flatpickr-input{background:var(--surface)!important;}
 }
 </style>
 </head>
-<body>
+
+    <body>
 
 <div class="layout">
 
@@ -1697,6 +1667,15 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                 else if (value.length > 3) value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
                 e.target.value = value;
             });
+
+            // ✅ Enter no CPF = clicar em Buscar (sem submeter o form)
+            inputCpf.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.buscarServidorPorCpf();
+                }
+            });
         }
         window.mudarTipoAusencia();
         window.inicializarFlatpickr();
@@ -1955,7 +1934,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
     /* ============================================================
        FILTRO PADRÃO — SÓ LANÇAMENTOS ATIVOS OU FUTUROS
-       (dataFim >= hoje)
        ============================================================ */
     function aplicarFiltroPadrao(registros) {
         const hoje = new Date();
@@ -1976,7 +1954,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
             registrosCache = [];
             regSnap.forEach(d => registrosCache.push({ id: d.id, ...d.data() }));
-            // ✅ Aplica filtro padrão (só ativos/futuros)
             const visiveis = aplicarFiltroPadrao(registrosCache);
             renderizarTabela(visiveis);
         } catch (e) {
@@ -1988,13 +1965,11 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     window.filtrarTabela = function() {
         const termo = document.getElementById("filtroTabela").value.toLowerCase().trim();
 
-        // ✅ Sem termo de busca → aplica filtro padrão (só ativos/futuros)
         if (!termo) {
             renderizarTabela(aplicarFiltroPadrao(registrosCache));
             return;
         }
 
-        // ✅ Com termo de busca → procura em TODOS os registros (inclusive passados)
         const filtrados = registrosCache.filter(r => {
             const nome = (r.nome || "").toLowerCase();
             const cpf = (r.cpf || "").toLowerCase();
