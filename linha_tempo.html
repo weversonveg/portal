@@ -237,7 +237,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .badge-gozado { color:var(--ok); border-color:var(--ok-bd); background:var(--ok-bg); }
 .badge-pendente { color:var(--warn); border-color:var(--warn-bd); background:var(--warn-bg); }
 .badge-vencido { color:var(--danger); border-color:var(--danger-bd); background:var(--danger-bg); }
-.badge-atual { color:var(--brand); border-color:var(--brand-soft); background:var(--brand-soft); }
 .badge-programado { color:var(--purple); border-color:#e1bee7; background:var(--purple-soft); }
 .badge-disponivel { color:var(--ok); border-color:var(--ok-bd); background:var(--ok-bg); }
 .badge-perdido { color:var(--danger); border-color:var(--danger-bd); background:var(--danger-bg); }
@@ -403,7 +402,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .grafico-segmento.seg-pendente { background: var(--warn); }
 .grafico-segmento.seg-vencido { background: var(--danger); }
 .grafico-segmento.seg-perdido { background: var(--gray-500); }
-.grafico-segmento.seg-atual { background: var(--brand); }
 .grafico-segmento.seg-fora-prazo { background: var(--danger); }
 .grafico-legenda {
     display: flex;
@@ -613,7 +611,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <option value="programado">Programado</option>
                                 <option value="vencido">Vencido</option>
                                 <option value="perdido">Perdido</option>
-                                <option value="atual">Em andamento</option>
                             </select>
                         </div>
                     </div>
@@ -637,7 +634,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                 </section>
 
-                <!-- ================= GRÁFICO VISUAL ================= -->
                 <section class="form-card" id="graficoContainer">
                     <div class="card-title">
                         <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
@@ -645,7 +641,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                     <div id="graficoPeriodos" class="grafico-periodos"></div>
                 </section>
-                <!-- ================================================== -->
             </div>
         </div>
     </div>
@@ -881,17 +876,6 @@ function calcularDiasRegistro(reg) {
     return d > 0 ? d : 0;
 }
 
-function atualizarStatusConexao() {
-    const statusDiv = document.getElementById("statusConexao");
-    const statusTexto = document.getElementById("statusTexto");
-    if (!statusDiv) return;
-    if (!navigator.onLine) { statusDiv.className = "status-conexao offline"; statusTexto.textContent = "Sem Conexão"; }
-    else { statusDiv.className = "status-conexao online"; statusTexto.textContent = "Online"; }
-}
-window.addEventListener('online', atualizarStatusConexao);
-window.addEventListener('offline', atualizarStatusConexao);
-atualizarStatusConexao();
-
 function mostrarLoading(texto = 'Carregando...') {
     document.getElementById('loadingTexto').textContent = texto;
     document.getElementById('loadingOverlay').classList.add('ativo');
@@ -991,27 +975,50 @@ function verificarExtemporaneo(status, gozoStr, dataLimite) {
     return dg ? dg > dataLimite : false;
 }
 
+/* ============================================================
+   CÁLCULO DE FÉRIAS — apenas períodos JÁ ADQUIRIDOS
+   (sem "Em andamento")
+   ============================================================ */
 function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
     const totalDireito = diasDireito || DIAS_PADRAO;
     let completos=0, det=[], ini=new Date(adm);
+
     while(completos<40){
         const fim=new Date(ini);
         fim.setFullYear(fim.getFullYear()+1);
         fim.setDate(fim.getDate()-1);
+
+        // ✅ Só considera o período se o ciclo JÁ FECHOU
+        if(fim > ref) break;
+
         const prazoGozo = new Date(fim);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
-        const p={numero:completos+1,inicio:new Date(ini),fim:new Date(fim),
+
+        const p={
+            numero:completos+1,
+            inicio:new Date(ini),
+            fim:new Date(fim),
             anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            dataLimiteGozo:prazoGozo,status:'pendente',
-            totalDireito: totalDireito};
-        if(fim<=ref){completos++;det.push(p);ini=new Date(fim);ini.setDate(ini.getDate()+1);}
-        else{p.status='atual';det.push(p);break;}
+            dataLimiteGozo:prazoGozo,
+            status:'pendente',
+            totalDireito: totalDireito
+        };
+        completos++;
+        det.push(p);
+
+        ini=new Date(fim);
+        ini.setDate(ini.getDate()+1);
     }
+
     return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
 }
 
+/* ============================================================
+   CÁLCULO DE FOLGA ANIVERSÁRIO — apenas quando o aniversário JÁ PASSOU
+   (sem "Em andamento")
+   ============================================================ */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
@@ -1033,21 +1040,32 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
         const prazoGozo = new Date(aniv);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-        const p={numero:i+1,inicio:new Date(ini),fim:new Date(fim),
-            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            aniversarioNoPeriodo:aniv,
-            dataDisponivel:dataDisponivel,
-            dataLimiteGozo:prazoGozo,status:'pendente'};
-
+        // ✅ Só considera o período se o aniversário JÁ PASSOU
         if(ref < dataDisponivel){
-            p.status='atual';   // ✅ ciclo ainda em formação — direito ainda não nasceu
-            det.push(p);
+            // aniversário ainda não chegou → período em formação → NÃO lista
             break;
         }
 
+        const p={
+            numero:i+1,
+            inicio:new Date(ini),
+            fim:new Date(fim),
+            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
+            aniversarioNoPeriodo:aniv,
+            dataDisponivel:dataDisponivel,
+            dataLimiteGozo:prazoGozo,
+            status:'pendente'
+        };
+
         adquiridas++;
-        if(ref >= prazoGozo){ p.status='perdido'; perdidas++; }
-        else { p.status='disponivel'; disponiveis++; }
+
+        if(ref >= prazoGozo){
+            p.status='perdido';
+            perdidas++;
+        } else {
+            p.status='disponivel';
+            disponiveis++;
+        }
         det.push(p);
 
         ini=new Date(fim); ini.setDate(ini.getDate()+1);
@@ -1127,9 +1145,9 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
-                    if(p.status==='atual') status='atual';
-                    else if(p.dataLimiteGozo<hoje) status='vencido';
-                    else status='disponivel';   // ✅ ciclo fechou, prazo ok, nada lançado → Disponível
+                    // ✅ Sem "atual": ciclo fechou, então é disponível ou vencido
+                    if(p.dataLimiteGozo<hoje) status='vencido';
+                    else status='disponivel';
                 }
 
                 linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
@@ -1151,18 +1169,24 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     const raw=r.data||r.data_gozo||r.dataInicio||r.data_inicio;
                     return raw && parseDataParaDate(raw) && parseDataParaDate(raw)>=p.dataDisponivel && parseDataParaDate(raw)<p.dataLimiteGozo;
                 });
-                let status=p.status, gozo='';
+
+                let status, gozo='';
+
                 if(lanc){
                     const raw=lanc.data||lanc.data_gozo||lanc.dataInicio||lanc.data_inicio;
                     gozo=formatarData(raw);
                     status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
+                } else {
+                    gozo='—';
+                    status = p.status; // 'disponivel' ou 'perdido'
                 }
+
                 linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                     status,gozo:gozo||'—',ordem:p.inicio.getTime(),
-                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)});
+                    extemporaneo: false});
             });
         }
     });
@@ -1179,8 +1203,7 @@ function badgeStatus(s){
         disponivel:['badge-disponivel','event_available','Disponível'],
         pendente:['badge-pendente','schedule','Pendente'],
         vencido:['badge-vencido','error','Vencido'],
-        perdido:['badge-perdido','cancel','Perdido'],
-        atual:['badge-atual','hourglass_top','Em andamento']
+        perdido:['badge-perdido','cancel','Perdido']
     };
     const x=m[s]; if(!x)return '-';
     return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
@@ -1199,10 +1222,9 @@ function renderizarResumoExecutivo(){
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
 
-        const feriasAdquiridas = f.filter(l => l.status !== 'atual').length;
-        const folgaAdquiridas = g.filter(l =>
-            ['disponivel','gozado','programado','perdido'].includes(l.status)
-        ).length;
+        // Férias: adquiridas = todas (não existe mais "atual")
+        const feriasAdquiridas = f.length;
+        const folgaAdquiridas = g.length;
 
         html += `
             <div class="resumo-matricula">
@@ -1222,7 +1244,6 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
                             <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f,'disponivel')}</span></span>
                             <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
-                            <span class="chip">Em andamento <span class="num chip-num-cinza">${c(f,'atual')}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
@@ -1235,7 +1256,6 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(g,'programado')}</span></span>
                             <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g,'disponivel')}</span></span>
                             <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g,'perdido')}</span></span>
-                            <span class="chip">Em andamento <span class="num chip-num-cinza">${c(g,'atual')}</span></span>
                         </div>
                     </div>
                 </div>
@@ -1297,24 +1317,9 @@ function obterClasseSegmento(status) {
         disponivel: 'seg-disponivel',
         pendente: 'seg-pendente',
         vencido: 'seg-vencido',
-        perdido: 'seg-perdido',
-        atual: 'seg-atual'
+        perdido: 'seg-perdido'
     };
     return mapa[status] || 'seg-pendente';
-}
-
-function obterRotuloStatus(status) {
-    const mapa = {
-        gozado: 'Gozado',
-        parcial: 'Parcial',
-        programado: 'Programado',
-        disponivel: 'Disponível',
-        pendente: 'Pendente',
-        vencido: 'Vencido',
-        perdido: 'Perdido',
-        atual: 'Em andamento'
-    };
-    return mapa[status] || status;
 }
 
 function renderizarGrafico() {
@@ -1364,7 +1369,6 @@ function renderizarGrafico() {
                 : statusFerias.includes('parcial') ? 'parcial'
                 : statusFerias.includes('programado') ? 'programado'
                 : statusFerias.includes('vencido') ? 'vencido'
-                : statusFerias.includes('atual') ? 'atual'
                 : statusFerias.includes('disponivel') ? 'disponivel'
                 : 'pendente';
 
@@ -1388,9 +1392,6 @@ function renderizarGrafico() {
             } else if (statusPrincipal === 'programado') {
                 percentual = 100;
                 labelPercentual = 'Programado';
-            } else if (statusPrincipal === 'atual') {
-                percentual = 0;
-                labelPercentual = 'Em andamento';
             } else if (statusPrincipal === 'disponivel') {
                 percentual = 60;
                 labelPercentual = 'Disponível';
@@ -1442,9 +1443,6 @@ function renderizarGrafico() {
             } else if (statusFolga === 'perdido') {
                 percentualFolga = 100;
                 labelFolga = 'Perdida';
-            } else if (statusFolga === 'atual') {
-                percentualFolga = 0;
-                labelFolga = 'Em andamento';
             } else {
                 percentualFolga = 0;
                 labelFolga = statusFolga;
@@ -1480,7 +1478,7 @@ function renderizarGrafico() {
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--purple);"></span> Programado</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Pendente</span>
-                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido / Fora do prazo</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--gray-500);"></span> Perdido</span>
              </div>`;
 
