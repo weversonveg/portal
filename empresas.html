@@ -1,1 +1,1045 @@
-hggg
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1f3a5f">
+<title>Empresas e Tarifas — Vale Transporte</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,add,paid,edit_note">
+
+<script>
+(function () {
+    try {
+        var t = localStorage.getItem('tema-vt') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
+        var menuFechado = localStorage.getItem('menu-vt-fechado');
+        if (menuFechado === '1') {
+            document.documentElement.classList.add('menu-inicial-fechado');
+        }
+    } catch (e) {}
+})();
+</script>
+
+<style>
+:root,
+:root[data-theme="light"] {
+    --brand: #1f3a5f;
+    --brand-hover: #2c4d77;
+    --brand-soft: #e8eef5;
+
+    --gray-50:  #fafafa;
+    --gray-100: #f5f5f6;
+    --gray-200: #e4e4e7;
+    --gray-300: #d4d4d8;
+    --gray-400: #a1a1aa;
+    --gray-500: #71717a;
+    --gray-600: #52525b;
+    --gray-700: #3f3f46;
+    --gray-800: #27272a;
+    --gray-900: #18181b;
+
+    --ok: #1a6a38;
+    --ok-bg: #f1f8f3;
+    --ok-bd: #bfdcc6;
+    --warn: #8a5610;
+    --warn-bg: #fbf7ef;
+    --warn-bd: #e6d3ac;
+    --danger: #9a1e1e;
+    --danger-bg: #fbf3f3;
+    --danger-bd: #e0c2c2;
+    --info: #1a4d8f;
+    --info-bg: #f0f5fb;
+    --info-bd: #c3d5e9;
+
+    --background: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --surface-3: #eef0f3;
+
+    --text: #1a1d21;
+    --text-secondary: #4d5560;
+    --text-muted: #7b8490;
+
+    --border: #d8dce0;
+    --border-strong: #b8bfc7;
+
+    --shadow-sm: 0 1px 2px rgba(20,25,35,.05);
+    --shadow-md: 0 2px 6px rgba(20,25,35,.08);
+
+    --sidebar-width: 268px;
+    --topbar-height: 56px;
+
+    --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+:root[data-theme="dark"] {
+    --brand: #7ba3cd;
+    --brand-hover: #96b8db;
+    --brand-soft: #1a2634;
+
+    --gray-50:  #1a1c20;
+    --gray-100: #1e2024;
+    --gray-200: #2a2d31;
+    --gray-300: #3a3d42;
+    --gray-400: #52555b;
+    --gray-500: #71757c;
+    --gray-600: #a1a5ab;
+    --gray-700: #d4d7db;
+    --gray-800: #e4e6e9;
+    --gray-900: #f4f5f7;
+
+    --ok: #86c79a;
+    --ok-bg: #13251a;
+    --ok-bd: #2f5c3f;
+    --warn: #e4c56c;
+    --warn-bg: #26200f;
+    --warn-bd: #5c4d2a;
+    --danger: #f0a1a1;
+    --danger-bg: #241515;
+    --danger-bd: #5c3434;
+    --info: #a3b8dd;
+    --info-bg: #141b28;
+    --info-bd: #33405a;
+
+    --background: #0f1114;
+    --surface: #171a1e;
+    --surface-2: #1c1f23;
+    --surface-3: #23262b;
+
+    --text: #eceef1;
+    --text-secondary: #a1a5ab;
+    --text-muted: #71757c;
+
+    --border: #2a2d32;
+    --border-strong: #3a3d42;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-md: 0 2px 6px rgba(0,0,0,.5);
+}
+
+*, *::before, *::after {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: var(--font); -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%; height: 100%; background: var(--background); color: var(--text);
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+
+body { overflow: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px;
+}
+
+.layout {
+    display: flex; width: 100%; height: 100vh; height: 100dvh; overflow: hidden;
+}
+
+.sidebar {
+    width: var(--sidebar-width); min-width: var(--sidebar-width);
+    height: 100%; background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: width .25s ease, min-width .25s ease, transform .25s ease;
+    overflow: hidden; z-index: 100;
+}
+.sidebar.fechado { width: 0; min-width: 0; border-right: none; }
+:root.menu-inicial-fechado .sidebar { width: 0; min-width: 0; border-right: none; }
+
+.sidebar-inner {
+    width: var(--sidebar-width); height: 100%; display: flex; flex-direction: column;
+}
+
+.sidebar-header {
+    height: var(--topbar-height); padding: 0 12px 0 20px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    background: var(--surface);
+}
+
+.sidebar-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+.sidebar-brand { display: flex; flex-direction: column; gap: 0; min-width: 0; flex: 1; }
+.sidebar-brand strong { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.sidebar-brand span {
+    font-size: 10.5px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .4px;
+    line-height: 1.2; margin-top: 1px;
+}
+
+.btn-fechar-sidebar {
+    display: none; width: 32px; height: 32px;
+    background: transparent; border: 1px solid transparent;
+    border-radius: 4px; color: var(--text-secondary);
+    align-items: center; justify-content: center; flex-shrink: 0;
+}
+.btn-fechar-sidebar .material-symbols-outlined { font-size: 20px; }
+@media (max-width: 900px) {
+    .sidebar.aberta-mobile .btn-fechar-sidebar { display: inline-flex; }
+}
+
+.sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+
+.menu-section { padding: 16px 0 8px; }
+.menu-section-title {
+    padding: 0 20px; font-size: 10.5px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: .7px; margin-bottom: 6px;
+}
+.menu { list-style: none; padding: 0 10px; display: flex; flex-direction: column; gap: 1px; }
+.menu-item a {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px; border-radius: 4px;
+    text-decoration: none; color: var(--text-secondary);
+    font-size: 13.5px; font-weight: 500;
+    position: relative; white-space: nowrap;
+}
+.menu-item a:hover { background: var(--surface-2); color: var(--text); }
+.menu-item.ativo a { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.menu-item.ativo a::before {
+    content: ""; position: absolute; left: -10px; top: 50%;
+    transform: translateY(-50%); width: 3px; height: 20px;
+    background: var(--brand); border-radius: 0 3px 3px 0;
+}
+.menu-item .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
+.menu-item.ativo .material-symbols-outlined { opacity: 1; }
+
+.menu-section-sair {
+    margin-top: 8px; padding-top: 16px;
+    border-top: 1px solid var(--border); padding-bottom: 8px;
+}
+.menu-item-sair button {
+    display: flex; align-items: center; gap: 11px;
+    width: 100%; padding: 9px 12px; border-radius: 4px;
+    background: transparent; border: none;
+    color: var(--text-secondary); font-size: 13.5px;
+    font-weight: 500; text-align: left; white-space: nowrap;
+}
+.menu-item-sair button:hover { background: var(--danger-bg); color: var(--danger); }
+.menu-item-sair button .material-symbols-outlined { font-size: 18px; flex-shrink: 0; opacity: .75; }
+
+.sidebar-info { padding: 16px 22px 22px; font-size: 10.5px; color: var(--text-muted); line-height: 1.5; }
+.sidebar-info strong { color: var(--text-secondary); font-weight: 600; display: block; font-size: 11px; margin-bottom: 2px; }
+
+.sidebar-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(20, 25, 35, .45);
+    z-index: 150; opacity: 0; transition: opacity .2s ease;
+}
+.sidebar-backdrop.ativo { display: block; opacity: 1; }
+@media (min-width: 901px) { .sidebar-backdrop { display: none !important; } }
+
+.main {
+    flex: 1 1 auto; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; height: 100%;
+    overflow: hidden; background: var(--background);
+}
+
+.topbar {
+    height: var(--topbar-height);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; gap: 16px; flex-shrink: 0; z-index: 50;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 auto; }
+.btn-menu {
+    width: 34px; height: 34px; flex-shrink: 0;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-menu:hover { background: var(--surface-2); color: var(--text); }
+.btn-menu .material-symbols-outlined { font-size: 20px; }
+
+.topbar-title { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.topbar-title strong {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-title span {
+    font-size: 11px; color: var(--text-muted); line-height: 1.2;
+    margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.topbar-btn {
+    height: 34px; padding: 0 12px;
+    background: transparent; border: 1px solid transparent;
+    border-radius: 4px; color: var(--text-secondary);
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 500;
+}
+.topbar-btn:hover { background: var(--surface-2); color: var(--text); }
+.topbar-btn .material-symbols-outlined { font-size: 18px; }
+.topbar-btn.carregando .material-symbols-outlined { animation: girar 1s linear infinite; }
+@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.topbar-user-group { display: flex; align-items: center; gap: 4px; }
+.topbar-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px 4px 4px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    max-width: 220px; min-width: 0;
+}
+.user-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--brand); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.user-info { display: flex; flex-direction: column; gap: 0; min-width: 0; line-height: 1.15; }
+.user-info strong {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.user-info span {
+    font-size: 10.5px; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-sair {
+    width: 34px; height: 34px; padding: 0;
+    background: transparent; border: none; border-radius: 4px;
+    color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background-color .12s ease, color .12s ease;
+}
+.topbar-sair:hover { background: var(--danger-bg); color: var(--danger); }
+.topbar-sair .material-symbols-outlined { font-size: 20px; }
+
+.btn-tema .icon-dark  { display: none; }
+.btn-tema .icon-light { display: inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-dark  { display: inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-light { display: none; }
+
+.content-page {
+    flex: 1 1 auto; min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 24px 28px 32px;
+}
+
+.breadcrumb {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; color: var(--text-muted); margin-bottom: 12px;
+}
+.breadcrumb .material-symbols-outlined { font-size: 17px; }
+.breadcrumb a { text-decoration: none; color: inherit; }
+.breadcrumb a:hover { color: var(--brand); }
+.breadcrumb .sep { opacity: .5; }
+
+.page-header-page {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
+}
+.page-header-page h1 {
+    font-family: var(--font-serif);
+    font-size: 24px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px;
+}
+.page-header-page p { font-size: 13px; color: var(--text-secondary); }
+
+.btn-novo {
+    height: 40px; background: var(--brand); color: #fff;
+    border: none; border-radius: 6px; padding: 0 16px;
+    font-weight: 600; cursor: pointer; display: flex;
+    align-items: center; gap: 6px; font-size: 13px;
+    transition: background .15s;
+}
+.btn-novo:hover { background: var(--brand-hover); }
+
+.card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.table-card {
+    overflow: auto;
+    max-height: 65vh;
+}
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; white-space: nowrap; }
+th {
+    background: var(--surface-2); padding: 12px 16px;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: .4px;
+    position: sticky; top: 0; z-index: 5;
+    box-shadow: 0 1px 0 var(--border);
+}
+td {
+    padding: 12px 16px; font-size: 13px;
+    color: var(--text); border-bottom: 1px solid var(--border);
+}
+tr:hover td { background: var(--surface-2); }
+
+.valor-tarifa {
+    font-weight: 700;
+    color: var(--ok);
+    font-size: 14px;
+}
+
+.data-reajuste {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.acoes { display: flex; gap: 6px; }
+.btn-acao {
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--surface);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); transition: all .15s;
+}
+.btn-acao:hover { background: var(--surface-2); }
+.btn-acao.editar:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+.btn-acao.excluir:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+.btn-acao .material-symbols-outlined { font-size: 16px; }
+
+.empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-muted);
+}
+.empty-state .material-symbols-outlined {
+    font-size: 48px; opacity: 0.3; margin-bottom: 12px;
+}
+.empty-state strong {
+    display: block; font-size: 15px; font-weight: 600;
+    color: var(--text); margin-bottom: 4px;
+}
+.empty-state p { font-size: 13px; }
+
+/* MODAL */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 9999;
+    align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.ativo { display: flex; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes slideDown { from{transform:translateY(-20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+
+.modal {
+    background: var(--surface); border-radius: 12px;
+    max-width: 480px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    animation: slideDown .3s ease;
+    display: flex; flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+}
+.modal-header h3 .material-symbols-outlined { color: var(--brand); }
+
+.modal-fechar {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: transparent; border: none;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all .15s;
+}
+.modal-fechar:hover { background: var(--surface-2); color: var(--text); }
+
+.modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 16px;
+}
+
+.form-group { display: flex; flex-direction: column; }
+.form-group label {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px;
+}
+.form-group label span { color: var(--danger); }
+.form-group input {
+    height: 42px; padding: 0 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; outline: none; font-size: 14px; color: var(--text);
+}
+.form-group input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+
+.btn-modal {
+    height: 40px; padding: 0 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all .15s;
+}
+.btn-modal.cancelar {
+    background: var(--surface); color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+.btn-modal.cancelar:hover { background: var(--surface-2); }
+.btn-modal.salvar {
+    background: var(--brand); color: #fff; border: none;
+}
+.btn-modal.salvar:hover { background: var(--brand-hover); }
+.btn-modal:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.mensagem {
+    display: none; padding: 12px 14px; border-radius: 6px;
+    font-size: 13px; font-weight: 500; margin-bottom: 16px;
+}
+.mensagem.sucesso { display: block; background: var(--ok-bg); border: 1px solid var(--ok-bd); color: var(--ok); }
+.mensagem.erro { display: block; background: var(--danger-bg); border: 1px solid var(--danger-bd); color: var(--danger); }
+
+/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */
+.modal-confirm-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 10000;
+    align-items: center; justify-content: center; padding: 20px;
+}
+.modal-confirm-overlay.ativo { display: flex; animation: fadeIn .2s ease; }
+
+.modal-confirm {
+    background: var(--surface); border-radius: 12px;
+    max-width: 400px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    animation: slideDown .3s ease;
+    text-align: center;
+    padding: 28px 24px;
+}
+.modal-confirm .material-symbols-outlined {
+    font-size: 48px; color: var(--danger);
+    margin-bottom: 12px;
+}
+.modal-confirm h4 {
+    font-size: 16px; font-weight: 700; color: var(--text);
+    margin-bottom: 8px;
+}
+.modal-confirm p {
+    font-size: 13px; color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+.modal-confirm .modal-footer {
+    border-top: none; padding: 0;
+    justify-content: center;
+}
+.btn-modal.excluir {
+    background: var(--danger); color: #fff; border: none;
+}
+.btn-modal.excluir:hover { background: #7d1717; }
+
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed; top: 0; left: 0;
+        height: 100vh; height: 100dvh;
+        width: var(--sidebar-width); min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        box-shadow: var(--shadow-md);
+        border-right: 1px solid var(--border); z-index: 200;
+    }
+    .sidebar.aberta-mobile { transform: translateX(0); }
+    .sidebar.fechado {
+        width: var(--sidebar-width); min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+        border-right: 1px solid var(--border);
+    }
+    :root.menu-inicial-fechado .sidebar {
+        width: var(--sidebar-width); min-width: var(--sidebar-width);
+        transform: translateX(-100%);
+    }
+    .topbar { padding: 0 16px; gap: 12px; }
+    .topbar-title span { display: none; }
+    .topbar-user .user-info span { display: none; }
+    .topbar-btn .btn-texto { display: none; }
+    .topbar-btn { padding: 0 10px; }
+}
+
+@media (max-width: 640px) {
+    .content-page { padding: 16px 12px 32px; }
+    .page-header-page { flex-direction: column; align-items: stretch; }
+    .btn-novo { width: 100%; justify-content: center; }
+    .topbar { padding: 0 12px; gap: 8px; }
+    .topbar-btn { padding: 0 8px; height: 32px; }
+    .topbar-user { display: none; }
+    .topbar-right { gap: 4px; }
+    .page-header-page h1 { font-size: 20px; }
+    .modal { max-width: 100%; margin: 12px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
+        <div class="sidebar-inner">
+
+            <div class="sidebar-header">
+                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
+                <div class="sidebar-brand">
+                    <strong>Vale Transporte</strong>
+                    <span>SEMED · RH</span>
+                </div>
+                <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+            </div>
+
+            <div class="sidebar-scroll">
+                <nav class="menu-section">
+                    <div class="menu-section-title">Principal</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="inicial.html"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Painel de controle</span></a></li>
+                        <li class="menu-item"><a href="servidores.html"><span class="material-symbols-outlined" aria-hidden="true">badge</span><span>Servidores e vínculos</span></a></li>
+                    </ul>
+                </nav>
+
+                <nav class="menu-section">
+                    <div class="menu-section-title">Configuração</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="configuracao.html"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Dias úteis e meses</span></a></li>
+                        <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">domain</span><span>Unidades escolares</span></a></li>
+                        <li class="menu-item ativo"><a href="empresas.html" aria-current="page"><span class="material-symbols-outlined" aria-hidden="true">paid</span><span>Empresas e Tarifas</span></a></li>
+                    </ul>
+                </nav>
+
+                <nav class="menu-section">
+                    <div class="menu-section-title">Operação</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Lançamentos da unidade</span></a></li>
+                        <li class="menu-item"><a href="lancamento.html"><span class="material-symbols-outlined" aria-hidden="true">event_note</span><span>Férias, folgas e licenças</span></a></li>
+                        <li class="menu-item"><a href="calculo.html"><span class="material-symbols-outlined" aria-hidden="true">calculate</span><span>Cálculo e vales</span><span class="menu-badge">Mensal</span></a></li>
+                    </ul>
+                </nav>
+
+                <nav class="menu-section">
+                    <div class="menu-section-title">Consultas</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="relatorios.html"><span class="material-symbols-outlined" aria-hidden="true">description</span><span>Relatórios gerais</span></a></li>
+                        <li class="menu-item"><a href="linha_tempo.html"><span class="material-symbols-outlined" aria-hidden="true">history</span><span>Linha do tempo</span></a></li>
+                    </ul>
+                </nav>
+
+                <nav class="menu-section menu-section-sair">
+                    <ul class="menu">
+                        <li class="menu-item menu-item-sair">
+                            <button type="button" id="btnSairSidebar">
+                                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                                <span>Sair do sistema</span>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar-info">
+                    <strong>Versão 1.0.0</strong>
+                    Sistema de gestão de vale transporte
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <div class="main">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-menu" id="btnMenuToggle" aria-label="Abrir ou fechar menu lateral" aria-controls="sidebarMenu" aria-expanded="true" title="Abrir / fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+                </button>
+
+                <div class="topbar-title">
+                    <strong>Empresas e Tarifas</strong>
+                    <span>SEMED — Gestão de Tarifas de Transporte</span>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
+                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                    <span class="btn-texto">Atualizar</span>
+                </button>
+
+                <button type="button" class="topbar-btn btn-tema" id="btnTema" title="Alternar tema claro/escuro">
+                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
+                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
+                    <span class="btn-texto">Tema</span>
+                </button>
+
+                <div class="topbar-user-group">
+                    <div class="topbar-user" title="Usuário logado">
+                        <div class="user-avatar" id="userAvatar">—</div>
+                        <div class="user-info">
+                            <strong id="userNameLabel">Usuário</strong>
+                            <span id="userEmailLabel">Carregando…</span>
+                        </div>
+                    </div>
+
+                    <button type="button" class="topbar-sair" id="btnSairTopbar" title="Sair do sistema" aria-label="Sair do sistema">
+                        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-page">
+
+            <div class="breadcrumb">
+                <span class="material-symbols-outlined">home</span>
+                <a href="inicial.html">Início</a>
+                <span class="sep">/</span>
+                <span>Empresas e Tarifas</span>
+            </div>
+
+            <div class="page-header-page">
+                <div>
+                    <h1>Empresas e Tarifas</h1>
+                    <p>Gerencie as concessionárias de transporte e os valores das tarifas.</p>
+                </div>
+                <button type="button" class="btn-novo" onclick="abrirModalNovaEmpresa()">
+                    <span class="material-symbols-outlined">add</span>
+                    Nova Empresa
+                </button>
+            </div>
+
+            <div id="mensagem" class="mensagem"></div>
+
+            <div class="card">
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Empresa</th>
+                                <th>Valor da Tarifa</th>
+                                <th>Último Reajuste</th>
+                                <th style="text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEmpresas">
+                            <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding: 40px;">Carregando empresas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL NOVA/EDITAR EMPRESA -->
+<div class="modal-overlay" id="modalEmpresa">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>
+                <span class="material-symbols-outlined">paid</span>
+                <span id="modalTitulo">Nova Empresa</span>
+            </h3>
+            <button type="button" class="modal-fechar" onclick="fecharModalEmpresa()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="nomeEmpresa">Nome da Empresa <span>*</span></label>
+                <input type="text" id="nomeEmpresa" placeholder="Ex: Trancid, Transpratur..." maxlength="50">
+            </div>
+            <div class="form-group">
+                <label for="valorTarifa">Valor da Tarifa (R$) <span>*</span></label>
+                <input type="number" id="valorTarifa" placeholder="Ex: 4.50" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label for="dataReajuste">Data do Último Reajuste</label>
+                <input type="date" id="dataReajuste">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal cancelar" onclick="fecharModalEmpresa()">Cancelar</button>
+            <button type="button" class="btn-modal salvar" id="btnSalvarEmpresa" onclick="salvarEmpresa()">
+                <span class="material-symbols-outlined">save</span>
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO DE EXCLUSÃO -->
+<div class="modal-confirm-overlay" id="modalConfirmarExclusao">
+    <div class="modal-confirm">
+        <span class="material-symbols-outlined">warning</span>
+        <h4>Excluir Empresa</h4>
+        <p>Tem certeza que deseja excluir a empresa <strong id="nomeEmpresaExcluir"></strong>?<br>Esta ação não pode ser desfeita.</p>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal cancelar" onclick="fecharModalExclusao()">Cancelar</button>
+            <button type="button" class="btn-modal excluir" onclick="confirmarExclusao()">
+                <span class="material-symbols-outlined">delete</span>
+                Excluir
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let empresasCache = [];
+    let empresaEmEdicao = null;
+    let empresaParaExcluir = null;
+
+    // Formatar valor monetário
+    function formatarMoeda(valor) {
+        return 'R$ ' + Number(valor).toFixed(2).replace('.', ',');
+    }
+
+    // Formatar data para exibição
+    function formatarData(dataStr) {
+        if (!dataStr) return '—';
+        const partes = dataStr.split('-');
+        if (partes.length !== 3) return dataStr;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    // Carregar empresas do Firestore
+    async function carregarEmpresas() {
+        const tbody = document.getElementById('tabelaEmpresas');
+        try {
+            const snapshot = await getDocs(collection(db, 'empresas'));
+            empresasCache = [];
+            snapshot.forEach(d => {
+                empresasCache.push({ id: d.id, ...d.data() });
+            });
+
+            // Ordenar por nome
+            empresasCache.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+            renderizarTabela();
+        } catch (e) {
+            console.error('Erro ao carregar empresas:', e);
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger); padding: 40px;">Erro ao carregar empresas.</td></tr>`;
+        }
+    }
+
+    // Renderizar tabela
+    function renderizarTabela() {
+        const tbody = document.getElementById('tabelaEmpresas');
+
+        if (empresasCache.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <span class="material-symbols-outlined">domain</span>
+                            <strong>Nenhuma empresa cadastrada</strong>
+                            <p>Clique em "Nova Empresa" para adicionar a primeira concessionária.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        empresasCache.forEach(emp => {
+            const valorFormatado = formatarMoeda(emp.valorTarifa || 0);
+            const dataReajuste = formatarData(emp.dataReajuste);
+
+            html += `
+                <tr>
+                    <td><strong>${emp.nome || '—'}</strong></td>
+                    <td><span class="valor-tarifa">${valorFormatado}</span></td>
+                    <td><span class="data-reajuste">${dataReajuste}</span></td>
+                    <td style="text-align:right;">
+                        <div class="acoes" style="justify-content:flex-end;">
+                            <button type="button" class="btn-acao editar" onclick="editarEmpresa('${emp.id}')" title="Editar">
+                                <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button type="button" class="btn-acao excluir" onclick="abrirModalExclusao('${emp.id}')" title="Excluir">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    // Abrir modal de nova empresa
+    window.abrirModalNovaEmpresa = function() {
+        empresaEmEdicao = null;
+        document.getElementById('modalTitulo').textContent = 'Nova Empresa';
+        document.getElementById('nomeEmpresa').value = '';
+        document.getElementById('valorTarifa').value = '';
+        document.getElementById('dataReajuste').value = new Date().toISOString().split('T')[0];
+        document.getElementById('modalEmpresa').classList.add('ativo');
+    };
+
+    // Editar empresa
+    window.editarEmpresa = function(id) {
+        const empresa = empresasCache.find(e => e.id === id);
+        if (!empresa) return;
+
+        empresaEmEdicao = id;
+        document.getElementById('modalTitulo').textContent = 'Editar Empresa';
+        document.getElementById('nomeEmpresa').value = empresa.nome || '';
+        document.getElementById('valorTarifa').value = empresa.valorTarifa || '';
+        document.getElementById('dataReajuste').value = empresa.dataReajuste || '';
+        document.getElementById('modalEmpresa').classList.add('ativo');
+    };
+
+    // Fechar modal
+    window.fecharModalEmpresa = function() {
+        document.getElementById('modalEmpresa').classList.remove('ativo');
+    };
+
+    // Salvar empresa
+    window.salvarEmpresa = async function() {
+        const nome = document.getElementById('nomeEmpresa').value.trim();
+        const valorStr = document.getElementById('valorTarifa').value;
+        const dataReajuste = document.getElementById('dataReajuste').value;
+
+        if (!nome) {
+            alert('Informe o nome da empresa.');
+            return;
+        }
+
+        const valor = parseFloat(valorStr);
+        if (isNaN(valor) || valor < 0) {
+            alert('Informe um valor de tarifa válido.');
+            return;
+        }
+
+        const btnSalvar = document.getElementById('btnSalvarEmpresa');
+        btnSalvar.disabled = true;
+
+        try {
+            // Verificar se já existe empresa com o mesmo nome (exceto a em edição)
+            const nomeNormalizado = nome.toUpperCase();
+            const duplicada = empresasCache.find(e =>
+                e.nome.toUpperCase() === nomeNormalizado && e.id !== empresaEmEdicao
+            );
+
+            if (duplicada) {
+                alert('Já existe uma empresa com este nome.');
+                btnSalvar.disabled = false;
+                return;
+            }
+
+            const dadosEmpresa = {
+                nome: nome,
+                valorTarifa: valor,
+                dataReajuste: dataReajuste || null,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            if (empresaEmEdicao) {
+                // Editar existente
+                await setDoc(doc(db, 'empresas', empresaEmEdicao), dadosEmpresa, { merge: true });
+                mostrarMensagem('Empresa atualizada com sucesso!', 'sucesso');
+            } else {
+                // Criar nova
+                await setDoc(doc(collection(db, 'empresas')), dadosEmpresa);
+                mostrarMensagem('Empresa cadastrada com sucesso!', 'sucesso');
+            }
+
+            fecharModalEmpresa();
+            await carregarEmpresas();
+        } catch (e) {
+            console.error('Erro ao salvar empresa:', e);
+            mostrarMensagem('Erro ao salvar a empresa.', 'erro');
+        } finally {
+            btnSalvar.disabled = false;
+        }
+    };
+
+    // Abrir modal de exclusão
+    window.abrirModalExclusao = function(id) {
+        const empresa = empresasCache.find(e => e.id === id);
+        if (!empresa) return;
+
+        empresaParaExcluir = id;
+        document.getElementById('nomeEmpresaExcluir').textContent = empresa.nome;
+        document.getElementById('modalConfirmarExclusao').classList.add('ativo');
+    };
+
+    // Fechar modal de exclusão
+    window.fecharModalExclusao = function() {
+        document.getElementById('modalConfirmarExclusao').classList.remove('ativo');
+        empresaParaExcluir = null;
+    };
+
+    // Confirmar exclusão
+    window.confirmarExclusao = async function() {
+        if (!empresaParaExcluir) return;
+
+        try {
+            await deleteDoc(doc(db, 'empresas', empresaParaExcluir));
+            mostrarMensagem('Empresa excluída com sucesso!', 'sucesso');
+            fecharModalExclusao();
+            await carregarEmpresas();
+        } catch (e) {
+            console.error('Erro ao excluir empresa:', e);
+            mostrarMensagem('Erro ao excluir a empresa.', 'erro');
+        }
+    };
+
+    // Mostrar mensagem
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById('mensagem');
+        msg.textContent = texto;
+        msg.className = 'mensagem ' + tipo;
+        setTimeout(() => {
+            msg.className = 'mensagem';
+        }, 4000);
+    }
+
+    // Fechar modais com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            fecharModalEmpresa();
+            fecharModalExclusao();
+        }
+    });
+
+    // Fechar modal ao clicar fora
+    document.getElementById('modalEmpresa').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalEmpresa();
+    });
+
+    document.getElementById('modalConfirmarExclusao').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalExclusao();
+    });
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarEmpresas();
+    });
+</script>
+
+</body>
+</html>
