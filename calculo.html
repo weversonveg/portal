@@ -24,6 +24,7 @@
         document.documentElement.setAttribute('data-theme', t);
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
+
         var menuFechado = localStorage.getItem('menu-vt-fechado');
         if (menuFechado === '1') {
             document.documentElement.classList.add('menu-inicial-fechado');
@@ -41,248 +42,7 @@
     --gray-50:  #fafafa;
     --gray-100: #f5f5f6;
     --gray-200: #e4e4e7;
-    --gray-300: #d4d4d8;window.carregarDados = async function() {
-    const mesAno = document.getElementById("mesReferencia").value;
-    const filtroEscola = document.getElementById("filtroEscola").value;
-
-    if (!mesAno) {
-        alert("Selecione o mês de referência.");
-        return;
-    }
-
-    await carregarTarifas();
-    
-    debugLog = [];
-    adicionarLog(`🔍 Iniciando cálculo para o mês: ${mesAno}`);
-    adicionarLog(`💰 Tarifas carregadas: ${JSON.stringify(tarifasEmpresas)}`);
-
-    const tabelaResultado = document.getElementById("tabelaResultado");
-    tabelaResultado.innerHTML = `
-        <tr>
-            <td colspan="11" style="text-align:center; padding:40px;">
-                <span class="spinner"></span>
-                <div style="margin-top:12px; color:var(--text-secondary);">Carregando dados e verificando status...</div>
-            </td>
-        </tr>
-    `;
-
-    try {
-        const configRef = doc(db, "configuracoes", mesAno);
-        const configSnap = await getDoc(configRef);
-        const config = configSnap.exists() ? configSnap.data() : {};
-
-        const status = verificarStatusCalculo(config, mesAno);
-        mesBloqueadoParaCalculo = status.bloqueado;
-
-        atualizarCardStatus(status, config);
-
-        if (status.bloqueado) {
-            document.getElementById("cardResultado").classList.remove("ativo");
-            document.getElementById("resumoBox").classList.remove("ativo");
-            document.getElementById("debugPanel").classList.add("ativo");
-            document.getElementById("debugContent").textContent = debugLog.join('\n');
-            return;
-        }
-
-        const servidoresSnap = await getDocs(collection(db, "servidores"));
-        if (servidoresSnap.empty) {
-            tabelaResultado.innerHTML = `
-                <tr>
-                    <td colspan="11" class="empty-state">
-                        <span class="material-symbols-outlined">person_off</span>
-                        <strong>Nenhum servidor cadastrado</strong>
-                        Cadastre servidores para realizar os cálculos.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
-        const lancamentosMap = {};
-        const lancamentosPorCpfEscola = {};
-        let totalLancamentos = 0;
-        
-        adicionarLog(`📊 Total de lançamentos no Firestore: ${lancamentosSnap.size}`);
-        
-        lancamentosSnap.forEach(lancDoc => {
-            const data = lancDoc.data();
-            if (data.mesReferencia === mesAno) {
-                totalLancamentos++;
-                
-                const escolaNorm = normalizarEscola(data.escola);
-                const cpfNorm = normalizarCPF(data.cpf);
-                const matriculaNorm = normalizarMatricula(data.numeroMatricula);
-                
-                const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
-                const diasAfast = Number(data.diasAfastamento) || 0;
-                
-                lancamentosMap[chave] = diasAfast;
-                
-                const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
-                if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = 0;
-                }
-                lancamentosPorCpfEscola[chaveCpfEscola] += diasAfast;
-                
-                if (totalLancamentos <= 5) {
-                    adicionarLog(`📝 Lançamento ${totalLancamentos}: escola="${data.escola}" cpf="${data.cpf}" matricula="${data.numeroMatricula}" dias=${diasAfast}`);
-                    adicionarLog(`   → Chave completa: ${chave}`);
-                    adicionarLog(`   → Chave CPF+Escola: ${chaveCpfEscola}`);
-                }
-            }
-        });
-        
-        adicionarLog(`✅ Total de lançamentos para o mês ${mesAno}: ${totalLancamentos}`);
-        adicionarLog(`📊 Total de chaves completas no mapa: ${Object.keys(lancamentosMap).length}`);
-        adicionarLog(`📊 Total de chaves CPF+Escola no mapa: ${Object.keys(lancamentosPorCpfEscola).length}`);
-
-        const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
-        const configEscolasMap = {};
-        configEscolasSnap.forEach(cfgDoc => {
-            const data = cfgDoc.data();
-            if (data.mesReferencia === mesAno) {
-                configEscolasMap[normalizarEscola(data.escola)] = Number(data.diasUteisEscola) || config.diasUteis || 22;
-            }
-        });
-
-        const diasUteisPadrao = config.diasUteis || 22;
-        adicionarLog(`⚙️ Dias úteis padrão: ${diasUteisPadrao}`);
-
-        dadosCalculados = [];
-        let totalPasses = 0;
-        let totalAfastados = 0;
-        let totalValor = 0;
-        let matchesEncontrados = 0;
-        let matchesFallback = 0;
-
-        servidoresSnap.forEach(servidorDoc => {
-            const servidor = servidorDoc.data();
-            const cpfLimpo = normalizarCPF(servidor.cpf);
-            
-            adicionarLog(`\n👤 Processando servidor: ${servidor.nome} (CPF: ${cpfLimpo})`);
-
-            const processarMatricula = (matricula) => {
-                if (!matricula) return;
-
-                const processarEscola = (escolaObj) => {
-                    if (!escolaObj || !escolaObj.nomeEscola) return;
-
-                    const nomeEscola = escolaObj.nomeEscola;
-                    const nomeEscolaNorm = normalizarEscola(nomeEscola);
-
-                    if (filtroEscola && nomeEscola !== filtroEscola) return;
-
-                    const numeroMatricula = matricula.numeroMatricula || "";
-                    const matriculaNorm = normalizarMatricula(numeroMatricula);
-                    
-                    adicionarLog(`  📍 Processando escola: ${nomeEscola} | Matrícula: ${numeroMatricula}`);
-                    
-                    const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
-                    const chaveCpfEscola = `${nomeEscolaNorm}_${cpfLimpo}`;
-                    
-                    let diasAfastamento = 0;
-                    let matchEncontrado = false;
-                    
-                    if (lancamentosMap.hasOwnProperty(chave)) {
-                        diasAfastamento = lancamentosMap[chave];
-                        matchesEncontrados++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH COMPLETO: ${chave} = ${diasAfastamento} dias`);
-                    }
-                    else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
-                        diasAfastamento = lancamentosPorCpfEscola[chaveCpfEscola];
-                        matchesFallback++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH FALLBACK (CPF+Escola): ${chaveCpfEscola} = ${diasAfastamento} dias`);
-                        adicionarLog(`    ⚠️  ATENÇÃO: Matrícula do lançamento não confere com a matrícula cadastrada!`);
-                    } else {
-                        adicionarLog(`    ❌ SEM MATCH: ${chave}`);
-                    }
-                    
-                    const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
-                    const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
-                    const passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
-                    const totalPassesServidor = diasEfetivos * passesPorDia;
-
-                    const nomeEmpresa = escolaObj.empresa || '';
-                    const valorUnitario = tarifasEmpresas[nomeEmpresa] || 0;
-                    const valorTotalServidor = totalPassesServidor * valorUnitario;
-
-                    // 👇 LOGS DETALHADOS DO CÁLCULO
-                    adicionarLog(`    📊 CÁLCULO DETALHADO:`);
-                    adicionarLog(`      • Dias úteis da escola: ${diasUteisEscola}`);
-                    adicionarLog(`      • Dias de afastamento: ${diasAfastamento}`);
-                    adicionarLog(`      • Dias efetivos: ${diasUteisEscola} - ${diasAfastamento} = ${diasEfetivos}`);
-                    adicionarLog(`      • Passes por dia: ${passesPorDia}`);
-                    adicionarLog(`      • Total de passes: ${diasEfetivos} × ${passesPorDia} = ${totalPassesServidor}`);
-                    adicionarLog(`      • Empresa: "${nomeEmpresa}"`);
-                    adicionarLog(`      • Valor unitário da empresa: ${valorUnitario}`);
-                    adicionarLog(`      • Valor total: ${totalPassesServidor} × ${valorUnitario} = ${valorTotalServidor}`);
-
-                    dadosCalculados.push({
-                        nome: servidor.nome,
-                        cpf: servidor.cpf,
-                        escola: nomeEscola,
-                        empresa: nomeEmpresa,
-                        matricula: numeroMatricula,
-                        diasUteis: diasUteisEscola,
-                        afastamentos: diasAfastamento,
-                        diasEfetivos: diasEfetivos,
-                        passesPorDia: passesPorDia,
-                        totalPasses: totalPassesServidor,
-                        valorUnitario: valorUnitario,
-                        valorTotal: valorTotalServidor
-                    });
-
-                    totalPasses += totalPassesServidor;
-                    totalValor += valorTotalServidor;
-                    if (diasAfastamento > 0) totalAfastados++;
-                };
-
-                processarEscola(matricula.escola1);
-                processarEscola(matricula.escola2);
-            };
-
-            processarMatricula(servidor.matricula1);
-            processarMatricula(servidor.matricula2);
-        });
-        
-        adicionarLog(`\n✅ Total de matches completos: ${matchesEncontrados}`);
-        adicionarLog(`✅ Total de matches por fallback: ${matchesFallback}`);
-        adicionarLog(`✅ Total de servidores com afastamento: ${totalAfastados}`);
-        adicionarLog(`✅ Total de servidores processados: ${dadosCalculados.length}`);
-
-        dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-        document.getElementById("totalServidores").textContent = dadosCalculados.length;
-        document.getElementById("totalPasses").textContent = totalPasses.toLocaleString("pt-BR");
-        document.getElementById("totalValor").textContent = formatarMoeda(totalValor);
-        document.getElementById("totalAfastados").textContent = totalAfastados;
-        document.getElementById("resumoBox").classList.add("ativo");
-
-        renderizarTabela(dadosCalculados);
-        document.getElementById("cardResultado").classList.add("ativo");
-        
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-
-    } catch (erro) {
-        console.error("Erro ao carregar dados:", erro);
-        adicionarLog(`❌ ERRO: ${erro.message}`);
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-        tabelaResultado.innerHTML = `
-            <tr>
-                <td colspan="11" class="empty-state">
-                    <span class="material-symbols-outlined" style="color:var(--red);">error_outline</span>
-                    <strong style="color:var(--red);">Erro ao carregar dados</strong>
-                    ${erro.message || 'Erro desconhecido'}
-                </td>
-            </tr>
-        `;
-    }
-};
+    --gray-300: #d4d4d8;
     --gray-400: #a1a1aa;
     --gray-500: #71717a;
     --gray-600: #52525b;
@@ -394,248 +154,7 @@
     font-family: var(--font);
     -webkit-tap-highlight-color: transparent;
 }
-window.carregarDados = async function() {
-    const mesAno = document.getElementById("mesReferencia").value;
-    const filtroEscola = document.getElementById("filtroEscola").value;
 
-    if (!mesAno) {
-        alert("Selecione o mês de referência.");
-        return;
-    }
-
-    await carregarTarifas();
-    
-    debugLog = [];
-    adicionarLog(`🔍 Iniciando cálculo para o mês: ${mesAno}`);
-    adicionarLog(`💰 Tarifas carregadas: ${JSON.stringify(tarifasEmpresas)}`);
-
-    const tabelaResultado = document.getElementById("tabelaResultado");
-    tabelaResultado.innerHTML = `
-        <tr>
-            <td colspan="11" style="text-align:center; padding:40px;">
-                <span class="spinner"></span>
-                <div style="margin-top:12px; color:var(--text-secondary);">Carregando dados e verificando status...</div>
-            </td>
-        </tr>
-    `;
-
-    try {
-        const configRef = doc(db, "configuracoes", mesAno);
-        const configSnap = await getDoc(configRef);
-        const config = configSnap.exists() ? configSnap.data() : {};
-
-        const status = verificarStatusCalculo(config, mesAno);
-        mesBloqueadoParaCalculo = status.bloqueado;
-
-        atualizarCardStatus(status, config);
-
-        if (status.bloqueado) {
-            document.getElementById("cardResultado").classList.remove("ativo");
-            document.getElementById("resumoBox").classList.remove("ativo");
-            document.getElementById("debugPanel").classList.add("ativo");
-            document.getElementById("debugContent").textContent = debugLog.join('\n');
-            return;
-        }
-
-        const servidoresSnap = await getDocs(collection(db, "servidores"));
-        if (servidoresSnap.empty) {
-            tabelaResultado.innerHTML = `
-                <tr>
-                    <td colspan="11" class="empty-state">
-                        <span class="material-symbols-outlined">person_off</span>
-                        <strong>Nenhum servidor cadastrado</strong>
-                        Cadastre servidores para realizar os cálculos.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
-        const lancamentosMap = {};
-        const lancamentosPorCpfEscola = {};
-        let totalLancamentos = 0;
-        
-        adicionarLog(`📊 Total de lançamentos no Firestore: ${lancamentosSnap.size}`);
-        
-        lancamentosSnap.forEach(lancDoc => {
-            const data = lancDoc.data();
-            if (data.mesReferencia === mesAno) {
-                totalLancamentos++;
-                
-                const escolaNorm = normalizarEscola(data.escola);
-                const cpfNorm = normalizarCPF(data.cpf);
-                const matriculaNorm = normalizarMatricula(data.numeroMatricula);
-                
-                const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
-                const diasAfast = Number(data.diasAfastamento) || 0;
-                
-                lancamentosMap[chave] = diasAfast;
-                
-                const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
-                if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = 0;
-                }
-                lancamentosPorCpfEscola[chaveCpfEscola] += diasAfast;
-                
-                if (totalLancamentos <= 5) {
-                    adicionarLog(`📝 Lançamento ${totalLancamentos}: escola="${data.escola}" cpf="${data.cpf}" matricula="${data.numeroMatricula}" dias=${diasAfast}`);
-                    adicionarLog(`   → Chave completa: ${chave}`);
-                    adicionarLog(`   → Chave CPF+Escola: ${chaveCpfEscola}`);
-                }
-            }
-        });
-        
-        adicionarLog(`✅ Total de lançamentos para o mês ${mesAno}: ${totalLancamentos}`);
-        adicionarLog(`📊 Total de chaves completas no mapa: ${Object.keys(lancamentosMap).length}`);
-        adicionarLog(`📊 Total de chaves CPF+Escola no mapa: ${Object.keys(lancamentosPorCpfEscola).length}`);
-
-        const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
-        const configEscolasMap = {};
-        configEscolasSnap.forEach(cfgDoc => {
-            const data = cfgDoc.data();
-            if (data.mesReferencia === mesAno) {
-                configEscolasMap[normalizarEscola(data.escola)] = Number(data.diasUteisEscola) || config.diasUteis || 22;
-            }
-        });
-
-        const diasUteisPadrao = config.diasUteis || 22;
-        adicionarLog(`⚙️ Dias úteis padrão: ${diasUteisPadrao}`);
-
-        dadosCalculados = [];
-        let totalPasses = 0;
-        let totalAfastados = 0;
-        let totalValor = 0;
-        let matchesEncontrados = 0;
-        let matchesFallback = 0;
-
-        servidoresSnap.forEach(servidorDoc => {
-            const servidor = servidorDoc.data();
-            const cpfLimpo = normalizarCPF(servidor.cpf);
-            
-            adicionarLog(`\n👤 Processando servidor: ${servidor.nome} (CPF: ${cpfLimpo})`);
-
-            const processarMatricula = (matricula) => {
-                if (!matricula) return;
-
-                const processarEscola = (escolaObj) => {
-                    if (!escolaObj || !escolaObj.nomeEscola) return;
-
-                    const nomeEscola = escolaObj.nomeEscola;
-                    const nomeEscolaNorm = normalizarEscola(nomeEscola);
-
-                    if (filtroEscola && nomeEscola !== filtroEscola) return;
-
-                    const numeroMatricula = matricula.numeroMatricula || "";
-                    const matriculaNorm = normalizarMatricula(numeroMatricula);
-                    
-                    adicionarLog(`  📍 Processando escola: ${nomeEscola} | Matrícula: ${numeroMatricula}`);
-                    
-                    const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
-                    const chaveCpfEscola = `${nomeEscolaNorm}_${cpfLimpo}`;
-                    
-                    let diasAfastamento = 0;
-                    let matchEncontrado = false;
-                    
-                    if (lancamentosMap.hasOwnProperty(chave)) {
-                        diasAfastamento = lancamentosMap[chave];
-                        matchesEncontrados++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH COMPLETO: ${chave} = ${diasAfastamento} dias`);
-                    }
-                    else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
-                        diasAfastamento = lancamentosPorCpfEscola[chaveCpfEscola];
-                        matchesFallback++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH FALLBACK (CPF+Escola): ${chaveCpfEscola} = ${diasAfastamento} dias`);
-                        adicionarLog(`    ⚠️  ATENÇÃO: Matrícula do lançamento não confere com a matrícula cadastrada!`);
-                    } else {
-                        adicionarLog(`    ❌ SEM MATCH: ${chave}`);
-                    }
-                    
-                    const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
-                    const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
-                    const passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
-                    const totalPassesServidor = diasEfetivos * passesPorDia;
-
-                    const nomeEmpresa = escolaObj.empresa || '';
-                    const valorUnitario = tarifasEmpresas[nomeEmpresa] || 0;
-                    const valorTotalServidor = totalPassesServidor * valorUnitario;
-
-                    // 👇 LOGS DETALHADOS DO CÁLCULO
-                    adicionarLog(`    📊 CÁLCULO DETALHADO:`);
-                    adicionarLog(`      • Dias úteis da escola: ${diasUteisEscola}`);
-                    adicionarLog(`      • Dias de afastamento: ${diasAfastamento}`);
-                    adicionarLog(`      • Dias efetivos: ${diasUteisEscola} - ${diasAfastamento} = ${diasEfetivos}`);
-                    adicionarLog(`      • Passes por dia: ${passesPorDia}`);
-                    adicionarLog(`      • Total de passes: ${diasEfetivos} × ${passesPorDia} = ${totalPassesServidor}`);
-                    adicionarLog(`      • Empresa: "${nomeEmpresa}"`);
-                    adicionarLog(`      • Valor unitário da empresa: ${valorUnitario}`);
-                    adicionarLog(`      • Valor total: ${totalPassesServidor} × ${valorUnitario} = ${valorTotalServidor}`);
-
-                    dadosCalculados.push({
-                        nome: servidor.nome,
-                        cpf: servidor.cpf,
-                        escola: nomeEscola,
-                        empresa: nomeEmpresa,
-                        matricula: numeroMatricula,
-                        diasUteis: diasUteisEscola,
-                        afastamentos: diasAfastamento,
-                        diasEfetivos: diasEfetivos,
-                        passesPorDia: passesPorDia,
-                        totalPasses: totalPassesServidor,
-                        valorUnitario: valorUnitario,
-                        valorTotal: valorTotalServidor
-                    });
-
-                    totalPasses += totalPassesServidor;
-                    totalValor += valorTotalServidor;
-                    if (diasAfastamento > 0) totalAfastados++;
-                };
-
-                processarEscola(matricula.escola1);
-                processarEscola(matricula.escola2);
-            };
-
-            processarMatricula(servidor.matricula1);
-            processarMatricula(servidor.matricula2);
-        });
-        
-        adicionarLog(`\n✅ Total de matches completos: ${matchesEncontrados}`);
-        adicionarLog(`✅ Total de matches por fallback: ${matchesFallback}`);
-        adicionarLog(`✅ Total de servidores com afastamento: ${totalAfastados}`);
-        adicionarLog(`✅ Total de servidores processados: ${dadosCalculados.length}`);
-
-        dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-        document.getElementById("totalServidores").textContent = dadosCalculados.length;
-        document.getElementById("totalPasses").textContent = totalPasses.toLocaleString("pt-BR");
-        document.getElementById("totalValor").textContent = formatarMoeda(totalValor);
-        document.getElementById("totalAfastados").textContent = totalAfastados;
-        document.getElementById("resumoBox").classList.add("ativo");
-
-        renderizarTabela(dadosCalculados);
-        document.getElementById("cardResultado").classList.add("ativo");
-        
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-
-    } catch (erro) {
-        console.error("Erro ao carregar dados:", erro);
-        adicionarLog(`❌ ERRO: ${erro.message}`);
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-        tabelaResultado.innerHTML = `
-            <tr>
-                <td colspan="11" class="empty-state">
-                    <span class="material-symbols-outlined" style="color:var(--red);">error_outline</span>
-                    <strong style="color:var(--red);">Erro ao carregar dados</strong>
-                    ${erro.message || 'Erro desconhecido'}
-                </td>
-            </tr>
-        `;
-    }
-};
 html, body {
     width: 100%;
     height: 100%;
@@ -1086,33 +605,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-exportar.csv { background: #455a64; }
 .btn-exportar.csv:hover { background: #37474f; }
 
-/* 👇 PAINEL DE DEBUG */
-.debug-panel {
-    display: none;
-    background: var(--info-bg);
-    border: 1px solid var(--info-bd);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    font-family: 'Courier New', monospace;
-    max-height: 300px;
-    overflow-y: auto;
-}
-.debug-panel.ativo { display: block; }
-.debug-panel h4 {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--info);
-    margin-bottom: 8px;
-}
-.debug-panel pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
 .table-responsive {
     width: 100%;
     overflow: auto;
@@ -1438,12 +930,6 @@ td.afastamento-positivo {
                 </div>
             </div>
 
-            <!-- 👇 PAINEL DE DEBUG -->
-            <div id="debugPanel" class="debug-panel">
-                <h4>🔍 Debug - Matches de Afastamentos</h4>
-                <pre id="debugContent">Clique em "Calcular Todos" para ver os resultados do debug...</pre>
-            </div>
-
             <section id="cardResultado" class="card-resultado">
                 <div class="card-header">
                     <div class="card-title">
@@ -1717,7 +1203,6 @@ import {
 let dadosCalculados = [];
 let mesBloqueadoParaCalculo = false;
 let tarifasEmpresas = {};
-let debugLog = [];
 
 document.addEventListener("DOMContentLoaded", async function() {
     const hoje = new Date();
@@ -1725,6 +1210,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     const mes = String(hoje.getMonth() + 1).padStart(2, "0");
     const mesAtual = `${ano}-${mes}`;
 
+    // 👇 CORREÇÃO: altInput: true para exibir "Outubro / 2026" ao invés de "2026-10"
     flatpickr("#mesReferencia", {
         locale: "pt",
         altInput: true,
@@ -1764,6 +1250,7 @@ function normalizarMatricula(matricula) {
 // FUNÇÕES DE FORMATAÇÃO
 // =========================================================
 
+// 👇 CORREÇÃO MONETÁRIA: R$ 2.277,80
 function formatarMoeda(valor) {
     return 'R$ ' + Number(valor).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
@@ -1771,6 +1258,7 @@ function formatarMoeda(valor) {
     });
 }
 
+// 👇 CORREÇÃO DO FORMATO DO MÊS: "2026-09" → "09/2026"
 function formatarMesAno(valor) {
     if (!valor) return "";
     const partes = valor.split("-");
@@ -1778,6 +1266,7 @@ function formatarMesAno(valor) {
     return `${partes[1]}/${partes[0]}`;
 }
 
+// Para usar em nomes de arquivo: "2026-09" → "09-2026"
 function formatarMesAnoArquivo(valor) {
     return formatarMesAno(valor).replace('/', '-');
 }
@@ -2013,9 +1502,6 @@ window.carregarDados = async function() {
     }
 
     await carregarTarifas();
-    
-    debugLog = [];
-    adicionarLog(`🔍 Iniciando cálculo para o mês: ${mesAno}`);
 
     const tabelaResultado = document.getElementById("tabelaResultado");
     tabelaResultado.innerHTML = `
@@ -2040,8 +1526,6 @@ window.carregarDados = async function() {
         if (status.bloqueado) {
             document.getElementById("cardResultado").classList.remove("ativo");
             document.getElementById("resumoBox").classList.remove("ativo");
-            document.getElementById("debugPanel").classList.add("ativo");
-            document.getElementById("debugContent").textContent = debugLog.join('\n');
             return;
         }
 
@@ -2063,8 +1547,6 @@ window.carregarDados = async function() {
         const lancamentosMap = {};
         let totalLancamentos = 0;
         
-        adicionarLog(`📊 Total de lançamentos no Firestore: ${lancamentosSnap.size}`);
-        
         lancamentosSnap.forEach(lancDoc => {
             const data = lancDoc.data();
             if (data.mesReferencia === mesAno) {
@@ -2079,15 +1561,23 @@ window.carregarDados = async function() {
                 
                 lancamentosMap[chave] = diasAfast;
                 
-                if (totalLancamentos <= 5) {
-                    adicionarLog(`📝 Lançamento ${totalLancamentos}: escola="${data.escola}" cpf="${data.cpf}" matricula="${data.numeroMatricula}" dias=${diasAfast}`);
-                    adicionarLog(`   → Chave: ${chave}`);
+                if (totalLancamentos <= 3) {
+                    console.log(`📝 Lançamento ${totalLancamentos}:`, {
+                        escola: data.escola,
+                        escolaNorm: escolaNorm,
+                        cpf: data.cpf,
+                        cpfNorm: cpfNorm,
+                        matricula: data.numeroMatricula,
+                        matriculaNorm: matriculaNorm,
+                        diasAfastamento: diasAfast,
+                        chave: chave
+                    });
                 }
             }
         });
         
-        adicionarLog(`✅ Total de lançamentos para o mês ${mesAno}: ${totalLancamentos}`);
-        adicionarLog(`📊 Total de chaves no mapa: ${Object.keys(lancamentosMap).length}`);
+        console.log(`✅ Total de lançamentos encontrados para ${mesAno}:`, totalLancamentos);
+        console.log('📊 Mapa de lançamentos (primeiras 5 entradas):', Object.entries(lancamentosMap).slice(0, 5));
 
         const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
         const configEscolasMap = {};
@@ -2099,7 +1589,6 @@ window.carregarDados = async function() {
         });
 
         const diasUteisPadrao = config.diasUteis || 22;
-        adicionarLog(`⚙️ Dias úteis padrão: ${diasUteisPadrao}`);
 
         dadosCalculados = [];
         let totalPasses = 0;
@@ -2128,23 +1617,16 @@ window.carregarDados = async function() {
                     const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
                     
                     let diasAfastamento = 0;
-                    let matchEncontrado = false;
-                    
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         diasAfastamento = lancamentosMap[chave];
                         matchesEncontrados++;
-                        matchEncontrado = true;
-                        adicionarLog(`✅ MATCH: ${servidor.nome} - ${chave} = ${diasAfastamento} dias`);
+                        console.log(`✅ Match encontrado: ${chave} = ${diasAfastamento} dias`);
                     } else {
-                        // Tentar buscar sem matrícula (para compatibilidade)
                         const chaveSemMatricula = `${nomeEscolaNorm}_${cpfLimpo}_`;
                         if (lancamentosMap.hasOwnProperty(chaveSemMatricula)) {
                             diasAfastamento = lancamentosMap[chaveSemMatricula];
                             matchesEncontrados++;
-                            matchEncontrado = true;
-                            adicionarLog(`✅ MATCH (sem matrícula): ${servidor.nome} - ${chaveSemMatricula} = ${diasAfastamento} dias`);
-                        } else {
-                            adicionarLog(`❌ SEM MATCH: ${servidor.nome} - Chave: ${chave}`);
+                            console.log(`✅ Match encontrado (sem matrícula): ${chaveSemMatricula} = ${diasAfastamento} dias`);
                         }
                     }
                     
@@ -2185,9 +1667,8 @@ window.carregarDados = async function() {
             processarMatricula(servidor.matricula2);
         });
         
-        adicionarLog(`✅ Total de matches encontrados: ${matchesEncontrados}`);
-        adicionarLog(`✅ Total de servidores com afastamento: ${totalAfastados}`);
-        adicionarLog(`✅ Total de servidores processados: ${dadosCalculados.length}`);
+        console.log(`✅ Total de matches encontrados: ${matchesEncontrados}`);
+        console.log(`✅ Total de servidores com afastamento: ${totalAfastados}`);
 
         dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
 
@@ -2199,16 +1680,9 @@ window.carregarDados = async function() {
 
         renderizarTabela(dadosCalculados);
         document.getElementById("cardResultado").classList.add("ativo");
-        
-        // Mostrar painel de debug
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
 
     } catch (erro) {
         console.error("Erro ao carregar dados:", erro);
-        adicionarLog(`❌ ERRO: ${erro.message}`);
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
         tabelaResultado.innerHTML = `
             <tr>
                 <td colspan="11" class="empty-state">
@@ -2220,11 +1694,6 @@ window.carregarDados = async function() {
         `;
     }
 };
-
-function adicionarLog(mensagem) {
-    debugLog.push(mensagem);
-    console.log(mensagem);
-}
 
 function renderizarTabela(dados) {
     const tbody = document.getElementById("tabelaResultado");
@@ -2476,251 +1945,6 @@ window.exportarCSV = function() {
     link.href = URL.createObjectURL(blob);
     link.download = nomeArquivo;
     link.click();
-};
-
-
-
-    window.carregarDados = async function() {
-    const mesAno = document.getElementById("mesReferencia").value;
-    const filtroEscola = document.getElementById("filtroEscola").value;
-
-    if (!mesAno) {
-        alert("Selecione o mês de referência.");
-        return;
-    }
-
-    await carregarTarifas();
-    
-    debugLog = [];
-    adicionarLog(`🔍 Iniciando cálculo para o mês: ${mesAno}`);
-    adicionarLog(`💰 Tarifas carregadas: ${JSON.stringify(tarifasEmpresas)}`);
-
-    const tabelaResultado = document.getElementById("tabelaResultado");
-    tabelaResultado.innerHTML = `
-        <tr>
-            <td colspan="11" style="text-align:center; padding:40px;">
-                <span class="spinner"></span>
-                <div style="margin-top:12px; color:var(--text-secondary);">Carregando dados e verificando status...</div>
-            </td>
-        </tr>
-    `;
-
-    try {
-        const configRef = doc(db, "configuracoes", mesAno);
-        const configSnap = await getDoc(configRef);
-        const config = configSnap.exists() ? configSnap.data() : {};
-
-        const status = verificarStatusCalculo(config, mesAno);
-        mesBloqueadoParaCalculo = status.bloqueado;
-
-        atualizarCardStatus(status, config);
-
-        if (status.bloqueado) {
-            document.getElementById("cardResultado").classList.remove("ativo");
-            document.getElementById("resumoBox").classList.remove("ativo");
-            document.getElementById("debugPanel").classList.add("ativo");
-            document.getElementById("debugContent").textContent = debugLog.join('\n');
-            return;
-        }
-
-        const servidoresSnap = await getDocs(collection(db, "servidores"));
-        if (servidoresSnap.empty) {
-            tabelaResultado.innerHTML = `
-                <tr>
-                    <td colspan="11" class="empty-state">
-                        <span class="material-symbols-outlined">person_off</span>
-                        <strong>Nenhum servidor cadastrado</strong>
-                        Cadastre servidores para realizar os cálculos.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
-        const lancamentosMap = {};
-        const lancamentosPorCpfEscola = {};
-        let totalLancamentos = 0;
-        
-        adicionarLog(`📊 Total de lançamentos no Firestore: ${lancamentosSnap.size}`);
-        
-        lancamentosSnap.forEach(lancDoc => {
-            const data = lancDoc.data();
-            if (data.mesReferencia === mesAno) {
-                totalLancamentos++;
-                
-                const escolaNorm = normalizarEscola(data.escola);
-                const cpfNorm = normalizarCPF(data.cpf);
-                const matriculaNorm = normalizarMatricula(data.numeroMatricula);
-                
-                const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
-                const diasAfast = Number(data.diasAfastamento) || 0;
-                
-                lancamentosMap[chave] = diasAfast;
-                
-                const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
-                if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = 0;
-                }
-                lancamentosPorCpfEscola[chaveCpfEscola] += diasAfast;
-                
-                if (totalLancamentos <= 5) {
-                    adicionarLog(`📝 Lançamento ${totalLancamentos}: escola="${data.escola}" cpf="${data.cpf}" matricula="${data.numeroMatricula}" dias=${diasAfast}`);
-                    adicionarLog(`   → Chave completa: ${chave}`);
-                    adicionarLog(`   → Chave CPF+Escola: ${chaveCpfEscola}`);
-                }
-            }
-        });
-        
-        adicionarLog(`✅ Total de lançamentos para o mês ${mesAno}: ${totalLancamentos}`);
-        adicionarLog(`📊 Total de chaves completas no mapa: ${Object.keys(lancamentosMap).length}`);
-        adicionarLog(`📊 Total de chaves CPF+Escola no mapa: ${Object.keys(lancamentosPorCpfEscola).length}`);
-
-        const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
-        const configEscolasMap = {};
-        configEscolasSnap.forEach(cfgDoc => {
-            const data = cfgDoc.data();
-            if (data.mesReferencia === mesAno) {
-                configEscolasMap[normalizarEscola(data.escola)] = Number(data.diasUteisEscola) || config.diasUteis || 22;
-            }
-        });
-
-        const diasUteisPadrao = config.diasUteis || 22;
-        adicionarLog(`⚙️ Dias úteis padrão: ${diasUteisPadrao}`);
-
-        dadosCalculados = [];
-        let totalPasses = 0;
-        let totalAfastados = 0;
-        let totalValor = 0;
-        let matchesEncontrados = 0;
-        let matchesFallback = 0;
-
-        servidoresSnap.forEach(servidorDoc => {
-            const servidor = servidorDoc.data();
-            const cpfLimpo = normalizarCPF(servidor.cpf);
-            
-            adicionarLog(`\n👤 Processando servidor: ${servidor.nome} (CPF: ${cpfLimpo})`);
-
-            const processarMatricula = (matricula) => {
-                if (!matricula) return;
-
-                const processarEscola = (escolaObj) => {
-                    if (!escolaObj || !escolaObj.nomeEscola) return;
-
-                    const nomeEscola = escolaObj.nomeEscola;
-                    const nomeEscolaNorm = normalizarEscola(nomeEscola);
-
-                    if (filtroEscola && nomeEscola !== filtroEscola) return;
-
-                    const numeroMatricula = matricula.numeroMatricula || "";
-                    const matriculaNorm = normalizarMatricula(numeroMatricula);
-                    
-                    adicionarLog(`  📍 Processando escola: ${nomeEscola} | Matrícula: ${numeroMatricula}`);
-                    
-                    const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
-                    const chaveCpfEscola = `${nomeEscolaNorm}_${cpfLimpo}`;
-                    
-                    let diasAfastamento = 0;
-                    let matchEncontrado = false;
-                    
-                    if (lancamentosMap.hasOwnProperty(chave)) {
-                        diasAfastamento = lancamentosMap[chave];
-                        matchesEncontrados++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH COMPLETO: ${chave} = ${diasAfastamento} dias`);
-                    }
-                    else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
-                        diasAfastamento = lancamentosPorCpfEscola[chaveCpfEscola];
-                        matchesFallback++;
-                        matchEncontrado = true;
-                        adicionarLog(`    ✅ MATCH FALLBACK (CPF+Escola): ${chaveCpfEscola} = ${diasAfastamento} dias`);
-                        adicionarLog(`    ⚠️  ATENÇÃO: Matrícula do lançamento não confere com a matrícula cadastrada!`);
-                    } else {
-                        adicionarLog(`    ❌ SEM MATCH: ${chave}`);
-                    }
-                    
-                    const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
-                    const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
-                    const passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
-                    const totalPassesServidor = diasEfetivos * passesPorDia;
-
-                    const nomeEmpresa = escolaObj.empresa || '';
-                    const valorUnitario = tarifasEmpresas[nomeEmpresa] || 0;
-                    const valorTotalServidor = totalPassesServidor * valorUnitario;
-
-                    // 👇 LOGS DETALHADOS DO CÁLCULO
-                    adicionarLog(`    📊 CÁLCULO DETALHADO:`);
-                    adicionarLog(`      • Dias úteis da escola: ${diasUteisEscola}`);
-                    adicionarLog(`      • Dias de afastamento: ${diasAfastamento}`);
-                    adicionarLog(`      • Dias efetivos: ${diasUteisEscola} - ${diasAfastamento} = ${diasEfetivos}`);
-                    adicionarLog(`      • Passes por dia: ${passesPorDia}`);
-                    adicionarLog(`      • Total de passes: ${diasEfetivos} × ${passesPorDia} = ${totalPassesServidor}`);
-                    adicionarLog(`      • Empresa: "${nomeEmpresa}"`);
-                    adicionarLog(`      • Valor unitário da empresa: ${valorUnitario}`);
-                    adicionarLog(`      • Valor total: ${totalPassesServidor} × ${valorUnitario} = ${valorTotalServidor}`);
-
-                    dadosCalculados.push({
-                        nome: servidor.nome,
-                        cpf: servidor.cpf,
-                        escola: nomeEscola,
-                        empresa: nomeEmpresa,
-                        matricula: numeroMatricula,
-                        diasUteis: diasUteisEscola,
-                        afastamentos: diasAfastamento,
-                        diasEfetivos: diasEfetivos,
-                        passesPorDia: passesPorDia,
-                        totalPasses: totalPassesServidor,
-                        valorUnitario: valorUnitario,
-                        valorTotal: valorTotalServidor
-                    });
-
-                    totalPasses += totalPassesServidor;
-                    totalValor += valorTotalServidor;
-                    if (diasAfastamento > 0) totalAfastados++;
-                };
-
-                processarEscola(matricula.escola1);
-                processarEscola(matricula.escola2);
-            };
-
-            processarMatricula(servidor.matricula1);
-            processarMatricula(servidor.matricula2);
-        });
-        
-        adicionarLog(`\n✅ Total de matches completos: ${matchesEncontrados}`);
-        adicionarLog(`✅ Total de matches por fallback: ${matchesFallback}`);
-        adicionarLog(`✅ Total de servidores com afastamento: ${totalAfastados}`);
-        adicionarLog(`✅ Total de servidores processados: ${dadosCalculados.length}`);
-
-        dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-        document.getElementById("totalServidores").textContent = dadosCalculados.length;
-        document.getElementById("totalPasses").textContent = totalPasses.toLocaleString("pt-BR");
-        document.getElementById("totalValor").textContent = formatarMoeda(totalValor);
-        document.getElementById("totalAfastados").textContent = totalAfastados;
-        document.getElementById("resumoBox").classList.add("ativo");
-
-        renderizarTabela(dadosCalculados);
-        document.getElementById("cardResultado").classList.add("ativo");
-        
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-
-    } catch (erro) {
-        console.error("Erro ao carregar dados:", erro);
-        adicionarLog(`❌ ERRO: ${erro.message}`);
-        document.getElementById("debugPanel").classList.add("ativo");
-        document.getElementById("debugContent").textContent = debugLog.join('\n');
-        tabelaResultado.innerHTML = `
-            <tr>
-                <td colspan="11" class="empty-state">
-                    <span class="material-symbols-outlined" style="color:var(--red);">error_outline</span>
-                    <strong style="color:var(--red);">Erro ao carregar dados</strong>
-                    ${erro.message || 'Erro desconhecido'}
-                </td>
-            </tr>
-        `;
-    }
 };
 </script>
 
