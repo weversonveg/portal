@@ -659,7 +659,6 @@ tr:hover td { background: var(--surface-2); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Estilo para destacar afastamentos */
 td.afastamento-positivo {
     color: var(--red);
     font-weight: 700;
@@ -1211,7 +1210,6 @@ document.addEventListener("DOMContentLoaded", async function() {
     const mes = String(hoje.getMonth() + 1).padStart(2, "0");
     const mesAtual = `${ano}-${mes}`;
 
-    // Inicializa Flatpickr com plugin de seleção de mês (tema roxo)
     flatpickr("#mesReferencia", {
         locale: "pt",
         plugins: [
@@ -1247,6 +1245,31 @@ function normalizarMatricula(matricula) {
 }
 
 // =========================================================
+// FUNÇÕES DE FORMATAÇÃO
+// =========================================================
+
+// 👇 CORREÇÃO MONETÁRIA: R$ 2.277,80
+function formatarMoeda(valor) {
+    return 'R$ ' + Number(valor).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// 👇 CORREÇÃO DO FORMATO DO MÊS: "2026-09" → "09/2026"
+function formatarMesAno(valor) {
+    if (!valor) return "";
+    const partes = valor.split("-");
+    if (partes.length !== 2) return valor;
+    return `${partes[1]}/${partes[0]}`;
+}
+
+// Para usar em nomes de arquivo: "2026-09" → "09-2026"
+function formatarMesAnoArquivo(valor) {
+    return formatarMesAno(valor).replace('/', '-');
+}
+
+// =========================================================
 // CARREGAR TARIFAS DAS EMPRESAS
 // =========================================================
 async function carregarTarifas() {
@@ -1269,10 +1292,6 @@ function formatarData(dataStr) {
     const partes = dataStr.split("-");
     if (partes.length !== 3) return dataStr;
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function formatarMoeda(valor) {
-    return 'R$ ' + Number(valor).toFixed(2).replace('.', ',');
 }
 
 function verificarStatusCalculo(config, mesAno) {
@@ -1480,7 +1499,6 @@ window.carregarDados = async function() {
         return;
     }
 
-    // Recarrega tarifas a cada cálculo
     await carregarTarifas();
 
     const tabelaResultado = document.getElementById("tabelaResultado");
@@ -1523,7 +1541,6 @@ window.carregarDados = async function() {
             return;
         }
 
-        // 👇 CORREÇÃO: Carregar lançamentos com normalização
         const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
         const lancamentosMap = {};
         let totalLancamentos = 0;
@@ -1533,18 +1550,15 @@ window.carregarDados = async function() {
             if (data.mesReferencia === mesAno) {
                 totalLancamentos++;
                 
-                // Normalizar todos os campos para comparação
                 const escolaNorm = normalizarEscola(data.escola);
                 const cpfNorm = normalizarCPF(data.cpf);
                 const matriculaNorm = normalizarMatricula(data.numeroMatricula);
                 
-                // Criar chave normalizada
                 const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
                 const diasAfast = Number(data.diasAfastamento) || 0;
                 
                 lancamentosMap[chave] = diasAfast;
                 
-                // Debug: log dos primeiros lançamentos
                 if (totalLancamentos <= 3) {
                     console.log(`📝 Lançamento ${totalLancamentos}:`, {
                         escola: data.escola,
@@ -1598,17 +1612,14 @@ window.carregarDados = async function() {
                     const numeroMatricula = matricula.numeroMatricula || "";
                     const matriculaNorm = normalizarMatricula(numeroMatricula);
                     
-                    // Criar chave normalizada para busca
                     const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
                     
-                    // Buscar afastamento usando a chave normalizada
                     let diasAfastamento = 0;
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         diasAfastamento = lancamentosMap[chave];
                         matchesEncontrados++;
                         console.log(`✅ Match encontrado: ${chave} = ${diasAfastamento} dias`);
                     } else {
-                        // Tentar buscar sem matrícula (para compatibilidade)
                         const chaveSemMatricula = `${nomeEscolaNorm}_${cpfLimpo}_`;
                         if (lancamentosMap.hasOwnProperty(chaveSemMatricula)) {
                             diasAfastamento = lancamentosMap[chaveSemMatricula];
@@ -1622,7 +1633,6 @@ window.carregarDados = async function() {
                     const passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
                     const totalPassesServidor = diasEfetivos * passesPorDia;
 
-                    // 👇 CÁLCULO DO VALOR EM REAIS
                     const nomeEmpresa = escolaObj.empresa || '';
                     const valorUnitario = tarifasEmpresas[nomeEmpresa] || 0;
                     const valorTotalServidor = totalPassesServidor * valorUnitario;
@@ -1704,7 +1714,6 @@ function renderizarTabela(dados) {
         const valorUnitFmt = item.valorUnitario > 0 ? formatarMoeda(item.valorUnitario) : '—';
         const valorTotalFmt = item.valorTotal > 0 ? formatarMoeda(item.valorTotal) : '—';
         
-        // Destacar afastamentos em vermelho
         const afastamentoClass = item.afastamentos > 0 ? 'afastamento-positivo' : '';
 
         html += `
@@ -1794,7 +1803,7 @@ window.exportarODS = async function() {
 
     const resumo = [
         ["Campo", "Valor"],
-        ["Mês de Referência", `${nomeMes}/${ano}`],
+        ["Mês de Referência", formatarMesAno(mesAno)],
         ["Total de Servidores", dadosCalculados.length],
         ["Total de Passes", totalPasses],
         ["Valor Total (R$)", totalValor.toFixed(2)],
@@ -1849,7 +1858,7 @@ window.exportarODS = async function() {
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     office:version="1.2">
     <office:meta>
-        <dc:title>Cálculo de Passes - ${nomeMes}/${ano}</dc:title>
+        <dc:title>Cálculo de Passes - ${formatarMesAno(mesAno)}</dc:title>
         <dc:creator>Sistema Vale Transporte - SEMED</dc:creator>
         <meta:creation-date>${new Date().toISOString()}</meta:creation-date>
     </office:meta>
@@ -1892,7 +1901,8 @@ window.exportarODS = async function() {
     zip.file("styles.xml", stylesXml);
     zip.folder("META-INF").file("manifest.xml", manifestXml);
 
-    const nomeArquivo = `calculo_passes_${mesAno}.ods`;
+    // 👇 CORREÇÃO DO FORMATO DO MÊS NO NOME DO ARQUIVO
+    const nomeArquivo = `calculo_passes_${formatarMesAnoArquivo(mesAno)}.ods`;
 
     try {
         const blob = await zip.generateAsync({ 
@@ -1918,7 +1928,9 @@ window.exportarCSV = function() {
     }
 
     const mesAno = document.getElementById("mesReferencia").value;
-    const nomeArquivo = `calculo_passes_${mesAno}.csv`;
+    
+    // 👇 CORREÇÃO DO FORMATO DO MÊS NO NOME DO ARQUIVO
+    const nomeArquivo = `calculo_passes_${formatarMesAnoArquivo(mesAno)}.csv`;
 
     let csv = "Servidor;CPF;Escola;Empresa;Matrícula;Dias Úteis;Afastamentos;Dias Efetivos;Passes/Dia;Total de Passes;Valor Unit. (R$);Valor Total (R$)\n";
 
