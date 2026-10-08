@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2,tune">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -170,11 +170,30 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .badge-ajustado .material-symbols-outlined{font-size:14px}
 .valor-dias-normal{color:var(--text);font-weight:600}
 
-/* 👇 BADGES DE FONTE DE PASSES */
 .badge-fonte{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px}
 .badge-fonte-historico{background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd)}
 .badge-fonte-atual{background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border)}
 .badge-fonte .material-symbols-outlined{font-size:13px}
+
+/* 👇 LINHA SELECIONADA NA TABELA */
+tr.linha-clicavel{
+    cursor:pointer;
+    transition:background .12s ease;
+    position:relative;
+}
+tr.linha-clicavel:hover td{
+    background:var(--surface-3);
+}
+tr.linha-selecionada td{
+    background:var(--brand-soft) !important;
+    color:var(--text);
+}
+tr.linha-selecionada td:first-child{
+    box-shadow:inset 4px 0 0 var(--brand);
+}
+tr.linha-selecionada td:first-child strong{
+    color:var(--brand);
+}
 
 .table-responsive{width:100%;overflow:auto;max-height:65vh;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}
@@ -191,7 +210,7 @@ tr:hover td{background:var(--surface-2)}
 @media(max-width:768px){.content-page{padding:16px 12px}.filter-card{flex-direction:column;align-items:stretch}.btn-carregar{width:100%}.status-card{flex-direction:column}.card-header{flex-direction:column;align-items:stretch}.card-actions{width:100%}.btn-exportar{flex:1;justify-content:center}}
 @media(max-width:640px){.topbar{padding:0 12px;gap:8px}.topbar-btn{padding:0 8px;height:32px}.topbar-user{display:none}.topbar-right{gap:4px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-@media print{@page{margin:1.5cm}body{background:#fff!important;color:#000!important;overflow:visible!important}.layout{display:block;height:auto;overflow:visible}.sidebar,.sidebar-backdrop,.btn-menu,.topbar-btn,.topbar-user,.topbar-sair,.modal-sair-overlay,.filter-card,.card-actions,.breadcrumb,.page-header-page,.aviso-bloqueio{display:none!important}.main{overflow:visible}.content-page{overflow:visible;padding:0}.card-resultado{border:none!important;box-shadow:none!important;overflow:visible!important;display:block!important}.table-responsive{max-height:none!important}table{font-size:10px!important;white-space:normal!important}th{position:static!important;box-shadow:none!important}th,td{padding:6px 8px!important}}
+@media print{@page{margin:1.5cm}body{background:#fff!important;color:#000!important;overflow:visible!important}.layout{display:block;height:auto;overflow:visible}.sidebar,.sidebar-backdrop,.btn-menu,.topbar-btn,.topbar-user,.topbar-sair,.modal-sair-overlay,.filter-card,.card-actions,.breadcrumb,.page-header-page,.aviso-bloqueio{display:none!important}.main{overflow:visible}.content-page{overflow:visible;padding:0}.card-resultado{border:none!important;box-shadow:none!important;overflow:visible!important;display:block!important}.table-responsive{max-height:none!important}table{font-size:10px!important;white-space:normal!important}th{position:static!important;box-shadow:none!important}th,td{padding:6px 8px!important}tr.linha-selecionada td{background:#eef!important}}
 </style>
 </head>
 
@@ -991,7 +1010,6 @@ window.carregarDados = async function() {
         const lancamentosPorCpfEscola = {};
         let totalLancamentos = 0;
         
-        // 👇 SNAPSHOTS: Carregar lançamentos com passes diários congelados
         lancamentosSnap.forEach(lancDoc => {
             const data = lancDoc.data();
             if (data.mesReferencia === mesAno) {
@@ -1004,7 +1022,6 @@ window.carregarDados = async function() {
                 const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
                 const diasAfast = Number(data.diasAfastamento) || 0;
                 
-                // 👇 NOVO: Capturar snapshot de passes diários do lançamento
                 const passesLancados = (data.passesDiariosLancados !== undefined && data.passesDiariosLancados !== null) 
                     ? Number(data.passesDiariosLancados) 
                     : null;
@@ -1078,7 +1095,6 @@ window.carregarDados = async function() {
                     const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
                     const chaveCpfEscola = `${nomeEscolaNorm}_${cpfLimpo}`;
                     
-                    // 👇 SNAPSHOTS: Extrair afastamento E snapshot de passes
                     let diasAfastamento = 0;
                     let passesLancadosSnapshot = null;
                     
@@ -1099,7 +1115,6 @@ window.carregarDados = async function() {
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
                     
-                    // 👇 NOVO: Priorizar snapshot do lançamento, usar cadastro atual como fallback
                     let passesPorDia;
                     let tipoPasses;
                     if (passesLancadosSnapshot !== null) {
@@ -1197,11 +1212,10 @@ function renderizarTabela(dados) {
     }
 
     let html = "";
-    dados.forEach(item => {
+    dados.forEach((item, index) => {
         const valorUnitFmt = item.valorUnitario > 0 ? formatarMoeda(item.valorUnitario) : '—';
         const valorTotalFmt = item.valorTotal > 0 ? formatarMoeda(item.valorTotal) : '—';
         
-        // 👇 DIAS ÚTEIS: mostra "23 Ajustado" quando diferente do padrão SEMED
         let diasUteisHtml = '';
         if (item.diasUteisAjustado) {
             diasUteisHtml = `
@@ -1214,7 +1228,6 @@ function renderizarTabela(dados) {
             diasUteisHtml = `<span class="valor-dias-normal">${item.diasUteis}</span>`;
         }
         
-        // 👇 AFASTAMENTOS: mostra "1 dia" / "2 dias" com ícone quando > 0
         let afastamentosHtml = '';
         if (item.afastamentos > 0) {
             const textoDia = item.afastamentos === 1 ? 'dia' : 'dias';
@@ -1228,7 +1241,6 @@ function renderizarTabela(dados) {
             afastamentosHtml = `<span class="valor-dias-normal">0</span>`;
         }
         
-        // 👇 NOVO: FONTE DE PASSES (badge "Histórico" ou "Atual")
         let fonteHtml = '';
         if (item.tipoPasses === 'Histórico') {
             fonteHtml = `
@@ -1247,7 +1259,7 @@ function renderizarTabela(dados) {
         }
 
         html += `
-            <tr>
+            <tr class="linha-clicavel" data-index="${index}">
                 <td><strong>${item.nome}</strong></td>
                 <td>${item.cpf}</td>
                 <td>${item.escola}</td>
@@ -1265,6 +1277,70 @@ function renderizarTabela(dados) {
     });
 
     tbody.innerHTML = html;
+    
+    setTimeout(() => configurarCliquesTabela(), 10);
+}
+
+function configurarCliquesTabela() {
+    const linhas = document.querySelectorAll('#tabelaResultado tr.linha-clicavel');
+    
+    linhas.forEach(linha => {
+        linha.addEventListener('click', function(e) {
+            document.querySelectorAll('#tabelaResultado tr.linha-selecionada').forEach(l => {
+                l.classList.remove('linha-selecionada');
+            });
+            
+            this.classList.add('linha-selecionada');
+        });
+    });
+    
+    const tabela = document.querySelector('#cardResultado table');
+    if (tabela) {
+        tabela.addEventListener('click', function(e) {
+            if (!e.target.closest('tr.linha-clicavel')) {
+                document.querySelectorAll('#tabelaResultado tr.linha-selecionada').forEach(l => {
+                    l.classList.remove('linha-selecionada');
+                });
+            }
+        });
+    }
+    
+    document.addEventListener('keydown', navegarComTeclado);
+}
+
+function navegarComTeclado(e) {
+    const tabela = document.querySelector('#cardResultado');
+    if (!tabela || !tabela.classList.contains('ativo')) return;
+    
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    
+    const linhas = Array.from(document.querySelectorAll('#tabelaResultado tr.linha-clicavel'));
+    if (linhas.length === 0) return;
+    
+    const selecionada = document.querySelector('#tabelaResultado tr.linha-selecionada');
+    let indiceAtual = selecionada ? linhas.indexOf(selecionada) : -1;
+    
+    let novoIndice = indiceAtual;
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        novoIndice = Math.min(indiceAtual + 1, linhas.length - 1);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        novoIndice = Math.max(indiceAtual - 1, 0);
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        linhas.forEach(l => l.classList.remove('linha-selecionada'));
+        return;
+    } else {
+        return;
+    }
+    
+    if (novoIndice !== indiceAtual && novoIndice >= 0) {
+        linhas.forEach(l => l.classList.remove('linha-selecionada'));
+        linhas[novoIndice].classList.add('linha-selecionada');
+        linhas[novoIndice].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 window.exportarODS = async function() {
