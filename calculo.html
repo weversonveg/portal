@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -164,41 +164,17 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .btn-exportar.csv{background:#455a64}
 .btn-exportar.csv:hover{background:#37474f}
 
-/* 👇 BADGES VISUAIS */
-.badge-afastamento{
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    padding:3px 10px;
-    background:var(--danger-bg);
-    color:var(--danger);
-    border:1px solid var(--danger-bd);
-    border-radius:4px;
-    font-weight:700;
-    font-size:12px;
-}
-.badge-afastamento .material-symbols-outlined{
-    font-size:14px;
-}
-.badge-ajustado{
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    padding:3px 10px;
-    background:var(--warn-bg);
-    color:var(--warn);
-    border:1px solid var(--warn-bd);
-    border-radius:4px;
-    font-weight:700;
-    font-size:12px;
-}
-.badge-ajustado .material-symbols-outlined{
-    font-size:14px;
-}
-.valor-dias-normal{
-    color:var(--text);
-    font-weight:600;
-}
+.badge-afastamento{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-bd);border-radius:4px;font-weight:700;font-size:12px}
+.badge-afastamento .material-symbols-outlined{font-size:14px}
+.badge-ajustado{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd);border-radius:4px;font-weight:700;font-size:12px}
+.badge-ajustado .material-symbols-outlined{font-size:14px}
+.valor-dias-normal{color:var(--text);font-weight:600}
+
+/* 👇 BADGES DE FONTE DE PASSES */
+.badge-fonte{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px}
+.badge-fonte-historico{background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd)}
+.badge-fonte-atual{background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border)}
+.badge-fonte .material-symbols-outlined{font-size:13px}
 
 .table-responsive{width:100%;overflow:auto;max-height:65vh;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}
@@ -440,6 +416,7 @@ tr:hover td{background:var(--surface-2)}
                                 <th>Afastamentos</th>
                                 <th>Dias Efetivos</th>
                                 <th>Passes/Dia</th>
+                                <th>Fonte</th>
                                 <th>Total Passes</th>
                                 <th>Valor Unit. (R$)</th>
                                 <th>Valor Total (R$)</th>
@@ -447,7 +424,7 @@ tr:hover td{background:var(--surface-2)}
                         </thead>
                         <tbody id="tabelaResultado">
                             <tr>
-                                <td colspan="11" class="empty-state">
+                                <td colspan="12" class="empty-state">
                                     <span class="material-symbols-outlined">calculate</span>
                                     <strong>Nenhum cálculo realizado</strong>
                                     Selecione o mês e clique em "Calcular Todos".
@@ -972,7 +949,7 @@ window.carregarDados = async function() {
     const tabelaResultado = document.getElementById("tabelaResultado");
     tabelaResultado.innerHTML = `
         <tr>
-            <td colspan="11" style="text-align:center; padding:40px;">
+            <td colspan="12" style="text-align:center; padding:40px;">
                 <span class="spinner"></span>
                 <div style="margin-top:12px; color:var(--text-secondary);">Carregando dados e verificando status...</div>
             </td>
@@ -999,7 +976,7 @@ window.carregarDados = async function() {
         if (servidoresSnap.empty) {
             tabelaResultado.innerHTML = `
                 <tr>
-                    <td colspan="11" class="empty-state">
+                    <td colspan="12" class="empty-state">
                         <span class="material-symbols-outlined">person_off</span>
                         <strong>Nenhum servidor cadastrado</strong>
                         Cadastre servidores para realizar os cálculos.
@@ -1014,6 +991,7 @@ window.carregarDados = async function() {
         const lancamentosPorCpfEscola = {};
         let totalLancamentos = 0;
         
+        // 👇 SNAPSHOTS: Carregar lançamentos com passes diários congelados
         lancamentosSnap.forEach(lancDoc => {
             const data = lancDoc.data();
             if (data.mesReferencia === mesAno) {
@@ -1026,13 +1004,24 @@ window.carregarDados = async function() {
                 const chave = `${escolaNorm}_${cpfNorm}_${matriculaNorm}`;
                 const diasAfast = Number(data.diasAfastamento) || 0;
                 
-                lancamentosMap[chave] = diasAfast;
+                // 👇 NOVO: Capturar snapshot de passes diários do lançamento
+                const passesLancados = (data.passesDiariosLancados !== undefined && data.passesDiariosLancados !== null) 
+                    ? Number(data.passesDiariosLancados) 
+                    : null;
+                
+                lancamentosMap[chave] = {
+                    diasAfast: diasAfast,
+                    passesLancados: passesLancados
+                };
                 
                 const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
                 if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = 0;
+                    lancamentosPorCpfEscola[chaveCpfEscola] = { diasAfast: 0, passesLancados: null };
                 }
-                lancamentosPorCpfEscola[chaveCpfEscola] += diasAfast;
+                lancamentosPorCpfEscola[chaveCpfEscola].diasAfast += diasAfast;
+                if (passesLancados !== null && lancamentosPorCpfEscola[chaveCpfEscola].passesLancados === null) {
+                    lancamentosPorCpfEscola[chaveCpfEscola].passesLancados = passesLancados;
+                }
                 
                 if (totalLancamentos <= 3) {
                     console.log(`📝 Lançamento ${totalLancamentos}:`, {
@@ -1040,6 +1029,7 @@ window.carregarDados = async function() {
                         cpf: data.cpf,
                         matricula: data.numeroMatricula,
                         diasAfastamento: diasAfast,
+                        passesDiariosLancados: passesLancados,
                         chave: chave
                     });
                 }
@@ -1064,6 +1054,8 @@ window.carregarDados = async function() {
         let totalAfastados = 0;
         let totalValor = 0;
         let matchesEncontrados = 0;
+        let snapshotUsados = 0;
+        let cadastroAtualUsados = 0;
 
         servidoresSnap.forEach(servidorDoc => {
             const servidor = servidorDoc.data();
@@ -1086,20 +1078,40 @@ window.carregarDados = async function() {
                     const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
                     const chaveCpfEscola = `${nomeEscolaNorm}_${cpfLimpo}`;
                     
+                    // 👇 SNAPSHOTS: Extrair afastamento E snapshot de passes
                     let diasAfastamento = 0;
+                    let passesLancadosSnapshot = null;
+                    
                     if (lancamentosMap.hasOwnProperty(chave)) {
-                        diasAfastamento = lancamentosMap[chave];
+                        const info = lancamentosMap[chave];
+                        diasAfastamento = info.diasAfast;
+                        passesLancadosSnapshot = info.passesLancados;
                         matchesEncontrados++;
                     }
                     else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
-                        diasAfastamento = lancamentosPorCpfEscola[chaveCpfEscola];
+                        const info = lancamentosPorCpfEscola[chaveCpfEscola];
+                        diasAfastamento = info.diasAfast;
+                        passesLancadosSnapshot = info.passesLancados;
                         matchesEncontrados++;
                     }
                     
                     const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
-                    const passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
+                    
+                    // 👇 NOVO: Priorizar snapshot do lançamento, usar cadastro atual como fallback
+                    let passesPorDia;
+                    let tipoPasses;
+                    if (passesLancadosSnapshot !== null) {
+                        passesPorDia = passesLancadosSnapshot;
+                        tipoPasses = 'Histórico';
+                        snapshotUsados++;
+                    } else {
+                        passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        tipoPasses = 'Atual';
+                        cadastroAtualUsados++;
+                    }
+                    
                     const totalPassesServidor = diasEfetivos * passesPorDia;
 
                     const nomeEmpresa = escolaObj.empresa || '';
@@ -1118,6 +1130,8 @@ window.carregarDados = async function() {
                         afastamentos: diasAfastamento,
                         diasEfetivos: diasEfetivos,
                         passesPorDia: passesPorDia,
+                        passesPorDiaSnapshot: passesLancadosSnapshot,
+                        tipoPasses: tipoPasses,
                         totalPasses: totalPassesServidor,
                         valorUnitario: valorUnitario,
                         valorTotal: valorTotalServidor
@@ -1138,6 +1152,8 @@ window.carregarDados = async function() {
         
         console.log(`✅ Total de matches encontrados: ${matchesEncontrados}`);
         console.log(`✅ Total de servidores com afastamento: ${totalAfastados}`);
+        console.log(`📸 Snapshots de passes usados: ${snapshotUsados} (lançamentos antigos)`);
+        console.log(`📋 Cadastro atual usado: ${cadastroAtualUsados} (sem lançamento histórico)`);
 
         dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
 
@@ -1154,7 +1170,7 @@ window.carregarDados = async function() {
         console.error("Erro ao carregar dados:", erro);
         tabelaResultado.innerHTML = `
             <tr>
-                <td colspan="11" class="empty-state">
+                <td colspan="12" class="empty-state">
                     <span class="material-symbols-outlined" style="color:var(--red);">error_outline</span>
                     <strong style="color:var(--red);">Erro ao carregar dados</strong>
                     ${erro.message || 'Erro desconhecido'}
@@ -1170,7 +1186,7 @@ function renderizarTabela(dados) {
     if (dados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="empty-state">
+                <td colspan="12" class="empty-state">
                     <span class="material-symbols-outlined">search_off</span>
                     <strong>Nenhum resultado encontrado</strong>
                     Ajuste os filtros e tente novamente.
@@ -1211,6 +1227,24 @@ function renderizarTabela(dados) {
         } else {
             afastamentosHtml = `<span class="valor-dias-normal">0</span>`;
         }
+        
+        // 👇 NOVO: FONTE DE PASSES (badge "Histórico" ou "Atual")
+        let fonteHtml = '';
+        if (item.tipoPasses === 'Histórico') {
+            fonteHtml = `
+                <span class="badge-fonte badge-fonte-historico" title="Passes diários congelados do lançamento anterior (${item.passesPorDiaSnapshot} passes/dia)">
+                    <span class="material-symbols-outlined">history</span>
+                    Histórico
+                </span>
+            `;
+        } else {
+            fonteHtml = `
+                <span class="badge-fonte badge-fonte-atual" title="Valor atual do cadastro do servidor (${item.passesPorDia} passes/dia)">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    Atual
+                </span>
+            `;
+        }
 
         html += `
             <tr>
@@ -1222,6 +1256,7 @@ function renderizarTabela(dados) {
                 <td>${afastamentosHtml}</td>
                 <td>${item.diasEfetivos}</td>
                 <td>${item.passesPorDia}</td>
+                <td>${fonteHtml}</td>
                 <td><strong style="color:var(--primary);">${item.totalPasses}</strong></td>
                 <td style="text-align:right;">${valorUnitFmt}</td>
                 <td style="text-align:right;"><strong style="color:var(--green);">${valorTotalFmt}</strong></td>
@@ -1247,6 +1282,7 @@ window.exportarODS = async function() {
     const totalPasses = dadosCalculados.reduce((sum, item) => sum + item.totalPasses, 0);
     const totalValor = dadosCalculados.reduce((sum, item) => sum + item.valorTotal, 0);
     const totalAfastados = dadosCalculados.filter(item => item.afastamentos > 0).length;
+    const totalSnapshots = dadosCalculados.filter(item => item.tipoPasses === 'Histórico').length;
 
     function escapeXml(text) {
         if (text === null || text === undefined) return "";
@@ -1269,7 +1305,7 @@ window.exportarODS = async function() {
         return `<table:table-cell office:value-type="string"><text:p>${escaped}</text:p></table:table-cell>`;
     }
 
-    const cabecalhos = ["Nº", "Servidor", "CPF", "Escola", "Empresa", "Matrícula", "Dias Úteis", "Ajustado", "Afastamentos", "Dias Efetivos", "Passes/Dia", "Total de Passes", "Valor Unit. (R$)", "Valor Total (R$)"];
+    const cabecalhos = ["Nº", "Servidor", "CPF", "Escola", "Empresa", "Matrícula", "Dias Úteis", "Ajustado", "Afastamentos", "Dias Efetivos", "Passes/Dia", "Fonte Passes", "Total de Passes", "Valor Unit. (R$)", "Valor Total (R$)"];
 
     let linhasTabela = "";
 
@@ -1292,6 +1328,7 @@ window.exportarODS = async function() {
         linhasTabela += getCellXml(item.afastamentos);
         linhasTabela += getCellXml(item.diasEfetivos);
         linhasTabela += getCellXml(item.passesPorDia);
+        linhasTabela += getCellXml(item.tipoPasses);
         linhasTabela += getCellXml(item.totalPasses);
         linhasTabela += getCellXml(item.valorUnitario > 0 ? item.valorUnitario.toFixed(2) : '');
         linhasTabela += getCellXml(item.valorTotal > 0 ? item.valorTotal.toFixed(2) : '');
@@ -1305,6 +1342,7 @@ window.exportarODS = async function() {
         ["Total de Passes", totalPasses],
         ["Valor Total (R$)", totalValor.toFixed(2)],
         ["Servidores com Afastamento", totalAfastados],
+        ["Snapshots de Passes Usados", totalSnapshots],
         ["Data da Exportação", new Date().toLocaleString("pt-BR")]
     ];
 
@@ -1337,7 +1375,7 @@ window.exportarODS = async function() {
     <office:body>
         <office:spreadsheet>
             <table:table table:name="Cálculo de Passes">
-                <table:table-column table:style-name="co1" table:number-columns-repeated="14"/>
+                <table:table-column table:style-name="co1" table:number-columns-repeated="15"/>
                 ${linhasTabela}
             </table:table>
             <table:table table:name="Resumo">
@@ -1427,13 +1465,13 @@ window.exportarCSV = function() {
     
     const nomeArquivo = `calculo_passes_${formatarMesAnoArquivo(mesAno)}.csv`;
 
-    let csv = "Servidor;CPF;Escola;Empresa;Matrícula;Dias Úteis;Ajustado;Afastamentos;Dias Efetivos;Passes/Dia;Total de Passes;Valor Unit. (R$);Valor Total (R$)\n";
+    let csv = "Servidor;CPF;Escola;Empresa;Matrícula;Dias Úteis;Ajustado;Afastamentos;Dias Efetivos;Passes/Dia;Fonte Passes;Total de Passes;Valor Unit. (R$);Valor Total (R$)\n";
 
     dadosCalculados.forEach(item => {
         const valUnit = item.valorUnitario > 0 ? item.valorUnitario.toFixed(2).replace('.', ',') : '';
         const valTotal = item.valorTotal > 0 ? item.valorTotal.toFixed(2).replace('.', ',') : '';
         const ajustado = item.diasUteisAjustado ? 'Sim' : 'Não';
-        csv += `${item.nome};${item.cpf};${item.escola};${item.empresa || ''};${item.matricula};${item.diasUteis};${ajustado};${item.afastamentos};${item.diasEfetivos};${item.passesPorDia};${item.totalPasses};${valUnit};${valTotal}\n`;
+        csv += `${item.nome};${item.cpf};${item.escola};${item.empresa || ''};${item.matricula};${item.diasUteis};${ajustado};${item.afastamentos};${item.diasEfetivos};${item.passesPorDia};${item.tipoPasses};${item.totalPasses};${valUnit};${valTotal}\n`;
     });
 
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
