@@ -24,7 +24,6 @@
         document.documentElement.setAttribute('data-theme', t);
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
-
         var menuFechado = localStorage.getItem('menu-vt-fechado');
         if (menuFechado === '1') {
             document.documentElement.classList.add('menu-inicial-fechado');
@@ -605,6 +604,33 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-exportar.csv { background: #455a64; }
 .btn-exportar.csv:hover { background: #37474f; }
 
+/* 👇 PAINEL DE DEBUG */
+.debug-panel {
+    display: none;
+    background: var(--info-bg);
+    border: 1px solid var(--info-bd);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.debug-panel.ativo { display: block; }
+.debug-panel h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--info);
+    margin-bottom: 8px;
+}
+.debug-panel pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
 .table-responsive {
     width: 100%;
     overflow: auto;
@@ -930,6 +956,12 @@ td.afastamento-positivo {
                 </div>
             </div>
 
+            <!-- 👇 PAINEL DE DEBUG -->
+            <div id="debugPanel" class="debug-panel">
+                <h4>🔍 Debug - Matches de Afastamentos</h4>
+                <pre id="debugContent">Clique em "Calcular Todos" para ver os resultados do debug...</pre>
+            </div>
+
             <section id="cardResultado" class="card-resultado">
                 <div class="card-header">
                     <div class="card-title">
@@ -1203,6 +1235,7 @@ import {
 let dadosCalculados = [];
 let mesBloqueadoParaCalculo = false;
 let tarifasEmpresas = {};
+let debugLog = [];
 
 document.addEventListener("DOMContentLoaded", async function() {
     const hoje = new Date();
@@ -1210,7 +1243,6 @@ document.addEventListener("DOMContentLoaded", async function() {
     const mes = String(hoje.getMonth() + 1).padStart(2, "0");
     const mesAtual = `${ano}-${mes}`;
 
-    // 👇 CORREÇÃO: altInput: true para exibir "Outubro / 2026" ao invés de "2026-10"
     flatpickr("#mesReferencia", {
         locale: "pt",
         altInput: true,
@@ -1250,7 +1282,6 @@ function normalizarMatricula(matricula) {
 // FUNÇÕES DE FORMATAÇÃO
 // =========================================================
 
-// 👇 CORREÇÃO MONETÁRIA: R$ 2.277,80
 function formatarMoeda(valor) {
     return 'R$ ' + Number(valor).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
@@ -1258,7 +1289,6 @@ function formatarMoeda(valor) {
     });
 }
 
-// 👇 CORREÇÃO DO FORMATO DO MÊS: "2026-09" → "09/2026"
 function formatarMesAno(valor) {
     if (!valor) return "";
     const partes = valor.split("-");
@@ -1266,7 +1296,6 @@ function formatarMesAno(valor) {
     return `${partes[1]}/${partes[0]}`;
 }
 
-// Para usar em nomes de arquivo: "2026-09" → "09-2026"
 function formatarMesAnoArquivo(valor) {
     return formatarMesAno(valor).replace('/', '-');
 }
@@ -1502,6 +1531,9 @@ window.carregarDados = async function() {
     }
 
     await carregarTarifas();
+    
+    debugLog = [];
+    adicionarLog(`🔍 Iniciando cálculo para o mês: ${mesAno}`);
 
     const tabelaResultado = document.getElementById("tabelaResultado");
     tabelaResultado.innerHTML = `
@@ -1526,6 +1558,8 @@ window.carregarDados = async function() {
         if (status.bloqueado) {
             document.getElementById("cardResultado").classList.remove("ativo");
             document.getElementById("resumoBox").classList.remove("ativo");
+            document.getElementById("debugPanel").classList.add("ativo");
+            document.getElementById("debugContent").textContent = debugLog.join('\n');
             return;
         }
 
@@ -1547,6 +1581,8 @@ window.carregarDados = async function() {
         const lancamentosMap = {};
         let totalLancamentos = 0;
         
+        adicionarLog(`📊 Total de lançamentos no Firestore: ${lancamentosSnap.size}`);
+        
         lancamentosSnap.forEach(lancDoc => {
             const data = lancDoc.data();
             if (data.mesReferencia === mesAno) {
@@ -1561,23 +1597,15 @@ window.carregarDados = async function() {
                 
                 lancamentosMap[chave] = diasAfast;
                 
-                if (totalLancamentos <= 3) {
-                    console.log(`📝 Lançamento ${totalLancamentos}:`, {
-                        escola: data.escola,
-                        escolaNorm: escolaNorm,
-                        cpf: data.cpf,
-                        cpfNorm: cpfNorm,
-                        matricula: data.numeroMatricula,
-                        matriculaNorm: matriculaNorm,
-                        diasAfastamento: diasAfast,
-                        chave: chave
-                    });
+                if (totalLancamentos <= 5) {
+                    adicionarLog(`📝 Lançamento ${totalLancamentos}: escola="${data.escola}" cpf="${data.cpf}" matricula="${data.numeroMatricula}" dias=${diasAfast}`);
+                    adicionarLog(`   → Chave: ${chave}`);
                 }
             }
         });
         
-        console.log(`✅ Total de lançamentos encontrados para ${mesAno}:`, totalLancamentos);
-        console.log('📊 Mapa de lançamentos (primeiras 5 entradas):', Object.entries(lancamentosMap).slice(0, 5));
+        adicionarLog(`✅ Total de lançamentos para o mês ${mesAno}: ${totalLancamentos}`);
+        adicionarLog(`📊 Total de chaves no mapa: ${Object.keys(lancamentosMap).length}`);
 
         const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
         const configEscolasMap = {};
@@ -1589,6 +1617,7 @@ window.carregarDados = async function() {
         });
 
         const diasUteisPadrao = config.diasUteis || 22;
+        adicionarLog(`⚙️ Dias úteis padrão: ${diasUteisPadrao}`);
 
         dadosCalculados = [];
         let totalPasses = 0;
@@ -1617,16 +1646,23 @@ window.carregarDados = async function() {
                     const chave = `${nomeEscolaNorm}_${cpfLimpo}_${matriculaNorm}`;
                     
                     let diasAfastamento = 0;
+                    let matchEncontrado = false;
+                    
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         diasAfastamento = lancamentosMap[chave];
                         matchesEncontrados++;
-                        console.log(`✅ Match encontrado: ${chave} = ${diasAfastamento} dias`);
+                        matchEncontrado = true;
+                        adicionarLog(`✅ MATCH: ${servidor.nome} - ${chave} = ${diasAfastamento} dias`);
                     } else {
+                        // Tentar buscar sem matrícula (para compatibilidade)
                         const chaveSemMatricula = `${nomeEscolaNorm}_${cpfLimpo}_`;
                         if (lancamentosMap.hasOwnProperty(chaveSemMatricula)) {
                             diasAfastamento = lancamentosMap[chaveSemMatricula];
                             matchesEncontrados++;
-                            console.log(`✅ Match encontrado (sem matrícula): ${chaveSemMatricula} = ${diasAfastamento} dias`);
+                            matchEncontrado = true;
+                            adicionarLog(`✅ MATCH (sem matrícula): ${servidor.nome} - ${chaveSemMatricula} = ${diasAfastamento} dias`);
+                        } else {
+                            adicionarLog(`❌ SEM MATCH: ${servidor.nome} - Chave: ${chave}`);
                         }
                     }
                     
@@ -1667,8 +1703,9 @@ window.carregarDados = async function() {
             processarMatricula(servidor.matricula2);
         });
         
-        console.log(`✅ Total de matches encontrados: ${matchesEncontrados}`);
-        console.log(`✅ Total de servidores com afastamento: ${totalAfastados}`);
+        adicionarLog(`✅ Total de matches encontrados: ${matchesEncontrados}`);
+        adicionarLog(`✅ Total de servidores com afastamento: ${totalAfastados}`);
+        adicionarLog(`✅ Total de servidores processados: ${dadosCalculados.length}`);
 
         dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
 
@@ -1680,9 +1717,16 @@ window.carregarDados = async function() {
 
         renderizarTabela(dadosCalculados);
         document.getElementById("cardResultado").classList.add("ativo");
+        
+        // Mostrar painel de debug
+        document.getElementById("debugPanel").classList.add("ativo");
+        document.getElementById("debugContent").textContent = debugLog.join('\n');
 
     } catch (erro) {
         console.error("Erro ao carregar dados:", erro);
+        adicionarLog(`❌ ERRO: ${erro.message}`);
+        document.getElementById("debugPanel").classList.add("ativo");
+        document.getElementById("debugContent").textContent = debugLog.join('\n');
         tabelaResultado.innerHTML = `
             <tr>
                 <td colspan="11" class="empty-state">
@@ -1694,6 +1738,11 @@ window.carregarDados = async function() {
         `;
     }
 };
+
+function adicionarLog(mensagem) {
+    debugLog.push(mensagem);
+    console.log(mensagem);
+}
 
 function renderizarTabela(dados) {
     const tbody = document.getElementById("tabelaResultado");
