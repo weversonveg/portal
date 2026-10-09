@@ -582,7 +582,7 @@ tbody tr:hover td { background:var(--surface-2); }
                     </div>
                 </a>
 
-                <!-- CARD 3: UNIDADES (ATUALIZADO COM CONTADOR) -->
+                <!-- CARD 3: UNIDADES -->
                 <a href="#" class="cadastro-card cadastro-card-unidade" data-modal="modalUnidades" role="button">
                     <div class="cadastro-card-icone"><span class="material-symbols-outlined">apartment</span></div>
                     <div class="cadastro-card-titulo">Cadastro de Unidades</div>
@@ -744,7 +744,7 @@ tbody tr:hover td { background:var(--surface-2); }
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     MODAL EXPANDIDO — UNIDADES (NOVO!)
+     MODAL EXPANDIDO — UNIDADES
      ═══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modalUnidades" style="--card-accent:#8a5610; --card-accent-soft:#fbf7ef;">
     <div class="modal-box modal-unidades-box">
@@ -1060,6 +1060,25 @@ function converterMoedaParaNumero(valorFormatado) {
     return isNaN(num) ? null : num;
 }
 
+/* ==========================================================
+   ORDENAÇÃO ALFABÉTICA (com suporte a acentos PT-BR)
+   ========================================================== */
+function ordenarPorNome(lista) {
+    return lista.sort((a, b) => {
+        const nomeA = (a.nome || '').toString().trim();
+        const nomeB = (b.nome || '').toString().trim();
+        // Valores vazios vão para o final
+        if (!nomeA && !nomeB) return 0;
+        if (!nomeA) return 1;
+        if (!nomeB) return -1;
+        // Ordenação alfabética PT-BR (ignora acentos e pontuação)
+        return nomeA.localeCompare(nomeB, 'pt-BR', {
+            sensitivity: 'base',
+            ignorePunctuation: true
+        });
+    });
+}
+
 const inputValorTarifa = document.getElementById('valorTarifa');
 if (inputValorTarifa) {
     inputValorTarifa.addEventListener('input', function (e) {
@@ -1094,7 +1113,7 @@ async function carregarEmpresas() {
         const snapshot = await getDocs(collection(db, 'empresas'));
         empresasCache = [];
         snapshot.forEach(d => empresasCache.push({ id: d.id, ...d.data() }));
-        empresasCache.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        ordenarPorNome(empresasCache);
         renderizarTabelaEmpresas();
         atualizarContadorEmpresas();
     } catch (e) {
@@ -1230,7 +1249,7 @@ async function carregarCargos() {
         const snapshot = await getDocs(collection(db, 'cargos'));
         cargosCache = [];
         snapshot.forEach(d => cargosCache.push({ id: d.id, ...d.data() }));
-        cargosCache.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        ordenarPorNome(cargosCache);
         renderizarTabelaCargos();
         atualizarContadorCargos();
     } catch (e) {
@@ -1343,8 +1362,7 @@ new MutationObserver(mutations => {
 }).observe(document.getElementById('modalCargos'), { attributes: true, attributeFilter: ['class'] });
 
 /* ==========================================================
-   LÓGICA: UNIDADES (FIREBASE) — NOVO!
-   Coleção 'unidades' criada automaticamente ao salvar
+   LÓGICA: UNIDADES (FIREBASE)
    ========================================================== */
 let unidadesCache = [];
 let unidadeEmEdicao = null;
@@ -1364,7 +1382,7 @@ async function carregarUnidades() {
         const snapshot = await getDocs(collection(db, 'unidades'));
         unidadesCache = [];
         snapshot.forEach(d => unidadesCache.push({ id: d.id, ...d.data() }));
-        unidadesCache.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        ordenarPorNome(unidadesCache);
         renderizarTabelaUnidades();
         atualizarContadorUnidades();
     } catch (e) {
@@ -1427,7 +1445,6 @@ function editarUnidade(id) {
 
 async function salvarUnidade() {
     const nome = document.getElementById('nomeUnidade').value.trim();
-    // Com altInput do Flatpickr, o valor real fica em ISO (Y-m-d)
     const dataCadastro = document.getElementById('dataCadastroUnidade').value;
 
     if (!nome) { mostrarMensagemUnidades('Informe o nome da unidade.', 'erro'); return; }
@@ -1485,12 +1502,10 @@ function mostrarMensagemUnidades(texto, tipo) {
     setTimeout(() => { msg.className = 'mensagem-inline'; }, 4000);
 }
 
-/* Bind dos botões de unidades */
 document.getElementById('btnNovaUnidade').addEventListener('click', abrirModalNovaUnidade);
 document.getElementById('btnSalvarUnidade').addEventListener('click', salvarUnidade);
 document.getElementById('btnConfirmarExclusaoUnidade').addEventListener('click', confirmarExclusaoUnidade);
 
-/* Carrega unidades ao abrir o modal principal */
 new MutationObserver(mutations => {
     mutations.forEach(m => { if (m.target.classList.contains('ativo')) carregarUnidades(); });
 }).observe(document.getElementById('modalUnidades'), { attributes: true, attributeFilter: ['class'] });
@@ -1501,9 +1516,9 @@ new MutationObserver(mutations => {
 if (typeof flatpickr !== 'undefined') {
     flatpickrUnidade = flatpickr("#dataCadastroUnidade", {
         locale: "pt",
-        dateFormat: "Y-m-d",        // valor real salvo em ISO
-        altInput: true,              // campo visível separado
-        altFormat: "d/m/Y",          // exibe em formato brasileiro
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
         allowInput: true,
         disableMobile: "true",
         onReady: function(selectedDates, dateStr, instance) {
