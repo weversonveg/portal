@@ -720,7 +720,7 @@ tr:hover td { background: var(--surface-2); }
         <div class="sidebar-inner">
 
             <div class="sidebar-header">
-                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
+                <img class="sidebar-logo" src="logo.png" alt="">
                 <div class="sidebar-brand">
                     <strong>Vale Transporte</strong>
                     <span>SEMED · RH</span>
@@ -981,7 +981,7 @@ tr:hover td { background: var(--surface-2); }
 
             <section id="tableCard" class="table-card">
                 <div class="print-report-header">
-                    <img class="print-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+                    <img class="print-logo" src="logo.png" alt="Logo">
                     <div class="print-report-text">
                         <h2>PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)</h2>
                         <p id="printSubtitulo">Relatório Consolidado</p>
@@ -1139,7 +1139,8 @@ import {
 
 onAuthStateChanged(auth, function (user) {
     if (user) {
-        var email = user.email || '';
+        window.__usuarioEmail = user.email || '';
+        var email = window.__usuarioEmail;
         var partes = email.split('@')[0].split(/[.\-_]/);
         var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
         var nome = partes.filter(Boolean)
@@ -1234,6 +1235,284 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     const DIAS_PADRAO = 30;
 
+    /* ------------------------------------------------------------
+       Carregamento dinâmico do jsPDF + AutoTable
+       ------------------------------------------------------------ */
+    const JSPDF_URL     = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    const AUTOTABLE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+
+    function carregarScript(url) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+            const s = document.createElement('script');
+            s.src = url;
+            s.onload = () => resolve();
+            s.onerror = () => reject(new Error('Falha ao carregar: ' + url));
+            document.head.appendChild(s);
+        });
+    }
+
+    async function garantirJsPDF() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+            if (typeof window.jspdf.jsPDF.API.autoTable !== 'function') {
+                await carregarScript(AUTOTABLE_URL);
+            }
+            return window.jspdf.jsPDF;
+        }
+        await carregarScript(JSPDF_URL);
+        await carregarScript(AUTOTABLE_URL);
+        return window.jspdf.jsPDF;
+    }
+
+    /* ------------------------------------------------------------
+       Logo local (logo.png) como DataURL
+       ------------------------------------------------------------ */
+    let __logoDataURL = null;
+    async function obterLogoDataURL() {
+        if (__logoDataURL) return __logoDataURL;
+        try {
+            const resp = await fetch('logo.png', { cache: 'force-cache' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const blob = await resp.blob();
+            __logoDataURL = await new Promise((resolve, reject) => {
+                const fr = new FileReader();
+                fr.onload = () => resolve(fr.result);
+                fr.onerror = () => reject(new Error('Falha ao ler logo'));
+                fr.readAsDataURL(blob);
+            });
+            return __logoDataURL;
+        } catch (e) {
+            console.warn('[PDF] Não foi possível carregar a logo.png:', e);
+            return null;
+        }
+    }
+
+    /* ------------------------------------------------------------
+       Geração do PDF profissional com jsPDF + AutoTable
+       ------------------------------------------------------------ */
+    async function gerarPDFProfissional() {
+        if (!dadosRelatorioGlobal || dadosRelatorioGlobal.length === 0) {
+            mostrarMensagem("Gere o relatório antes de exportar.", "erro");
+            return;
+        }
+
+        mostrarLoading('Gerando PDF...');
+
+        try {
+            const jsPDFCtor = await garantirJsPDF();
+            const logoData = await obterLogoDataURL();
+
+            const doc = new jsPDFCtor({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
+
+            const pageW = doc.internal.pageSize.getWidth();   // ~297mm
+            const pageH = doc.internal.pageSize.getHeight();  // ~210mm
+            const marginX = 10;
+            const headerTop = 8;
+            const headerHeight = 22;
+            const footerHeight = 10;
+
+            const subtitulo = (document.getElementById('printSubtitulo').textContent || 'Relatório Consolidado').trim();
+            const usuario = window.__usuarioEmail || '';
+            const geradoEm = new Date();
+            const dataHoraStr = geradoEm.toLocaleString('pt-BR');
+
+            function desenharCabecalho() {
+                let textX = marginX;
+                if (logoData) {
+                    try {
+                        const logoH = 14;
+                        const img = new Image();
+                        img.src = logoData;
+                        const ratio = img.width && img.height ? (img.width / img.height) : 1;
+                        const logoW = logoH * ratio;
+                        doc.addImage(logoData, 'PNG', marginX, headerTop, logoW, logoH);
+                        textX = marginX + logoW + 5;
+                    } catch (e) {
+                        console.warn('[PDF] addImage falhou:', e);
+                    }
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(31, 58, 95);
+                doc.text('PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)', textX, headerTop + 5);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(60, 60, 60);
+                doc.text(subtitulo, textX, headerTop + 10.5);
+
+                doc.setFontSize(8);
+                doc.setTextColor(110, 110, 110);
+                const linhaInfo = (usuario ? 'Usuário: ' + usuario + '   |   ' : '') + 'Gerado em: ' + dataHoraStr;
+                doc.text(linhaInfo, textX, headerTop + 15.5);
+
+                doc.setDrawColor(31, 58, 95);
+                doc.setLineWidth(0.5);
+                doc.line(marginX, headerTop + headerHeight - 3, pageW - marginX, headerTop + headerHeight - 3);
+            }
+
+            function desenharRodape(pageNumber, totalPages) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(110, 110, 110);
+                const txt = `Relatório gerado pelo Sistema de Vale Transporte — SEMED/RH   |   Página ${pageNumber} de ${totalPages}`;
+                doc.text(txt, pageW / 2, pageH - 4, { align: 'center' });
+            }
+
+            let head, body, colStyles;
+
+            if (tipoRelatorioAtual === 'ferias') {
+                head = [[
+                    'Servidor', 'CPF / Matrícula', 'Cargo', 'Escola', 'Tipo',
+                    'Período', 'Prazo Gozo', 'Status', 'Data Gozo'
+                ]];
+                body = dadosRelatorioGlobal.map(it => ([
+                    it.nome,
+                    it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
+                    it.cargo,
+                    it.escola,
+                    it.tipo,
+                    it.periodo,
+                    it.prazo,
+                    (it.status || '').toUpperCase() + (it.extemporaneo ? ' / FORA DO PRAZO' : ''),
+                    it.gozo
+                ]));
+                colStyles = {
+                    0: { cellWidth: 42 },
+                    1: { cellWidth: 28 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 34 },
+                    4: { cellWidth: 22 },
+                    5: { cellWidth: 20 },
+                    6: { cellWidth: 20 },
+                    7: { cellWidth: 26 },
+                    8: { cellWidth: 20 }
+                };
+            } else {
+                head = [[
+                    'Servidor', 'CPF / Matrícula', 'Cargo', 'Escola / Lotação',
+                    'Concessionária', 'Passes/Dia', 'Dias Efetivos',
+                    'Afast. Totais', 'Total Passes', 'Valor Unit.', 'Valor Total'
+                ]];
+                body = dadosRelatorioGlobal.map(it => ([
+                    it.nome,
+                    it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
+                    it.cargo,
+                    it.escola,
+                    it.empresa,
+                    String(it.passesDiarios),
+                    String(it.diasEfetivosTotal) + ' dias',
+                    '-' + String(it.afastamentosTotal),
+                    String(it.passesTotal),
+                    it.valorUnitario > 0 ? formatarMoeda(it.valorUnitario) : '—',
+                    it.valorTotal > 0 ? formatarMoeda(it.valorTotal) : '—'
+                ]));
+                colStyles = {
+                    0: { cellWidth: 38 },
+                    1: { cellWidth: 26 },
+                    2: { cellWidth: 26 },
+                    3: { cellWidth: 34 },
+                    4: { cellWidth: 26 },
+                    5: { cellWidth: 16, halign: 'center' },
+                    6: { cellWidth: 20, halign: 'center' },
+                    7: { cellWidth: 18, halign: 'center' },
+                    8: { cellWidth: 18, halign: 'center' },
+                    9: { cellWidth: 20, halign: 'right' },
+                    10: { cellWidth: 22, halign: 'right', fontStyle: 'bold' }
+                };
+            }
+
+            doc.autoTable({
+                head: head,
+                body: body,
+                startY: headerTop + headerHeight,
+                margin: { top: headerTop + headerHeight, left: marginX, right: marginX, bottom: footerHeight + 4 },
+                theme: 'grid',
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 7.6,
+                    cellPadding: { top: 1.5, right: 1.6, bottom: 1.5, left: 1.8 },
+                    overflow: 'linebreak',
+                    valign: 'middle',
+                    lineColor: [200, 205, 210],
+                    lineWidth: 0.15,
+                    textColor: [30, 30, 30]
+                },
+                headStyles: {
+                    fillColor: [31, 58, 95],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 7.8,
+                    halign: 'left',
+                    valign: 'middle',
+                    cellPadding: { top: 2.2, right: 2, bottom: 2.2, left: 2 }
+                },
+                alternateRowStyles: {
+                    fillColor: [246, 248, 250]
+                },
+                columnStyles: colStyles,
+                didDrawPage: function () {
+                    desenharCabecalho();
+                },
+                didParseCell: function (data) {
+                    // Status colors no relatório de férias
+                    if (tipoRelatorioAtual === 'ferias' && data.section === 'body' && data.column.index === 7) {
+                        const raw = String(data.cell.raw || '').toLowerCase();
+                        let color = null;
+                        if (raw.includes('gozado'))       color = [26, 106, 56];
+                        else if (raw.includes('vencido')) color = [154, 30, 30];
+                        else if (raw.includes('perdido')) color = [154, 30, 30];
+                        else if (raw.includes('parcial')) color = [26, 77, 143];
+                        else if (raw.includes('pendente'))color = [138, 86, 16];
+                        else if (raw.includes('disponivel') || raw.includes('disponível')) color = [26, 77, 143];
+                        else if (raw.includes('programado') || raw.includes('atual')) color = [31, 58, 95];
+                        if (color) {
+                            data.cell.styles.textColor = color;
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    }
+                    // Destacar valor total em verde no relatório de vales
+                    if (tipoRelatorioAtual === 'vales' && data.section === 'body' && data.column.index === 10) {
+                        data.cell.styles.textColor = [26, 106, 56];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                desenharRodape(i, totalPages);
+            }
+
+            const base = tipoRelatorioAtual === 'ferias'
+                ? 'relatorio_ferias_folgas'
+                : `relatorio_vales_${document.getElementById('tipoPeriodo').value}`;
+            const stamp = geradoEm.toISOString().slice(0, 10);
+            doc.save(`${base}_${stamp}.pdf`);
+
+            mostrarMensagem('PDF gerado com sucesso!', 'sucesso');
+        } catch (e) {
+            console.error('[PDF] Erro ao gerar:', e);
+            mostrarMensagem('Erro ao gerar o PDF. Verifique a conexão e tente novamente.', 'erro');
+        } finally {
+            ocultarLoading();
+        }
+    }
+
+    window.exportarPDF = function () {
+        gerarPDFProfissional();
+    };
+
+    /* ------------------------------------------------------------
+       Helpers de cálculo
+       ------------------------------------------------------------ */
     function obterDiasPorPeriodo(servidor, vinculo) {
         if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
         if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
@@ -1921,10 +2200,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         } finally {
             ocultarLoading();
         }
-    }
-
-    window.exportarPDF = function() {
-        window.print();
     }
 
     window.exportarCSV = function() {
