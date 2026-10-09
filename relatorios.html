@@ -1265,22 +1265,31 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     /* ------------------------------------------------------------
-       Logo local (logo.png) como DataURL
+       Logo local (logo.png) como DataURL + dimensões reais
        ------------------------------------------------------------ */
-    let __logoDataURL = null;
-    async function obterLogoDataURL() {
-        if (__logoDataURL) return __logoDataURL;
+    let __logoInfo = null; // { dataURL, width, height, ratio }
+    async function obterLogoInfo() {
+        if (__logoInfo) return __logoInfo;
         try {
             const resp = await fetch('logo.png', { cache: 'force-cache' });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const blob = await resp.blob();
-            __logoDataURL = await new Promise((resolve, reject) => {
+            const dataURL = await new Promise((resolve, reject) => {
                 const fr = new FileReader();
                 fr.onload = () => resolve(fr.result);
                 fr.onerror = () => reject(new Error('Falha ao ler logo'));
                 fr.readAsDataURL(blob);
             });
-            return __logoDataURL;
+            // Pré-carrega a imagem para obter largura/altura REAIS antes do addImage
+            const dims = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+                img.onerror = () => reject(new Error('Falha ao decodificar logo'));
+                img.src = dataURL;
+            });
+            const ratio = (dims.width && dims.height) ? (dims.width / dims.height) : 1;
+            __logoInfo = { dataURL, width: dims.width, height: dims.height, ratio };
+            return __logoInfo;
         } catch (e) {
             console.warn('[PDF] Não foi possível carregar a logo.png:', e);
             return null;
@@ -1300,7 +1309,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         try {
             const jsPDFCtor = await garantirJsPDF();
-            const logoData = await obterLogoDataURL();
+            const logo = await obterLogoInfo();
 
             const doc = new jsPDFCtor({
                 orientation: 'landscape',
@@ -1309,8 +1318,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 compress: true
             });
 
-            const pageW = doc.internal.pageSize.getWidth();   // ~297mm
-            const pageH = doc.internal.pageSize.getHeight();  // ~210mm
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
             const marginX = 10;
             const headerTop = 8;
             const headerHeight = 22;
@@ -1321,17 +1330,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const geradoEm = new Date();
             const dataHoraStr = geradoEm.toLocaleString('pt-BR');
 
+            // Dimensões da logo: altura fixa, largura proporcional
+            const LOGO_H = 14;                 // mm (altura fixa)
+            const LOGO_W = logo ? (LOGO_H * logo.ratio) : 0;
+            const LOGO_X = marginX;
+            const LOGO_Y = headerTop;
+            const TEXT_X = logo ? (LOGO_X + LOGO_W + 5) : marginX;
+
             function desenharCabecalho() {
-                let textX = marginX;
-                if (logoData) {
+                if (logo && LOGO_W > 0) {
                     try {
-                        const logoH = 14;
-                        const img = new Image();
-                        img.src = logoData;
-                        const ratio = img.width && img.height ? (img.width / img.height) : 1;
-                        const logoW = logoH * ratio;
-                        doc.addImage(logoData, 'PNG', marginX, headerTop, logoW, logoH);
-                        textX = marginX + logoW + 5;
+                        // addImage(dataURL, 'PNG', x, y, w, h) — mantém proporção real
+                        doc.addImage(logo.dataURL, 'PNG', LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
                     } catch (e) {
                         console.warn('[PDF] addImage falhou:', e);
                     }
@@ -1340,17 +1350,17 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(11);
                 doc.setTextColor(31, 58, 95);
-                doc.text('PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)', textX, headerTop + 5);
+                doc.text('PREFEITURA MUNICIPAL - SECRETARIA DE EDUCAÇÃO (SEMED)', TEXT_X, headerTop + 5);
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
                 doc.setTextColor(60, 60, 60);
-                doc.text(subtitulo, textX, headerTop + 10.5);
+                doc.text(subtitulo, TEXT_X, headerTop + 10.5);
 
                 doc.setFontSize(8);
                 doc.setTextColor(110, 110, 110);
                 const linhaInfo = (usuario ? 'Usuário: ' + usuario + '   |   ' : '') + 'Gerado em: ' + dataHoraStr;
-                doc.text(linhaInfo, textX, headerTop + 15.5);
+                doc.text(linhaInfo, TEXT_X, headerTop + 15.5);
 
                 doc.setDrawColor(31, 58, 95);
                 doc.setLineWidth(0.5);
@@ -1461,7 +1471,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     desenharCabecalho();
                 },
                 didParseCell: function (data) {
-                    // Status colors no relatório de férias
                     if (tipoRelatorioAtual === 'ferias' && data.section === 'body' && data.column.index === 7) {
                         const raw = String(data.cell.raw || '').toLowerCase();
                         let color = null;
@@ -1477,7 +1486,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                             data.cell.styles.fontStyle = 'bold';
                         }
                     }
-                    // Destacar valor total em verde no relatório de vales
                     if (tipoRelatorioAtual === 'vales' && data.section === 'body' && data.column.index === 10) {
                         data.cell.styles.textColor = [26, 106, 56];
                         data.cell.styles.fontStyle = 'bold';
