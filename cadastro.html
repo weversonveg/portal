@@ -1397,10 +1397,11 @@ tbody tr:hover td { background: var(--surface-2); }
 
                             <div class="form-group full">
                                 <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
-                                <select id="escola1_m1" name="escola1_m1" required>
-                                    <option value="">Selecione a escola</option>
-                                </select>
+                                <input type="text" id="escola1_m1" name="escola1_m1" list="lista-escolas" placeholder="Digite ou selecione a escola" autocomplete="off" required>
                             </div>
+
+                            <!-- Datalist compartilhado entre todos os campos de escola -->
+                            <datalist id="lista-escolas"></datalist>
 
                             <div class="form-group">
                                 <label for="empresa1_m1">Concessionária (Linha de Ônibus) <span>*</span></label>
@@ -1422,9 +1423,7 @@ tbody tr:hover td { background: var(--surface-2); }
                             <div id="escolaExtra1" class="escola-extra">
                                 <div class="form-group full">
                                     <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
-                                    <select id="escola2_m1" name="escola2_m1">
-                                        <option value="">Selecione a segunda escola</option>
-                                    </select>
+                                    <input type="text" id="escola2_m1" name="escola2_m1" list="lista-escolas" placeholder="Digite ou selecione a segunda escola" autocomplete="off">
                                 </div>
 
                                 <div class="form-group">
@@ -1494,9 +1493,7 @@ tbody tr:hover td { background: var(--surface-2); }
 
                                 <div class="form-group full">
                                     <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
-                                    <select id="escola1_m2" name="escola1_m2">
-                                        <option value="">Selecione a escola</option>
-                                    </select>
+                                    <input type="text" id="escola1_m2" name="escola1_m2" list="lista-escolas" placeholder="Digite ou selecione a escola" autocomplete="off">
                                 </div>
 
                                 <div class="form-group">
@@ -1519,9 +1516,7 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <div id="escolaExtra2" class="escola-extra">
                                     <div class="form-group full">
                                         <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
-                                        <select id="escola2_m2" name="escola2_m2">
-                                            <option value="">Selecione a segunda escola</option>
-                                        </select>
+                                        <input type="text" id="escola2_m2" name="escola2_m2" list="lista-escolas" placeholder="Digite ou selecione a segunda escola" autocomplete="off">
                                     </div>
 
                                     <div class="form-group">
@@ -2013,18 +2008,19 @@ async function carregarEmpresasNosSelects() {
     }
 }
 
+
 // =========================================================
-// CARREGAR UNIDADES ESCOLARES DO FIRESTORE E PREENCHER SELECTS
+// CARREGAR UNIDADES ESCOLARES DO FIRESTORE E PREENCHER DATALIST
 // =========================================================
-async function carregarUnidadesNosSelects() {
+async function carregarUnidadesEscolares() {
     try {
         const snapshot = await getDocs(collection(db, 'unidades'));
         const unidades = [];
-        
+
         snapshot.forEach(d => {
-            unidades.push({ 
-                id: d.id, 
-                ...d.data() 
+            unidades.push({
+                id: d.id,
+                ...d.data()
             });
         });
 
@@ -2035,36 +2031,18 @@ async function carregarUnidadesNosSelects() {
             return nomeA.localeCompare(nomeB);
         });
 
-        const selectIds = [
-            'escola1_m1',
-            'escola2_m1',
-            'escola1_m2',
-            'escola2_m2'
-        ];
-
-        selectIds.forEach(id => {
-            const select = document.getElementById(id);
-            if (!select) return;
-
-            const valorAtual = select.value;
-
-            select.innerHTML = '<option value="">Selecione a escola</option>';
+        // Preenche o <datalist> compartilhado (uma única vez para os 4 campos)
+        const datalist = document.getElementById('lista-escolas');
+        if (datalist) {
+            datalist.innerHTML = '';
 
             unidades.forEach(unidade => {
                 const opt = document.createElement('option');
                 const nomeUnidade = unidade.nome || unidade.nomeEscola || unidade.id;
-                opt.value = nomeUnidade; 
-                opt.textContent = nomeUnidade;
-                select.appendChild(opt);
+                opt.value = nomeUnidade;
+                datalist.appendChild(opt);
             });
-
-            if (valorAtual) {
-                const existe = Array.from(select.options).some(o => o.value === valorAtual);
-                if (existe) {
-                    select.value = valorAtual;
-                }
-            }
-        });
+        }
     } catch (e) {
         console.error('Erro ao carregar unidades escolares:', e);
     }
@@ -2140,10 +2118,10 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-  // 👇 Carrega as empresas e unidades escolares do Firestore nos selects ANTES de qualquer outra inicialização
+  // 👇 Carrega empresas (selects) e unidades escolares (datalist) em paralelo
   await Promise.all([
       carregarEmpresasNosSelects(),
-      carregarUnidadesNosSelects()
+      carregarUnidadesEscolares()
   ]);
 
   flatpickr("input[type='date']", {
