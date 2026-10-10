@@ -782,8 +782,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 .btn-icone .material-symbols-outlined { font-size: 18px; }
 
 /* ============================================================
-   STATUS CALCULADO
-   ============================================================ */
+   STATUS CALCULADO   ============================================================ */
 .status-calculado {
     padding: 14px 18px; border-radius: 6px;
     display: flex; align-items: center; gap: 12px;
@@ -1800,7 +1799,7 @@ tbody tr:hover td { background: var(--surface-2); }
             <button type="button" class="modal-btn-cancelar" onclick="fecharModalReabertura()">
                 Cancelar
             </button>
-            <button type="button" class="modal-btn-confirmar" onclick="fecharModalReabertura()">
+            <button type="button" class="modal-btn-confirmar" onclick="confirmarReabertura()">
                 <span class="material-symbols-outlined" style="font-size:16px;" aria-hidden="true">check</span>
                 Confirmar seleção
             </button>
@@ -2421,6 +2420,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     // Armazena as unidades vindas do Firestore
     let unidadesDisponiveis = [];
 
+    // Snapshot das escolas no momento em que o modal de reabertura foi aberto
+    // Usado para descartar alterações feitas no modal caso o usuário cancele/fecha.
+    let snapshotEscolasModal = null;
+
     // Busca as escolas da coleção "unidades"
     async function carregarUnidadesEscolares() {
         try {
@@ -2516,15 +2519,71 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     });
 
+    // ============================================================
+    // MODAL DE REABERTURA — com snapshot/restauração
+    // ============================================================
+
+    // Captura { [unidadeId]: { marcado, dias } } do estado atual do DOM
+    function capturarEstadoEscolas() {
+        const estado = {};
+        document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]').forEach(cb => {
+            const unidadeId = cb.dataset.id || cb.id.replace('escola_', '');
+            const inputDias = document.getElementById(`dias_${unidadeId}`);
+            estado[unidadeId] = {
+                marcado: cb.checked,
+                dias: inputDias ? inputDias.value : '3'
+            };
+        });
+        return estado;
+    }
+
+    // Aplica um snapshot de volta ao DOM
+    function restaurarEstadoEscolas(estado) {
+        if (!estado) return;
+        document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]').forEach(cb => {
+            const unidadeId = cb.dataset.id || cb.id.replace('escola_', '');
+            const inputDias = document.getElementById(`dias_${unidadeId}`);
+            const container = document.getElementById(`container_${cb.id}`);
+            const dados = estado[unidadeId];
+
+            if (!dados) return;
+
+            cb.checked = !!dados.marcado;
+            if (container) container.classList.toggle('marcado', !!dados.marcado);
+            if (inputDias) inputDias.value = dados.dias;
+        });
+        atualizarContadorEscolasSelecionadas();
+    }
+
     window.abrirModalReabertura = function() {
+        // Guarda o estado atual (o que está "salvo" no form antes de abrir)
+        snapshotEscolasModal = capturarEstadoEscolas();
+
         document.getElementById('modalReabertura').classList.add('ativo');
         document.body.style.overflow = 'hidden';
     };
 
     window.fecharModalReabertura = function() {
+        // Restaura o estado anterior (descarta qualquer marcação feita no modal)
+        if (snapshotEscolasModal) {
+            restaurarEstadoEscolas(snapshotEscolasModal);
+            snapshotEscolasModal = null;
+        }
         document.getElementById('modalReabertura').classList.remove('ativo');
         document.body.style.overflow = '';
     };
+
+    // Botão "Confirmar seleção" — mantém o que foi marcado e fecha
+    window.confirmarReabertura = function() {
+        snapshotEscolasModal = null; // o que está no DOM agora é o que vale
+        document.getElementById('modalReabertura').classList.remove('ativo');
+        document.body.style.overflow = '';
+        atualizarContadorEscolasSelecionadas();
+    };
+
+    // ============================================================
+    // MODAL DE EXCLUSÃO
+    // ============================================================
 
     window.abrirModalExcluir = function(mesAno) {
         mesParaExcluir = mesAno;
@@ -2570,10 +2629,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     window.excluirConfiguracao = function(mesAno) { abrirModalExcluir(mesAno); };
 
+    // ============================================================
+    // CHECKBOXES DE ESCOLAS
+    // ============================================================
+
     window.montarCheckboxesEscolas = function() {
         const grid = document.getElementById("escolasCheckboxGrid");
         if (!grid) return;
-        
+
         grid.innerHTML = unidadesDisponiveis.map(unidade => {
             const idSeguro = `escola_${unidade.id}`;
             const idDias = `dias_${unidade.id}`;
@@ -2631,6 +2694,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     };
 
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
     function formatarDataISO(data) {
         const ano = data.getFullYear();
         const mes = String(data.getMonth() + 1).padStart(2, '0');
@@ -2652,6 +2719,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const nomeMes = meses[parseInt(mes, 10) - 1] || mes;
         return `${nomeMes} de ${ano}`;
     }
+
+    // ============================================================
+    // PADRÃO GLOBAL
+    // ============================================================
 
     async function carregarPadraoGlobal() {
         try {
@@ -2713,6 +2784,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             mostrarMensagem("Erro ao salvar o padrão global.", "erro");
         }
     };
+
+    // ============================================================
+    // STATUS CALCULADO
+    // ============================================================
 
     function calcularStatusMes(config) {
         const hoje = new Date();
@@ -2801,6 +2876,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         else campo.classList.remove("preenchido");
     };
 
+    // ============================================================
+    // EXCEÇÕES — verificação de expiração
+    // ============================================================
+
     function verificarExpiracaoExcecao(excecao) {
         if (typeof excecao === 'string') {
             return { escola: excecao, expirada: false, dataExpiracao: null, diasPermitidos: null };
@@ -2818,6 +2897,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             diasPermitidos: excecao.diasPermitidos || null
         };
     }
+
+    // ============================================================
+    // LISTAGEM DE CONFIGURAÇÕES
+    // ============================================================
 
     async function carregarTodasConfiguracoes() {
         const tbody = document.getElementById("tabelaConfiguracoes");
@@ -2917,7 +3000,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     }
 
+    // ============================================================
+    // SELEÇÃO / CARREGAMENTO DE MÊS
+    // ============================================================
+
     window.selecionarMes = function(mesAno, dias, obs, isCongelado, dataAbertura, dataFechamento, escolasReabertas) {
+        // Qualquer snapshot pendente é descartado ao trocar de mês
+        snapshotEscolasModal = null;
+
         setarMes(document.getElementById("mesReferencia"), mesAno);
 
         document.getElementById("diasUteis").value = dias;
@@ -2985,6 +3075,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     window.carregarConfiguracao = async function(mesAno) {
         if (!mesAno) return;
+
+        // Troca de mês descarta qualquer snapshot pendente do modal
+        snapshotEscolasModal = null;
+
         ocultarMensagem();
 
         try {
@@ -3085,6 +3179,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     };
 
+    // ============================================================
+    // SALVAR CONFIGURAÇÃO
+    // ============================================================
+
     window.salvarConfiguracao = async function(event) {
         event.preventDefault();
 
@@ -3153,7 +3251,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     };
 
+    // ============================================================
+    // LIMPAR FORMULÁRIO
+    // ============================================================
+
     window.limparFormulario = function() {
+        snapshotEscolasModal = null;
+
         document.getElementById("diasUteis").value = "";
         document.getElementById("observacoes").value = "";
         setarData(document.getElementById("dataAbertura"), '');
@@ -3177,6 +3281,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarStatusCalculado();
         ocultarMensagem();
     };
+
+    // ============================================================
+    // MENSAGENS
+    // ============================================================
 
     let timeoutMensagem = null;
 
