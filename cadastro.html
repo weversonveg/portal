@@ -1399,11 +1399,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <label for="escola1_m1">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
                                 <select id="escola1_m1" name="escola1_m1" required>
                                     <option value="">Selecione a escola</option>
-                                    <option value="CEAE">CEAE</option>
-                                    <option value="CETEPE">CETEPE</option>
-                                    <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                    <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                    <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                                 </select>
                             </div>
 
@@ -1429,11 +1424,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                     <label for="escola2_m1">Escola / Unidade de Lotação (Escola 2)</label>
                                     <select id="escola2_m1" name="escola2_m1">
                                         <option value="">Selecione a segunda escola</option>
-                                        <option value="CEAE">CEAE</option>
-                                        <option value="CETEPE">CETEPE</option>
-                                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                                     </select>
                                 </div>
 
@@ -1506,11 +1496,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                     <label for="escola1_m2">Escola / Unidade de Lotação (Escola 1) <span>*</span></label>
                                     <select id="escola1_m2" name="escola1_m2">
                                         <option value="">Selecione a escola</option>
-                                        <option value="CEAE">CEAE</option>
-                                        <option value="CETEPE">CETEPE</option>
-                                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                                     </select>
                                 </div>
 
@@ -1536,11 +1521,6 @@ tbody tr:hover td { background: var(--surface-2); }
                                         <label for="escola2_m2">Escola / Unidade de Lotação (Escola 2)</label>
                                         <select id="escola2_m2" name="escola2_m2">
                                             <option value="">Selecione a segunda escola</option>
-                                            <option value="CEAE">CEAE</option>
-                                            <option value="CETEPE">CETEPE</option>
-                                            <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                                            <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                                            <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                                         </select>
                                     </div>
 
@@ -2022,7 +2002,6 @@ async function carregarEmpresasNosSelects() {
             });
 
             if (valorAtual) {
-                // Verifica se o valor ainda existe nas opções
                 const existe = Array.from(select.options).some(o => o.value === valorAtual);
                 if (existe) {
                     select.value = valorAtual;
@@ -2031,6 +2010,63 @@ async function carregarEmpresasNosSelects() {
         });
     } catch (e) {
         console.error('Erro ao carregar empresas:', e);
+    }
+}
+
+// =========================================================
+// CARREGAR UNIDADES ESCOLARES DO FIRESTORE E PREENCHER SELECTS
+// =========================================================
+async function carregarUnidadesNosSelects() {
+    try {
+        const snapshot = await getDocs(collection(db, 'unidades'));
+        const unidades = [];
+        
+        snapshot.forEach(d => {
+            unidades.push({ 
+                id: d.id, 
+                ...d.data() 
+            });
+        });
+
+        // Ordenar alfabeticamente pelo nome
+        unidades.sort((a, b) => {
+            const nomeA = (a.nome || a.nomeEscola || '').toLowerCase();
+            const nomeB = (b.nome || b.nomeEscola || '').toLowerCase();
+            return nomeA.localeCompare(nomeB);
+        });
+
+        const selectIds = [
+            'escola1_m1',
+            'escola2_m1',
+            'escola1_m2',
+            'escola2_m2'
+        ];
+
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            const valorAtual = select.value;
+
+            select.innerHTML = '<option value="">Selecione a escola</option>';
+
+            unidades.forEach(unidade => {
+                const opt = document.createElement('option');
+                const nomeUnidade = unidade.nome || unidade.nomeEscola || unidade.id;
+                opt.value = nomeUnidade; 
+                opt.textContent = nomeUnidade;
+                select.appendChild(opt);
+            });
+
+            if (valorAtual) {
+                const existe = Array.from(select.options).some(o => o.value === valorAtual);
+                if (existe) {
+                    select.value = valorAtual;
+                }
+            }
+        });
+    } catch (e) {
+        console.error('Erro ao carregar unidades escolares:', e);
     }
 }
 
@@ -2104,8 +2140,11 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-  // 👇 Carrega as empresas do Firestore nos selects ANTES de qualquer outra inicialização
-  await carregarEmpresasNosSelects();
+  // 👇 Carrega as empresas e unidades escolares do Firestore nos selects ANTES de qualquer outra inicialização
+  await Promise.all([
+      carregarEmpresasNosSelects(),
+      carregarUnidadesNosSelects()
+  ]);
 
   flatpickr("input[type='date']", {
     locale: "pt",
