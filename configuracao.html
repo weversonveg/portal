@@ -2418,13 +2418,26 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     import { db } from "./firebase.js";
     import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const ESCOLAS_DISPONIVEIS = [
-        "CEAE",
-        "CETEPE",
-        "E M SÃO JOSÉ",
-        "E M SÃO GERALDO",
-        "CMEI ANÁLIA NOGUEIRA"
-    ];
+    // Armazena as unidades vindas do Firestore
+    let unidadesDisponiveis = [];
+
+    // Busca as escolas da coleção "unidades"
+    async function carregarUnidadesEscolares() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "unidades"));
+            unidadesDisponiveis = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    nome: data.nome || data.nomeEscola || data.razaoSocial || data.fantasia || "Unidade sem nome"
+                };
+            });
+            unidadesDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
+        } catch (erro) {
+            console.error("Erro ao carregar unidades escolares:", erro);
+            mostrarMensagem("Erro ao carregar lista de escolas.", "erro");
+        }
+    }
 
     let padraoGlobal = { diaAbertura: null, diaFechamento: null };
     let mesParaExcluir = null;
@@ -2474,6 +2487,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         setarMes(inputMes, mesAtualStr);
         if (window.atualizarCorCampo) window.atualizarCorCampo(inputMes);
 
+        await carregarUnidadesEscolares();
         montarCheckboxesEscolas();
 
         await carregarPadraoGlobal();
@@ -2558,14 +2572,16 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     window.montarCheckboxesEscolas = function() {
         const grid = document.getElementById("escolasCheckboxGrid");
-        grid.innerHTML = ESCOLAS_DISPONIVEIS.map(escola => {
-            const id = `escola_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
-            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+        if (!grid) return;
+        
+        grid.innerHTML = unidadesDisponiveis.map(unidade => {
+            const idSeguro = `escola_${unidade.id}`;
+            const idDias = `dias_${unidade.id}`;
             return `
-                <div class="escola-checkbox" id="container_${id}">
-                    <input type="checkbox" id="${id}" value="${escola}"
-                           onchange="toggleDiasInput('${id}', '${idDias}'); atualizarContadorEscolasSelecionadas()">
-                    <label for="${id}">${escola}</label>
+                <div class="escola-checkbox" id="container_${idSeguro}">
+                    <input type="checkbox" id="${idSeguro}" value="${unidade.nome}" data-id="${unidade.id}"
+                           onchange="toggleDiasInput('${idSeguro}'); atualizarContadorEscolasSelecionadas()">
+                    <label for="${idSeguro}">${unidade.nome}</label>
                     <div class="dias-permitidos">
                         <label for="${idDias}">Dias:</label>
                         <input type="number" id="${idDias}" value="3" min="1" max="30">
@@ -2579,8 +2595,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     window.toggleDiasInput = function(idCheckbox) {
         const checkbox = document.getElementById(idCheckbox);
         const container = document.getElementById(`container_${idCheckbox}`);
-        if (checkbox.checked) container.classList.add("marcado");
-        else container.classList.remove("marcado");
+        if (checkbox && container) {
+            if (checkbox.checked) container.classList.add("marcado");
+            else container.classList.remove("marcado");
+        }
     };
 
     window.atualizarContadorEscolasSelecionadas = function() {
@@ -2592,7 +2610,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (selecionadas.length > 0) {
             info.style.display = "flex";
             const detalhes = selecionadas.map(cb => {
-                const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                const unidadeId = cb.id.replace('escola_', '');
+                const idDias = `dias_${unidadeId}`;
                 const inputDias = document.getElementById(idDias);
                 const dias = inputDias ? inputDias.value : 3;
                 return `${cb.value} (${dias} dia${dias != 1 ? 's' : ''})`;
@@ -2910,16 +2929,21 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
         checkboxes.forEach(cb => {
-            const escola = cb.value;
-            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const unidadeId = cb.dataset.id || cb.id.replace('escola_', '');
+            const unidade = unidadesDisponiveis.find(u => u.id === unidadeId);
+            const idDias = `dias_${unidadeId}`;
             const inputDias = document.getElementById(idDias);
             const container = document.getElementById(`container_${cb.id}`);
 
+            if (!unidade) return;
+
             let encontrada = null;
             if (escolasReabertas && Array.isArray(escolasReabertas)) {
-                encontrada = escolasReabertas.find(e =>
-                    typeof e === 'string' ? e === escola : e.escola === escola
-                );
+                encontrada = escolasReabertas.find(e => {
+                    if (typeof e === 'string') return e === unidade.nome;
+                    if (e.unidadeId && e.unidadeId === unidade.id) return true;
+                    return e.escola === unidade.nome;
+                });
             }
 
             if (encontrada) {
@@ -2943,7 +2967,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         atualizarStatusCalculado();
 
-        // ===== Rola até a Seção 3 (Abrir / Fechar Mês) =====
         const secaoAlvo = document.getElementById("secao-abrir-fechar");
         if (secaoAlvo) {
             secaoAlvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2986,23 +3009,28 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 const escolasReabertas = dados.escolasReabertas || [];
                 const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]');
                 checkboxes.forEach(cb => {
-                    const escola = cb.value;
-                    const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                    const unidadeId = cb.dataset.id || cb.id.replace('escola_', '');
+                    const unidade = unidadesDisponiveis.find(u => u.id === unidadeId);
+                    const idDias = `dias_${unidadeId}`;
                     const inputDias = document.getElementById(idDias);
                     const container = document.getElementById(`container_${cb.id}`);
 
+                    if (!unidade) return;
+
                     let encontrada = null;
                     if (Array.isArray(escolasReabertas)) {
-                        encontrada = escolasReabertas.find(e =>
-                            typeof e === 'string' ? e === escola : e.escola === escola
-                        );
+                        encontrada = escolasReabertas.find(e => {
+                            if (typeof e === 'string') return e === unidade.nome;
+                            if (e.unidadeId && e.unidadeId === unidade.id) return true;
+                            return e.escola === unidade.nome;
+                        });
                     }
 
                     if (encontrada) {
                         cb.checked = true;
                         if (container) container.classList.add("marcado");
-                        if (inputDias && typeof encontrada === 'object') {
-                            inputDias.value = encontrada.diasPermitidos || 3;
+                        if (inputDias && typeof encontrada === 'object' && encontrada.diasPermitidos) {
+                            inputDias.value = encontrada.diasPermitidos;
                         }
                     } else {
                         cb.checked = false;
@@ -3043,7 +3071,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     cb.checked = false;
                     const container = document.getElementById(`container_${cb.id}`);
                     if (container) container.classList.remove("marcado");
-                    const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+                    const idDias = `dias_${cb.dataset.id || cb.id.replace('escola_', '')}`;
                     const inputDias = document.getElementById(idDias);
                     if (inputDias) inputDias.value = 3;
                 });
@@ -3078,8 +3106,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const checkboxes = document.querySelectorAll('#escolasCheckboxGrid input[type="checkbox"]:checked');
         const escolasReabertas = Array.from(checkboxes).map(cb => {
-            const escola = cb.value;
-            const idDias = `dias_${escola.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const unidadeId = cb.dataset.id || cb.id.replace('escola_', '');
+            const escolaNome = cb.value;
+            const idDias = `dias_${unidadeId}`;
             const inputDias = document.getElementById(idDias);
             const diasPermitidos = inputDias ? Number(inputDias.value) || 3 : 3;
 
@@ -3088,7 +3117,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             dataExpiracao.setDate(dataExpiracao.getDate() + diasPermitidos);
 
             return {
-                escola: escola,
+                unidadeId: unidadeId,
+                escola: escolaNome,
                 diasPermitidos: diasPermitidos,
                 dataReabertura: formatarDataISO(hoje),
                 dataExpiracao: formatarDataISO(dataExpiracao)
@@ -3139,7 +3169,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             cb.checked = false;
             const container = document.getElementById(`container_${cb.id}`);
             if (container) container.classList.remove("marcado");
-            const idDias = `dias_${cb.value.replace(/\s+/g, '_').replace(/\./g, '')}`;
+            const idDias = `dias_${cb.dataset.id || cb.id.replace('escola_', '')}`;
             const inputDias = document.getElementById(idDias);
             if (inputDias) inputDias.value = 3;
         });
