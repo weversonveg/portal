@@ -275,6 +275,63 @@ button { font:inherit; color:inherit; cursor:pointer; }
     margin-bottom: 4px;
 }
 
+/* ===== TABELA RESUMO FINAL (igual à imagem) ===== */
+.tabela-resumo-wrap {
+    overflow-x: auto;
+    margin-top: 8px;
+}
+.tabela-resumo {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid var(--border-strong);
+    font-size: 13px;
+}
+.tabela-resumo thead th {
+    background: var(--surface-2);
+    border: 2px solid var(--border-strong);
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+.tabela-resumo tbody th {
+    background: var(--surface-2);
+    border: 2px solid var(--border-strong);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    vertical-align: top;
+}
+.tabela-resumo tbody td {
+    border: 2px solid var(--border-strong);
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.6;
+}
+.tabela-resumo tbody td .linha-item {
+    display: block;
+    white-space: nowrap;
+}
+.tabela-resumo tbody td .linha-item + .linha-item {
+    margin-top: 2px;
+}
+.tabela-resumo tbody td .linha-item.destaque {
+    color: var(--brand);
+    font-weight: 600;
+}
+.tabela-resumo tbody td .linha-item.folga {
+    color: var(--purple);
+    font-weight: 600;
+}
+
 .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.15); z-index:9998; align-items:center; justify-content:center; }
 .loading-overlay.ativo { display:flex; }
 .loading-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.15); padding:26px 36px; display:flex; flex-direction:column; align-items:center; gap:14px; animation:loadingIn .2s ease; }
@@ -314,6 +371,8 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .busca-linha { flex-direction:column; align-items:stretch; }
     .btn-buscar { width:100%; }
     .resumo-cards-row { flex-direction:column; }
+    .tabela-resumo { font-size: 11px; }
+    .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
 }
 @media (max-width:640px){
     .topbar { padding:0 12px; gap:8px; }
@@ -337,6 +396,10 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .periodos-table { font-size:10px; }
     .periodos-table th { position:static !important; box-shadow:none !important; }
     .periodos-table tr { page-break-inside:avoid; }
+    .tabela-resumo { border-color: #000 !important; }
+    .tabela-resumo thead th,
+    .tabela-resumo tbody th,
+    .tabela-resumo tbody td { border-color: #000 !important; }
 }
 
 .grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
@@ -575,6 +638,31 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                     <div id="graficoPeriodos" class="grafico-periodos"></div>
                 </section>
+
+                <!-- ===== NOVO: TABELA RESUMO FINAL ===== -->
+                <section class="form-card" id="cardResumoFinal">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
+                        Resumo por Período Aquisitivo
+                    </div>
+                    <div class="tabela-resumo-wrap">
+                        <table class="tabela-resumo">
+                            <thead>
+                                <tr>
+                                    <th colspan="99" id="tabelaResumoTitulo">Período Aquisitivo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaResumoCorpo"></tbody>
+                        </table>
+                    </div>
+                    <div id="avisoResumoVazio" class="aviso-info hidden" style="margin-top:8px;">
+                        <span class="material-symbols-outlined">info</span>
+                        <div>
+                            <strong>Sem dados para o resumo</strong>
+                            Nenhum período aquisitivo foi localizado para este servidor.
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -764,7 +852,7 @@ var b1 = document.getElementById('btnCancelarSair');
 var b2 = document.getElementById('btnConfirmarSair');
 var modalSair = document.getElementById('modalSair');
 if (b1) b1.addEventListener('click', fecharModalSair);
-if (b2) b2.addEventListener('click', confirmarSaida);
+if (b2) b2.addEventListener('click', confirmarSair);
 if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target === this) fecharModalSair(); });
 
 (function () {
@@ -909,9 +997,6 @@ function verificarExtemporaneo(status, gozoStr, dataLimite) {
     return dg ? dg > dataLimite : false;
 }
 
-/* ============================================================
-   FÉRIAS — apenas períodos JÁ FECHADOS (12 meses completos)
-   ============================================================ */
 function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
     const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
     ref.setHours(0,0,0,0);
@@ -923,7 +1008,6 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
         fim.setFullYear(fim.getFullYear()+1);
         fim.setDate(fim.getDate()-1);
 
-        // Só considera o período se ele JÁ FECHOU (12 meses completos)
         if(fim > ref) break;
 
         const prazoGozo = new Date(fim);
@@ -948,9 +1032,6 @@ function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_
     return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
 }
 
-/* ============================================================
-   FOLGA ANIVERSÁRIO — apenas quando o aniversário JÁ PASSOU
-   ============================================================ */
 function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
     const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
     if(!nasc||!adm)return null;
@@ -972,7 +1053,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new D
         const prazoGozo = new Date(aniv);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-        // Só considera se o aniversário JÁ PASSOU
         if(ref < dataDisponivel) break;
 
         const p={
@@ -1407,6 +1487,181 @@ function renderizarGrafico() {
     container.innerHTML = html;
 }
 
+/* ============================================================
+   TABELA RESUMO FINAL — igual à imagem
+   ============================================================ */
+function renderizarTabelaResumo() {
+    const tbody = document.getElementById('tabelaResumoCorpo');
+    const aviso = document.getElementById('avisoResumoVazio');
+    const tabela = tbody.closest('table');
+
+    if (!tbody || !aviso || !tabela) return;
+
+    if (linhasUnificadas.length === 0) {
+        tbody.innerHTML = '';
+        tabela.classList.add('hidden');
+        aviso.classList.remove('hidden');
+        return;
+    }
+
+    tabela.classList.remove('hidden');
+    aviso.classList.add('hidden');
+
+    // Agrupa por período
+    const periodosMap = new Map();
+    linhasUnificadas.forEach(l => {
+        if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
+        periodosMap.get(l.periodo).push(l);
+    });
+
+    // Ordena períodos do mais antigo para o mais recente (esquerda → direita)
+    const periodosOrdenados = [...periodosMap.keys()].sort((a, b) => {
+        const aNum = parseInt(a.split('/')[0], 10);
+        const bNum = parseInt(b.split('/')[0], 10);
+        return aNum - bNum;
+    });
+
+    // ----- Cabeçalho: "Período Aquisitivo" (título já no thead) -----
+    // Linha de cabeçalho com os anos
+    let thead = tabela.querySelector('thead');
+    // Garante o título
+    thead.innerHTML = `<tr><th colspan="${periodosOrdenados.length}" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>`;
+
+    // ----- Corpo: 2 linhas (1ª = cabeçalho dos anos, 2ª = conteúdo) -----
+    // Linha 1: anos (th)
+    let linhaAnos = '<tr>';
+    periodosOrdenados.forEach(per => {
+        linhaAnos += `<th scope="col">${per}</th>`;
+    });
+    linhaAnos += '</tr>';
+
+    // Linha 2: conteúdo de cada período
+    let linhaConteudo = '<tr>';
+    periodosOrdenados.forEach(per => {
+        const itens = periodosMap.get(per);
+
+        // Separa férias (agrupando por mês/ano de início) e folgas
+        const ferias = itens.filter(i => i.tipoKey === 'ferias');
+        const folgas = itens.filter(i => i.tipoKey === 'folga');
+
+        // Agrupa férias por "mês/ano" para juntar as que caem no mesmo mês
+        const gruposFerias = new Map();
+        ferias.forEach(f => {
+            // Extrai o mês/ano do gozo (ou do prazo, se não tiver gozo)
+            const gozoTxt = f.gozo && f.gozo !== '—' ? f.gozo : '';
+            let chave = 'sem-data';
+            let dias = '';
+
+            // Tenta extrair "dd/mm/aaaa" ou "X/Y dias"
+            const datas = gozoTxt.match(/(\d{2}\/\d{2}\/\d{4})/g) || [];
+            const diasMatch = gozoTxt.match(/(\d+)\s*(?:de\s*)?(\d+)?\s*dias/i) || gozoTxt.match(/(\d+)\/(\d+)\s*dias/i);
+
+            // Se tem "15/15 dias" — extrai dias consumidos
+            let diasConsumidos = null;
+            const dm = gozoTxt.match(/(\d+)\/(\d+)\s*dias/i);
+            if (dm) diasConsumidos = parseInt(dm[1], 10);
+
+            if (datas.length > 0) {
+                const primeiraData = datas[0];
+                const partes = primeiraData.split('/');
+                chave = `${partes[1]}/${partes[2]}`; // MM/AAAA
+            }
+
+            // Texto exibido
+            let textoTrecho = '';
+            if (f.status === 'gozado' || f.status === 'parcial') {
+                if (diasConsumidos !== null) {
+                    textoTrecho = `${diasConsumidos} dias ${datas[0] || ''}`;
+                } else if (datas.length === 1) {
+                    textoTrecho = `${f.gozo}`;
+                } else if (datas.length >= 2) {
+                    textoTrecho = `${f.gozo}`;
+                } else {
+                    textoTrecho = f.gozo || '—';
+                }
+            } else if (f.status === 'programado') {
+                textoTrecho = `Programado ${f.ciclo ? '(' + f.ciclo.split(' a ')[0] + ')' : ''}`;
+            } else if (f.status === 'disponivel') {
+                textoTrecho = `Disponível`;
+            } else if (f.status === 'vencido') {
+                textoTrecho = `Vencido em ${f.prazo}`;
+            } else {
+                textoTrecho = f.gozo || '—';
+            }
+
+            if (!gruposFerias.has(chave)) gruposFerias.set(chave, []);
+            gruposFerias.get(chave).push({
+                texto: textoTrecho,
+                status: f.status,
+                gozo: f.gozo,
+                prazo: f.prazo
+            });
+        });
+
+        // Monta as linhas de texto do bloco
+        const linhasTexto = [];
+
+        // --- Férias ---
+        gruposFerias.forEach((lista, chave) => {
+            // Se há apenas 1 item, junta tudo em uma linha
+            if (lista.length === 1) {
+                const item = lista[0];
+                // Se é "15/15 dias" junta com a data
+                if (/^\d+\s*dias/.test(item.texto) && item.gozo && item.gozo.includes(' a ')) {
+                    linhasTexto.push({
+                        classe: 'destaque',
+                        html: `<strong>${item.texto.split(' ')[0]} dias</strong> ${item.gozo}`
+                    });
+                } else {
+                    linhasTexto.push({ classe: 'destaque', html: item.texto });
+                }
+            } else {
+                // Vários no mesmo mês: agrupa dias
+                // Ex.: "15 dias 01/09/205 a 15/09/2025" + "15 dias 01/10/2025 a 15/10/2025"
+                lista.forEach(item => {
+                    linhasTexto.push({ classe: 'destaque', html: item.texto });
+                });
+            }
+        });
+
+        // --- Folga aniversário ---
+        folgas.forEach(g => {
+            let textoFolga = '';
+            if (g.status === 'gozado' && g.gozo && g.gozo !== '—') {
+                textoFolga = `Folga Aniversário ${g.gozo}`;
+            } else if (g.status === 'programado' && g.gozo && g.gozo !== '—') {
+                textoFolga = `Folga Aniversário ${g.gozo}`;
+            } else if (g.status === 'disponivel') {
+                textoFolga = `Folga Aniversário (disponível)`;
+            } else if (g.status === 'perdido') {
+                textoFolga = `Folga Aniversário (perdida)`;
+            } else {
+                textoFolga = `Folga Aniversário`;
+            }
+            linhasTexto.push({ classe: 'folga', html: textoFolga });
+        });
+
+        // Monta o HTML da célula
+        let celula = '';
+        if (linhasTexto.length === 0) {
+            celula = '<span class="linha-item" style="color:var(--text-muted);">—</span>';
+        } else {
+            celula = linhasTexto.map(l =>
+                `<span class="linha-item ${l.classe}">${l.html}</span>`
+            ).join('');
+        }
+
+        linhaConteudo += `<td>${celula}</td>`;
+    });
+    linhaConteudo += '</tr>';
+
+    tbody.innerHTML = linhaAnos + linhaConteudo;
+
+    // Ajusta colspan do título
+    const titulo = document.getElementById('tabelaResumoTitulo');
+    if (titulo) titulo.setAttribute('colspan', String(periodosOrdenados.length));
+}
+
 async function buscarServidor(){
     if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
     const termo=document.getElementById('termoBusca').value.trim();
@@ -1534,7 +1789,6 @@ async function processarServidores(docs){
     document.getElementById('filtroTipo').value='';
     document.getElementById('filtroStatus').value='';
 
-    // Se não há linhas, mostra a mensagem e esconde tabela/filtros/gráfico
     const semPeriodos = linhasUnificadas.length === 0;
 
     document.getElementById('tabelaUnica').innerHTML = '';
@@ -1548,6 +1802,9 @@ async function processarServidores(docs){
         renderizarTabelaUnica(linhasUnificadas);
         renderizarGrafico();
     }
+
+    // Sempre renderiza a tabela resumo (mesmo vazia → mostra aviso próprio)
+    renderizarTabelaResumo();
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
