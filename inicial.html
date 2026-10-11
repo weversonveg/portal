@@ -1578,10 +1578,9 @@ button:disabled { opacity: .65; cursor: not-allowed; }
                                             <td id="statServidores">—</td>
                                         </tr>
                                         <tr>
-                                            <td>Férias pendentes</td>
+                                            <td>Férias vencidas</td>
                                             <td id="statFeriasPendentes">
-                                                <!-- ⬇️ LINK ATUALIZADO PARA pendencias.html -->
-                                                <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores com férias pendentes">
+                                                <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores com férias vencidas">
                                                     —
                                                 </a>
                                             </td>
@@ -1689,21 +1688,16 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* AUTO-DETECÇÃO GENÉRICA DO ITEM ATIVO */
 (function () {
     var pathAtual = (window.location.pathname.split('/').pop() || '').toLowerCase();
     if (!pathAtual) pathAtual = 'inicial.html';
-
     document.querySelectorAll('.menu-item > a').forEach(function (link) {
         var href = (link.getAttribute('href') || '').toLowerCase().split('#')[0].split('?')[0];
         if (!href) return;
-
         var li = link.closest('.menu-item');
         if (!li) return;
-
         li.classList.remove('ativo');
         link.removeAttribute('aria-current');
-
         if (href === pathAtual) {
             li.classList.add('ativo');
             link.setAttribute('aria-current', 'page');
@@ -1711,7 +1705,6 @@ import {
     });
 })();
 
-/* TEMA CLARO / ESCURO */
 (function () {
     var btn = document.getElementById('btnTema');
     if (btn) {
@@ -1726,7 +1719,6 @@ import {
     }
 })();
 
-/* MENU LATERAL */
 (function () {
     var sidebar   = document.getElementById('sidebarMenu');
     var backdrop  = document.getElementById('sidebarBackdrop');
@@ -1806,7 +1798,6 @@ import {
     }
 })();
 
-/* AUTENTICAÇÃO */
 onAuthStateChanged(auth, function (user) {
     if (user) {
         var email = user.email || '';
@@ -1826,7 +1817,6 @@ onAuthStateChanged(auth, function (user) {
     }
 });
 
-/* MODAL DE SAIR */
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -1856,6 +1846,7 @@ async function confirmarSaida() {
         try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
         try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
         try { localStorage.removeItem('cache-pendencias-v1'); } catch (e) {}
+        try { localStorage.removeItem('cache-pendencias-v2'); } catch (e) {}
         await signOut(auth);
         window.location.href = 'index.html';
     } catch (e) {
@@ -2419,16 +2410,13 @@ function renderizarPendencias(dados) {
         }
     }
 
-    if (dados.servidoresComPendencia > 0) {
-        const partes = [];
-        if (dados.feriasPendentes > 0) partes.push(`${dados.feriasPendentes} no prazo`);
-        if (dados.feriasVencidas > 0) partes.push(`${dados.feriasVencidas} vencida${dados.feriasVencidas === 1 ? '' : 's'}`);
+    // Férias vencidas — alerta crítico
+    if (dados.feriasVencidas > 0) {
         pendencias.push({
-            tipo: dados.feriasVencidas > 0 ? 'danger' : 'warn',
-            icone: 'event_note',
-            titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com férias pendentes`,
-            descricao: `${partes.join(' · ')}. Clique para ver a lista completa.`,
-            // ⬇️ LINK ATUALIZADO PARA pendencias.html
+            tipo: 'danger',
+            icone: 'warning',
+            titulo: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'}`,
+            descricao: `Requer regularização imediata. Clique para ver a lista de servidores.`,
             cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
@@ -2482,30 +2470,23 @@ function renderizarResumo(dados) {
 
     td.classList.remove('pendencia-ok', 'pendencia-alerta', 'pendencia-urgente');
 
-    const totalServidores = dados.servidoresComPendencia || 0;
-    const pendentes = dados.feriasPendentes || 0;
     const vencidas = dados.feriasVencidas || 0;
 
-    if (totalServidores === 0) {
+    if (vencidas === 0) {
         td.classList.add('pendencia-ok');
         td.innerHTML = '0';
-        td.title = 'Nenhum servidor com férias pendentes no momento.';
+        td.title = 'Nenhuma férias vencida no momento.';
         return;
     }
 
-    td.classList.add(vencidas > 0 ? 'pendencia-urgente' : 'pendencia-alerta');
-
-    const partes = [];
-    if (pendentes > 0) partes.push(`${pendentes} no prazo`);
-    if (vencidas > 0) partes.push(`${vencidas} vencida${vencidas === 1 ? '' : 's'}`);
-    const subtitulo = partes.join(' · ');
+    td.classList.add('pendencia-urgente');
 
     link.innerHTML = `
-        ${totalServidores}
-        <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">arrow_forward</span>
-        <span class="stat-sub">${subtitulo}</span>
+        ${vencidas}
+        <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
+        <span class="stat-sub">requer regularização</span>
     `;
-    link.title = `${totalServidores} servidor${totalServidores === 1 ? '' : 'es'} com férias pendentes — ${subtitulo}.`;
+    link.title = `${vencidas} período${vencidas === 1 ? '' : 's'} de férias vencido${vencidas === 1 ? '' : 's'} — clique para ver a lista completa.`;
 }
 
 function renderizarUltimosMeses(dados) {
@@ -2614,9 +2595,9 @@ if (btnAtualizarPainel) {
         try {
             const resumo = await calcularResumoCompleto();
             if (resumo) {
+                resumo._recalculo = 'manual';
                 await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
                     ...resumo,
-                    _recalculo: 'manual',
                     atualizadoEm: serverTimestamp()
                 });
                 salvarCache(resumo);
