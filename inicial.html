@@ -1282,7 +1282,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
                         <li class="menu-item">
                             <a href="escola.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades escolares</span>
+                                <span>Unidades cadastradas</span>
                             </a>
                         </li>
 
@@ -1592,7 +1592,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>Unidades escolares</td>
+                                            <td>Unidades cadastradas</td>
                                             <td id="statEscolas">—</td>
                                         </tr>
                                         <tr>
@@ -2170,11 +2170,8 @@ async function calcularResumoCompleto() {
         snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
 
         let excecoesAtivas = 0;
-        const escolasUnicas = new Set();
-
         meses.forEach(m => {
             (m.escolasReabertas || []).forEach(e => {
-                escolasUnicas.add(typeof e === 'string' ? e : e.escola);
                 if (typeof e === 'object' && e.dataExpiracao) {
                     if (new Date(e.dataExpiracao + 'T23:59:59') >= hoje) excecoesAtivas++;
                 } else {
@@ -2183,12 +2180,16 @@ async function calcularResumoCompleto() {
             });
         });
 
+        // Busca a quantidade real de unidades cadastradas diretamente da coleção 'unidades'
+        const snapUnidades = await getDocs(collection(db, 'unidades'));
+        const totalUnidades = snapUnidades.size;
+
         const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
 
         return {
             totalServidores: servidores.length,
             totalMesesConfigurados: meses.length,
-            totalEscolas: escolasUnicas.size,
+            totalEscolas: totalUnidades,
             excecoesAtivas,
             feriasPendentes: resultadoFerias.pendentes,
             feriasVencidas: resultadoFerias.vencidas,
