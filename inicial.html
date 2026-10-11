@@ -1206,9 +1206,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 
 <div class="layout">
 
-    <!-- ═══════════════════════════════════════════════════════════
-         SIDEBAR
-         ═══════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
         <div class="sidebar-inner">
 
@@ -1282,7 +1280,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
                         <li class="menu-item">
                             <a href="escola.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades cadastradas</span>
+                                <span>Unidades escolares</span>
                             </a>
                         </li>
 
@@ -1359,9 +1357,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 
     <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         MAIN
-         ═══════════════════════════════════════════════════════════ -->
+    <!-- MAIN -->
     <div class="main">
 
         <header class="topbar">
@@ -1411,9 +1407,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
             </div>
         </header>
 
-        <!-- ═══════════════════════════════════════════════════════
-             ▼▼▼ CONTEÚDO DA PÁGINA ▼▼▼
-             ═══════════════════════════════════════════════════════ -->
+        <!-- CONTEÚDO DA PÁGINA -->
         <div class="content-page">
             <div class="content-inner">
 
@@ -1586,7 +1580,8 @@ button:disabled { opacity: .65; cursor: not-allowed; }
                                         <tr>
                                             <td>Férias pendentes</td>
                                             <td id="statFeriasPendentes">
-                                                <a href="lancamentos.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores com férias pendentes">
+                                                <!-- ⬇️ LINK ATUALIZADO PARA pendencias.html -->
+                                                <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores com férias pendentes">
                                                     —
                                                 </a>
                                             </td>
@@ -1660,15 +1655,12 @@ button:disabled { opacity: .65; cursor: not-allowed; }
 
             </div>
         </div>
-        <!-- ▲▲▲ FIM DO CONTEÚDO DA PÁGINA ▲▲▲ -->
 
     </div>
 
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     MODAL DE SAIR
-     ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL DE SAIR -->
 <div class="modal-sair-overlay" id="modalSair" role="presentation">
     <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
         <div class="modal-sair-icone" aria-hidden="true">
@@ -1689,9 +1681,7 @@ button:disabled { opacity: .65; cursor: not-allowed; }
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SCRIPTS DO LAYOUT
-     ═══════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS DO LAYOUT -->
 <script type="module">
 import { auth } from "./firebase.js";
 import {
@@ -1699,9 +1689,7 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-/* ============================================================
-   AUTO-DETECÇÃO GENÉRICA DO ITEM ATIVO
-   ============================================================ */
+/* AUTO-DETECÇÃO GENÉRICA DO ITEM ATIVO */
 (function () {
     var pathAtual = (window.location.pathname.split('/').pop() || '').toLowerCase();
     if (!pathAtual) pathAtual = 'inicial.html';
@@ -1723,9 +1711,7 @@ import {
     });
 })();
 
-/* ============================================================
-   TEMA CLARO / ESCURO
-   ============================================================ */
+/* TEMA CLARO / ESCURO */
 (function () {
     var btn = document.getElementById('btnTema');
     if (btn) {
@@ -1740,9 +1726,7 @@ import {
     }
 })();
 
-/* ============================================================
-   MENU LATERAL (abrir / fechar)
-   ============================================================ */
+/* MENU LATERAL */
 (function () {
     var sidebar   = document.getElementById('sidebarMenu');
     var backdrop  = document.getElementById('sidebarBackdrop');
@@ -1822,9 +1806,7 @@ import {
     }
 })();
 
-/* ============================================================
-   AUTENTICAÇÃO (usuário logado)
-   ============================================================ */
+/* AUTENTICAÇÃO */
 onAuthStateChanged(auth, function (user) {
     if (user) {
         var email = user.email || '';
@@ -1844,9 +1826,7 @@ onAuthStateChanged(auth, function (user) {
     }
 });
 
-/* ============================================================
-   MODAL DE SAIR
-   ============================================================ */
+/* MODAL DE SAIR */
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -1875,6 +1855,7 @@ async function confirmarSaida() {
     try {
         try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
         try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
+        try { localStorage.removeItem('cache-pendencias-v1'); } catch (e) {}
         await signOut(auth);
         window.location.href = 'index.html';
     } catch (e) {
@@ -1896,16 +1877,9 @@ if (b2) b2.addEventListener('click', confirmarSaida);
 if (modalSair) modalSair.addEventListener('click', function (e) {
     if (e.target === this) fecharModalSair();
 });
-
-/* ============================================================
-   OBS: o botão "Atualizar" da topbar é controlado pelo script
-   do painel (mais abaixo), que faz o recálculo dos indicadores.
-   ============================================================ */
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SCRIPT DO INDICADOR DE REDE
-     ═══════════════════════════════════════════════════════════ -->
+<!-- SCRIPT DO INDICADOR DE REDE -->
 <script>
 (function () {
     var el    = document.getElementById('redeIndicador');
@@ -2033,9 +2007,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SCRIPTS ESPECÍFICOS DA PÁGINA inicial.html (Painel)
-     ═══════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS ESPECÍFICOS DA PÁGINA inicial.html (Painel) -->
 <script type="module">
 import { db } from "./firebase.js";
 import {
@@ -2092,7 +2064,6 @@ function limparCache() {
     try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
 }
 
-/* Inicia painel depois do auth (verificação em onAuthStateChanged) */
 function aguardarAuth() {
     const check = setInterval(() => {
         if (document.getElementById('userEmailLabel') &&
@@ -2180,16 +2151,20 @@ async function calcularResumoCompleto() {
             });
         });
 
-        // Busca a quantidade real de unidades cadastradas diretamente da coleção 'unidades'
-        const snapUnidades = await getDocs(collection(db, 'unidades'));
-        const totalUnidades = snapUnidades.size;
+        let totalEscolas = 0;
+        try {
+            const snapUnidades = await getDocs(collection(db, 'unidades'));
+            totalEscolas = snapUnidades.size;
+        } catch (e) {
+            console.warn('[Painel] Erro ao ler "unidades":', e);
+        }
 
         const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
 
         return {
             totalServidores: servidores.length,
             totalMesesConfigurados: meses.length,
-            totalEscolas: totalUnidades,
+            totalEscolas: totalEscolas,
             excecoesAtivas,
             feriasPendentes: resultadoFerias.pendentes,
             feriasVencidas: resultadoFerias.vencidas,
@@ -2452,8 +2427,9 @@ function renderizarPendencias(dados) {
             tipo: dados.feriasVencidas > 0 ? 'danger' : 'warn',
             icone: 'event_note',
             titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com férias pendentes`,
-            descricao: `${partes.join(' · ')}. Revise a linha do tempo para regularizar.`,
-            cta: 'Ver linha do tempo', link: 'linha_tempo.html'
+            descricao: `${partes.join(' · ')}. Clique para ver a lista completa.`,
+            // ⬇️ LINK ATUALIZADO PARA pendencias.html
+            cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
 
@@ -2494,7 +2470,7 @@ function renderizarPendencias(dados) {
 function renderizarResumo(dados) {
     document.getElementById('statMeses').textContent = dados.totalMesesConfigurados || 0;
     document.getElementById('statServidores').textContent = dados.totalServidores || 0;
-    document.getElementById('statEscolas').textContent = dados.totalEscolas || '—';
+    document.getElementById('statEscolas').textContent = dados.totalEscolas || 0;
     document.getElementById('statExcecoes').textContent = dados.excecoesAtivas || 0;
     document.getElementById('statAtualizacao').textContent = dados.dataAtualizacao
         ? formatarDataHora(dados.dataAtualizacao)
@@ -2622,9 +2598,7 @@ function formatarDataHora(iso) {
     } catch (e) { return '—'; }
 }
 
-/* ============================================================
-   BOTÃO ATUALIZAR — recalcula indicadores e atualiza os cards
-   ============================================================ */
+/* BOTÃO ATUALIZAR */
 const btnAtualizarPainel = document.getElementById('btnAtualizar');
 if (btnAtualizarPainel) {
     btnAtualizarPainel.addEventListener('click', async function () {
@@ -2640,9 +2614,9 @@ if (btnAtualizarPainel) {
         try {
             const resumo = await calcularResumoCompleto();
             if (resumo) {
-                resumo._recalculo = 'manual';
                 await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
                     ...resumo,
+                    _recalculo: 'manual',
                     atualizadoEm: serverTimestamp()
                 });
                 salvarCache(resumo);
