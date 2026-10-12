@@ -275,6 +275,68 @@ button { font:inherit; color:inherit; cursor:pointer; }
     margin-bottom: 4px;
 }
 
+/* ===== ALERTA DE FÉRIAS VENCIDAS ===== */
+.alerta-ferias {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-bd);
+    border-left: 4px solid var(--danger);
+    border-radius: 6px;
+    color: var(--text);
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    animation: alertaPulsa 2s ease-in-out infinite;
+}
+.alerta-ferias.hidden { display: none !important; }
+
+@keyframes alertaPulsa {
+    0%, 100% { box-shadow: var(--shadow-sm); }
+    50%      { box-shadow: 0 0 0 4px var(--danger-bg), 0 0 0 6px var(--danger-bd); }
+}
+
+.alerta-ferias-icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--danger);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.alerta-ferias-icone .material-symbols-outlined { font-size: 24px; }
+
+.alerta-ferias-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.5;
+}
+.alerta-ferias-texto strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--danger);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+.alerta-ferias-texto span {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.alerta-ferias-texto span strong {
+    display: inline;
+    font-size: 13px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
 /* ===== TABELA RESUMO FINAL ===== */
 .tabela-resumo-wrap {
     overflow-x: auto;
@@ -373,6 +435,11 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .resumo-cards-row { flex-direction:column; }
     .tabela-resumo { font-size: 11px; }
     .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
+    .alerta-ferias { padding: 14px 16px; }
+    .alerta-ferias-icone { width: 34px; height: 34px; }
+    .alerta-ferias-icone .material-symbols-outlined { font-size: 20px; }
+    .alerta-ferias-texto strong { font-size: 13px; }
+    .alerta-ferias-texto span { font-size: 12px; }
 }
 @media (max-width:640px){
     .topbar { padding:0 12px; gap:8px; }
@@ -400,6 +467,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .tabela-resumo thead th,
     .tabela-resumo tbody th,
     .tabela-resumo tbody td { border-color: #000 !important; }
+    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
 }
 
 .grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
@@ -569,6 +637,17 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div class="cab-div" aria-hidden="true"></div>
                     <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
                 </section>
+
+                <!-- Alerta de férias vencidas (2 ou mais) -->
+                <div id="alertaFeriasVencidas" class="alerta-ferias hidden" role="alert" aria-live="polite">
+                    <div class="alerta-ferias-icone" aria-hidden="true">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <div class="alerta-ferias-texto">
+                        <strong id="alertaFeriasTitulo">Atenção: férias vencidas</strong>
+                        <span id="alertaFeriasDetalhe">—</span>
+                    </div>
+                </div>
 
                 <div id="resumoExecutivo" class="resumo-executivo"></div>
 
@@ -1269,6 +1348,54 @@ function renderizarResumoExecutivo(){
     container.innerHTML = html;
 }
 
+/* ============================================================
+   ALERTA DE FÉRIAS VENCIDAS (2 ou mais)
+   Regra: assim que o servidor acumular 2 férias com status "vencido",
+   mostra alerta para o RH regularizar antes de virar ilegal.
+   ============================================================ */
+function renderizarAlertaFeriasVencidas() {
+    const card = document.getElementById('alertaFeriasVencidas');
+    const titulo = document.getElementById('alertaFeriasTitulo');
+    const detalhe = document.getElementById('alertaFeriasDetalhe');
+    if (!card || !titulo || !detalhe) return;
+
+    const vencidasPorMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey === 'ferias' && l.status === 'vencido') {
+            if (!vencidasPorMatricula.has(l.matricula)) {
+                vencidasPorMatricula.set(l.matricula, []);
+            }
+            vencidasPorMatricula.get(l.matricula).push(l);
+        }
+    });
+
+    const matriculasAlerta = [];
+    vencidasPorMatricula.forEach((lista, mat) => {
+        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
+    });
+
+    if (matriculasAlerta.length === 0) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const totalMatriculas = matriculasAlerta.length;
+    const totalVencidas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
+
+    titulo.textContent = totalMatriculas === 1
+        ? 'Atenção: 2 ou mais férias vencidas'
+        : `Atenção: ${totalMatriculas} matrículas com 2 ou mais férias vencidas`;
+
+    const partes = matriculasAlerta
+        .sort((a, b) => b.qtd - a.qtd)
+        .map(m => `<strong>${m.mat}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
+        .join(' · ');
+
+    detalhe.innerHTML = `${totalVencidas} férias vencidas no total — ${partes}. O RH tem até o encerramento do próximo período aquisitivo para regularizar antes de se tornar ilegal.`;
+
+    card.classList.remove('hidden');
+}
+
 function popularFiltroMatricula(){
     const sel=document.getElementById('filtroMatricula');
     const mats=[...new Set(linhasUnificadas.map(l=>l.matricula))];
@@ -1746,6 +1873,7 @@ async function processarServidores(docs){
     linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
 
     renderizarResumoExecutivo();
+    renderizarAlertaFeriasVencidas();
     popularFiltroMatricula();
     document.getElementById('filtroTipo').value='';
     document.getElementById('filtroStatus').value='';
@@ -1804,7 +1932,7 @@ window.buscarServidor = buscarServidor;
     }
 
     let tentativas = 0;
-    const MAX_TENTATIVAS = 40; // ~8s
+    const MAX_TENTATIVAS = 40;
 
     const tentar = setInterval(() => {
         tentativas++;
