@@ -1207,7 +1207,16 @@ document.getElementById('csTipoAusencia').addEventListener('click', function (e)
 });
 document.getElementById('csVinculo').addEventListener('click', function (e) {
     var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.carregarPeriodosAbertos && window.carregarPeriodosAbertos(); }, 0);
+    if (op) setTimeout(function () {
+        window.carregarPeriodosAbertos && window.carregarPeriodosAbertos();
+        // BÔNUS: foco automático no Tipo de Ausência
+        setTimeout(function () {
+            var triggerTipo = document.querySelector('#csTipoAusencia .cs-trigger');
+            if (triggerTipo && !triggerTipo.closest('.cs-wrap').classList.contains('aberto')) {
+                triggerTipo.focus();
+            }
+        }, 120);
+    }, 0);
 });
 document.getElementById('csPeriodo').addEventListener('click', function (e) {
     var op = e.target.closest('.cs-opcao');
@@ -1668,7 +1677,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                 e.target.value = value;
             });
 
-            // ✅ Enter no CPF = clicar em Buscar (sem submeter o form)
             inputCpf.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -1730,6 +1738,25 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             lblInicio.innerHTML = 'Data de Início <span>*</span>';
         }
         if (document.getElementById("selectVinculo").value) window.carregarPeriodosAbertos();
+
+        // BÔNUS: se o tipo tem período aquisitivo, foca no select de período após carregar
+        if (tipo === "FERIAS" || tipo === "FOLGA_ANIVERSARIO") {
+            setTimeout(function () {
+                const triggerPeriodo = document.querySelector('#csPeriodo .cs-trigger');
+                const selectVinculo = document.getElementById('selectVinculo');
+                if (triggerPeriodo && selectVinculo && selectVinculo.value) {
+                    const grupoVisivel = document.getElementById('grupoPeriodoAquisitivo').style.display !== 'none';
+                    if (grupoVisivel && !document.querySelector('#csPeriodo .cs-wrap')) {
+                        // noop
+                    }
+                    // Só foca se ainda não houver período selecionado
+                    const selectPeriodo = document.getElementById('selectPeriodo');
+                    if (selectPeriodo && !selectPeriodo.value) {
+                        triggerPeriodo.focus();
+                    }
+                }
+            }, 250);
+        }
     };
 
     window.calcularDataFim = function() {
@@ -1932,9 +1959,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         }
     };
 
-    /* ============================================================
-       FILTRO PADRÃO — SÓ LANÇAMENTOS ATIVOS OU FUTUROS
-       ============================================================ */
     function aplicarFiltroPadrao(registros) {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
@@ -2264,6 +2288,107 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         msg.textContent = texto;
         msg.className = "mensagem visivel " + tipo;
     }
+
+    /* ============================================================
+       AUTO-PREENCHIMENTO POR PARÂMETRO DE URL
+       Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidorId=ZZZ
+       ============================================================ */
+    (function autoPreencherPorUrl() {
+        const params = new URLSearchParams(window.location.search);
+
+        let cpfUrl = (params.get('cpf') || '').trim();
+        const matriculaUrl = (params.get('matricula') || '').trim();
+        const servidorIdUrl = (params.get('servidorId') || '').trim();
+
+        if (!cpfUrl && !matriculaUrl && !servidorIdUrl) return;
+
+        const inputCpf = document.getElementById('inputCpf');
+        const lblNome = document.getElementById('nomeServidorEncontrado');
+        if (!inputCpf) return;
+
+        if (cpfUrl) {
+            const apenasDigitos = cpfUrl.replace(/\D/g, '');
+            if (apenasDigitos.length === 11) {
+                inputCpf.value = apenasDigitos.replace(
+                    /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+                    '$1.$2.$3-$4'
+                );
+            } else {
+                inputCpf.value = cpfUrl;
+            }
+        } else if (matriculaUrl && lblNome) {
+            lblNome.textContent = 'Matrícula recebida da página anterior. Informe o CPF para buscar.';
+            lblNome.style.color = 'var(--text-secondary)';
+        }
+
+        let tentativas = 0;
+        const MAX_TENTATIVAS = 40;
+
+        const tentar = setInterval(function () {
+            tentativas++;
+
+            if (acessoAutorizado) {
+                clearInterval(tentar);
+
+                if (!cpfUrl) {
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('cpf');
+                        url.searchParams.delete('matricula');
+                        url.searchParams.delete('servidorId');
+                        window.history.replaceState({}, '', url.toString());
+                    } catch (e) {}
+                    inputCpf.focus();
+                    return;
+                }
+
+                setTimeout(async function () {
+                    try {
+                        await window.buscarServidorPorCpf();
+
+                        if (matriculaUrl) {
+                            const csVinculo = document.getElementById('csVinculo');
+                            if (csVinculo) {
+                                const lista = Array.from(
+                                    csVinculo.querySelectorAll('.cs-opcao')
+                                );
+                                const alvo = lista.find(function (op) {
+                                    const value = op.dataset.value || '';
+                                    return value.split('|')[0] === matriculaUrl;
+                                });
+
+                                if (alvo) {
+                                    alvo.click();
+                                    setTimeout(function () {
+                                        if (typeof window.carregarPeriodosAbertos === 'function') {
+                                            window.carregarPeriodosAbertos();
+                                        }
+                                        // BÔNUS: foca no Tipo de Ausência
+                                        setTimeout(function () {
+                                            var triggerTipo = document.querySelector('#csTipoAusencia .cs-trigger');
+                                            if (triggerTipo) triggerTipo.focus();
+                                        }, 150);
+                                    }, 100);
+                                }
+                            }
+                        }
+
+                        try {
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('cpf');
+                            url.searchParams.delete('matricula');
+                            url.searchParams.delete('servidorId');
+                            window.history.replaceState({}, '', url.toString());
+                        } catch (e) {}
+                    } catch (e) {
+                        console.warn('[Lançamentos] Falha ao auto-preencher via URL:', e);
+                    }
+                }, 250);
+            } else if (tentativas >= MAX_TENTATIVAS) {
+                clearInterval(tentar);
+            }
+        }, 200);
+    })();
 </script>
 
 </body>
