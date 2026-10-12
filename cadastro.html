@@ -525,7 +525,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     width: 100%; background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px; box-shadow: var(--shadow-sm);
-    /* Alterado para visible para permitir que o dropdown do autocomplete vaze para fora */
     overflow: visible; 
     margin-bottom: 20px;
 }
@@ -1013,7 +1012,7 @@ tbody tr:hover td { background: var(--surface-2); }
 #modalConfirm #btnModalConfirmar:active { background: #061A0F; border-color: #061A0F; }
 
 /* ============================================================
-   AUTOCOMPLETE ESCOLAS (DROPDOWN PERSONALIZADO)
+   AUTOCOMPLETE ESCOLAS E CARGOS (DROPDOWN PERSONALIZADO)
    ============================================================ */
 .autocomplete-wrapper {
     position: relative;
@@ -1424,7 +1423,7 @@ tbody tr:hover td { background: var(--surface-2); }
 
                             <div class="form-group">
                                 <label for="cargo1">Cargo / Função (Matrícula 1) <span>*</span></label>
-                                <input type="text" id="cargo1" name="cargo1" placeholder="Digite o cargo" required>
+                                <input type="text" id="cargo1" name="cargo1" placeholder="Digite ou selecione o cargo" autocomplete="off" required>
                             </div>
 
                             <div class="form-group">
@@ -1517,7 +1516,7 @@ tbody tr:hover td { background: var(--surface-2); }
 
                                 <div class="form-group">
                                     <label for="cargo2">Cargo / Função (Matrícula 2) <span>*</span></label>
-                                    <input type="text" id="cargo2" name="cargo2" placeholder="Digite o cargo">
+                                    <input type="text" id="cargo2" name="cargo2" placeholder="Digite ou selecione o cargo" autocomplete="off">
                                 </div>
 
                                 <div class="form-group">
@@ -2007,8 +2006,9 @@ let ultimoCpfVerificado = "";
 let cpfDuplicado = false;
 let verificacaoCpfEmAndamento = false;
 
-// Array global para armazenar as escolas válidas
+// Arrays globais para armazenar listas válidas
 let escolasDisponiveis = [];
+let cargosDisponiveis = [];
 
 
 // =========================================================
@@ -2059,7 +2059,7 @@ async function carregarEmpresasNosSelects() {
 
 
 // =========================================================
-// AUTOCOMPLETE DE ESCOLAS (BUSCA + VALIDAÇÃO)
+// CARREGAR UNIDADES ESCOLARES
 // =========================================================
 async function carregarUnidadesEscolares() {
     try {
@@ -2073,16 +2073,38 @@ async function carregarUnidadesEscolares() {
         });
 
         escolasDisponiveis.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-        inicializarAutocompleteEscolas();
     } catch (e) {
         console.error('Erro ao carregar unidades escolares:', e);
     }
 }
 
-function inicializarAutocompleteEscolas() {
-    const inputIds = ['escola1_m1', 'escola2_m1', 'escola1_m2', 'escola2_m2'];
 
+// =========================================================
+// CARREGAR CARGOS DO FIRESTORE
+// =========================================================
+async function carregarCargos() {
+    try {
+        const snapshot = await getDocs(collection(db, 'cargos'));
+        cargosDisponiveis = [];
+
+        snapshot.forEach(d => {
+            const data = d.data();
+            // Aceita campos: nome, cargo, titulo, descricao
+            const nome = data.nome || data.cargo || data.titulo || data.descricao || d.id;
+            cargosDisponiveis.push(nome);
+        });
+
+        cargosDisponiveis.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    } catch (e) {
+        console.error('Erro ao carregar cargos:', e);
+    }
+}
+
+
+// =========================================================
+// AUTOCOMPLETE GENÉRICO (funciona para escolas, cargos, etc.)
+// =========================================================
+function inicializarAutocomplete(inputIds, listaDisponivel, nomeCampo = 'item') {
     inputIds.forEach(id => {
         const input = document.getElementById(id);
         if (!input || input.dataset.autocompleteInit) return;
@@ -2101,24 +2123,22 @@ function inicializarAutocompleteEscolas() {
 
         // Eventos
         input.addEventListener('focus', () => {
-            renderizarListaEscolas(input, list, input.value);
+            renderizarLista(input, list, input.value, listaDisponivel, nomeCampo);
             list.classList.add('ativo');
-            // Ajuda no mobile: rola a tela para garantir que o campo e a lista fiquem visíveis
             setTimeout(() => input.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
         });
 
         input.addEventListener('input', () => {
-            renderizarListaEscolas(input, list, input.value);
+            renderizarLista(input, list, input.value, listaDisponivel, nomeCampo);
             list.classList.add('ativo');
             atualizarCorCampo(input);
             input.classList.remove('erro-input');
         });
 
         input.addEventListener('blur', () => {
-            // Pequeno delay para permitir o clique no item antes de fechar
             setTimeout(() => {
                 list.classList.remove('ativo');
-                validarCampoEscola(input);
+                validarCampoAutocomplete(input, listaDisponivel);
             }, 150);
         });
     });
@@ -2131,13 +2151,13 @@ function inicializarAutocompleteEscolas() {
     });
 }
 
-function renderizarListaEscolas(input, listEl, filtro = '') {
+function renderizarLista(input, listEl, filtro, listaDisponivel, nomeCampo) {
     listEl.innerHTML = '';
     const termo = filtro.toLowerCase().trim();
-    const filtradas = escolasDisponiveis.filter(nome => nome.toLowerCase().includes(termo));
+    const filtradas = listaDisponivel.filter(nome => nome.toLowerCase().includes(termo));
 
     if (filtradas.length === 0) {
-        listEl.innerHTML = '<div class="autocomplete-vazio">Nenhuma escola encontrada</div>';
+        listEl.innerHTML = `<div class="autocomplete-vazio">Nenhum ${nomeCampo} encontrado</div>`;
         return;
     }
 
@@ -2146,7 +2166,6 @@ function renderizarListaEscolas(input, listEl, filtro = '') {
         item.className = 'autocomplete-item';
         item.textContent = nome;
 
-        // mousedown dispara antes do blur, permitindo selecionar
         item.addEventListener('mousedown', (e) => {
             e.preventDefault();
             input.value = nome;
@@ -2159,9 +2178,9 @@ function renderizarListaEscolas(input, listEl, filtro = '') {
     });
 }
 
-function validarCampoEscola(input) {
+function validarCampoAutocomplete(input, listaDisponivel) {
     const valor = input.value.trim();
-    if (valor && !escolasDisponiveis.includes(valor)) {
+    if (valor && !listaDisponivel.includes(valor)) {
         input.classList.add('erro-input');
         input.classList.remove('preenchido');
     } else if (valor) {
@@ -2240,11 +2259,26 @@ function mostrarConfirmacao(titulo, mensagem, tipo = 'aviso', textoConfirmar = '
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-  // Carrega empresas e escolas em paralelo
+  // Carrega empresas, escolas e cargos em paralelo
   await Promise.all([
       carregarEmpresasNosSelects(),
-      carregarUnidadesEscolares()
+      carregarUnidadesEscolares(),
+      carregarCargos()
   ]);
+
+  // Inicializa autocomplete de ESCOLAS
+  inicializarAutocomplete(
+      ['escola1_m1', 'escola2_m1', 'escola1_m2', 'escola2_m2'],
+      escolasDisponiveis,
+      'escola'
+  );
+
+  // Inicializa autocomplete de CARGOS
+  inicializarAutocomplete(
+      ['cargo1', 'cargo2'],
+      cargosDisponiveis,
+      'cargo'
+  );
 
   flatpickr("input[type='date']", {
     locale: "pt",
@@ -2373,10 +2407,14 @@ async function carregarDadosServidor(id) {
       const camposPreenchidos = document.querySelectorAll("#formServidor input, #formServidor select");
       camposPreenchidos.forEach(c => atualizarCorCampo(c));
       
-      // Valida os campos de escola carregados na edição
+      // Valida os campos de escola e cargo carregados na edição
       ['escola1_m1', 'escola2_m1', 'escola1_m2', 'escola2_m2'].forEach(id => {
           const el = document.getElementById(id);
-          if (el) validarCampoEscola(el);
+          if (el) validarCampoAutocomplete(el, escolasDisponiveis);
+      });
+      ['cargo1', 'cargo2'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) validarCampoAutocomplete(el, cargosDisponiveis);
       });
 
       ultimoCpfVerificado = normalizarCPF(document.getElementById("cpf").value);
@@ -2631,7 +2669,7 @@ window.salvarServidor = async function(event) {
     return;
   }
 
-  // VALIDAÇÃO DE ESCOLAS: Impede salvar texto livre que não esteja no Firebase
+  // VALIDAÇÃO DE ESCOLAS
   const camposEscola = ['escola1_m1', 'escola2_m1', 'escola1_m2', 'escola2_m2'];
   let escolaInvalida = false;
   let primeiroCampoInvalido = null;
@@ -2652,6 +2690,30 @@ window.salvarServidor = async function(event) {
   if (escolaInvalida) {
       mostrarMensagem("Atenção: Você digitou um nome de escola que não existe na lista. Selecione uma das opções sugeridas.", "erro");
       if (primeiroCampoInvalido) primeiroCampoInvalido.focus();
+      return;
+  }
+
+  // VALIDAÇÃO DE CARGOS
+  const camposCargo = ['cargo1', 'cargo2'];
+  let cargoInvalido = false;
+  let primeiroCampoCargoInvalido = null;
+
+  camposCargo.forEach(id => {
+      const campo = document.getElementById(id);
+      if (campo && campo.value.trim()) {
+          if (!cargosDisponiveis.includes(campo.value.trim())) {
+              campo.classList.add('erro-input');
+              cargoInvalido = true;
+              if (!primeiroCampoCargoInvalido) primeiroCampoCargoInvalido = campo;
+          } else {
+              campo.classList.remove('erro-input');
+          }
+      }
+  });
+
+  if (cargoInvalido) {
+      mostrarMensagem("Atenção: Você digitou um cargo que não existe na lista. Selecione uma das opções sugeridas.", "erro");
+      if (primeiroCampoCargoInvalido) primeiroCampoCargoInvalido.focus();
       return;
   }
 
