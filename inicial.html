@@ -547,7 +547,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
 .card-body.sem-padding { padding:0; }
 
 /* ============================================================
-   ALERTA CRÍTICO — FÉRIAS VENCIDAS
+   ALERTA CRÍTICO — FÉRIAS VENCIDAS (2+)
    ============================================================ */
 .alerta-critico {
     display:none;
@@ -1446,7 +1446,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                     </p>
                 </div>
 
-                <!-- ALERTA CRÍTICO — FÉRIAS VENCIDAS -->
+                <!-- ALERTA CRÍTICO — FÉRIAS VENCIDAS (2+) -->
                 <div class="alerta-critico" id="alertaCritico" role="alert" aria-live="assertive">
                     <div class="alerta-critico-inner">
                         <div class="alerta-critico-icone-wrapper">
@@ -1463,12 +1463,12 @@ button:disabled { opacity:.65; cursor:not-allowed; }
 
                             <div class="alerta-critico-titulo" id="alertaCriticoTitulo">
                                 <span class="numero-destaque">—</span>
-                                períodos de férias vencidos
+                                servidores com limite legal excedido
                             </div>
 
                             <div class="alerta-critico-descricao" id="alertaCriticoDescricao">
-                                Servidores com férias vencidas podem acumular <strong>até 2 períodos</strong> pela legislação.
-                                Regularize imediatamente para evitar passivos trabalhistas.
+                                Servidores com <strong>2 ou mais períodos aquisitivos vencidos</strong> estão em
+                                situação crítica pela legislação. Regularize imediatamente para evitar passivos trabalhistas.
                             </div>
 
                             <div class="alerta-critico-acoes">
@@ -1634,9 +1634,9 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                                             <td id="statServidores">—</td>
                                         </tr>
                                         <tr>
-                                            <td>Férias vencidas</td>
+                                            <td>Servidores em situação crítica</td>
                                             <td id="statFeriasPendentes">
-                                                <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores com férias vencidas">
+                                                <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores em situação crítica">
                                                     —
                                                 </a>
                                             </td>
@@ -2070,6 +2070,7 @@ const CACHE_KEY      = 'cache-painel-dados-v1';
 const CACHE_VERSAO   = 'cache-painel-versao';
 const CACHE_TTL_MS   = 30 * 60 * 1000;
 const DOC_RESUMO     = ['_estatisticas', 'resumo'];
+const LIMITE_LEGAL   = 2;
 
 function mostrarAviso(texto, icone, carregando) {
     const aviso = document.getElementById('avisoCarregamento');
@@ -2213,9 +2214,10 @@ async function calcularResumoCompleto() {
             totalMesesConfigurados: meses.length,
             totalEscolas: totalEscolas,
             excecoesAtivas,
+            // ⬇️ AGORA SÓ CRÍTICOS (2+)
             feriasPendentes: resultadoFerias.pendentes,
             feriasVencidas: resultadoFerias.vencidas,
-            servidoresComPendencia: resultadoFerias.servidores,
+            servidoresComPendencia: resultadoFerias.servidoresCriticos,
             mesesParaExibir: meses.slice(0, 5).map(m => ({
                 mesReferencia: m.mesReferencia,
                 diasUteis: m.diasUteis || null,
@@ -2303,6 +2305,7 @@ function periodosFechados(dataAdmissao, hoje) {
     return out;
 }
 
+/* ⬇️ Conta só servidores com 2+ vencidas (limite legal) */
 function calcularFeriasPendentes(servidores, registros, hoje) {
     const porCpf = new Map();
     const porMatricula = new Map();
@@ -2325,7 +2328,9 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
         }
     });
 
-    let pendentes = 0, vencidas = 0, servidoresComPendencia = 0;
+    let pendentes = 0;              // total de períodos "a prazo" (não usados no painel)
+    let vencidasCriticas = 0;       // total de períodos vencidos SOMENTE dos servidores críticos
+    let servidoresCriticos = 0;     // servidores com 2+ vencidas
 
     servidores.forEach(s => {
         const cpf = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
@@ -2350,20 +2355,33 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
             if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
         });
 
-        let temPendencia = false;
+        let vencidasServidor = 0;
+        let pendentesServidor = 0;
+
         admissoes.forEach(adm => {
             periodosFechados(adm, hoje).forEach(p => {
                 if (lancados.has(p.anoReferencia)) return;
                 const limite = new Date(p.fim);
                 limite.setFullYear(limite.getFullYear() + 1);
-                if (limite < hoje) { vencidas++; temPendencia = true; }
-                else { pendentes++; temPendencia = true; }
+                if (limite < hoje) vencidasServidor++;
+                else pendentesServidor++;
             });
         });
-        if (temPendencia) servidoresComPendencia++;
+
+        pendentes += pendentesServidor;
+
+        // ⬇️ SÓ CONTA SE ATINGIU O LIMITE LEGAL
+        if (vencidasServidor >= LIMITE_LEGAL) {
+            servidoresCriticos++;
+            vencidasCriticas += vencidasServidor;
+        }
     });
 
-    return { pendentes, vencidas, servidores: servidoresComPendencia };
+    return {
+        pendentes: pendentes,
+        vencidas: vencidasCriticas,
+        servidoresCriticos: servidoresCriticos
+    };
 }
 
 function atualizarInfoCache(tipo, texto) {
@@ -2390,9 +2408,10 @@ function renderizarAlertaCritico(dados) {
     const alerta = document.getElementById('alertaCritico');
     if (!alerta) return;
 
+    const criticos = dados.servidoresComPendencia || 0;
     const vencidas = dados.feriasVencidas || 0;
 
-    if (vencidas === 0) {
+    if (criticos === 0) {
         alerta.classList.remove('ativo');
         return;
     }
@@ -2402,20 +2421,18 @@ function renderizarAlertaCritico(dados) {
     const tituloEl = document.getElementById('alertaCriticoTitulo');
     const descEl = document.getElementById('alertaCriticoDescricao');
 
-    const palavra = vencidas === 1 ? 'período' : 'períodos';
+    const palavraServidor = criticos === 1 ? 'servidor' : 'servidores';
+    const palavraPeriodo = vencidas === 1 ? 'período' : 'períodos';
 
     tituloEl.innerHTML = `
-        <span class="numero-destaque">${vencidas}</span>
-        ${palavra} de férias vencido${vencidas === 1 ? '' : 's'}
+        <span class="numero-destaque">${criticos}</span>
+        ${palavraServidor} com limite legal excedido
     `;
 
-    const servidores = dados.servidoresComPendencia || 0;
-    const servidoresTxt = servidores > 0
-        ? `<strong>${servidores} servidor${servidores === 1 ? '' : 'es'}</strong> afetado${servidores === 1 ? '' : 's'}. `
-        : '';
-
     descEl.innerHTML = `
-        ${servidoresTxt}O servidor pode acumular <strong>no máximo 2 períodos</strong> de férias vencidas pela legislação.
+        <strong>${criticos} ${palavraServidor}</strong> ${criticos === 1 ? 'acumulou' : 'acumularam'}
+        <strong>${vencidas} ${palavraPeriodo}</strong> de férias vencidas no total —
+        acima do limite de ${LIMITE_LEGAL} permitidos pela legislação.
         Regularize imediatamente para evitar passivos trabalhistas.
     `;
 }
@@ -2501,12 +2518,13 @@ function renderizarPendencias(dados) {
         }
     }
 
-    if (dados.feriasVencidas > 0) {
+    // ⬇️ SÓ ADICIONA SE HOUVER SERVIDORES CRÍTICOS (2+)
+    if (dados.servidoresComPendencia > 0) {
         pendencias.push({
             tipo: 'danger',
             icone: 'warning',
-            titulo: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'}`,
-            descricao: `Requer regularização imediata. Clique para ver a lista de servidores.`,
+            titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com limite legal excedido`,
+            descricao: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'} no total. Clique para ver a lista.`,
             cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
@@ -2560,23 +2578,24 @@ function renderizarResumo(dados) {
 
     td.classList.remove('pendencia-ok', 'pendencia-alerta', 'pendencia-urgente');
 
-    const vencidas = dados.feriasVencidas || 0;
+    // ⬇️ Agora mostra SÓ os servidores em situação crítica (2+)
+    const criticos = dados.servidoresComPendencia || 0;
 
-    if (vencidas === 0) {
+    if (criticos === 0) {
         td.classList.add('pendencia-ok');
         td.innerHTML = '0';
-        td.title = 'Nenhuma férias vencida no momento.';
+        td.title = 'Nenhum servidor em situação crítica no momento.';
         return;
     }
 
     td.classList.add('pendencia-urgente');
 
     link.innerHTML = `
-        ${vencidas}
+        ${criticos}
         <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
-        <span class="stat-sub">requer regularização</span>
+        <span class="stat-sub">limite legal excedido</span>
     `;
-    link.title = `${vencidas} período${vencidas === 1 ? '' : 's'} de férias vencido${vencidas === 1 ? '' : 's'} — clique para ver a lista completa.`;
+    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 2+ períodos vencidos — clique para ver a lista completa.`;
 }
 
 function renderizarUltimosMeses(dados) {
