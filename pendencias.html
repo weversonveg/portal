@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,directions_bus,paid,add,delete,person_search,work,work_history,progress_activity,search,filter_list,clear,gavel">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,directions_bus,paid,add,delete,person_search,work,work_history,progress_activity,search,filter_list,clear,gavel,list_alt">
 
 <script>
 (function () {
@@ -558,7 +558,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .tabela-wrapper { width:100%; overflow-x:auto; }
 .tabela {
     width:100%; border-collapse:collapse;
-    font-size:13px; min-width:800px;
+    font-size:13px; min-width:920px;
 }
 .tabela th {
     background:var(--surface-2);
@@ -636,6 +636,10 @@ button { font:inherit; color:inherit; cursor:pointer; }
     white-space:nowrap;
 }
 
+/* AÇÕES */
+.acoes-celula {
+    display:flex; gap:6px; flex-wrap:wrap;
+}
 .btn-acao {
     height:28px; padding:0 10px;
     background:var(--surface);
@@ -645,10 +649,15 @@ button { font:inherit; color:inherit; cursor:pointer; }
     font-size:12px; font-weight:500;
     display:inline-flex; align-items:center; gap:4px;
     text-decoration:none; white-space:nowrap;
-    transition:background-color .12s ease, border-color .12s ease;
+    transition:background-color .12s ease, border-color .12s ease, color .12s ease;
 }
 .btn-acao:hover { background:var(--brand-soft); border-color:var(--brand); color:var(--brand); }
 .btn-acao .material-symbols-outlined { font-size:15px; }
+.btn-acao.btn-acao-lancar:hover {
+    background:var(--brand-acao);
+    border-color:var(--brand-acao);
+    color:#ffffff;
+}
 
 .estado-vazio {
     padding:60px 20px; text-align:center;
@@ -798,32 +807,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                                 <span>Configurar Períodos</span>
                             </a>
-                            <ul class="submenu">
-                                <li class="submenu-item">
-                                    <a href="configuracao.html#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
-                                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                                        <span>1. Período aquisitivo</span>
-                                    </a>
-                                </li>
-                                <li class="submenu-item">
-                                    <a href="configuracao.html#secao-dias-uteis" data-secao="secao-dias-uteis">
-                                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                        <span>2. Dias úteis letivos</span>
-                                    </a>
-                                </li>
-                                <li class="submenu-item">
-                                    <a href="configuracao.html#secao-abrir-fechar" data-secao="secao-abrir-fechar">
-                                        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-                                        <span>3. Abrir / fechar mês</span>
-                                    </a>
-                                </li>
-                                <li class="submenu-item">
-                                    <a href="configuracao.html#secao-reabrir" data-secao="secao-reabrir">
-                                        <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
-                                        <span>4. Reabrir período</span>
-                                    </a>
-                                </li>
-                            </ul>
                         </li>
                         <li class="menu-item">
                             <a href="escola.html">
@@ -1107,7 +1090,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                         <th scope="col">Vencidas</th>
                                         <th scope="col">Períodos</th>
                                         <th scope="col">Situação</th>
-                                        <th scope="col">Ação</th>
+                                        <th scope="col">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabelaCorpo">
@@ -1547,7 +1530,6 @@ function calcularVencidas(servidores, registros, hoje) {
                 if (lancados.has(p.anoReferencia)) return;
                 const limite = new Date(p.fim);
                 limite.setFullYear(limite.getFullYear() + 1);
-                // Só conta se o prazo legal para gozar já passou
                 if (limite < hoje) {
                     periodosVencidos.push(p.anoReferencia);
                 }
@@ -1571,7 +1553,6 @@ function calcularVencidas(servidores, registros, hoje) {
         });
     });
 
-    // Ordena: quem excede o limite legal primeiro, depois por quantidade
     lista.sort((a, b) => {
         if (a.excedeLimite !== b.excedeLimite) return a.excedeLimite ? -1 : 1;
         if (b.vencidas !== a.vencidas) return b.vencidas - a.vencidas;
@@ -1722,6 +1703,25 @@ function aplicarFiltros() {
         `${resultado.length} de ${listaCompleta.length}`;
 }
 
+function montarLinkLinhaTempo(item) {
+    // Preferência: CPF (mais estável). Fallback: matrícula. Último recurso: id.
+    if (item.cpfOriginal && item.cpfOriginal.length === 11) {
+        return `linha_tempo.html?cpf=${encodeURIComponent(item.cpfOriginal)}`;
+    }
+    if (item.matricula && item.matricula !== '—') {
+        return `linha_tempo.html?matricula=${encodeURIComponent(item.matricula)}`;
+    }
+    return `linha_tempo.html?servidor=${encodeURIComponent(item.id)}`;
+}
+
+function montarLinkLancamentos(item) {
+    const params = new URLSearchParams();
+    if (item.cpfOriginal && item.cpfOriginal.length === 11) params.set('cpf', item.cpfOriginal);
+    if (item.matricula && item.matricula !== '—') params.set('matricula', item.matricula);
+    if (item.id) params.set('servidorId', item.id);
+    return `lancamentos.html?${params.toString()}`;
+}
+
 function renderizarTabela(lista) {
     const tbody = document.getElementById('tabelaCorpo');
 
@@ -1753,6 +1753,9 @@ function renderizarTabela(lista) {
             ? `<span class="badge badge-limite-legal"><span class="material-symbols-outlined" style="font-size:11px;">gavel</span>Limite legal</span>`
             : `<span class="badge badge-vencidas"><span class="material-symbols-outlined" style="font-size:11px;">error</span>${item.vencidas} ${item.vencidas === 1 ? 'período' : 'períodos'}</span>`;
 
+        const hrefLinhaTempo = montarLinkLinhaTempo(item);
+        const hrefLancamentos = montarLinkLancamentos(item);
+
         return `
             <tr class="${item.excedeLimite ? 'linha-critica' : ''}">
                 <td>
@@ -1766,10 +1769,20 @@ function renderizarTabela(lista) {
                 <td><div class="periodos-lista">${periodosHtml}</div></td>
                 <td>${situacaoHtml}</td>
                 <td>
-                    <a href="linha_tempo.html?servidor=${encodeURIComponent(item.id)}" class="btn-acao" title="Ver linha do tempo">
-                        <span class="material-symbols-outlined">history</span>
-                        Ver
-                    </a>
+                    <div class="acoes-celula">
+                        <a href="${hrefLinhaTempo}"
+                           class="btn-acao"
+                           title="Ver linha do tempo deste servidor">
+                            <span class="material-symbols-outlined">history</span>
+                            Ver
+                        </a>
+                        <a href="${hrefLancamentos}"
+                           class="btn-acao btn-acao-lancar"
+                           title="Lançar férias, folgas ou licenças para este servidor">
+                            <span class="material-symbols-outlined">edit_note</span>
+                            Lançar
+                        </a>
+                    </div>
                 </td>
             </tr>
         `;
