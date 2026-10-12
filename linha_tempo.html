@@ -639,7 +639,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div id="graficoPeriodos" class="grafico-periodos"></div>
                 </section>
 
-                <!-- ===== TABELA RESUMO FINAL ===== -->
                 <section class="form-card" id="cardResumoFinal">
                     <div class="card-title">
                         <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
@@ -1485,9 +1484,6 @@ function renderizarGrafico() {
     container.innerHTML = html;
 }
 
-/* ============================================================
-   TABELA RESUMO FINAL — corrigida
-   ============================================================ */
 function renderizarTabelaResumo() {
     const tbody = document.getElementById('tabelaResumoCorpo');
     const aviso = document.getElementById('avisoResumoVazio');
@@ -1534,7 +1530,6 @@ function renderizarTabelaResumo() {
 
         const linhasTexto = [];
 
-        /* ---------- FÉRIAS ---------- */
         const gruposFerias = new Map();
         ferias.forEach(f => {
             let chave = 'sem-data';
@@ -1545,7 +1540,6 @@ function renderizarTabelaResumo() {
                 const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
                 chave = m ? m[1] : 'sem-data';
             } else if (f.status === 'programado') {
-                // Usa a data do GOZO (programada), não o início do ciclo
                 textoTrecho = f.gozo && f.gozo !== '—'
                     ? `Programado ${f.gozo}`
                     : 'Programado';
@@ -1567,12 +1561,9 @@ function renderizarTabelaResumo() {
         });
 
         gruposFerias.forEach(lista => {
-            // Deduplica: mostra só 1 por grupo
             linhasTexto.push({ classe: 'destaque', html: lista[0].texto });
         });
 
-        /* ---------- FOLGA ANIVERSÁRIO ---------- */
-        // Deduplica por data/status — só uma linha por período
         const prioridade = { gozado: 1, programado: 2, disponivel: 3, perdido: 4 };
         const folgasUnicas = new Map();
 
@@ -1607,7 +1598,6 @@ function renderizarTabelaResumo() {
             }
         });
 
-        // Mostra apenas a folga mais relevante do período
         const folgasLista = [...folgasUnicas.values()];
         if (folgasLista.length > 0) {
             folgasLista.sort((a, b) => (prioridade[a.status] || 99) - (prioridade[b.status] || 99));
@@ -1788,6 +1778,54 @@ function mostrarErro(t){
 function ocultarErro(){document.getElementById('mensagemErro').classList.remove('ativo');}
 
 window.buscarServidor = buscarServidor;
+
+/* ============================================================
+   AUTO-BUSCA POR PARÂMETRO DE URL
+   Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidor=<id>
+   ============================================================ */
+(function autoBuscarPorUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
+    termo = termo.trim();
+    if (!termo) return;
+
+    const apenasDigitos = termo.replace(/\D/g, '');
+    const input = document.getElementById('termoBusca');
+    if (!input) return;
+
+    if (apenasDigitos.length === 11) {
+        input.value = apenasDigitos.replace(
+            /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+            '$1.$2.$3-$4'
+        );
+    } else {
+        input.value = termo;
+    }
+
+    let tentativas = 0;
+    const MAX_TENTATIVAS = 40; // ~8s
+
+    const tentar = setInterval(() => {
+        tentativas++;
+
+        if (acessoAutorizado) {
+            clearInterval(tentar);
+            setTimeout(() => {
+                buscarServidor();
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('cpf');
+                    url.searchParams.delete('matricula');
+                    url.searchParams.delete('servidor');
+                    window.history.replaceState({}, '', url.toString());
+                } catch (e) {}
+            }, 200);
+        } else if (tentativas >= MAX_TENTATIVAS) {
+            clearInterval(tentar);
+        }
+    }, 200);
+})();
 </script>
 
 </body>
