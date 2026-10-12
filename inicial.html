@@ -547,7 +547,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
 .card-body.sem-padding { padding:0; }
 
 /* ============================================================
-   ⚠️ NOVO: CARD DE ALERTA CRÍTICO (FÉRIAS VENCIDAS)
+   ALERTA CRÍTICO — FÉRIAS VENCIDAS
    ============================================================ */
 .alerta-critico {
     display:none;
@@ -575,7 +575,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     }
 }
 
-/* Faixa diagonal animada ao fundo (sutil) */
 .alerta-critico::before {
     content:"";
     position:absolute;
@@ -620,7 +619,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     font-weight:700;
 }
 
-/* Anel pulsante */
 .alerta-critico-icone-wrapper::after {
     content:"";
     position:absolute;
@@ -742,7 +740,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     color:var(--danger-strong);
 }
 
-/* Dark mode para o alerta */
 :root[data-theme="dark"] .alerta-critico {
     background:linear-gradient(135deg, #2a1010 0%, #3a1414 100%);
     border-color:#dc2626;
@@ -785,41 +782,57 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     color:#fca5a5;
 }
 
-@media (max-width:640px) {
+/* ─── Responsivo do alerta crítico (MOBILE) ─── */
+@media (max-width: 640px) {
     .alerta-critico {
-        padding:16px 16px;
+        padding: 16px 14px;
     }
     .alerta-critico-inner {
-        gap:12px;
+        gap: 12px;
     }
     .alerta-critico-icone {
-        width:44px;
-        height:44px;
+        width: 44px;
+        height: 44px;
     }
     .alerta-critico-icone .material-symbols-outlined {
-        font-size:24px;
+        font-size: 24px;
     }
     .alerta-critico-titulo {
-        font-size:18px;
+        font-size: 18px;
+        line-height: 1.25;
     }
     .alerta-critico-titulo .numero-destaque {
-        font-size:22px;
+        font-size: 22px;
     }
     .alerta-critico-descricao {
-        font-size:12.5px;
+        font-size: 12.5px;
     }
     .alerta-critico-acoes {
-        flex-direction:column;
-        align-items:stretch;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
     }
     .alerta-critico-btn-primario {
-        justify-content:center;
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+    .alerta-critico-btn-primario span:not(.material-symbols-outlined) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+    .alerta-critico-meta {
+        justify-content: center;
     }
 }
 
-/* ============================================================
-   FAIXA DE STATUS + PENDÊNCIAS
-   ============================================================ */
+/* FAIXA DE STATUS */
 .faixa-status {
     background:var(--surface);
     border:1px solid var(--border);
@@ -1433,9 +1446,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                     </p>
                 </div>
 
-                <!-- ═══════════════════════════════════════════════════════════
-                     ALERTA CRÍTICO — FÉRIAS VENCIDAS (aparece só se houver)
-                     ═══════════════════════════════════════════════════════════ -->
+                <!-- ALERTA CRÍTICO — FÉRIAS VENCIDAS -->
                 <div class="alerta-critico" id="alertaCritico" role="alert" aria-live="assertive">
                     <div class="alerta-critico-inner">
                         <div class="alerta-critico-icone-wrapper">
@@ -1463,7 +1474,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                             <div class="alerta-critico-acoes">
                                 <a href="pendencias.html" class="alerta-critico-btn-primario">
                                     <span class="material-symbols-outlined">arrow_forward</span>
-                                    Ver servidores afetados
+                                    <span>Ver servidores afetados</span>
                                 </a>
                                 <span class="alerta-critico-meta">
                                     <span class="material-symbols-outlined">history</span>
@@ -2375,9 +2386,6 @@ function renderizarTudo(dados) {
     renderizarTimeline(dados);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ALERTA CRÍTICO DE FÉRIAS VENCIDAS
-   ══════════════════════════════════════════════════════════════ */
 function renderizarAlertaCritico(dados) {
     const alerta = document.getElementById('alertaCritico');
     if (!alerta) return;
