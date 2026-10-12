@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,directions_bus,paid,add,delete,person_search,work,work_history,progress_activity,search,gavel">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,directions_bus,paid,add,delete,person_search,work,work_history,progress_activity,search,gavel,hourglass_empty">
 
 <script>
 (function () {
@@ -60,6 +60,7 @@
     --shadow-md:0 2px 6px rgba(20,25,35,.08);
     --shadow-lg:0 20px 50px rgba(20,25,35,.16);
     --shadow-alerta:0 4px 20px rgba(185,28,28,.18), 0 2px 6px rgba(185,28,28,.10);
+    --shadow-atencao:0 4px 20px rgba(217,119,6,.20), 0 2px 6px rgba(217,119,6,.12);
 
     --sidebar-width:268px;
     --topbar-height:56px;
@@ -95,6 +96,7 @@
     --shadow-md:0 2px 6px rgba(0,0,0,.5);
     --shadow-lg:0 20px 50px rgba(0,0,0,.6);
     --shadow-alerta:0 4px 20px rgba(220,38,38,.25), 0 2px 6px rgba(220,38,38,.15);
+    --shadow-atencao:0 4px 20px rgba(251,146,60,.25), 0 2px 6px rgba(251,146,60,.15);
 
     --focus-ring:0 0 0 3px rgba(123,163,205,.22);
     --focus-border:#7ba3cd;
@@ -547,8 +549,203 @@ button:disabled { opacity:.65; cursor:not-allowed; }
 .card-body.sem-padding { padding:0; }
 
 /* ============================================================
-   ALERTA CRÍTICO — FÉRIAS VENCIDAS (2+)
+   ALERTAS — FÉRIAS VENCIDAS
    ============================================================ */
+
+/* ══ CARD LARANJA — ATENÇÃO (2 vencidas) ══ */
+.alerta-atencao {
+    display:none;
+    position:relative;
+    background:linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border:2px solid #d97706;
+    border-left:6px solid #d97706;
+    border-radius:8px;
+    padding:20px 22px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow-atencao);
+    overflow:hidden;
+    animation:alertaEntrar .35s cubic-bezier(.34,1.56,.64,1);
+}
+.alerta-atencao.ativo { display:block; }
+
+.alerta-atencao::before {
+    content:"";
+    position:absolute;
+    top:0; right:-100px;
+    width:300px; height:100%;
+    background:repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(217,119,6,.05) 20px,
+        rgba(217,119,6,.05) 40px
+    );
+    pointer-events:none;
+}
+
+.alerta-atencao-inner {
+    display:flex;
+    align-items:flex-start;
+    gap:18px;
+    position:relative;
+    z-index:1;
+}
+
+.alerta-atencao-icone-wrapper {
+    position:relative;
+    flex-shrink:0;
+}
+.alerta-atencao-icone {
+    width:56px; height:56px;
+    border-radius:50%;
+    background:#d97706;
+    color:#ffffff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 12px rgba(217,119,6,.35);
+    position:relative;
+    z-index:2;
+}
+.alerta-atencao-icone .material-symbols-outlined {
+    font-size:32px;
+    font-weight:700;
+}
+
+.alerta-atencao-icone-wrapper::after {
+    content:"";
+    position:absolute;
+    inset:-4px;
+    border-radius:50%;
+    border:2px solid #d97706;
+    opacity:.5;
+    animation:pulsarAnel 1.8s ease-out infinite;
+}
+
+.alerta-atencao-conteudo { flex:1; min-width:0; }
+
+.alerta-atencao-label {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    color:#c2610a;
+    background:rgba(217,119,6,.12);
+    padding:3px 9px;
+    border-radius:4px;
+    margin-bottom:8px;
+}
+.alerta-atencao-label .material-symbols-outlined { font-size:13px; }
+
+.alerta-atencao-titulo {
+    font-size:22px;
+    font-weight:800;
+    color:#c2610a;
+    line-height:1.2;
+    margin-bottom:6px;
+    letter-spacing:-.02em;
+}
+.alerta-atencao-titulo .numero-destaque {
+    font-size:28px;
+    font-weight:800;
+    margin-right:2px;
+    font-variant-numeric:tabular-nums;
+}
+
+.alerta-atencao-descricao {
+    font-size:13.5px;
+    color:var(--text);
+    line-height:1.55;
+    margin-bottom:14px;
+    font-weight:500;
+}
+.alerta-atencao-descricao strong {
+    color:#c2610a;
+    font-weight:700;
+}
+
+.alerta-atencao-acoes {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+.alerta-atencao-btn-primario {
+    height:40px;
+    padding:0 18px;
+    background:#d97706;
+    color:#ffffff;
+    border:1px solid #d97706;
+    border-radius:6px;
+    font-size:13.5px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    text-decoration:none;
+    white-space:nowrap;
+    box-shadow:0 2px 8px rgba(217,119,6,.3);
+    transition:background-color .15s ease, transform .12s ease, box-shadow .15s ease;
+}
+.alerta-atencao-btn-primario:hover {
+    background:#b45309;
+    border-color:#b45309;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(217,119,6,.4);
+}
+.alerta-atencao-btn-primario .material-symbols-outlined { font-size:18px; }
+
+.alerta-atencao-meta {
+    font-size:11.5px;
+    color:var(--text-secondary);
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-weight:500;
+}
+.alerta-atencao-meta .material-symbols-outlined {
+    font-size:14px;
+    color:#c2610a;
+}
+
+/* Dark mode do card de atenção */
+:root[data-theme="dark"] .alerta-atencao {
+    background:linear-gradient(135deg, #2a1a08 0%, #3a2408 100%);
+    border-color:#ea580c;
+    border-left-color:#ea580c;
+}
+:root[data-theme="dark"] .alerta-atencao::before {
+    background:repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(234,88,12,.06) 20px,
+        rgba(234,88,12,.06) 40px
+    );
+}
+:root[data-theme="dark"] .alerta-atencao-label {
+    background:rgba(234,88,12,.20);
+    color:#fdba74;
+}
+:root[data-theme="dark"] .alerta-atencao-titulo { color:#fdba74; }
+:root[data-theme="dark"] .alerta-atencao-descricao { color:#f5d5b8; }
+:root[data-theme="dark"] .alerta-atencao-descricao strong { color:#fdba74; }
+:root[data-theme="dark"] .alerta-atencao-btn-primario {
+    background:#ea580c;
+    border-color:#ea580c;
+}
+:root[data-theme="dark"] .alerta-atencao-btn-primario:hover {
+    background:#c2410c;
+    border-color:#c2410c;
+}
+:root[data-theme="dark"] .alerta-atencao-meta { color:#d9c0a0; }
+:root[data-theme="dark"] .alerta-atencao-meta .material-symbols-outlined { color:#fdba74; }
+
+/* ── ALERTA CRÍTICO (3+ vencidas = ilegal) ── */
 .alerta-critico {
     display:none;
     position:relative;
@@ -557,7 +754,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     border-left:6px solid var(--danger-strong);
     border-radius:8px;
     padding:20px 22px;
-    margin-bottom:20px;
+    margin-bottom:16px;
     box-shadow:var(--shadow-alerta);
     overflow:hidden;
     animation:alertaEntrar .35s cubic-bezier(.34,1.56,.64,1);
@@ -565,14 +762,8 @@ button:disabled { opacity:.65; cursor:not-allowed; }
 .alerta-critico.ativo { display:block; }
 
 @keyframes alertaEntrar {
-    from {
-        opacity:0;
-        transform:translateY(-10px) scale(.98);
-    }
-    to {
-        opacity:1;
-        transform:translateY(0) scale(1);
-    }
+    from { opacity:0; transform:translateY(-10px) scale(.98); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
 }
 
 .alerta-critico::before {
@@ -629,24 +820,12 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     animation:pulsarAnel 1.8s ease-out infinite;
 }
 @keyframes pulsarAnel {
-    0% {
-        transform:scale(.9);
-        opacity:.6;
-    }
-    70% {
-        transform:scale(1.3);
-        opacity:0;
-    }
-    100% {
-        transform:scale(1.3);
-        opacity:0;
-    }
+    0%   { transform:scale(.9); opacity:.6; }
+    70%  { transform:scale(1.3); opacity:0; }
+    100% { transform:scale(1.3); opacity:0; }
 }
 
-.alerta-critico-conteudo {
-    flex:1;
-    min-width:0;
-}
+.alerta-critico-conteudo { flex:1; min-width:0; }
 
 .alerta-critico-label {
     display:inline-flex;
@@ -662,9 +841,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     border-radius:4px;
     margin-bottom:8px;
 }
-.alerta-critico-label .material-symbols-outlined {
-    font-size:13px;
-}
+.alerta-critico-label .material-symbols-outlined { font-size:13px; }
 
 .alerta-critico-titulo {
     font-size:22px;
@@ -723,9 +900,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     transform:translateY(-1px);
     box-shadow:0 4px 12px rgba(185,28,28,.4);
 }
-.alerta-critico-btn-primario .material-symbols-outlined {
-    font-size:18px;
-}
+.alerta-critico-btn-primario .material-symbols-outlined { font-size:18px; }
 
 .alerta-critico-meta {
     font-size:11.5px;
@@ -740,6 +915,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     color:var(--danger-strong);
 }
 
+/* Dark mode do card crítico */
 :root[data-theme="dark"] .alerta-critico {
     background:linear-gradient(135deg, #2a1010 0%, #3a1414 100%);
     border-color:#dc2626;
@@ -758,15 +934,9 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     background:rgba(220,38,38,.18);
     color:#fca5a5;
 }
-:root[data-theme="dark"] .alerta-critico-titulo {
-    color:#fca5a5;
-}
-:root[data-theme="dark"] .alerta-critico-descricao {
-    color:#f0c5c5;
-}
-:root[data-theme="dark"] .alerta-critico-descricao strong {
-    color:#fca5a5;
-}
+:root[data-theme="dark"] .alerta-critico-titulo { color:#fca5a5; }
+:root[data-theme="dark"] .alerta-critico-descricao { color:#f0c5c5; }
+:root[data-theme="dark"] .alerta-critico-descricao strong { color:#fca5a5; }
 :root[data-theme="dark"] .alerta-critico-btn-primario {
     background:#dc2626;
     border-color:#dc2626;
@@ -775,44 +945,49 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     background:#b91c1c;
     border-color:#b91c1c;
 }
-:root[data-theme="dark"] .alerta-critico-meta {
-    color:#c9b0b0;
-}
-:root[data-theme="dark"] .alerta-critico-meta .material-symbols-outlined {
-    color:#fca5a5;
-}
+:root[data-theme="dark"] .alerta-critico-meta { color:#c9b0b0; }
+:root[data-theme="dark"] .alerta-critico-meta .material-symbols-outlined { color:#fca5a5; }
 
-/* ─── Responsivo do alerta crítico (MOBILE) ─── */
+/* ─── Responsivo dos alertas (MOBILE) ─── */
 @media (max-width: 640px) {
+    .alerta-atencao,
     .alerta-critico {
         padding: 16px 14px;
     }
+    .alerta-atencao-inner,
     .alerta-critico-inner {
         gap: 12px;
     }
+    .alerta-atencao-icone,
     .alerta-critico-icone {
         width: 44px;
         height: 44px;
     }
+    .alerta-atencao-icone .material-symbols-outlined,
     .alerta-critico-icone .material-symbols-outlined {
         font-size: 24px;
     }
+    .alerta-atencao-titulo,
     .alerta-critico-titulo {
         font-size: 18px;
         line-height: 1.25;
     }
+    .alerta-atencao-titulo .numero-destaque,
     .alerta-critico-titulo .numero-destaque {
         font-size: 22px;
     }
+    .alerta-atencao-descricao,
     .alerta-critico-descricao {
         font-size: 12.5px;
     }
+    .alerta-atencao-acoes,
     .alerta-critico-acoes {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
         width: 100%;
     }
+    .alerta-atencao-btn-primario,
     .alerta-critico-btn-primario {
         width: 100%;
         max-width: 100%;
@@ -821,12 +996,14 @@ button:disabled { opacity:.65; cursor:not-allowed; }
         padding: 0 14px;
         font-size: 13px;
     }
+    .alerta-atencao-btn-primario span:not(.material-symbols-outlined),
     .alerta-critico-btn-primario span:not(.material-symbols-outlined) {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         min-width: 0;
     }
+    .alerta-atencao-meta,
     .alerta-critico-meta {
         justify-content: center;
     }
@@ -1193,6 +1370,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
         transition-duration:.01ms !important;
         scroll-behavior:auto !important;
     }
+    .alerta-atencao-icone-wrapper::after,
     .alerta-critico-icone-wrapper::after {
         animation:none !important;
     }
@@ -1210,6 +1388,14 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     .card, .faixa-status { box-shadow:none !important; border:1px solid #999; page-break-inside:avoid; }
     .modulo-card { border:1px solid #999; background:#fff !important; }
     .page-header h1 { font-family:Georgia, serif; }
+    .alerta-atencao {
+        background:#fff !important;
+        border:2px solid #d97706 !important;
+        box-shadow:none !important;
+        animation:none !important;
+    }
+    .alerta-atencao::before { display:none !important; }
+    .alerta-atencao-icone-wrapper::after { display:none !important; }
     .alerta-critico {
         background:#fff !important;
         border:2px solid #b91c1c !important;
@@ -1446,7 +1632,47 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                     </p>
                 </div>
 
-                <!-- ALERTA CRÍTICO — FÉRIAS VENCIDAS (2+) -->
+                <!-- 🟠 ALERTA DE ATENÇÃO — 2 vencidas (prazo de 1 ano) -->
+                <div class="alerta-atencao" id="alertaAtencao" role="alert" aria-live="polite">
+                    <div class="alerta-atencao-inner">
+                        <div class="alerta-atencao-icone-wrapper">
+                            <div class="alerta-atencao-icone">
+                                <span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span>
+                            </div>
+                        </div>
+
+                        <div class="alerta-atencao-conteudo">
+                            <span class="alerta-atencao-label">
+                                <span class="material-symbols-outlined">schedule</span>
+                                Atenção — Prazo de regularização
+                            </span>
+
+                            <div class="alerta-atencao-titulo" id="alertaAtencaoTitulo">
+                                <span class="numero-destaque">—</span>
+                                servidores a regularizar
+                            </div>
+
+                            <div class="alerta-atencao-descricao" id="alertaAtencaoDescricao">
+                                Servidores com <strong>2 períodos aquisitivos vencidos</strong> ainda estão dentro do
+                                limite legal, mas o RH tem <strong>até 1 ano</strong> para regularizar a situação
+                                antes que se torne ilegal.
+                            </div>
+
+                            <div class="alerta-atencao-acoes">
+                                <a href="pendencias.html" class="alerta-atencao-btn-primario">
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                    <span>Ver servidores a regularizar</span>
+                                </a>
+                                <span class="alerta-atencao-meta">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                    Prazo: 1 ano
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔴 ALERTA CRÍTICO — 3+ vencidas (ilegal) -->
                 <div class="alerta-critico" id="alertaCritico" role="alert" aria-live="assertive">
                     <div class="alerta-critico-inner">
                         <div class="alerta-critico-icone-wrapper">
@@ -1458,7 +1684,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                         <div class="alerta-critico-conteudo">
                             <span class="alerta-critico-label">
                                 <span class="material-symbols-outlined">gavel</span>
-                                Ação obrigatória
+                                Ação obrigatória — Ilegal
                             </span>
 
                             <div class="alerta-critico-titulo" id="alertaCriticoTitulo">
@@ -1467,8 +1693,8 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                             </div>
 
                             <div class="alerta-critico-descricao" id="alertaCriticoDescricao">
-                                Servidores com <strong>2 ou mais períodos aquisitivos vencidos</strong> estão em
-                                situação crítica pela legislação. Regularize imediatamente para evitar passivos trabalhistas.
+                                Servidores com <strong>3 ou mais períodos aquisitivos vencidos</strong> estão em
+                                situação <strong>ilegal</strong> pela legislação. Regularize imediatamente.
                             </div>
 
                             <div class="alerta-critico-acoes">
@@ -1477,7 +1703,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                                     <span>Ver servidores afetados</span>
                                 </a>
                                 <span class="alerta-critico-meta">
-                                    <span class="material-symbols-outlined">history</span>
+                                    <span class="material-symbols-outlined">warning</span>
                                     Ação imediata
                                 </span>
                             </div>
@@ -1634,7 +1860,11 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                                             <td id="statServidores">—</td>
                                         </tr>
                                         <tr>
-                                            <td>Servidores em situação crítica</td>
+                                            <td>A regularizar (2 vencidas)</td>
+                                            <td id="statFeriasAtencao">—</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Situação crítica (3+ vencidas)</td>
                                             <td id="statFeriasPendentes">
                                                 <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores em situação crítica">
                                                     —
@@ -2066,11 +2296,12 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const CACHE_KEY      = 'cache-painel-dados-v1';
+const CACHE_KEY      = 'cache-painel-dados-v2';
 const CACHE_VERSAO   = 'cache-painel-versao';
 const CACHE_TTL_MS   = 30 * 60 * 1000;
 const DOC_RESUMO     = ['_estatisticas', 'resumo'];
-const LIMITE_LEGAL   = 2;
+const LIMITE_ATENCAO = 2;   // 2 vencidas → card laranja
+const LIMITE_CRITICO = 3;   // 3+ vencidas → card vermelho
 
 function mostrarAviso(texto, icone, carregando) {
     const aviso = document.getElementById('avisoCarregamento');
@@ -2214,9 +2445,11 @@ async function calcularResumoCompleto() {
             totalMesesConfigurados: meses.length,
             totalEscolas: totalEscolas,
             excecoesAtivas,
-            // ⬇️ AGORA SÓ CRÍTICOS (2+)
-            feriasPendentes: resultadoFerias.pendentes,
-            feriasVencidas: resultadoFerias.vencidas,
+            // 2 vencidas
+            servidoresAtencao: resultadoFerias.servidoresAtencao,
+            periodosAtencao: resultadoFerias.periodosAtencao,
+            // 3+ vencidas
+            feriasVencidas: resultadoFerias.periodosCriticos,
             servidoresComPendencia: resultadoFerias.servidoresCriticos,
             mesesParaExibir: meses.slice(0, 5).map(m => ({
                 mesReferencia: m.mesReferencia,
@@ -2254,7 +2487,8 @@ function resumoVazio() {
         totalMesesConfigurados: 0,
         totalEscolas: 0,
         excecoesAtivas: 0,
-        feriasPendentes: 0,
+        servidoresAtencao: 0,
+        periodosAtencao: 0,
         feriasVencidas: 0,
         servidoresComPendencia: 0,
         mesesParaExibir: [],
@@ -2305,7 +2539,7 @@ function periodosFechados(dataAdmissao, hoje) {
     return out;
 }
 
-/* ⬇️ Conta só servidores com 2+ vencidas (limite legal) */
+/* Conta ATENÇÃO (2) e CRÍTICO (3+) separadamente */
 function calcularFeriasPendentes(servidores, registros, hoje) {
     const porCpf = new Map();
     const porMatricula = new Map();
@@ -2328,9 +2562,10 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
         }
     });
 
-    let pendentes = 0;              // total de períodos "a prazo" (não usados no painel)
-    let vencidasCriticas = 0;       // total de períodos vencidos SOMENTE dos servidores críticos
-    let servidoresCriticos = 0;     // servidores com 2+ vencidas
+    let servidoresAtencao = 0;
+    let periodosAtencao = 0;
+    let servidoresCriticos = 0;
+    let periodosCriticos = 0;
 
     servidores.forEach(s => {
         const cpf = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
@@ -2356,7 +2591,6 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
         });
 
         let vencidasServidor = 0;
-        let pendentesServidor = 0;
 
         admissoes.forEach(adm => {
             periodosFechados(adm, hoje).forEach(p => {
@@ -2364,23 +2598,26 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
                 const limite = new Date(p.fim);
                 limite.setFullYear(limite.getFullYear() + 1);
                 if (limite < hoje) vencidasServidor++;
-                else pendentesServidor++;
             });
         });
 
-        pendentes += pendentesServidor;
-
-        // ⬇️ SÓ CONTA SE ATINGIU O LIMITE LEGAL
-        if (vencidasServidor >= LIMITE_LEGAL) {
+        // ATENÇÃO: exatamente 2 vencidas
+        if (vencidasServidor === LIMITE_ATENCAO) {
+            servidoresAtencao++;
+            periodosAtencao += vencidasServidor;
+        }
+        // CRÍTICO: 3 ou mais vencidas (já passou do limite legal)
+        else if (vencidasServidor >= LIMITE_CRITICO) {
             servidoresCriticos++;
-            vencidasCriticas += vencidasServidor;
+            periodosCriticos += vencidasServidor;
         }
     });
 
     return {
-        pendentes: pendentes,
-        vencidas: vencidasCriticas,
-        servidoresCriticos: servidoresCriticos
+        servidoresAtencao: servidoresAtencao,
+        periodosAtencao: periodosAtencao,
+        servidoresCriticos: servidoresCriticos,
+        periodosCriticos: periodosCriticos
     };
 }
 
@@ -2396,12 +2633,44 @@ function atualizarInfoCache(tipo, texto) {
 }
 
 function renderizarTudo(dados) {
+    renderizarAlertaAtencao(dados);
     renderizarAlertaCritico(dados);
     renderizarFaixaStatus(dados);
     renderizarPendencias(dados);
     renderizarResumo(dados);
     renderizarUltimosMeses(dados);
     renderizarTimeline(dados);
+}
+
+function renderizarAlertaAtencao(dados) {
+    const alerta = document.getElementById('alertaAtencao');
+    if (!alerta) return;
+
+    const servidores = dados.servidoresAtencao || 0;
+    const periodos = dados.periodosAtencao || 0;
+
+    if (servidores === 0) {
+        alerta.classList.remove('ativo');
+        return;
+    }
+
+    alerta.classList.add('ativo');
+
+    const tituloEl = document.getElementById('alertaAtencaoTitulo');
+    const descEl = document.getElementById('alertaAtencaoDescricao');
+
+    const palavraServidor = servidores === 1 ? 'servidor' : 'servidores';
+
+    tituloEl.innerHTML = `
+        <span class="numero-destaque">${servidores}</span>
+        ${palavraServidor} a regularizar
+    `;
+
+    descEl.innerHTML = `
+        <strong>${servidores} ${palavraServidor}</strong> ${servidores === 1 ? 'atingiu' : 'atingiram'}
+        <strong>2 períodos aquisitivos vencidos</strong>. O RH tem <strong>até 1 ano</strong> para regularizar
+        antes que a situação se torne ilegal.
+    `;
 }
 
 function renderizarAlertaCritico(dados) {
@@ -2432,8 +2701,7 @@ function renderizarAlertaCritico(dados) {
     descEl.innerHTML = `
         <strong>${criticos} ${palavraServidor}</strong> ${criticos === 1 ? 'acumulou' : 'acumularam'}
         <strong>${vencidas} ${palavraPeriodo}</strong> de férias vencidas no total —
-        acima do limite de ${LIMITE_LEGAL} permitidos pela legislação.
-        Regularize imediatamente para evitar passivos trabalhistas.
+        <strong>situação ilegal</strong> pela legislação. Regularize imediatamente.
     `;
 }
 
@@ -2518,13 +2786,24 @@ function renderizarPendencias(dados) {
         }
     }
 
-    // ⬇️ SÓ ADICIONA SE HOUVER SERVIDORES CRÍTICOS (2+)
+    // Pendência de ATENÇÃO (2 vencidas)
+    if (dados.servidoresAtencao > 0) {
+        pendencias.push({
+            tipo: 'warn',
+            icone: 'hourglass_empty',
+            titulo: `${dados.servidoresAtencao} servidor${dados.servidoresAtencao === 1 ? '' : 'es'} a regularizar (2 férias vencidas)`,
+            descricao: `Prazo de 1 ano para regularização antes de se tornar ilegal.`,
+            cta: 'Ver servidores', link: 'pendencias.html'
+        });
+    }
+
+    // Pendência CRÍTICA (3+ vencidas)
     if (dados.servidoresComPendencia > 0) {
         pendencias.push({
             tipo: 'danger',
             icone: 'warning',
             titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com limite legal excedido`,
-            descricao: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'} no total. Clique para ver a lista.`,
+            descricao: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'} no total. Situação ilegal.`,
             cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
@@ -2572,13 +2851,29 @@ function renderizarResumo(dados) {
         ? formatarDataHora(dados.dataAtualizacao)
         : '—';
 
+    // ⬇️ A REGULARIZAR (2 vencidas)
+    const tdAtencao = document.getElementById('statFeriasAtencao');
+    if (tdAtencao) {
+        const atencao = dados.servidoresAtencao || 0;
+        if (atencao === 0) {
+            tdAtencao.textContent = '0';
+            tdAtencao.title = 'Nenhum servidor com 2 vencidas no momento.';
+            tdAtencao.style.color = '';
+        } else {
+            tdAtencao.innerHTML = `${atencao} <span style="color:#c2610a;">⚠</span>`;
+            tdAtencao.title = `${atencao} servidor${atencao === 1 ? '' : 'es'} com 2 vencidas — prazo de 1 ano para regularizar.`;
+            tdAtencao.style.color = '#c2610a';
+            tdAtencao.style.fontWeight = '600';
+        }
+    }
+
+    // ⬇️ SITUAÇÃO CRÍTICA (3+ vencidas)
     const td = document.getElementById('statFeriasPendentes');
     const link = document.getElementById('linkFeriasPendentes');
     if (!td || !link) return;
 
     td.classList.remove('pendencia-ok', 'pendencia-alerta', 'pendencia-urgente');
 
-    // ⬇️ Agora mostra SÓ os servidores em situação crítica (2+)
     const criticos = dados.servidoresComPendencia || 0;
 
     if (criticos === 0) {
@@ -2595,7 +2890,7 @@ function renderizarResumo(dados) {
         <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
         <span class="stat-sub">limite legal excedido</span>
     `;
-    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 2+ períodos vencidos — clique para ver a lista completa.`;
+    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 3+ períodos vencidos — clique para ver a lista completa.`;
 }
 
 function renderizarUltimosMeses(dados) {
