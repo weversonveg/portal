@@ -275,86 +275,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
     margin-bottom: 4px;
 }
 
-/* ===== ALERTA DE FÉRIAS VENCIDAS (base) ===== */
-.alerta-ferias {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 16px 20px;
-    background: var(--danger-bg);
-    border: 1px solid var(--danger-bd);
-    border-left: 4px solid var(--danger);
-    border-radius: 6px;
-    color: var(--text);
-    margin-bottom: 14px;
-    box-shadow: var(--shadow-sm);
-    animation: alertaPulsa 2s ease-in-out infinite;
-}
-.alerta-ferias.hidden { display: none !important; }
-
-@keyframes alertaPulsa {
-    0%, 100% { box-shadow: var(--shadow-sm); }
-    50%      { box-shadow: 0 0 0 4px var(--danger-bg), 0 0 0 6px var(--danger-bd); }
-}
-
-.alerta-ferias-icone {
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
-    background: var(--danger);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.alerta-ferias-icone .material-symbols-outlined { font-size: 24px; }
-
-.alerta-ferias-texto {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-    flex: 1;
-    line-height: 1.5;
-}
-.alerta-ferias-texto strong {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--danger);
-    text-transform: uppercase;
-    letter-spacing: .3px;
-}
-.alerta-ferias-texto span {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-.alerta-ferias-texto span strong {
-    display: inline;
-    font-size: 13px;
-    color: var(--text);
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-/* ===== ALERTA PREVENTIVO (laranja) ===== */
-.alerta-ferias-preventivo {
-    background: var(--warn-bg);
-    border-color: var(--warn-bd);
-    border-left-color: var(--warn);
-    animation: alertaPulsaPreventivo 2.4s ease-in-out infinite;
-}
-.alerta-ferias-preventivo .alerta-ferias-icone {
-    background: var(--warn);
-}
-.alerta-ferias-preventivo .alerta-ferias-texto strong {
-    color: var(--warn);
-}
-@keyframes alertaPulsaPreventivo {
-    0%, 100% { box-shadow: var(--shadow-sm); }
-    50%      { box-shadow: 0 0 0 4px var(--warn-bg), 0 0 0 6px var(--warn-bd); }
-}
-
 /* ===== TABELA RESUMO FINAL ===== */
 .tabela-resumo-wrap {
     overflow-x: auto;
@@ -453,11 +373,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .resumo-cards-row { flex-direction:column; }
     .tabela-resumo { font-size: 11px; }
     .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
-    .alerta-ferias { padding: 14px 16px; }
-    .alerta-ferias-icone { width: 34px; height: 34px; }
-    .alerta-ferias-icone .material-symbols-outlined { font-size: 20px; }
-    .alerta-ferias-texto strong { font-size: 13px; }
-    .alerta-ferias-texto span { font-size: 12px; }
 }
 @media (max-width:640px){
     .topbar { padding:0 12px; gap:8px; }
@@ -485,8 +400,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .tabela-resumo thead th,
     .tabela-resumo tbody th,
     .tabela-resumo tbody td { border-color: #000 !important; }
-    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
-    .alerta-ferias-preventivo { border: 2px solid #a60 !important; }
 }
 
 .grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
@@ -657,28 +570,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
                 </section>
 
-                <!-- Alerta preventivo: 2+ férias vencidas (ainda dá tempo) -->
-                <div id="alertaFeriasVencidasPreventivo" class="alerta-ferias alerta-ferias-preventivo hidden" role="alert" aria-live="polite">
-                    <div class="alerta-ferias-icone" aria-hidden="true">
-                        <span class="material-symbols-outlined">schedule</span>
-                    </div>
-                    <div class="alerta-ferias-texto">
-                        <strong id="alertaFeriasPreventivoTitulo">Atenção: férias vencidas</strong>
-                        <span id="alertaFeriasPreventivoDetalhe">—</span>
-                    </div>
-                </div>
-
-                <!-- Alerta crítico: 2+ férias já ilegais -->
-                <div id="alertaFeriasVencidas" class="alerta-ferias hidden" role="alert" aria-live="polite">
-                    <div class="alerta-ferias-icone" aria-hidden="true">
-                        <span class="material-symbols-outlined">warning</span>
-                    </div>
-                    <div class="alerta-ferias-texto">
-                        <strong id="alertaFeriasTitulo">Atenção: férias vencidas</strong>
-                        <span id="alertaFeriasDetalhe">—</span>
-                    </div>
-                </div>
-
                 <div id="resumoExecutivo" class="resumo-executivo"></div>
 
                 <section class="form-card" id="cardTabela">
@@ -707,7 +598,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <option value="parcial">Parcial</option>
                                 <option value="disponivel">Disponível</option>
                                 <option value="programado">Programado</option>
-                                <option value="vencido_preventivo">Vencido (preventivo)</option>
                                 <option value="vencido">Vencido</option>
                                 <option value="perdido">Perdido</option>
                             </select>
@@ -749,6 +639,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div id="graficoPeriodos" class="grafico-periodos"></div>
                 </section>
 
+                <!-- ===== TABELA RESUMO FINAL ===== -->
                 <section class="form-card" id="cardResumoFinal">
                     <div class="card-title">
                         <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
@@ -1261,15 +1152,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
-                    if (p.dataLimiteGozo < hoje) {
-                        // Passou 1 ano do fim do ciclo → já é ilegal
-                        status = 'vencido';
-                    } else if (p.fim < hoje) {
-                        // Ciclo já fechou, mas ainda está dentro do prazo de gozo → preventivo
-                        status = 'vencido_preventivo';
-                    } else {
-                        status = 'disponivel';
-                    }
+                    if(p.dataLimiteGozo<hoje) status='vencido';
+                    else status='disponivel';
                 }
 
                 linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
@@ -1325,7 +1209,6 @@ function badgeStatus(s){
         disponivel:['badge-disponivel','event_available','Disponível'],
         pendente:['badge-pendente','schedule','Pendente'],
         vencido:['badge-vencido','error','Vencido'],
-        vencido_preventivo:['badge-pendente','schedule','Vencido (preventivo)'],
         perdido:['badge-perdido','cancel','Perdido']
     };
     const x=m[s]; if(!x)return '-';
@@ -1365,8 +1248,7 @@ function renderizarResumoExecutivo(){
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
                             <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f,'disponivel')}</span></span>
-                            <span class="chip">Vencidas <span class="num chip-num-amarelo">${c(f,'vencido_preventivo')}</span></span>
-                            <span class="chip">Críticas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
+                            <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
@@ -1386,101 +1268,6 @@ function renderizarResumoExecutivo(){
         `;
     });
     container.innerHTML = html;
-}
-
-/* ============================================================
-   ALERTA CRÍTICO DE FÉRIAS VENCIDAS (2 ou mais)
-   Férias que já passaram o prazo de gozo — situação ilegal.
-   ============================================================ */
-function renderizarAlertaFeriasVencidas() {
-    const card = document.getElementById('alertaFeriasVencidas');
-    const titulo = document.getElementById('alertaFeriasTitulo');
-    const detalhe = document.getElementById('alertaFeriasDetalhe');
-    if (!card || !titulo || !detalhe) return;
-
-    const vencidasPorMatricula = new Map();
-    linhasUnificadas.forEach(l => {
-        if (l.tipoKey === 'ferias' && l.status === 'vencido') {
-            if (!vencidasPorMatricula.has(l.matricula)) {
-                vencidasPorMatricula.set(l.matricula, []);
-            }
-            vencidasPorMatricula.get(l.matricula).push(l);
-        }
-    });
-
-    const matriculasAlerta = [];
-    vencidasPorMatricula.forEach((lista, mat) => {
-        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
-    });
-
-    if (matriculasAlerta.length === 0) {
-        card.classList.add('hidden');
-        return;
-    }
-
-    const totalMatriculas = matriculasAlerta.length;
-    const totalVencidas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
-
-    titulo.textContent = totalMatriculas === 1
-        ? 'Crítico: 2 ou mais férias já ilegais'
-        : `Crítico: ${totalMatriculas} matrículas com 2 ou mais férias já ilegais`;
-
-    const partes = matriculasAlerta
-        .sort((a, b) => b.qtd - a.qtd)
-        .map(m => `<strong>${m.mat}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
-        .join(' · ');
-
-    detalhe.innerHTML = `${totalVencidas} férias já passaram do prazo legal de gozo — ${partes}. Ação imediata do RH é necessária para regularizar a situação.`;
-
-    card.classList.remove('hidden');
-}
-
-/* ============================================================
-   ALERTA PREVENTIVO DE FÉRIAS VENCIDAS (2 ou mais)
-   Férias com ciclo fechado que ainda estão dentro do prazo
-   de gozo — o RH ainda tem tempo para regularizar.
-   ============================================================ */
-function renderizarAlertaFeriasVencidasPreventivo() {
-    const card = document.getElementById('alertaFeriasVencidasPreventivo');
-    const titulo = document.getElementById('alertaFeriasPreventivoTitulo');
-    const detalhe = document.getElementById('alertaFeriasPreventivoDetalhe');
-    if (!card || !titulo || !detalhe) return;
-
-    const preventivasPorMatricula = new Map();
-    linhasUnificadas.forEach(l => {
-        if (l.tipoKey === 'ferias' && l.status === 'vencido_preventivo') {
-            if (!preventivasPorMatricula.has(l.matricula)) {
-                preventivasPorMatricula.set(l.matricula, []);
-            }
-            preventivasPorMatricula.get(l.matricula).push(l);
-        }
-    });
-
-    const matriculasAlerta = [];
-    preventivasPorMatricula.forEach((lista, mat) => {
-        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
-    });
-
-    if (matriculasAlerta.length === 0) {
-        card.classList.add('hidden');
-        return;
-    }
-
-    const totalMatriculas = matriculasAlerta.length;
-    const totalPreventivas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
-
-    titulo.textContent = totalMatriculas === 1
-        ? 'Atenção: 2 ou mais férias vencidas (ainda dá tempo)'
-        : `Atenção: ${totalMatriculas} matrículas com 2 ou mais férias vencidas (ainda dá tempo)`;
-
-    const partes = matriculasAlerta
-        .sort((a, b) => b.qtd - a.qtd)
-        .map(m => `<strong>${m.mat}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
-        .join(' · ');
-
-    detalhe.innerHTML = `${totalPreventivas} férias com ciclo fechado — ${partes}. Ainda estão dentro do prazo legal de gozo, mas o RH deve regularizar antes do prazo final.`;
-
-    card.classList.remove('hidden');
 }
 
 function popularFiltroMatricula(){
@@ -1532,7 +1319,6 @@ function obterClasseSegmento(status) {
         disponivel: 'seg-disponivel',
         pendente: 'seg-pendente',
         vencido: 'seg-vencido',
-        vencido_preventivo: 'seg-pendente',
         perdido: 'seg-perdido'
     };
     return mapa[status] || 'seg-pendente';
@@ -1584,7 +1370,6 @@ function renderizarGrafico() {
                 : statusFerias.includes('parcial') ? 'parcial'
                 : statusFerias.includes('programado') ? 'programado'
                 : statusFerias.includes('vencido') ? 'vencido'
-                : statusFerias.includes('vencido_preventivo') ? 'vencido_preventivo'
                 : statusFerias.includes('disponivel') ? 'disponivel'
                 : 'pendente';
 
@@ -1611,9 +1396,6 @@ function renderizarGrafico() {
             } else if (statusPrincipal === 'disponivel') {
                 percentual = 60;
                 labelPercentual = 'Disponível';
-            } else if (statusPrincipal === 'vencido_preventivo') {
-                percentual = 40;
-                labelPercentual = 'Vencido (prev.)';
             } else if (statusPrincipal === 'vencido') {
                 percentual = 0;
                 labelPercentual = 'Vencido';
@@ -1695,7 +1477,7 @@ function renderizarGrafico() {
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--ok);"></span> Gozado / Disponível</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--purple);"></span> Programado</span>
-                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Vencido (preventivo)</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Pendente</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--gray-500);"></span> Perdido</span>
              </div>`;
@@ -1703,6 +1485,9 @@ function renderizarGrafico() {
     container.innerHTML = html;
 }
 
+/* ============================================================
+   TABELA RESUMO FINAL — corrigida
+   ============================================================ */
 function renderizarTabelaResumo() {
     const tbody = document.getElementById('tabelaResumoCorpo');
     const aviso = document.getElementById('avisoResumoVazio');
@@ -1749,6 +1534,7 @@ function renderizarTabelaResumo() {
 
         const linhasTexto = [];
 
+        /* ---------- FÉRIAS ---------- */
         const gruposFerias = new Map();
         ferias.forEach(f => {
             let chave = 'sem-data';
@@ -1759,6 +1545,7 @@ function renderizarTabelaResumo() {
                 const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
                 chave = m ? m[1] : 'sem-data';
             } else if (f.status === 'programado') {
+                // Usa a data do GOZO (programada), não o início do ciclo
                 textoTrecho = f.gozo && f.gozo !== '—'
                     ? `Programado ${f.gozo}`
                     : 'Programado';
@@ -1770,9 +1557,6 @@ function renderizarTabelaResumo() {
             } else if (f.status === 'vencido') {
                 textoTrecho = `Vencido em ${f.prazo || '—'}`;
                 chave = 'vencido';
-            } else if (f.status === 'vencido_preventivo') {
-                textoTrecho = `Vencido (preventivo) — prazo ${f.prazo || '—'}`;
-                chave = 'vencido_preventivo';
             } else {
                 textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
                 chave = 'outro';
@@ -1783,10 +1567,13 @@ function renderizarTabelaResumo() {
         });
 
         gruposFerias.forEach(lista => {
+            // Deduplica: mostra só 1 por grupo
             linhasTexto.push({ classe: 'destaque', html: lista[0].texto });
         });
 
-        const prioridade = { gozado: 1, programado: 2, disponivel: 3, vencido_preventivo: 4, perdido: 5 };
+        /* ---------- FOLGA ANIVERSÁRIO ---------- */
+        // Deduplica por data/status — só uma linha por período
+        const prioridade = { gozado: 1, programado: 2, disponivel: 3, perdido: 4 };
         const folgasUnicas = new Map();
 
         folgas.forEach(g => {
@@ -1820,6 +1607,7 @@ function renderizarTabelaResumo() {
             }
         });
 
+        // Mostra apenas a folga mais relevante do período
         const folgasLista = [...folgasUnicas.values()];
         if (folgasLista.length > 0) {
             folgasLista.sort((a, b) => (prioridade[a.status] || 99) - (prioridade[b.status] || 99));
@@ -1968,8 +1756,6 @@ async function processarServidores(docs){
     linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
 
     renderizarResumoExecutivo();
-    renderizarAlertaFeriasVencidasPreventivo();
-    renderizarAlertaFeriasVencidas();
     popularFiltroMatricula();
     document.getElementById('filtroTipo').value='';
     document.getElementById('filtroStatus').value='';
@@ -2002,54 +1788,6 @@ function mostrarErro(t){
 function ocultarErro(){document.getElementById('mensagemErro').classList.remove('ativo');}
 
 window.buscarServidor = buscarServidor;
-
-/* ============================================================
-   AUTO-BUSCA POR PARÂMETRO DE URL
-   Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidor=<id>
-   ============================================================ */
-(function autoBuscarPorUrl() {
-    const params = new URLSearchParams(window.location.search);
-
-    let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
-    termo = termo.trim();
-    if (!termo) return;
-
-    const apenasDigitos = termo.replace(/\D/g, '');
-    const input = document.getElementById('termoBusca');
-    if (!input) return;
-
-    if (apenasDigitos.length === 11) {
-        input.value = apenasDigitos.replace(
-            /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
-            '$1.$2.$3-$4'
-        );
-    } else {
-        input.value = termo;
-    }
-
-    let tentativas = 0;
-    const MAX_TENTATIVAS = 40;
-
-    const tentar = setInterval(() => {
-        tentativas++;
-
-        if (acessoAutorizado) {
-            clearInterval(tentar);
-            setTimeout(() => {
-                buscarServidor();
-                try {
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete('cpf');
-                    url.searchParams.delete('matricula');
-                    url.searchParams.delete('servidor');
-                    window.history.replaceState({}, '', url.toString());
-                } catch (e) {}
-            }, 200);
-        } else if (tentativas >= MAX_TENTATIVAS) {
-            clearInterval(tentar);
-        }
-    }, 200);
-})();
 </script>
 
 </body>
