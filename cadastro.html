@@ -32,6 +32,9 @@
 </script>
 
 <style>
+/* ============================================================
+   LAYOUT — TOKENS
+   ============================================================ */
 :root,
 :root[data-theme="light"] {
     --brand: #1f3a5f;
@@ -907,6 +910,9 @@ tbody tr:hover td { background: var(--surface-2); }
 }
 #modalConfirm #btnModalConfirmar:active { background: #061A0F; border-color: #061A0F; }
 
+/* ============================================================
+   AUTOCOMPLETE (DROPDOWN PERSONALIZADO)
+   ============================================================ */
 .autocomplete-wrapper {
     position: relative;
     width: 100%;
@@ -1225,6 +1231,7 @@ tbody tr:hover td { background: var(--surface-2); }
                                 <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" autocomplete="name" required>
                             </div>
 
+                            <!-- NOVO CAMPO: SEXO -->
                             <div class="form-group">
                                 <label for="sexo">Sexo <span>*</span></label>
                                 <select id="sexo" name="sexo" required>
@@ -1898,10 +1905,8 @@ let verificacaoCpfEmAndamento = false;
 
 // Arrays globais
 let escolasDisponiveis = [];
-// Array de objetos cargo: { masculino: "Professor", feminino: "Professora" } (feminino pode ser null)
+// Array de objetos cargo: { masculino: "Professor", feminino: "Professora" }
 let cargosBase = [];
-// Lista atual de cargos exibidos no autocomplete (varia conforme o sexo selecionado)
-let cargosDisponiveis = [];
 
 
 async function carregarEmpresasNosSelects() {
@@ -1965,10 +1970,9 @@ async function carregarUnidadesEscolares() {
 
 // =========================================================
 // CARREGAR CARGOS DO FIRESTORE (com suporte a feminino)
-// Estrutura esperada no documento:
-//   { nome: "Professor", feminino: "Professora" }
-// ou apenas:
-//   { nome: "Auxiliar de Serviços Gerais" }
+// Aceita várias nomenclaturas de campo para ser flexível:
+//   masculino: nome, cargo, titulo, masculino
+//   feminino:  feminino, feminina, nomeFeminino, nome_feminino
 // =========================================================
 async function carregarCargos() {
     try {
@@ -1977,15 +1981,22 @@ async function carregarCargos() {
 
         snapshot.forEach(d => {
             const data = d.data();
+            
+            // Tenta várias nomenclaturas possíveis para o masculino
             const masculino = data.nome || data.cargo || data.titulo || data.masculino || d.id;
-            const feminino  = data.feminino || null;
+            
+            // Tenta várias nomenclaturas possíveis para o feminino
+            const feminino = data.feminino 
+                          || data.feminina 
+                          || data.nomeFeminino 
+                          || data.nome_feminino 
+                          || null;
+            
             cargosBase.push({ masculino, feminino });
         });
 
         cargosBase.sort((a, b) => a.masculino.toLowerCase().localeCompare(b.masculino.toLowerCase()));
         
-        // Inicializa lista com forma masculina como padrão
-        atualizarListaCargosPorSexo();
     } catch (e) {
         console.error('Erro ao carregar cargos:', e);
     }
@@ -1993,21 +2004,21 @@ async function carregarCargos() {
 
 
 // =========================================================
-// ATUALIZA a lista de cargos exibidos conforme o sexo selecionado
+// CALCULA a lista de cargos no momento do uso (não usa cache)
+// Isso garante que se o sexo mudar, a lista muda imediatamente
 // =========================================================
-function atualizarListaCargosPorSexo() {
+function getListaCargosAtual() {
     const sexoSelect = document.getElementById('sexo');
     const sexo = sexoSelect ? sexoSelect.value : '';
 
+    let lista;
     if (sexo === 'F') {
-        // Feminino: usa feminino quando disponível, senão o masculino
-        cargosDisponiveis = cargosBase.map(c => c.feminino || c.masculino);
+        lista = cargosBase.map(c => c.feminino || c.masculino);
     } else {
-        // Masculino ou não selecionado: sempre usa masculino
-        cargosDisponiveis = cargosBase.map(c => c.masculino);
+        lista = cargosBase.map(c => c.masculino);
     }
 
-    cargosDisponiveis.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    return lista.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
 
@@ -2015,8 +2026,6 @@ function atualizarListaCargosPorSexo() {
 // Quando o sexo muda, tenta converter o cargo atual para a forma correspondente
 // =========================================================
 function aoMudarSexo() {
-    atualizarListaCargosPorSexo();
-
     const sexoSelect = document.getElementById('sexo');
     const sexo = sexoSelect ? sexoSelect.value : '';
 
@@ -2062,6 +2071,7 @@ function inicializarAutocomplete(inputIds, getListaFn, nomeCampo = 'item') {
         wrapper.appendChild(list);
 
         input.addEventListener('focus', () => {
+            // CHAVE DA CORREÇÃO: chama a função para obter a lista ATUAL
             const listaAtual = typeof getListaFn === 'function' ? getListaFn() : getListaFn;
             renderizarLista(input, list, input.value, listaAtual, nomeCampo);
             list.classList.add('ativo');
@@ -2206,21 +2216,19 @@ document.addEventListener("DOMContentLoaded", async function() {
       carregarCargos()
   ]);
 
-  // Inicializa autocomplete de ESCOLAS (lista estática)
   inicializarAutocomplete(
       ['escola1_m1', 'escola2_m1', 'escola1_m2', 'escola2_m2'],
       () => escolasDisponiveis,
       'escola'
   );
 
-  // Inicializa autocomplete de CARGOS (lista dinâmica, muda com o sexo)
+  // CORREÇÃO: usa função que calcula a lista no momento do uso
   inicializarAutocomplete(
       ['cargo1', 'cargo2'],
-      () => cargosDisponiveis,
+      getListaCargosAtual, 
       'cargo'
   );
 
-  // Listener do select de sexo: atualiza lista e converte cargo se já houver seleção
   const sexoSelect = document.getElementById('sexo');
   if (sexoSelect) {
       sexoSelect.addEventListener('change', aoMudarSexo);
@@ -2280,7 +2288,6 @@ async function carregarDadosServidor(id) {
       document.getElementById("dataNascimento").value = d.dataNascimento || "";
       document.getElementById("telefone").value = d.telefone || "";
 
-      // Atualiza lista de cargos conforme sexo carregado
       aoMudarSexo();
 
       if (d.dataNascimento && document.getElementById("dataNascimento")._flatpickr) {
@@ -2363,7 +2370,7 @@ async function carregarDadosServidor(id) {
       });
       ['cargo1', 'cargo2'].forEach(id => {
           const el = document.getElementById(id);
-          if (el) validarCampoAutocomplete(el, cargosDisponiveis);
+          if (el) validarCampoAutocomplete(el, getListaCargosAtual());
       });
 
       ultimoCpfVerificado = normalizarCPF(document.getElementById("cpf").value);
@@ -2625,6 +2632,8 @@ window.salvarServidor = async function(event) {
       return;
   }
 
+  // Usa getListaCargosAtual() para validar com base no sexo ATUAL
+  const listaCargosAtual = getListaCargosAtual();
   const camposCargo = ['cargo1', 'cargo2'];
   let cargoInvalido = false;
   let primeiroCampoCargoInvalido = null;
@@ -2632,7 +2641,7 @@ window.salvarServidor = async function(event) {
   camposCargo.forEach(id => {
       const campo = document.getElementById(id);
       if (campo && campo.value.trim()) {
-          if (!cargosDisponiveis.includes(campo.value.trim())) {
+          if (!listaCargosAtual.includes(campo.value.trim())) {
               campo.classList.add('erro-input');
               cargoInvalido = true;
               if (!primeiroCampoCargoInvalido) primeiroCampoCargoInvalido = campo;
@@ -2774,7 +2783,6 @@ window.salvarServidor = async function(event) {
       mostrarMensagem("Servidor cadastrado com sucesso!", "sucesso");
 
       document.getElementById("formServidor").reset();
-      atualizarListaCargosPorSexo(); // reseta para masculino
       ultimoCpfVerificado = "";
       cpfDuplicado = false;
     }
