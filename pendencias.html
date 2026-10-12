@@ -4,9 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Servidores com férias vencidas — Sistema de Gestão de Vale Transporte SEMED.">
+<meta name="description" content="Servidores com férias a regularizar — Sistema de Gestão de Vale Transporte SEMED.">
 <meta name="theme-color" content="#1f3a5f">
-<title>Férias Vencidas — Vale Transporte</title>
+<title>Férias a Regularizar — Vale Transporte</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -499,6 +499,11 @@ button { font:inherit; color:inherit; cursor:pointer; }
     background:var(--danger-bg);
     border-color:var(--danger-bd);
 }
+.badge-alerta {
+    color:var(--warn);
+    background:var(--warn-bg);
+    border-color:var(--warn-bd);
+}
 .badge-limite-legal {
     color:#ffffff;
     background:var(--danger);
@@ -525,6 +530,16 @@ button { font:inherit; color:inherit; cursor:pointer; }
     border-radius:3px;
     font-variant-numeric:tabular-nums;
     white-space:nowrap;
+}
+.periodo-tag.vencido {
+    background:var(--danger-bg);
+    color:var(--danger);
+    border:1px solid var(--danger-bd);
+}
+.periodo-tag.completo {
+    background:var(--warn-bg);
+    color:var(--warn);
+    border:1px solid var(--warn-bd);
 }
 
 /* AÇÕES */
@@ -782,8 +797,8 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <span class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
                 <div class="topbar-title">
-                    <strong>Férias Vencidas</strong>
-                    <span>SEMED — Servidores com férias vencidas</span>
+                    <strong>Férias a Regularizar</strong>
+                    <span>SEMED — Servidores com 2+ períodos completos</span>
                 </div>
             </div>
 
@@ -833,15 +848,16 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <span class="material-symbols-outlined">home</span>
                     <a href="inicial.html">Início</a>
                     <span class="sep" aria-hidden="true">/</span>
-                    <span aria-current="page">Férias vencidas</span>
+                    <span aria-current="page">Férias a regularizar</span>
                 </div>
 
                 <div class="page-header">
                     <div class="page-header-info">
-                        <h1>Férias vencidas</h1>
+                        <h1>Férias a regularizar</h1>
                         <p>
-                            Servidores que acumularam <strong>2 ou mais períodos aquisitivos de férias vencidos</strong>,
-                            em desacordo com o limite legal. Ordenado por quantidade de períodos vencidos (maior primeiro).
+                            Servidores que já acumularam <strong>2 ou mais períodos aquisitivos completos</strong> de férias.
+                            A partir deste ponto, o RH tem <strong>até 1 ano</strong> para regularizar antes que a situação
+                            se torne ilegal. Ordenado por quantidade de períodos (maior primeiro).
                         </p>
                     </div>
                     <div class="page-header-acoes">
@@ -852,13 +868,15 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                 </div>
 
-                <!-- ALERTA LEGAL -->
+                <!-- AVISO LEGAL -->
                 <div class="aviso-legal">
-                    <span class="material-symbols-outlined">gavel</span>
+                    <span class="material-symbols-outlined">schedule</span>
                     <div>
-                        <span class="aviso-legal-titulo">Limite legal</span>
-                        Pela legislação trabalhista, o servidor <strong>não pode acumular mais de 2 (dois) períodos aquisitivos de férias vencidos</strong>.
-                        Esta página lista apenas os servidores que <strong>ultrapassaram esse limite</strong>.
+                        <span class="aviso-legal-titulo">Alerta antecipado</span>
+                        Quando o servidor completa <strong>2 períodos aquisitivos</strong> sem gozar as férias, o prazo legal
+                        para regularização ainda está vigente (o servidor tem direito a gozar cada período em até 12 meses
+                        após o término). <strong>Este é o momento de agir</strong>: regularize agora para evitar que o
+                        acúmulo se torne ilegal.
                     </div>
                 </div>
 
@@ -873,16 +891,16 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                 </div>
 
-                <!-- KPI: LIMITE LEGAL -->
+                <!-- KPI: SERVIDORES A REGULARIZAR -->
                 <div class="kpis">
                     <div class="kpi critico">
                         <div class="kpi-icone">
                             <span class="material-symbols-outlined">gavel</span>
                         </div>
                         <div class="kpi-info">
-                            <span class="kpi-label">Limite legal</span>
+                            <span class="kpi-label">A regularizar</span>
                             <span class="kpi-valor" id="kpiCriticos">—</span>
-                            <span class="kpi-sub">com 2+ períodos vencidos</span>
+                            <span class="kpi-sub">com 2+ períodos completos</span>
                         </div>
                     </div>
                 </div>
@@ -892,7 +910,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div class="card-header">
                         <div class="card-header-esq">
                             <span class="material-symbols-outlined" aria-hidden="true">list_alt</span>
-                            <h2>Servidores em situação crítica</h2>
+                            <h2>Servidores a regularizar</h2>
                         </div>
                         <div class="card-header-acoes">
                             <span class="badge badge-neutro" id="resultadoContador">—</span>
@@ -901,12 +919,12 @@ button { font:inherit; color:inherit; cursor:pointer; }
 
                     <div class="card-body sem-padding" style="padding:0;">
                         <div class="tabela-wrapper">
-                            <table class="tabela" aria-label="Servidores com férias vencidas">
+                            <table class="tabela" aria-label="Servidores com férias a regularizar">
                                 <thead>
                                     <tr>
                                         <th scope="col">Servidor</th>
                                         <th scope="col">CPF</th>
-                                        <th scope="col">Vencidas</th>
+                                        <th scope="col">Completos</th>
                                         <th scope="col">Períodos</th>
                                         <th scope="col">Situação</th>
                                         <th scope="col">Ações</th>
@@ -1205,10 +1223,11 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const CACHE_KEY       = 'cache-pendencias-v3';
-const CACHE_TTL_MS    = 30 * 60 * 1000;
-const DOC_PENDENCIAS  = ['_estatisticas', 'pendencias_vencidas'];
-const LIMITE_LEGAL    = 2;
+const CACHE_KEY        = 'cache-pendencias-v4';
+const CACHE_TTL_MS     = 30 * 60 * 1000;
+const DOC_PENDENCIAS   = ['_estatisticas', 'pendencias_vencidas'];
+const MIN_PERIODOS     = 2;   // alerta a partir de 2 períodos completos
+const PRAZO_LEGAL_ANOS = 1;   // 12 meses após o fim do período aquisitivo
 
 let listaCompleta = [];
 
@@ -1259,7 +1278,16 @@ function parseDataParaDate(v) {
     return null;
 }
 
-function periodosFechados(dataAdmissao, hoje) {
+/**
+ * Retorna todos os períodos aquisitivos FECHADOS (completos) de um servidor,
+ * com marcação de vencido ou não.
+ *
+ *   - Período aquisitivo = 12 meses contados da admissão (ou do fim do anterior).
+ *   - "Completo"   → data de fim do período <= hoje.
+ *   - "Vencido"    → fim + 12 meses (prazo concessivo) < hoje.
+ *   - "A vencer"   → completo mas dentro do prazo concessivo.
+ */
+function periodosAquisitivos(dataAdmissao, hoje) {
     const adm = parseDataParaDate(dataAdmissao);
     if (!adm) return [];
     const ref = new Date(hoje); ref.setHours(0,0,0,0);
@@ -1269,15 +1297,25 @@ function periodosFechados(dataAdmissao, hoje) {
         const fim = new Date(ini);
         fim.setFullYear(fim.getFullYear() + 1);
         fim.setDate(fim.getDate() - 1);
-        if (fim <= ref) {
-            out.push({
-                inicio: new Date(ini),
-                fim: new Date(fim),
-                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`
-            });
-            ini = new Date(fim);
-            ini.setDate(ini.getDate() + 1);
-        } else break;
+
+        // Ainda não completou 12 meses → para
+        if (fim > ref) break;
+
+        // Limite concessivo: fim + 12 meses
+        const limiteConcessivo = new Date(fim);
+        limiteConcessivo.setFullYear(limiteConcessivo.getFullYear() + PRAZO_LEGAL_ANOS);
+
+        const vencido = limiteConcessivo < ref;
+
+        out.push({
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            vencido: vencido
+        });
+
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
     }
     return out;
 }
@@ -1293,8 +1331,13 @@ function periodosUnicos(arr) {
     return Array.from(new Set(arr)).sort();
 }
 
-/* Calcula SOMENTE servidores com 2+ períodos vencidos (limite legal) */
-function calcularVencidas(servidores, registros, hoje) {
+/**
+ * Regra nova:
+ *   - Conta os períodos aquisitivos COMPLETOS que ainda NÃO foram lançados.
+ *   - Se esse número >= MIN_PERIODOS (2) → entra na lista "a regularizar".
+ *   - O campo `vencidos` continua sendo calculado para exibir destaque.
+ */
+function calcularARegularizar(servidores, registros, hoje) {
     const porCpf = new Map();
     const porMatricula = new Map();
 
@@ -1341,25 +1384,22 @@ function calcularVencidas(servidores, registros, hoje) {
             if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
         });
 
-        const periodosVencidos = [];
-
+        const todosCompletos = [];
         admissoes.forEach(adm => {
-            periodosFechados(adm, hoje).forEach(p => {
-                if (lancados.has(p.anoReferencia)) return;
-                const limite = new Date(p.fim);
-                limite.setFullYear(limite.getFullYear() + 1);
-                if (limite < hoje) {
-                    periodosVencidos.push(p.anoReferencia);
-                }
+            periodosAquisitivos(adm, hoje).forEach(p => {
+                todosCompletos.push(p);
             });
         });
 
-        if (periodosVencidos.length === 0) return;
+        // Filtra apenas os que ainda NÃO foram lançados
+        const naoLancados = todosCompletos.filter(p => !lancados.has(p.anoReferencia));
 
-        const vencidas = periodosVencidos.length;
+        if (naoLancados.length < MIN_PERIODOS) return;
 
-        // ⚠️ Só entra na lista quem atingiu/excedeu o limite legal (2+)
-        if (vencidas < LIMITE_LEGAL) return;
+        const qtdCompletos        = naoLancados.length;
+        const qtdVencidos         = naoLancados.filter(p => p.vencido).length;
+        const periodosTexto       = periodosUnicos(naoLancados.map(p => p.anoReferencia));
+        const periodosVencidosSet = new Set(naoLancados.filter(p => p.vencido).map(p => p.anoReferencia));
 
         lista.push({
             id: s.id,
@@ -1367,13 +1407,17 @@ function calcularVencidas(servidores, registros, hoje) {
             cpfMascarado: mascararCPF(cpf),
             cpfOriginal: cpf,
             matricula: mats[0] || '—',
-            vencidas: vencidas,
-            periodos: periodosUnicos(periodosVencidos)
+            completos: qtdCompletos,
+            vencidos: qtdVencidos,
+            periodos: periodosTexto,
+            periodosVencidos: Array.from(periodosVencidosSet)
         });
     });
 
+    // Ordena: mais períodos completos primeiro; depois mais vencidos; depois nome
     lista.sort((a, b) => {
-        if (b.vencidas !== a.vencidas) return b.vencidas - a.vencidas;
+        if (b.completos !== a.completos) return b.completos - a.completos;
+        if (b.vencidos !== a.vencidos) return b.vencidos - a.vencidos;
         return (a.nome || '').localeCompare(b.nome || '');
     });
 
@@ -1388,7 +1432,7 @@ async function carregarDoFirestore() {
     const snapReg = await getDocs(collection(db, 'registro_ferias_folgas'));
     const registros = [];
     snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
-    return calcularVencidas(servidores, registros, hoje);
+    return calcularARegularizar(servidores, registros, hoje);
 }
 
 async function iniciar() {
@@ -1401,7 +1445,7 @@ async function iniciar() {
         return;
     }
 
-    mostrarAviso('Carregando lista de férias vencidas…', 'sync', true);
+    mostrarAviso('Carregando lista de servidores a regularizar…', 'sync', true);
     let lista = null;
     try {
         const snap = await getDoc(doc(db, DOC_PENDENCIAS[0], DOC_PENDENCIAS[1]));
@@ -1410,7 +1454,7 @@ async function iniciar() {
             if (Array.isArray(dados.servidores)) lista = dados.servidores;
         }
     } catch (e) {
-        console.warn('[Vencidas] Não foi possível ler doc, recalculando…', e);
+        console.warn('[Regularizar] Não foi possível ler doc, recalculando…', e);
     }
 
     if (!lista) {
@@ -1424,11 +1468,11 @@ async function iniciar() {
                     total: lista.length
                 });
             } catch (e) {
-                console.warn('[Vencidas] Não foi possível salvar doc.', e);
+                console.warn('[Regularizar] Não foi possível salvar doc.', e);
             }
         } catch (e) {
-            console.error('[Vencidas] Erro ao calcular:', e);
-            mostrarAviso('Erro ao calcular férias vencidas. Tente novamente.', 'error', false);
+            console.error('[Regularizar] Erro ao calcular:', e);
+            mostrarAviso('Erro ao calcular lista. Tente novamente.', 'error', false);
             return;
         }
     }
@@ -1465,14 +1509,25 @@ function atualizarAlertaCritico() {
     const titulo = document.getElementById('alertaCriticoTitulo');
     const descricao = document.getElementById('alertaCriticoDescricao');
 
+    const comVencidos = criticos.filter(c => c.vencidos > 0);
+
     if (criticos.length === 1) {
-        titulo.textContent = '1 servidor ultrapassou o limite legal';
-        descricao.innerHTML = `O servidor <strong>${escaparHtml(criticos[0].nome)}</strong> acumulou <strong>${criticos[0].vencidas} períodos aquisitivos vencidos</strong>, o que excede o limite de ${LIMITE_LEGAL} permitidos pela legislação. Providencie a regularização imediata.`;
+        if (criticos[0].vencidos > 0) {
+            titulo.textContent = '1 servidor já está com período vencido';
+            descricao.innerHTML = `O servidor <strong>${escaparHtml(criticos[0].nome)}</strong> tem <strong>${criticos[0].completos} períodos completos</strong> (sendo <strong>${criticos[0].vencidos} já vencido(s)</strong>) sem lançamento. Regularize com urgência.`;
+        } else {
+            titulo.textContent = '1 servidor precisa de regularização';
+            descricao.innerHTML = `O servidor <strong>${escaparHtml(criticos[0].nome)}</strong> já completou <strong>${criticos[0].completos} períodos aquisitivos</strong> sem lançamento. Regularize dentro do prazo para evitar acúmulo ilegal.`;
+        }
+        return;
+    }
+
+    if (comVencidos.length > 0) {
+        titulo.textContent = `${comVencidos.length} ${comVencidos.length === 1 ? 'servidor já tem período vencido' : 'servidores já têm períodos vencidos'}`;
+        descricao.innerHTML = `Dos <strong>${criticos.length} servidores</strong> a regularizar, <strong>${comVencidos.length}</strong> já estão com pelo menos 1 período <strong>vencido</strong>. Regularize com urgência para evitar acúmulo ilegal.`;
     } else {
-        const nomes = criticos.slice(0, 3).map(c => escaparHtml(c.nome)).join(', ');
-        const restantes = criticos.length > 3 ? ` e mais ${criticos.length - 3}` : '';
-        titulo.textContent = `${criticos.length} servidores ultrapassaram o limite legal`;
-        descricao.innerHTML = `<strong>${criticos.length} servidores</strong> acumularam <strong>${LIMITE_LEGAL}+ períodos aquisitivos vencidos</strong>, excedendo o limite permitido pela legislação. Entre eles: ${nomes}${restantes}. Providencie a regularização.`;
+        titulo.textContent = `${criticos.length} servidores precisam de regularização`;
+        descricao.innerHTML = `<strong>${criticos.length} servidores</strong> já completaram <strong>2 ou mais períodos aquisitivos</strong> sem lançamento. Regularize dentro do prazo para evitar acúmulo ilegal.`;
     }
 }
 
@@ -1503,8 +1558,8 @@ function renderizarTabela(lista) {
                 <td colspan="6" style="padding:0;">
                     <div class="estado-vazio ok">
                         <span class="material-symbols-outlined">check_circle</span>
-                        <strong>Nenhum servidor acima do limite legal</strong>
-                        Nenhum servidor acumulou 2 ou mais períodos de férias vencidos. Excelente!
+                        <strong>Nenhum servidor a regularizar</strong>
+                        Nenhum servidor acumulou 2 ou mais períodos aquisitivos completos. Situação em dia!
                     </div>
                 </td>
             </tr>
@@ -1513,18 +1568,28 @@ function renderizarTabela(lista) {
     }
 
     tbody.innerHTML = lista.map(item => {
+        const vencidosSet = new Set(item.periodosVencidos);
+
         const periodosHtml = item.periodos.length
-            ? item.periodos.slice(0, 6).map(p => `<span class="periodo-tag">${p}</span>`).join('') +
+            ? item.periodos.slice(0, 6).map(p => {
+                const vencido = vencidosSet.has(p);
+                return `<span class="periodo-tag ${vencido ? 'vencido' : 'completo'}">${p}</span>`;
+            }).join('') +
               (item.periodos.length > 6 ? `<span class="periodo-tag">+${item.periodos.length - 6}</span>` : '')
             : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
 
-        const situacaoHtml = `<span class="badge badge-limite-legal"><span class="material-symbols-outlined" style="font-size:11px;">gavel</span>Limite legal</span>`;
+        let situacaoHtml;
+        if (item.vencidos > 0) {
+            situacaoHtml = `<span class="badge badge-limite-legal"><span class="material-symbols-outlined" style="font-size:11px;">error</span>${item.vencidos} vencido${item.vencidos > 1 ? 's' : ''}</span>`;
+        } else {
+            situacaoHtml = `<span class="badge badge-alerta"><span class="material-symbols-outlined" style="font-size:11px;">schedule</span>Regularizar</span>`;
+        }
 
         const hrefLinhaTempo = montarLinkLinhaTempo(item);
         const hrefLancamentos = montarLinkLancamentos(item);
 
         return `
-            <tr class="linha-critica">
+            <tr class="${item.vencidos > 0 ? 'linha-critica' : ''}">
                 <td>
                     <span class="nome-servidor">${escaparHtml(item.nome)}</span>
                     <span class="matricula-servidor">Mat. ${escaparHtml(item.matricula)}</span>
@@ -1532,7 +1597,7 @@ function renderizarTabela(lista) {
                 <td><span style="font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;">${escaparHtml(item.cpfMascarado)}</span></td>
                 <td>
                     <span class="badge badge-vencidas">
-                        <span class="material-symbols-outlined" style="font-size:13px;">error</span>${item.vencidas}
+                        <span class="material-symbols-outlined" style="font-size:13px;">error</span>${item.completos}
                     </span>
                 </td>
                 <td><div class="periodos-lista">${periodosHtml}</div></td>
@@ -1586,7 +1651,7 @@ document.getElementById('btnAtualizar').addEventListener('click', async function
                 total: lista.length
             });
         } catch (e) {
-            console.warn('[Vencidas] Não foi possível salvar doc.', e);
+            console.warn('[Regularizar] Não foi possível salvar doc.', e);
         }
         listaCompleta = lista;
         salvarCache(lista);
@@ -1594,7 +1659,7 @@ document.getElementById('btnAtualizar').addEventListener('click', async function
         mostrarAviso('Lista atualizada com sucesso.', 'check_circle', false);
         setTimeout(esconderAviso, 2500);
     } catch (e) {
-        console.error('[Vencidas] Erro ao recalcular:', e);
+        console.error('[Regularizar] Erro ao recalcular:', e);
         mostrarAviso('Não foi possível recalcular. Tente novamente.', 'error', false);
         setTimeout(esconderAviso, 3500);
     } finally {
