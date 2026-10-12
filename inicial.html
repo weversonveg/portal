@@ -552,7 +552,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
    ALERTAS — FÉRIAS VENCIDAS
    ============================================================ */
 
-/* ══ CARD LARANJA — ATENÇÃO (2 vencidas) ══ */
+/* ══ CARD LARANJA — ATENÇÃO (2 períodos fechados sem gozo) ══ */
 .alerta-atencao {
     display:none;
     position:relative;
@@ -712,7 +712,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     color:#c2610a;
 }
 
-/* Dark mode do card de atenção */
 :root[data-theme="dark"] .alerta-atencao {
     background:linear-gradient(135deg, #2a1a08 0%, #3a2408 100%);
     border-color:#ea580c;
@@ -915,7 +914,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     color:var(--danger-strong);
 }
 
-/* Dark mode do card crítico */
 :root[data-theme="dark"] .alerta-critico {
     background:linear-gradient(135deg, #2a1010 0%, #3a1414 100%);
     border-color:#dc2626;
@@ -1632,7 +1630,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                     </p>
                 </div>
 
-                <!-- 🟠 ALERTA DE ATENÇÃO — 2 vencidas (prazo de 1 ano) -->
+                <!-- 🟠 ALERTA DE ATENÇÃO — 2 períodos fechados sem gozo -->
                 <div class="alerta-atencao" id="alertaAtencao" role="alert" aria-live="polite">
                     <div class="alerta-atencao-inner">
                         <div class="alerta-atencao-icone-wrapper">
@@ -1653,9 +1651,8 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                             </div>
 
                             <div class="alerta-atencao-descricao" id="alertaAtencaoDescricao">
-                                Servidores com <strong>2 períodos aquisitivos vencidos</strong> ainda estão dentro do
-                                limite legal, mas o RH tem <strong>até 1 ano</strong> para regularizar a situação
-                                antes que se torne ilegal.
+                                Servidores com <strong>2 períodos aquisitivos fechados sem gozo</strong> — o RH tem
+                                <strong>até 1 ano</strong> para regularizar antes que se torne ilegal.
                             </div>
 
                             <div class="alerta-atencao-acoes">
@@ -1672,7 +1669,7 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                     </div>
                 </div>
 
-                <!-- 🔴 ALERTA CRÍTICO — 3+ vencidas (ilegal) -->
+                <!-- 🔴 ALERTA CRÍTICO — 3+ períodos fechados sem gozo -->
                 <div class="alerta-critico" id="alertaCritico" role="alert" aria-live="assertive">
                     <div class="alerta-critico-inner">
                         <div class="alerta-critico-icone-wrapper">
@@ -1693,8 +1690,8 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                             </div>
 
                             <div class="alerta-critico-descricao" id="alertaCriticoDescricao">
-                                Servidores com <strong>3 ou mais períodos aquisitivos vencidos</strong> estão em
-                                situação <strong>ilegal</strong> pela legislação. Regularize imediatamente.
+                                Servidores com <strong>3 ou mais períodos aquisitivos fechados sem gozo</strong> estão
+                                em <strong>situação ilegal</strong> pela legislação. Regularize imediatamente.
                             </div>
 
                             <div class="alerta-critico-acoes">
@@ -1860,11 +1857,11 @@ button:disabled { opacity:.65; cursor:not-allowed; }
                                             <td id="statServidores">—</td>
                                         </tr>
                                         <tr>
-                                            <td>A regularizar (2 vencidas)</td>
+                                            <td>A regularizar (2 fechados)</td>
                                             <td id="statFeriasAtencao">—</td>
                                         </tr>
                                         <tr>
-                                            <td>Situação crítica (3+ vencidas)</td>
+                                            <td>Situação crítica (3+ fechados)</td>
                                             <td id="statFeriasPendentes">
                                                 <a href="pendencias.html" class="resumo-tabela-link" id="linkFeriasPendentes" title="Ver servidores em situação crítica">
                                                     —
@@ -2130,6 +2127,7 @@ async function confirmarSaida() {
     btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
     try {
         try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
+        try { localStorage.removeItem('cache-painel-dados-v2'); } catch (e) {}
         try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
         try { localStorage.removeItem('cache-pendencias-v1'); } catch (e) {}
         try { localStorage.removeItem('cache-pendencias-v2'); } catch (e) {}
@@ -2296,12 +2294,12 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const CACHE_KEY      = 'cache-painel-dados-v2';
+const CACHE_KEY      = 'cache-painel-dados-v3';
 const CACHE_VERSAO   = 'cache-painel-versao';
 const CACHE_TTL_MS   = 30 * 60 * 1000;
 const DOC_RESUMO     = ['_estatisticas', 'resumo'];
-const LIMITE_ATENCAO = 2;   // 2 vencidas → card laranja
-const LIMITE_CRITICO = 3;   // 3+ vencidas → card vermelho
+const LIMITE_ATENCAO = 2;   // 2 períodos fechados sem gozo → card laranja
+const LIMITE_CRITICO = 3;   // 3+ períodos fechados sem gozo → card vermelho
 
 function mostrarAviso(texto, icone, carregando) {
     const aviso = document.getElementById('avisoCarregamento');
@@ -2445,10 +2443,10 @@ async function calcularResumoCompleto() {
             totalMesesConfigurados: meses.length,
             totalEscolas: totalEscolas,
             excecoesAtivas,
-            // 2 vencidas
+            // Atenção: exatamente 2 períodos fechados sem gozo
             servidoresAtencao: resultadoFerias.servidoresAtencao,
             periodosAtencao: resultadoFerias.periodosAtencao,
-            // 3+ vencidas
+            // Crítico: 3+ períodos fechados sem gozo
             feriasVencidas: resultadoFerias.periodosCriticos,
             servidoresComPendencia: resultadoFerias.servidoresCriticos,
             mesesParaExibir: meses.slice(0, 5).map(m => ({
@@ -2514,6 +2512,7 @@ function parseDataParaDate(v) {
     return null;
 }
 
+/* ⬇️ Conta PERÍODOS FECHADOS (já completaram 1 ano) */
 function periodosFechados(dataAdmissao, hoje) {
     const adm = parseDataParaDate(dataAdmissao);
     if (!adm) return [];
@@ -2539,7 +2538,7 @@ function periodosFechados(dataAdmissao, hoje) {
     return out;
 }
 
-/* Conta ATENÇÃO (2) e CRÍTICO (3+) separadamente */
+/* ⬇️ NOVA LÓGICA: conta PERÍODOS FECHADOS SEM GOZO */
 function calcularFeriasPendentes(servidores, registros, hoje) {
     const porCpf = new Map();
     const porMatricula = new Map();
@@ -2590,26 +2589,25 @@ function calcularFeriasPendentes(servidores, registros, hoje) {
             if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
         });
 
-        let vencidasServidor = 0;
+        let fechadosSemGozo = 0;
 
         admissoes.forEach(adm => {
             periodosFechados(adm, hoje).forEach(p => {
+                // Se já tem lançamento para esse ano de referência, conta como gozo
                 if (lancados.has(p.anoReferencia)) return;
-                const limite = new Date(p.fim);
-                limite.setFullYear(limite.getFullYear() + 1);
-                if (limite < hoje) vencidasServidor++;
+                fechadosSemGozo++;
             });
         });
 
-        // ATENÇÃO: exatamente 2 vencidas
-        if (vencidasServidor === LIMITE_ATENCAO) {
+        // ATENÇÃO: exatamente 2 fechados sem gozo
+        if (fechadosSemGozo === LIMITE_ATENCAO) {
             servidoresAtencao++;
-            periodosAtencao += vencidasServidor;
+            periodosAtencao += fechadosSemGozo;
         }
-        // CRÍTICO: 3 ou mais vencidas (já passou do limite legal)
-        else if (vencidasServidor >= LIMITE_CRITICO) {
+        // CRÍTICO: 3 ou mais fechados sem gozo
+        else if (fechadosSemGozo >= LIMITE_CRITICO) {
             servidoresCriticos++;
-            periodosCriticos += vencidasServidor;
+            periodosCriticos += fechadosSemGozo;
         }
     });
 
@@ -2647,7 +2645,6 @@ function renderizarAlertaAtencao(dados) {
     if (!alerta) return;
 
     const servidores = dados.servidoresAtencao || 0;
-    const periodos = dados.periodosAtencao || 0;
 
     if (servidores === 0) {
         alerta.classList.remove('ativo');
@@ -2667,9 +2664,9 @@ function renderizarAlertaAtencao(dados) {
     `;
 
     descEl.innerHTML = `
-        <strong>${servidores} ${palavraServidor}</strong> ${servidores === 1 ? 'atingiu' : 'atingiram'}
-        <strong>2 períodos aquisitivos vencidos</strong>. O RH tem <strong>até 1 ano</strong> para regularizar
-        antes que a situação se torne ilegal.
+        <strong>${servidores} ${palavraServidor}</strong> ${servidores === 1 ? 'acumulou' : 'acumularam'}
+        <strong>2 períodos aquisitivos fechados sem gozo</strong>. O RH tem <strong>até 1 ano</strong> para
+        regularizar antes que se torne ilegal.
     `;
 }
 
@@ -2678,7 +2675,7 @@ function renderizarAlertaCritico(dados) {
     if (!alerta) return;
 
     const criticos = dados.servidoresComPendencia || 0;
-    const vencidas = dados.feriasVencidas || 0;
+    const periodos = dados.feriasVencidas || 0;
 
     if (criticos === 0) {
         alerta.classList.remove('ativo');
@@ -2691,7 +2688,7 @@ function renderizarAlertaCritico(dados) {
     const descEl = document.getElementById('alertaCriticoDescricao');
 
     const palavraServidor = criticos === 1 ? 'servidor' : 'servidores';
-    const palavraPeriodo = vencidas === 1 ? 'período' : 'períodos';
+    const palavraPeriodo = periodos === 1 ? 'período' : 'períodos';
 
     tituloEl.innerHTML = `
         <span class="numero-destaque">${criticos}</span>
@@ -2700,7 +2697,7 @@ function renderizarAlertaCritico(dados) {
 
     descEl.innerHTML = `
         <strong>${criticos} ${palavraServidor}</strong> ${criticos === 1 ? 'acumulou' : 'acumularam'}
-        <strong>${vencidas} ${palavraPeriodo}</strong> de férias vencidas no total —
+        <strong>${periodos} ${palavraPeriodo}</strong> de férias sem gozo —
         <strong>situação ilegal</strong> pela legislação. Regularize imediatamente.
     `;
 }
@@ -2786,24 +2783,24 @@ function renderizarPendencias(dados) {
         }
     }
 
-    // Pendência de ATENÇÃO (2 vencidas)
+    // Pendência de ATENÇÃO (2 períodos fechados sem gozo)
     if (dados.servidoresAtencao > 0) {
         pendencias.push({
             tipo: 'warn',
             icone: 'hourglass_empty',
-            titulo: `${dados.servidoresAtencao} servidor${dados.servidoresAtencao === 1 ? '' : 'es'} a regularizar (2 férias vencidas)`,
-            descricao: `Prazo de 1 ano para regularização antes de se tornar ilegal.`,
+            titulo: `${dados.servidoresAtencao} servidor${dados.servidoresAtencao === 1 ? '' : 'es'} a regularizar`,
+            descricao: `2 períodos aquisitivos fechados sem gozo. Prazo de 1 ano para regularizar.`,
             cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
 
-    // Pendência CRÍTICA (3+ vencidas)
+    // Pendência CRÍTICA (3+ períodos fechados sem gozo)
     if (dados.servidoresComPendencia > 0) {
         pendencias.push({
             tipo: 'danger',
             icone: 'warning',
             titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com limite legal excedido`,
-            descricao: `${dados.feriasVencidas} período${dados.feriasVencidas === 1 ? '' : 's'} de férias vencido${dados.feriasVencidas === 1 ? '' : 's'} no total. Situação ilegal.`,
+            descricao: `3+ períodos aquisitivos fechados sem gozo. Situação ilegal.`,
             cta: 'Ver servidores', link: 'pendencias.html'
         });
     }
@@ -2851,23 +2848,24 @@ function renderizarResumo(dados) {
         ? formatarDataHora(dados.dataAtualizacao)
         : '—';
 
-    // ⬇️ A REGULARIZAR (2 vencidas)
+    // A REGULARIZAR (2 fechados sem gozo)
     const tdAtencao = document.getElementById('statFeriasAtencao');
     if (tdAtencao) {
         const atencao = dados.servidoresAtencao || 0;
         if (atencao === 0) {
             tdAtencao.textContent = '0';
-            tdAtencao.title = 'Nenhum servidor com 2 vencidas no momento.';
+            tdAtencao.title = 'Nenhum servidor com 2 períodos fechados sem gozo.';
             tdAtencao.style.color = '';
+            tdAtencao.style.fontWeight = '';
         } else {
             tdAtencao.innerHTML = `${atencao} <span style="color:#c2610a;">⚠</span>`;
-            tdAtencao.title = `${atencao} servidor${atencao === 1 ? '' : 'es'} com 2 vencidas — prazo de 1 ano para regularizar.`;
+            tdAtencao.title = `${atencao} servidor${atencao === 1 ? '' : 'es'} com 2 períodos fechados sem gozo — prazo de 1 ano para regularizar.`;
             tdAtencao.style.color = '#c2610a';
             tdAtencao.style.fontWeight = '600';
         }
     }
 
-    // ⬇️ SITUAÇÃO CRÍTICA (3+ vencidas)
+    // CRÍTICO (3+ fechados sem gozo)
     const td = document.getElementById('statFeriasPendentes');
     const link = document.getElementById('linkFeriasPendentes');
     if (!td || !link) return;
@@ -2890,7 +2888,7 @@ function renderizarResumo(dados) {
         <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
         <span class="stat-sub">limite legal excedido</span>
     `;
-    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 3+ períodos vencidos — clique para ver a lista completa.`;
+    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 3+ períodos fechados sem gozo — clique para ver a lista completa.`;
 }
 
 function renderizarUltimosMeses(dados) {
