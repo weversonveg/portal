@@ -429,6 +429,43 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .grafico-linha { flex-direction: column; align-items: flex-start; gap: 4px; }
     .grafico-trilha { width: 100%; }
 }
+
+/* ===== KPI RESUMO CRÍTICO (novo) ===== */
+.kpi-critico-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.kpi-critico {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gray-400);
+    border-radius: 6px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.kpi-critico.total    { border-left-color: var(--brand); }
+.kpi-critico.vencidas { border-left-color: var(--danger); }
+.kpi-critico.critico  { border-left-color: var(--danger); }
+.kpi-critico-icone {
+    width: 40px; height: 40px; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; background: var(--surface-3); color: var(--text-secondary);
+}
+.kpi-critico.total    .kpi-critico-icone { background: var(--brand-soft); color: var(--brand); }
+.kpi-critico.vencidas .kpi-critico-icone { background: var(--danger-bg); color: var(--danger); }
+.kpi-critico.critico  .kpi-critico-icone { background: var(--danger-bg); color: var(--danger); }
+.kpi-critico-icone .material-symbols-outlined { font-size: 22px; }
+.kpi-critico-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi-critico-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); }
+.kpi-critico-valor { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi-critico.critico .kpi-critico-valor { color: var(--danger); }
+.kpi-critico.vencidas .kpi-critico-valor { color: var(--danger); }
+.kpi-critico-sub { font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
 </style>
 </head>
 
@@ -569,6 +606,40 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div class="cab-div" aria-hidden="true"></div>
                     <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
                 </section>
+
+                <!-- NOVO: KPIs de situação crítica -->
+                <div class="kpi-critico-wrap" id="kpisCriticos">
+                    <div class="kpi-critico total">
+                        <div class="kpi-critico-icone">
+                            <span class="material-symbols-outlined">badge</span>
+                        </div>
+                        <div class="kpi-critico-info">
+                            <span class="kpi-critico-label">Servidores críticos</span>
+                            <span class="kpi-critico-valor" id="kpiServidoresCriticos">—</span>
+                            <span class="kpi-critico-sub">com 2+ férias vencidas</span>
+                        </div>
+                    </div>
+                    <div class="kpi-critico vencidas">
+                        <div class="kpi-critico-icone">
+                            <span class="material-symbols-outlined">error</span>
+                        </div>
+                        <div class="kpi-critico-info">
+                            <span class="kpi-critico-label">Vencidas críticas</span>
+                            <span class="kpi-critico-valor" id="kpiVencidasCriticas">—</span>
+                            <span class="kpi-critico-sub">períodos vencidos só de quem tem 2+</span>
+                        </div>
+                    </div>
+                    <div class="kpi-critico critico">
+                        <div class="kpi-critico-icone">
+                            <span class="material-symbols-outlined">gavel</span>
+                        </div>
+                        <div class="kpi-critico-info">
+                            <span class="kpi-critico-label">Limite legal</span>
+                            <span class="kpi-critico-valor" id="kpiLimiteLegal">—</span>
+                            <span class="kpi-critico-sub">2 é o máximo permitido</span>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="resumoExecutivo" class="resumo-executivo"></div>
 
@@ -880,6 +951,7 @@ let ultimoTermoBuscado = '';
 let servidorAtualRef = null;
 
 const DIAS_PADRAO = 30;
+const LIMITE_LEGAL_FERIAS_VENCIDAS = 2;
 
 function obterDiasPorPeriodo(servidor, vinculo) {
     if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
@@ -1215,6 +1287,43 @@ function badgeStatus(s){
 }
 function badgeTipo(k){
     return k==='ferias'?'<span class="tipo-badge">Férias</span>':'<span class="tipo-badge">Folga Aniv.</span>';
+}
+
+/* ============================================================
+   NOVO: KPIs críticos
+   Conta apenas servidores com 2+ férias vencidas (limite legal).
+   Não conta folgas, só férias com status "vencido".
+   ============================================================ */
+function renderizarKpisCriticos() {
+    const elServ = document.getElementById('kpiServidoresCriticos');
+    const elVenc = document.getElementById('kpiVencidasCriticas');
+    const elLim  = document.getElementById('kpiLimiteLegal');
+    if (!elServ || !elVenc || !elLim) return;
+
+    // Agrupa por matrícula: quantas férias vencidas cada vínculo tem
+    const porMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey !== 'ferias') return;      // só férias
+        if (l.status !== 'vencido') return;      // só vencidas
+        const key = l.matricula;
+        if (!porMatricula.has(key)) porMatricula.set(key, 0);
+        porMatricula.set(key, porMatricula.get(key) + 1);
+    });
+
+    // Servidores (matrículas) que atingiram 2+ vencidas
+    let totalServidoresCriticos = 0;
+    let totalVencidasCriticas = 0;
+
+    porMatricula.forEach(qtd => {
+        if (qtd >= LIMITE_LEGAL_FERIAS_VENCIDAS) {
+            totalServidoresCriticos++;
+            totalVencidasCriticas += qtd;
+        }
+    });
+
+    elServ.textContent = totalServidoresCriticos;
+    elVenc.textContent = totalVencidasCriticas;
+    elLim.textContent  = LIMITE_LEGAL_FERIAS_VENCIDAS;
 }
 
 function renderizarResumoExecutivo(){
@@ -1745,6 +1854,7 @@ async function processarServidores(docs){
     const hoje=new Date();hoje.setHours(0,0,0,0);
     linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
 
+    renderizarKpisCriticos();
     renderizarResumoExecutivo();
     popularFiltroMatricula();
     document.getElementById('filtroTipo').value='';
@@ -1758,6 +1868,7 @@ async function processarServidores(docs){
     document.getElementById('avisoSemPeriodos').classList.toggle('hidden', !semPeriodos);
     document.getElementById('resumoExecutivo').classList.toggle('hidden', semPeriodos);
     document.getElementById('graficoContainer').classList.toggle('hidden', semPeriodos);
+    document.getElementById('kpisCriticos').classList.toggle('hidden', semPeriodos);
 
     if (!semPeriodos) {
         renderizarTabelaUnica(linhasUnificadas);
@@ -1804,7 +1915,7 @@ window.buscarServidor = buscarServidor;
     }
 
     let tentativas = 0;
-    const MAX_TENTATIVAS = 40; // ~8s
+    const MAX_TENTATIVAS = 40;
 
     const tentar = setInterval(() => {
         tentativas++;
