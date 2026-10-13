@@ -14,10 +14,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/material_purple.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/style.css">
-
 <script>
 (function () {
     try {
@@ -129,7 +125,7 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .filter-group label{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:7px}
 .filter-group input,.filter-group select{height:44px;padding:0 13px;background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;font-size:14px;color:var(--text);width:100%}
 .filter-group input:focus,.filter-group select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
-.filter-group .flatpickr-alt-input{width:100%;height:44px;padding:0 13px;background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;font-size:14px;color:var(--text)}
+.filter-group input[type="hidden"]{display:none}
 .btn-carregar{height:44px;background:var(--brand);color:#fff;border:none;border-radius:6px;padding:0 24px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;flex-shrink:0}
 .btn-carregar:hover{background:var(--brand-hover)}
 .status-card{display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-sm);padding:20px 24px;margin-bottom:20px;align-items:flex-start;gap:16px}
@@ -193,6 +189,21 @@ tr:hover td{background:var(--surface-2)}
 .empty-state strong{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
 .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Calendário próprio de mês/ano */
+.mes-picker-wrap{position:relative}
+.mes-picker-wrap input{cursor:pointer}
+.mes-picker-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:2000;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);padding:14px;width:290px;display:none}
+.mes-picker-pop.aberto{display:block}
+.mes-picker-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.mes-picker-title{font-size:15px;font-weight:800;color:var(--text);text-align:center;flex:1}
+.mes-picker-btn{width:34px;height:34px;border:1px solid var(--border);background:var(--surface-2);border-radius:6px;color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;line-height:1}
+.mes-picker-btn:hover{background:var(--surface-3);color:var(--text)}
+.mes-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mes-picker-item{height:40px;border:1px solid var(--border);background:var(--surface);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-secondary);cursor:pointer;user-select:none}
+.mes-picker-item:hover{background:var(--surface-2);color:var(--text)}
+.mes-picker-item.ativo{background:var(--brand);border-color:var(--brand);color:#fff}
+@media(max-width:768px){.mes-picker-pop{width:100%;left:0}}
 
 @media(max-width:900px){.sidebar{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-md);border-right:1px solid var(--border);z-index:200}.sidebar.aberta-mobile{transform:translateX(0)}.sidebar.fechado{width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%);border-right:1px solid var(--border)}:root.menu-inicial-fechado .sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%)}.topbar{padding:0 16px;gap:12px}.topbar-title span{display:none}.topbar-user .user-info span{display:none}.topbar-btn .btn-texto{display:none}.topbar-btn{padding:0 10px}}
 @media(max-width:768px){.content-page{padding:16px 12px}.filter-card{flex-direction:column;align-items:stretch}.btn-carregar{width:100%}.status-card{flex-direction:column}.card-header{flex-direction:column;align-items:stretch}.card-actions{width:100%}.btn-exportar{flex:1;justify-content:center}}
@@ -335,9 +346,10 @@ tr:hover td{background:var(--surface-2)}
             </div>
 
             <section class="filter-card">
-                <div class="filter-group">
-                    <label for="mesReferencia">Mês de Referência</label>
-                    <input type="text" id="mesReferencia" placeholder="Selecione o mês..." readonly>
+                <div class="filter-group mes-picker-wrap" id="mesPickerWrap">
+                    <label for="mesReferenciaDisplay">Mês de Referência</label>
+                    <input type="hidden" id="mesReferencia">
+                    <input type="text" id="mesReferenciaDisplay" placeholder="Selecione o mês..." readonly autocomplete="off">
                 </div>
 
                 <div class="filter-group">
@@ -651,125 +663,168 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
-
 <script>
 (function () {
-    var urls = [
-        "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/monthSelect.js",
-        "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/plugins/monthSelect/monthSelect.js"
+    const mesesNomes = [
+        "Janeiro", "Fevereiro", "Março", "Abril",
+        "Maio", "Junho", "Julho", "Agosto",
+        "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
 
-    function getMonthSelect() {
-        var p = window.monthSelectPlugin;
-        if (!p) return null;
-        if (typeof p === "function") return p;
-        if (typeof p.default === "function") return p.default;
-        return null;
+    const mesesCurtos = [
+        "Jan", "Fev", "Mar", "Abr",
+        "Mai", "Jun", "Jul", "Ago",
+        "Set", "Out", "Nov", "Dez"
+    ];
+
+    const campoValor = document.getElementById("mesReferencia");
+    const campoVisivel = document.getElementById("mesReferenciaDisplay");
+    const wrap = document.getElementById("mesPickerWrap");
+
+    if (!campoValor || !campoVisivel || !wrap) return;
+
+    const hoje = new Date();
+
+    function mesAnoAtual() {
+        return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
     }
 
-    function iniciarCampoMes() {
-        var campo = document.getElementById("mesReferencia");
-        if (!campo) return;
+    function parseMesAno(valor) {
+        const partes = String(valor || "").split("-");
 
-        var hoje = new Date();
-        var mesAtual = hoje.getFullYear() + "-" + String(hoje.getMonth() + 1).padStart(2, "0");
-
-        if (campo._flatpickr) {
-            campo._flatpickr.destroy();
+        if (partes.length !== 2) {
+            return {
+                ano: hoje.getFullYear(),
+                mes0: hoje.getMonth()
+            };
         }
 
-        var MonthSelect = getMonthSelect();
+        const ano = Number(partes[0]);
+        const mes0 = Number(partes[1]) - 1;
 
-        if (typeof window.flatpickr === "function" && MonthSelect) {
-            window.flatpickr(campo, {
-                locale: "pt",
-                dateFormat: "Y-m",
-                altInput: true,
-                altFormat: "F / Y",
-                defaultDate: mesAtual,
-                disableMobile: true,
-                allowInput: false,
-                plugins: [
-                    new MonthSelect({
-                        shorthand: false,
-                        dateFormat: "Y-m",
-                        altFormat: "F / Y",
-                        theme: "material_purple"
-                    })
-                ],
-                onReady: function (selectedDates, dateStr, instance) {
-                    if (instance.altInput) {
-                        instance.altInput.readOnly = true;
-                        instance.altInput.style.width = "100%";
-                        instance.altInput.style.height = "44px";
-                    }
-                }
-            });
+        if (!ano || isNaN(mes0) || mes0 < 0 || mes0 > 11) {
+            return {
+                ano: hoje.getFullYear(),
+                mes0: hoje.getMonth()
+            };
+        }
+
+        return { ano, mes0 };
+    }
+
+    function formatarTexto(mes0, ano) {
+        return `${mesesNomes[mes0]} / ${ano}`;
+    }
+
+    if (!campoValor.value) {
+        campoValor.value = mesAnoAtual();
+    }
+
+    let valorSelecionado = campoValor.value;
+    let atual = parseMesAno(valorSelecionado);
+    let anoExibido = atual.ano;
+
+    const popup = document.createElement("div");
+    popup.className = "mes-picker-pop";
+    popup.setAttribute("role", "dialog");
+    popup.setAttribute("aria-label", "Selecionar mês de referência");
+    wrap.appendChild(popup);
+
+    function atualizarCampoVisivel() {
+        const dados = parseMesAno(valorSelecionado);
+        campoVisivel.value = formatarTexto(dados.mes0, dados.ano);
+    }
+
+    function render() {
+        const selecionado = parseMesAno(valorSelecionado);
+
+        popup.innerHTML = `
+            <div class="mes-picker-header">
+                <button type="button" class="mes-picker-btn" data-ano="prev" aria-label="Ano anterior">&#8249;</button>
+                <div class="mes-picker-title">${anoExibido}</div>
+                <button type="button" class="mes-picker-btn" data-ano="next" aria-label="Próximo ano">&#8250;</button>
+            </div>
+
+            <div class="mes-picker-grid">
+                ${mesesCurtos.map((mes, i) => `
+                    <button
+                        type="button"
+                        class="mes-picker-item ${selecionado.ano === anoExibido && selecionado.mes0 === i ? "ativo" : ""}"
+                        data-mes="${i}"
+                    >
+                        ${mes}
+                    </button>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function abrir() {
+        const selecionado = parseMesAno(valorSelecionado);
+        anoExibido = selecionado.ano;
+        render();
+        popup.classList.add("aberto");
+        campoVisivel.setAttribute("aria-expanded", "true");
+    }
+
+    function fechar() {
+        popup.classList.remove("aberto");
+        campoVisivel.setAttribute("aria-expanded", "false");
+    }
+
+    campoVisivel.addEventListener("click", function () {
+        if (popup.classList.contains("aberto")) {
+            fechar();
         } else {
-            campo.type = "month";
-            campo.readOnly = false;
-            campo.removeAttribute("readonly");
-            campo.value = mesAtual;
+            abrir();
         }
-    }
+    });
 
-    function carregarPlugin(indice) {
-        if (indice >= urls.length) {
-            iniciarCampoMes();
+    campoVisivel.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            abrir();
+        }
+    });
+
+    popup.addEventListener("click", function (e) {
+        const btnAno = e.target.closest("[data-ano]");
+
+        if (btnAno) {
+            e.preventDefault();
+            anoExibido += btnAno.dataset.ano === "next" ? 1 : -1;
+            render();
             return;
         }
 
-        var script = document.createElement("script");
-        script.src = urls[indice];
-        script.async = true;
+        const btnMes = e.target.closest("[data-mes]");
 
-        var concluido = false;
+        if (btnMes) {
+            e.preventDefault();
 
-        var tempo = setTimeout(function () {
-            if (!concluido) {
-                concluido = true;
-                carregarPlugin(indice + 1);
-            }
-        }, 4000);
+            const mes = Number(btnMes.dataset.mes);
 
-        script.onload = function () {
-            if (concluido) return;
-            concluido = true;
-            clearTimeout(tempo);
+            valorSelecionado = `${anoExibido}-${String(mes + 1).padStart(2, "0")}`;
+            campoValor.value = valorSelecionado;
 
-            if (getMonthSelect()) {
-                iniciarCampoMes();
-            } else {
-                carregarPlugin(indice + 1);
-            }
-        };
-
-        script.onerror = function () {
-            if (concluido) return;
-            concluido = true;
-            clearTimeout(tempo);
-            carregarPlugin(indice + 1);
-        };
-
-        document.body.appendChild(script);
-    }
-
-    function aoCarregar() {
-        if (typeof window.flatpickr === "function") {
-            carregarPlugin(0);
-        } else {
-            iniciarCampoMes();
+            atualizarCampoVisivel();
+            fechar();
         }
-    }
+    });
 
-    if (document.readyState === "complete") {
-        aoCarregar();
-    } else {
-        window.addEventListener("load", aoCarregar);
-    }
+    document.addEventListener("click", function (e) {
+        if (!wrap.contains(e.target)) {
+            fechar();
+        }
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            fechar();
+        }
+    });
+
+    atualizarCampoVisivel();
 })();
 </script>
 
