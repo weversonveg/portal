@@ -785,26 +785,34 @@ tbody tr:hover td { background:var(--surface-2); }
 
     /* ============================================================
        HEADER DOS MODAIS EXPANDIDOS NO MOBILE
-       - X em linha própria no topo, alinhado à direita
-       - Título e botão de adicionar abaixo
+       - X em linha própria no TOPO, alinhado à DIREITA
+       - Título (ícone + texto) abaixo do X
+       - Botão de adicionar por último, full width
        ============================================================ */
     .modal-expand-header {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-areas:
-            ".       fechar"
-            "titulo  titulo"
-            "acoes   acoes";
-        gap: 8px 12px;
-        padding: 12px 16px 16px;
-        align-items: center;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 14px 16px 16px;
     }
+    /* X vem PRIMEIRO no fluxo visual, alinhado à direita */
+    .modal-expand-header .modal-fechar {
+        order: -1;
+        align-self: flex-end;
+        margin: 0;
+        position: static;
+        top: auto;
+        right: auto;
+    }
+    /* Título abaixo do X */
     .modal-expand-titulo-grupo {
-        grid-area: titulo;
+        order: 0;
         width: 100%;
     }
+    /* Botão de adicionar por último, full width */
     .modal-expand-acoes {
-        grid-area: acoes;
+        order: 1;
         width: 100%;
         flex-direction: column;
         align-items: stretch;
@@ -812,16 +820,6 @@ tbody tr:hover td { background:var(--surface-2); }
     .modal-expand-acoes .btn {
         width: 100%;
         flex: 1 1 auto;
-    }
-    /* O X fica na linha de cima, alinhado à direita */
-    .modal-expand-header .modal-fechar {
-        grid-area: fechar;
-        align-self: center;
-        justify-self: end;
-        margin: 0;
-        position: static;
-        top: auto;
-        right: auto;
     }
 }
 @media (max-width:640px) {
@@ -1406,21 +1404,15 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /* ==========================================================
-   SISTEMA DE TOAST — NOTIFICAÇÕES MODERNAS
+   SISTEMA DE TOAST
    ========================================================== */
 const Toast = (() => {
     const container = document.getElementById('toastContainer');
-    const ICONES = {
-        sucesso: 'check_circle',
-        erro: 'error',
-        aviso: 'warning',
-        info: 'info'
-    };
+    const ICONES = { sucesso: 'check_circle', erro: 'error', aviso: 'warning', info: 'info' };
     const DURACAO_PADRAO = 6000;
 
     function criar({ tipo = 'info', titulo, mensagem, resumo, duracao = DURACAO_PADRAO }) {
         if (!container) return null;
-
         const toast = document.createElement('div');
         toast.className = `toast toast-${tipo}`;
         toast.setAttribute('role', tipo === 'erro' ? 'alert' : 'status');
@@ -1434,7 +1426,6 @@ const Toast = (() => {
 
         const conteudo = document.createElement('div');
         conteudo.className = 'toast-conteudo';
-
         if (titulo) {
             const t = document.createElement('div');
             t.className = 'toast-titulo';
@@ -1489,36 +1480,14 @@ const Toast = (() => {
         let inicio = Date.now();
         let pausado = false;
 
-        function iniciarTimeout() {
-            inicio = Date.now();
-            timeoutId = setTimeout(() => remover(), restante);
-        }
-
-        function pausar() {
-            if (pausado) return;
-            pausado = true;
-            clearTimeout(timeoutId);
-            restante -= Date.now() - inicio;
-            progresso.style.animationPlayState = 'paused';
-        }
-
-        function retomar() {
-            if (!pausado) return;
-            pausado = false;
-            progresso.style.animationPlayState = 'running';
-            iniciarTimeout();
-        }
-
-        function remover() {
-            clearTimeout(timeoutId);
-            toast.classList.add('saindo');
-            toast.addEventListener('animationend', () => toast.remove(), { once: true });
-        }
+        function iniciarTimeout() { inicio = Date.now(); timeoutId = setTimeout(() => remover(), restante); }
+        function pausar() { if (pausado) return; pausado = true; clearTimeout(timeoutId); restante -= Date.now() - inicio; progresso.style.animationPlayState = 'paused'; }
+        function retomar() { if (!pausado) return; pausado = false; progresso.style.animationPlayState = 'running'; iniciarTimeout(); }
+        function remover() { clearTimeout(timeoutId); toast.classList.add('saindo'); toast.addEventListener('animationend', () => toast.remove(), { once: true }); }
 
         btnFechar.addEventListener('click', remover);
         toast.addEventListener('mouseenter', pausar);
         toast.addEventListener('mouseleave', retomar);
-
         iniciarTimeout();
         return toast;
     }
@@ -1763,10 +1732,7 @@ function ordenarPorNome(lista) {
         if (!nomeA && !nomeB) return 0;
         if (!nomeA) return 1;
         if (!nomeB) return -1;
-        return nomeA.localeCompare(nomeB, 'pt-BR', {
-            sensitivity: 'base',
-            ignorePunctuation: true
-        });
+        return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base', ignorePunctuation: true });
     });
 }
 
@@ -1877,7 +1843,6 @@ function parsearCSV(texto) {
     if (linhas.length === 0) return [];
     const primeira = linhas[0];
     const sep = (primeira.match(/;/g) || []).length >= (primeira.match(/,/g) || []).length ? ';' : ',';
-    
     const parsearLinha = (linha) => {
         const resultado = [];
         let atual = '';
@@ -1897,7 +1862,6 @@ function parsearCSV(texto) {
         resultado.push(atual);
         return resultado.map(v => v.trim());
     };
-    
     const headers = parsearLinha(linhas[0]);
     const resultado = [];
     for (let i = 1; i < linhas.length; i++) {
@@ -1912,11 +1876,7 @@ function parsearCSV(texto) {
 function parsearJSON(texto) {
     if (texto.charCodeAt(0) === 0xFEFF) texto = texto.slice(1);
     let json;
-    try {
-        json = JSON.parse(texto);
-    } catch (e) {
-        throw new Error('JSON inválido: ' + e.message);
-    }
+    try { json = JSON.parse(texto); } catch (e) { throw new Error('JSON inválido: ' + e.message); }
     if (Array.isArray(json)) return json;
     if (json && typeof json === 'object') {
         if (Array.isArray(json.dados)) return json.dados;
@@ -1950,16 +1910,12 @@ function lerArquivo(arquivo) {
 }
 
 function extrairDadosArquivo(resultado) {
-    if (resultado.tipo === 'csv') {
-        return parsearCSV(resultado.conteudo);
-    } else if (resultado.tipo === 'json') {
-        return parsearJSON(resultado.conteudo);
-    } else {
-        if (typeof XLSX === 'undefined') throw new Error('Biblioteca XLSX não carregada');
-        const wb = XLSX.read(resultado.conteudo, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        return XLSX.utils.sheet_to_json(ws, { defval: '' });
-    }
+    if (resultado.tipo === 'csv') return parsearCSV(resultado.conteudo);
+    if (resultado.tipo === 'json') return parsearJSON(resultado.conteudo);
+    if (typeof XLSX === 'undefined') throw new Error('Biblioteca XLSX não carregada');
+    const wb = XLSX.read(resultado.conteudo, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, { defval: '' });
 }
 
 function converterDataImport(dataStr) {
@@ -2002,7 +1958,7 @@ function atualizarMapaNomes(mapaNomes, cache, idAtualizado, nomeNovo) {
 }
 
 /* ==========================================================
-   CONFIG: COLUNAS PARA CADA TIPO
+   CONFIG: COLUNAS
    ========================================================== */
 const COLUNAS_EMPRESAS = [
     { campo: 'id',           label: 'ID' },
@@ -2028,30 +1984,20 @@ async function handleExport(tipo, formato) {
     let dados, colunas, nomeArquivo, nomeAba;
     if (tipo === 'empresas') {
         await carregarEmpresas();
-        dados = empresasCache;
-        colunas = COLUNAS_EMPRESAS;
-        nomeArquivo = gerarNomeArquivo('empresas', formato);
-        nomeAba = 'Empresas';
+        dados = empresasCache; colunas = COLUNAS_EMPRESAS;
+        nomeArquivo = gerarNomeArquivo('empresas', formato); nomeAba = 'Empresas';
     } else if (tipo === 'cargos') {
         await carregarCargos();
-        dados = cargosCache;
-        colunas = COLUNAS_CARGOS;
-        nomeArquivo = gerarNomeArquivo('cargos', formato);
-        nomeAba = 'Cargos';
+        dados = cargosCache; colunas = COLUNAS_CARGOS;
+        nomeArquivo = gerarNomeArquivo('cargos', formato); nomeAba = 'Cargos';
     } else {
         await carregarUnidades();
-        dados = unidadesCache;
-        colunas = COLUNAS_UNIDADES;
-        nomeArquivo = gerarNomeArquivo('unidades', formato);
-        nomeAba = 'Unidades';
+        dados = unidadesCache; colunas = COLUNAS_UNIDADES;
+        nomeArquivo = gerarNomeArquivo('unidades', formato); nomeAba = 'Unidades';
     }
-    if (formato === 'csv') {
-        exportarParaCSV(dados, colunas, nomeArquivo);
-    } else if (formato === 'json') {
-        exportarParaJSON(dados, colunas, nomeArquivo);
-    } else {
-        exportarParaODS(dados, colunas, nomeArquivo, nomeAba);
-    }
+    if (formato === 'csv') exportarParaCSV(dados, colunas, nomeArquivo);
+    else if (formato === 'json') exportarParaJSON(dados, colunas, nomeArquivo);
+    else exportarParaODS(dados, colunas, nomeArquivo, nomeAba);
 }
 
 /* ==========================================================
@@ -2062,19 +2008,14 @@ async function handleImport(tipo, formato) {
     input.type = 'file';
     input.accept = formato === 'csv' ? '.csv' : (formato === 'json' ? '.json' : '.ods');
     input.click();
-    
     input.addEventListener('change', async () => {
         const arquivo = input.files[0];
         if (!arquivo) return;
-
         try {
             const resultado = await lerArquivo(arquivo);
             const linhas = extrairDadosArquivo(resultado);
             if (!linhas || linhas.length === 0) {
-                Toast.aviso(
-                    'Arquivo vazio',
-                    `O arquivo "${arquivo.name}" não contém dados válidos para importação.`
-                );
+                Toast.aviso('Arquivo vazio', `O arquivo "${arquivo.name}" não contém dados válidos para importação.`);
                 return;
             }
             if (tipo === 'empresas') await processarImportEmpresas(linhas);
@@ -2082,10 +2023,7 @@ async function handleImport(tipo, formato) {
             else await processarImportUnidades(linhas);
         } catch (err) {
             console.error(err);
-            Toast.erro(
-                'Falha na importação',
-                `Não foi possível processar "${arquivo.name}". ${err.message || 'Verifique o formato do arquivo.'}`
-            );
+            Toast.erro('Falha na importação', `Não foi possível processar "${arquivo.name}". ${err.message || 'Verifique o formato do arquivo.'}`);
         }
     });
 }
@@ -2093,27 +2031,19 @@ async function handleImport(tipo, formato) {
 async function processarImportEmpresas(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarEmpresas();
-    
     const nomesProcessados = new Map();
-    empresasCache.forEach(e => {
-        nomesProcessados.set(normalizarChave(e.nome), e.id);
-    });
+    empresasCache.forEach(e => { nomesProcessados.set(normalizarChave(e.nome), e.id); });
     const idsExistentes = new Set(empresasCache.map(e => e.id));
-    
     for (const linha of linhas) {
         try {
             const nome = normalizarTexto(obterCampo(linha, ['Empresa', 'Nome', 'Nome da Empresa', 'Nome Empresa']));
             if (!nome) { ignorados++; continue; }
-            
             const valorStr = normalizarTexto(obterCampo(linha, ['Valor da Tarifa', 'Valor', 'Valor Tarifa', 'Tarifa']));
             const valor = converterMoedaParaNumero(valorStr);
             if (valor === null) { ignorados++; continue; }
-            
             const dataStr = converterDataImport(obterCampo(linha, ['Último Reajuste', 'Data Reajuste', 'Reajuste', 'Data']));
             const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
-            
             const dados = { nome, valorTarifa: valor, dataReajuste: dataStr || null, dataAtualizacao: new Date().toISOString() };
-            
             if (idArquivo && idsExistentes.has(idArquivo)) {
                 await setDoc(doc(db, 'empresas', idArquivo), dados, { merge: true });
                 atualizarMapaNomes(nomesProcessados, empresasCache, idArquivo, nome);
@@ -2137,49 +2067,32 @@ async function processarImportEmpresas(linhas) {
                     adicionados++;
                 }
             }
-        } catch (e) {
-            console.error('Erro ao importar linha:', e);
-            erros++;
-        }
+        } catch (e) { console.error(e); erros++; }
     }
     await carregarEmpresas();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
-
-    if (erros > 0 && total === 0) {
-        Toast.erro('Importação de empresas falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
-    } else if (erros > 0) {
-        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
-    } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova empresa adicionada' : 'novas empresas adicionadas'}`, 'A lista de empresas foi atualizada.', resumo);
-    } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'empresa atualizada' : 'empresas atualizadas'}`, 'Nenhuma empresa nova foi adicionada — os registros existentes foram atualizados.', resumo);
-    } else {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de empresas foi atualizada.', resumo);
-    }
+    if (erros > 0 && total === 0) Toast.erro('Importação de empresas falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+    else if (erros > 0) Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+    else if (adicionados > 0 && atualizados === 0) Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova empresa adicionada' : 'novas empresas adicionadas'}`, 'A lista de empresas foi atualizada.', resumo);
+    else if (adicionados === 0 && atualizados > 0) Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'empresa atualizada' : 'empresas atualizadas'}`, 'Nenhuma empresa nova foi adicionada — os registros existentes foram atualizados.', resumo);
+    else Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de empresas foi atualizada.', resumo);
 }
 
 async function processarImportCargos(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarCargos();
-    
     const nomesProcessados = new Map();
-    cargosCache.forEach(c => {
-        nomesProcessados.set(normalizarChave(c.nome), c.id);
-    });
+    cargosCache.forEach(c => { nomesProcessados.set(normalizarChave(c.nome), c.id); });
     const idsExistentes = new Set(cargosCache.map(c => c.id));
-    
     for (const linha of linhas) {
         try {
             const nome = normalizarTexto(obterCampo(linha, ['Cargo', 'Nome', 'Nome do Cargo']));
             if (!nome) { ignorados++; continue; }
-            
             let dataStr = converterDataImport(obterCampo(linha, ['Data de Cadastro', 'Data Cadastro', 'Data', 'Cadastro']));
             if (!dataStr) dataStr = new Date().toISOString().split('T')[0];
-            
             const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
             const dados = { nome, dataCadastro: dataStr, dataAtualizacao: new Date().toISOString() };
-            
             if (idArquivo && idsExistentes.has(idArquivo)) {
                 await setDoc(doc(db, 'cargos', idArquivo), dados, { merge: true });
                 atualizarMapaNomes(nomesProcessados, cargosCache, idArquivo, nome);
@@ -2192,10 +2105,8 @@ async function processarImportCargos(linhas) {
             } else {
                 const chaveNome = normalizarChave(nome);
                 const idExistente = nomesProcessados.get(chaveNome);
-                if (idExistente) {
-                    await setDoc(doc(db, 'cargos', idExistente), dados, { merge: true });
-                    atualizados++;
-                } else {
+                if (idExistente) { await setDoc(doc(db, 'cargos', idExistente), dados, { merge: true }); atualizados++; }
+                else {
                     const novoDoc = doc(collection(db, 'cargos'));
                     await setDoc(novoDoc, dados);
                     nomesProcessados.set(chaveNome, novoDoc.id);
@@ -2203,49 +2114,32 @@ async function processarImportCargos(linhas) {
                     adicionados++;
                 }
             }
-        } catch (e) {
-            console.error('Erro:', e);
-            erros++;
-        }
+        } catch (e) { console.error(e); erros++; }
     }
     await carregarCargos();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
-
-    if (erros > 0 && total === 0) {
-        Toast.erro('Importação de cargos falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
-    } else if (erros > 0) {
-        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
-    } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo cargo adicionado' : 'novos cargos adicionados'}`, 'A lista de cargos foi atualizada.', resumo);
-    } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'cargo atualizado' : 'cargos atualizados'}`, 'Nenhum cargo novo foi adicionado — os registros existentes foram atualizados.', resumo);
-    } else {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo' : 'novos'} e ${atualizados} ${atualizados === 1 ? 'atualizado' : 'atualizados'}`, 'A lista de cargos foi atualizada.', resumo);
-    }
+    if (erros > 0 && total === 0) Toast.erro('Importação de cargos falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+    else if (erros > 0) Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+    else if (adicionados > 0 && atualizados === 0) Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo cargo adicionado' : 'novos cargos adicionados'}`, 'A lista de cargos foi atualizada.', resumo);
+    else if (adicionados === 0 && atualizados > 0) Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'cargo atualizado' : 'cargos atualizados'}`, 'Nenhum cargo novo foi adicionado — os registros existentes foram atualizados.', resumo);
+    else Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo' : 'novos'} e ${atualizados} ${atualizados === 1 ? 'atualizado' : 'atualizados'}`, 'A lista de cargos foi atualizada.', resumo);
 }
 
 async function processarImportUnidades(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarUnidades();
-    
     const nomesProcessados = new Map();
-    unidadesCache.forEach(u => {
-        nomesProcessados.set(normalizarChave(u.nome), u.id);
-    });
+    unidadesCache.forEach(u => { nomesProcessados.set(normalizarChave(u.nome), u.id); });
     const idsExistentes = new Set(unidadesCache.map(u => u.id));
-    
     for (const linha of linhas) {
         try {
             const nome = normalizarTexto(obterCampo(linha, ['Unidade', 'Nome', 'Nome da Unidade', 'Escola', 'Setor']));
             if (!nome) { ignorados++; continue; }
-            
             let dataStr = converterDataImport(obterCampo(linha, ['Data de Cadastro', 'Data Cadastro', 'Data', 'Cadastro']));
             if (!dataStr) dataStr = new Date().toISOString().split('T')[0];
-            
             const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
             const dados = { nome, dataCadastro: dataStr, dataAtualizacao: new Date().toISOString() };
-            
             if (idArquivo && idsExistentes.has(idArquivo)) {
                 await setDoc(doc(db, 'unidades', idArquivo), dados, { merge: true });
                 atualizarMapaNomes(nomesProcessados, unidadesCache, idArquivo, nome);
@@ -2258,10 +2152,8 @@ async function processarImportUnidades(linhas) {
             } else {
                 const chaveNome = normalizarChave(nome);
                 const idExistente = nomesProcessados.get(chaveNome);
-                if (idExistente) {
-                    await setDoc(doc(db, 'unidades', idExistente), dados, { merge: true });
-                    atualizados++;
-                } else {
+                if (idExistente) { await setDoc(doc(db, 'unidades', idExistente), dados, { merge: true }); atualizados++; }
+                else {
                     const novoDoc = doc(collection(db, 'unidades'));
                     await setDoc(novoDoc, dados);
                     nomesProcessados.set(chaveNome, novoDoc.id);
@@ -2269,40 +2161,28 @@ async function processarImportUnidades(linhas) {
                     adicionados++;
                 }
             }
-        } catch (e) {
-            console.error('Erro:', e);
-            erros++;
-        }
+        } catch (e) { console.error(e); erros++; }
     }
     await carregarUnidades();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
-
-    if (erros > 0 && total === 0) {
-        Toast.erro('Importação de unidades falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
-    } else if (erros > 0) {
-        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
-    } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova unidade adicionada' : 'novas unidades adicionadas'}`, 'A lista de unidades foi atualizada.', resumo);
-    } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'unidade atualizada' : 'unidades atualizadas'}`, 'Nenhuma unidade nova foi adicionada — os registros existentes foram atualizados.', resumo);
-    } else {
-        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de unidades foi atualizada.', resumo);
-    }
+    if (erros > 0 && total === 0) Toast.erro('Importação de unidades falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+    else if (erros > 0) Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+    else if (adicionados > 0 && atualizados === 0) Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova unidade adicionada' : 'novas unidades adicionadas'}`, 'A lista de unidades foi atualizada.', resumo);
+    else if (adicionados === 0 && atualizados > 0) Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'unidade atualizada' : 'unidades atualizadas'}`, 'Nenhuma unidade nova foi adicionada — os registros existentes foram atualizados.', resumo);
+    else Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de unidades foi atualizada.', resumo);
 }
 
 /* Bind de todos os botões IO */
 document.querySelectorAll('[data-exportar]').forEach(btn => {
     btn.addEventListener('click', () => {
-        const valor = btn.getAttribute('data-exportar');
-        const [tipo, formato] = valor.split('-');
+        const [tipo, formato] = btn.getAttribute('data-exportar').split('-');
         handleExport(tipo, formato);
     });
 });
 document.querySelectorAll('[data-importar]').forEach(btn => {
     btn.addEventListener('click', () => {
-        const valor = btn.getAttribute('data-importar');
-        const [tipo, formato] = valor.split('-');
+        const [tipo, formato] = btn.getAttribute('data-importar').split('-');
         handleImport(tipo, formato);
     });
 });
@@ -2381,11 +2261,9 @@ async function salvarEmpresa() {
     const nome = document.getElementById('nomeEmpresa').value.trim();
     const valorFormatado = document.getElementById('valorTarifa').value;
     const dataReajusteISO = document.getElementById('dataReajuste').value;
-
     if (!nome) { mostrarMensagemEmpresas('Informe o nome da empresa.', 'erro'); return; }
     const valor = converterMoedaParaNumero(valorFormatado);
     if (valor === null || isNaN(valor) || valor < 0) { mostrarMensagemEmpresas('Informe um valor de tarifa válido.', 'erro'); return; }
-
     const btnSalvar = document.getElementById('btnSalvarEmpresa');
     btnSalvar.disabled = true;
     try {
@@ -2438,7 +2316,6 @@ function mostrarMensagemEmpresas(texto, tipo) {
 document.getElementById('btnNovaEmpresa').addEventListener('click', abrirModalNovaEmpresa);
 document.getElementById('btnSalvarEmpresa').addEventListener('click', salvarEmpresa);
 document.getElementById('btnConfirmarExclusaoEmpresa').addEventListener('click', confirmarExclusaoEmpresa);
-
 new MutationObserver(mutations => {
     mutations.forEach(m => { if (m.target.classList.contains('ativo')) carregarEmpresas(); });
 }).observe(document.getElementById('modalEmpresas'), { attributes: true, attributeFilter: ['class'] });
@@ -2513,10 +2390,8 @@ function editarCargo(id) {
 async function salvarCargo() {
     const nome = document.getElementById('nomeCargo').value.trim();
     const dataCadastro = document.getElementById('dataCadastroCargo').value;
-
     if (!nome) { mostrarMensagemCargos('Informe o nome do cargo.', 'erro'); return; }
     if (!dataCadastro) { mostrarMensagemCargos('Informe a data de cadastro.', 'erro'); return; }
-
     const btnSalvar = document.getElementById('btnSalvarCargo');
     btnSalvar.disabled = true;
     try {
@@ -2569,7 +2444,6 @@ function mostrarMensagemCargos(texto, tipo) {
 document.getElementById('btnNovoCargo').addEventListener('click', abrirModalNovoCargo);
 document.getElementById('btnSalvarCargo').addEventListener('click', salvarCargo);
 document.getElementById('btnConfirmarExclusaoCargo').addEventListener('click', confirmarExclusaoCargo);
-
 new MutationObserver(mutations => {
     mutations.forEach(m => { if (m.target.classList.contains('ativo')) carregarCargos(); });
 }).observe(document.getElementById('modalCargos'), { attributes: true, attributeFilter: ['class'] });
@@ -2634,11 +2508,8 @@ function abrirModalNovaUnidade() {
     document.getElementById('modalFormUnidadeTitulo').textContent = 'Nova Unidade';
     document.getElementById('nomeUnidade').value = '';
     const hojeISO = new Date().toISOString().split('T')[0];
-    if (flatpickrUnidade) {
-        flatpickrUnidade.setDate(hojeISO, false);
-    } else {
-        document.getElementById('dataCadastroUnidade').value = hojeISO;
-    }
+    if (flatpickrUnidade) flatpickrUnidade.setDate(hojeISO, false);
+    else document.getElementById('dataCadastroUnidade').value = hojeISO;
     abrirModal('modalFormUnidade');
 }
 
@@ -2648,21 +2519,16 @@ function editarUnidade(id) {
     unidadeEmEdicao = id;
     document.getElementById('modalFormUnidadeTitulo').textContent = 'Editar Unidade';
     document.getElementById('nomeUnidade').value = unidade.nome || '';
-    if (flatpickrUnidade) {
-        flatpickrUnidade.setDate(unidade.dataCadastro || '', false);
-    } else {
-        document.getElementById('dataCadastroUnidade').value = unidade.dataCadastro || '';
-    }
+    if (flatpickrUnidade) flatpickrUnidade.setDate(unidade.dataCadastro || '', false);
+    else document.getElementById('dataCadastroUnidade').value = unidade.dataCadastro || '';
     abrirModal('modalFormUnidade');
 }
 
 async function salvarUnidade() {
     const nome = document.getElementById('nomeUnidade').value.trim();
     const dataCadastro = document.getElementById('dataCadastroUnidade').value;
-
     if (!nome) { mostrarMensagemUnidades('Informe o nome da unidade.', 'erro'); return; }
     if (!dataCadastro) { mostrarMensagemUnidades('Informe a data de cadastro.', 'erro'); return; }
-
     const btnSalvar = document.getElementById('btnSalvarUnidade');
     btnSalvar.disabled = true;
     try {
@@ -2718,7 +2584,6 @@ function mostrarMensagemUnidades(texto, tipo) {
 document.getElementById('btnNovaUnidade').addEventListener('click', abrirModalNovaUnidade);
 document.getElementById('btnSalvarUnidade').addEventListener('click', salvarUnidade);
 document.getElementById('btnConfirmarExclusaoUnidade').addEventListener('click', confirmarExclusaoUnidade);
-
 new MutationObserver(mutations => {
     mutations.forEach(m => { if (m.target.classList.contains('ativo')) carregarUnidades(); });
 }).observe(document.getElementById('modalUnidades'), { attributes: true, attributeFilter: ['class'] });
