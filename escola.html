@@ -33,11 +33,23 @@
     .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
     .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
 
-    .bloco-aluno {
+    .bloco-registro {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .bloco-aluno h4 { margin: 0 0 .8rem; font-size: 1rem; }
+    .bloco-registro .cabecalho {
+      display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem;
+      flex-wrap: wrap;
+    }
+    .bloco-registro h4 { margin: 0; font-size: 1rem; }
+
+    .tag-tipo {
+      display: inline-block; padding: .15rem .55rem; border-radius: 10px;
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    }
+    .tag-aluno    { background: #dbeafe; color: #1e40af; }
+    .tag-escola   { background: #dcfce7; color: #166534; }
+    .tag-servidor { background: #f3e8ff; color: #6b21a8; }
 
     .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
     .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
@@ -60,17 +72,13 @@
     .rodape-form { text-align: right; margin-top: 1.5rem; }
     .vazio { color: #888; }
 
-    /* ========== RESPONSIVO ========== */
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
-      .usuario { font-size: .85rem; }
       .usuario select { max-width: 180px; font-size: .85rem; }
       .tela { margin: 1rem auto; padding: 0 .8rem; }
-
       h2 { font-size: 1.15rem; }
-      .card-tarefa, .bloco-aluno { padding: .9rem 1rem; }
-
+      .card-tarefa, .bloco-registro { padding: .9rem 1rem; }
       .rodape-form { text-align: stretch; }
       .rodape-form button { width: 100%; }
     }
@@ -85,22 +93,11 @@
       .topo h1 { font-size: .95rem; }
       .usuario { width: 100%; flex-direction: column; align-items: stretch; gap: .3rem; }
       .usuario select { max-width: 100%; width: 100%; }
-
       .tela { padding: 0 .6rem; }
-
       h2 { font-size: 1.05rem; }
-      .subtitulo { font-size: .85rem; }
-
-      .card-tarefa { padding: .8rem .9rem; }
-      .card-tarefa p { font-size: .82rem; }
-
-      .bloco-aluno { padding: .8rem .9rem; border-radius: 6px; }
-      .bloco-aluno h4 { font-size: .95rem; }
-
+      .bloco-registro { padding: .8rem .9rem; border-radius: 6px; }
       .campo input, .campo select { padding: .5rem .6rem; font-size: .9rem; }
-
       .btn-primario { padding: .65rem 1rem; font-size: .9rem; }
-      .btn-voltar { font-size: .85rem; }
     }
   </style>
 </head>
@@ -123,7 +120,7 @@
     <button id="btnVoltar" class="btn-voltar">← Voltar</button>
     <h2 id="tituloTarefa">Tarefa</h2>
     <p id="descricaoTarefa" class="subtitulo"></p>
-    <div id="listaAlunos"></div>
+    <div id="listaRegistros"></div>
     <div class="rodape-form">
       <button id="btnSalvarTodos" class="btn-primario">Salvar tudo</button>
     </div>
@@ -156,6 +153,12 @@
     function salvarDB(db) {
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
+
+    const ROTULO_TIPO = {
+      aluno:    "Aluno",
+      escola:   "Escola",
+      servidor: "Servidor"
+    };
 
     let ESCOLA_ATUAL = null;
     let db = carregarDB();
@@ -227,11 +230,17 @@
       pendentes.forEach((t) => {
         const card = document.createElement("div");
         card.className = "card-tarefa";
+
+        const tipos = Object.entries(t.camposPorTipo || {})
+          .filter(([_, v]) => v.length > 0)
+          .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]} (${campos.length})`)
+          .join(", ") || "—";
+
         card.innerHTML = `
           <h3>${t.titulo}</h3>
           <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
-          <p><strong>Campos:</strong> ${t.camposNecessarios.map(formatarLabel).join(", ")}</p>
-          <p><strong>Alunos:</strong> ${t.alunos.length}</p>
+          <p><strong>Tipos:</strong> ${tipos}</p>
+          <p><strong>Registros:</strong> ${t.registros.length}</p>
           <p><strong>Status:</strong> ${t.status}</p>
           <button class="btn-primario" style="margin-top:.6rem;">Abrir</button>
         `;
@@ -248,31 +257,43 @@
       mostrarTela("formulario");
 
       document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
-      document.getElementById("descricaoTarefa").textContent =
-        `Campos solicitados: ${tarefaAtual.camposNecessarios.map(formatarLabel).join(", ")}`;
 
-      const listaAlunos = document.getElementById("listaAlunos");
-      listaAlunos.innerHTML = "";
+      // Monta lista de campos formatados
+      const camposTexto = Object.entries(tarefaAtual.camposPorTipo || {})
+        .filter(([_, v]) => v.length > 0)
+        .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]}: ${campos.map(formatarLabel).join(", ")}`)
+        .join(" | ");
 
-      tarefaAtual.alunos.forEach((a) => {
+      document.getElementById("descricaoTarefa").textContent = camposTexto;
+
+      const listaRegistros = document.getElementById("listaRegistros");
+      listaRegistros.innerHTML = "";
+
+      tarefaAtual.registros.forEach((r) => {
         const bloco = document.createElement("div");
-        bloco.className = "bloco-aluno";
+        bloco.className = "bloco-registro";
 
-        let html = `<h4>${a.nome}</h4>`;
+        let html = `
+          <div class="cabecalho">
+            <span class="tag-tipo tag-${r.tipo}">${ROTULO_TIPO[r.tipo]}</span>
+            <h4>${r.nome}</h4>
+          </div>
+        `;
 
-        (a.camposFaltando || []).forEach((campo) => {
+        (r.camposFaltando || []).forEach((campo) => {
           const label = formatarLabel(campo);
           html += `
             <div class="campo">
               <label>${label}</label>
-              ${criarInput(campo, a[campo] || "")}
+              ${criarInput(campo, r[campo] || "")}
             </div>
           `;
         });
 
         bloco.innerHTML = html;
-        bloco.dataset.alunoId = a.alunoId;
-        listaAlunos.appendChild(bloco);
+        bloco.dataset.registroId = r.id;
+        bloco.dataset.tipo = r.tipo;
+        listaRegistros.appendChild(bloco);
       });
     }
 
@@ -300,6 +321,7 @@
 
     function formatarLabel(campo) {
       const mapa = {
+        // aluno
         nomeMae: "Nome da mãe",
         nomePai: "Nome do pai",
         genero: "Gênero",
@@ -307,7 +329,16 @@
         endereco: "Endereço",
         cpf: "CPF",
         telefone: "Telefone",
-        serie: "Série"
+        serie: "Série",
+        // escola
+        email: "E-mail",
+        diretor: "Nome do diretor",
+        inep: "Código INEP",
+        cnpj: "CNPJ",
+        // servidor
+        cargo: "Cargo",
+        formacao: "Formação",
+        cargaHoraria: "Carga horária"
       };
       return mapa[campo] || campo;
     }
@@ -315,28 +346,34 @@
     document.getElementById("btnSalvarTodos").addEventListener("click", () => {
       db = carregarDB();
       const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
-      const blocos = document.querySelectorAll(".bloco-aluno");
+      const blocos = document.querySelectorAll(".bloco-registro");
       let totalAtualizacoes = 0;
 
       blocos.forEach((bloco) => {
-        const alunoId = bloco.dataset.alunoId;
-        const alunoTarefa = tarefaDb.alunos.find(a => a.alunoId === alunoId);
-        const alunoBanco = db.alunos.find(a => a.id === alunoId);
+        const registroId = bloco.dataset.registroId;
+        const tipo = bloco.dataset.tipo;
+        const registroTarefa = tarefaDb.registros.find(r => r.id === registroId);
+
+        // Encontra o objeto no banco principal
+        const colecao = tipo === "aluno" ? db.alunos
+                     : tipo === "escola" ? db.escolas
+                     : db.servidores;
+        const objBanco = colecao.find(x => x.id === registroId);
 
         bloco.querySelectorAll("[data-campo]").forEach((input) => {
           const campo = input.dataset.campo;
           const valor = input.value.trim();
           if (valor !== "") {
-            if (alunoBanco) alunoBanco[campo] = valor;
-            alunoTarefa[campo] = valor;
-            alunoTarefa.camposFaltando =
-              (alunoTarefa.camposFaltando || []).filter(c => c !== campo);
+            if (objBanco) objBanco[campo] = valor;
+            registroTarefa[campo] = valor;
+            registroTarefa.camposFaltando =
+              (registroTarefa.camposFaltando || []).filter(c => c !== campo);
             totalAtualizacoes++;
           }
         });
 
-        if (alunoTarefa.camposFaltando.length === 0) {
-          alunoTarefa.status = "concluida";
+        if (registroTarefa.camposFaltando.length === 0) {
+          registroTarefa.status = "concluida";
         }
       });
 
@@ -345,7 +382,7 @@
         return;
       }
 
-      const aindaPendentes = tarefaDb.alunos.some(a => a.status !== "concluida");
+      const aindaPendentes = tarefaDb.registros.some(r => r.status !== "concluida");
       tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
 
       salvarDB(db);
