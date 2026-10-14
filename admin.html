@@ -88,22 +88,14 @@
       font-size: .9rem; color: #78350f;
     }
 
-    /* ========== RESPONSIVO ========== */
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
       .tela { margin: 1rem auto; padding: 0 .8rem; }
-
       .bloco { padding: .8rem 1rem; }
-
-      .form-linha {
-        grid-template-columns: 1fr;
-        gap: .6rem;
-      }
-
+      .form-linha { grid-template-columns: 1fr; gap: .6rem; }
       .btn-primario { width: 100%; }
       .btn-perigo { width: 100%; padding: .5rem; }
-
       table { font-size: .85rem; min-width: 450px; }
       th, td { padding: .5rem .6rem; }
     }
@@ -113,13 +105,10 @@
       .topo h1 { font-size: .95rem; }
       .usuario { font-size: .75rem; }
       .tela { padding: 0 .6rem; }
-
       .aba { padding: .6rem .8rem; font-size: .82rem; }
       .bloco { padding: .7rem .8rem; border-radius: 6px; }
-
       table { font-size: .8rem; min-width: 400px; }
       th, td { padding: .45rem .5rem; }
-
       .btn-primario { font-size: .9rem; padding: .65rem 1rem; }
     }
   </style>
@@ -128,7 +117,7 @@
 
   <header class="topo">
     <h1>Administração da Rede</h1>
-    <div class="usuario">Cadastro de escolas, alunos e servidores</div>
+    <div class="usuario">Escolas, alunos, servidores e campos</div>
   </header>
 
   <div class="tela">
@@ -136,6 +125,7 @@
       <button class="aba ativa" data-aba="escolas">🏫 Escolas</button>
       <button class="aba" data-aba="alunos">🎓 Alunos</button>
       <button class="aba" data-aba="servidores">👩‍🏫 Servidores</button>
+      <button class="aba" data-aba="campos">📋 Campos</button>
       <button class="aba" data-aba="dados">💾 Dados</button>
     </div>
 
@@ -284,10 +274,59 @@
       </div>
     </div>
 
+    <!-- ABA CAMPOS -->
+    <div id="painel-campos" class="painel">
+      <div class="bloco">
+        <h3>Cadastrar campo no catálogo</h3>
+        <p style="color:#555;font-size:.9rem;margin-top:0;">
+          Esses campos ficam disponíveis para a Secretaria montar as solicitações.
+        </p>
+        <div class="form-linha">
+          <div class="campo">
+            <label>ID (sem espaços)</label>
+            <input type="text" id="campoId" placeholder="nomeMae">
+          </div>
+          <div class="campo">
+            <label>Nome exibido</label>
+            <input type="text" id="campoLabel" placeholder="Nome da mãe">
+          </div>
+          <div class="campo">
+            <label>Categoria</label>
+            <select id="campoTipo">
+              <option value="">Selecione...</option>
+              <option value="aluno">Aluno</option>
+              <option value="escola">Escola</option>
+              <option value="servidor">Servidor</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Tipo do campo</label>
+            <select id="campoTipoCampo">
+              <option value="text">Texto</option>
+              <option value="number">Número</option>
+              <option value="date">Data</option>
+              <option value="email">E-mail</option>
+              <option value="select">Seleção (opções)</option>
+            </select>
+          </div>
+          <div class="campo" id="campoOpcoesWrap" style="display:none;">
+            <label>Opções (separadas por vírgula)</label>
+            <input type="text" id="campoOpcoes" placeholder="M, F">
+          </div>
+        </div>
+        <button id="btnAddCampo" class="btn-primario">+ Adicionar campo</button>
+      </div>
+
+      <div class="bloco">
+        <h3>Campos cadastrados</h3>
+        <div id="tabelaCampos"></div>
+      </div>
+    </div>
+
     <!-- ABA DADOS -->
     <div id="painel-dados" class="painel">
       <div class="bloco">
-        <h3>Gerenciar dados de teste</h3>
+        <h3>Gerenciar dados</h3>
         <div class="aviso">
           Esses botões apagam ou restauram os dados salvos no navegador (localStorage).
           Use com cuidado — não tem como desfazer.
@@ -310,18 +349,46 @@
   <script>
     const DB_KEY = "rede_municipal_db";
 
+    const CATALOGO_PADRAO = [
+      { id: "nomeMae",            label: "Nome da mãe",         tipo: "aluno",    tipoCampo: "text" },
+      { id: "nomePai",            label: "Nome do pai",         tipo: "aluno",    tipoCampo: "text" },
+      { id: "cpf",                label: "CPF do aluno",        tipo: "aluno",    tipoCampo: "text" },
+      { id: "genero",             label: "Gênero",              tipo: "aluno",    tipoCampo: "select", opcoes: ["M", "F"] },
+      { id: "restricaoAlimentar", label: "Restrição alimentar", tipo: "aluno",    tipoCampo: "select", opcoes: ["Não", "Sim"] },
+      { id: "endereco",           label: "Endereço",            tipo: "aluno",    tipoCampo: "text" },
+      { id: "telefone",           label: "Telefone",            tipo: "aluno",    tipoCampo: "text" },
+      { id: "serie",              label: "Série",               tipo: "aluno",    tipoCampo: "text" },
+      { id: "endereco",           label: "Endereço da escola",  tipo: "escola",   tipoCampo: "text" },
+      { id: "telefone",           label: "Telefone da escola",  tipo: "escola",   tipoCampo: "text" },
+      { id: "email",              label: "E-mail da escola",    tipo: "escola",   tipoCampo: "email" },
+      { id: "diretor",            label: "Nome do diretor",     tipo: "escola",   tipoCampo: "text" },
+      { id: "inep",               label: "Código INEP",         tipo: "escola",   tipoCampo: "text" },
+      { id: "cnpj",               label: "CNPJ",                tipo: "escola",   tipoCampo: "text" },
+      { id: "cargo",              label: "Cargo",               tipo: "servidor", tipoCampo: "text" },
+      { id: "genero",             label: "Gênero",              tipo: "servidor", tipoCampo: "select", opcoes: ["M", "F"] },
+      { id: "cpf",                label: "CPF do servidor",     tipo: "servidor", tipoCampo: "text" },
+      { id: "telefone",           label: "Telefone",            tipo: "servidor", tipoCampo: "text" },
+      { id: "email",              label: "E-mail",              tipo: "servidor", tipoCampo: "email" },
+      { id: "formacao",           label: "Formação",            tipo: "servidor", tipoCampo: "text" },
+      { id: "cargaHoraria",       label: "Carga horária",       tipo: "servidor", tipoCampo: "text" }
+    ];
+
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
-        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [] };
+        const inicial = {
+          escolas: [], alunos: [], servidores: [], tarefas: [],
+          campos: JSON.parse(JSON.stringify(CATALOGO_PADRAO))
+        };
         localStorage.setItem(DB_KEY, JSON.stringify(inicial));
         return inicial;
       }
       const db = JSON.parse(raw);
-      db.escolas = db.escolas || [];
-      db.alunos = db.alunos || [];
+      db.escolas    = db.escolas    || [];
+      db.alunos     = db.alunos     || [];
       db.servidores = db.servidores || [];
-      db.tarefas = db.tarefas || [];
+      db.tarefas    = db.tarefas    || [];
+      db.campos     = db.campos     || JSON.parse(JSON.stringify(CATALOGO_PADRAO));
       return db;
     }
 
@@ -412,7 +479,6 @@
       renderizarResumo();
     });
 
-    // ---------- SELECTS DE ESCOLA ----------
     function atualizarSelectsEscolas() {
       const db = carregarDB();
       ["alunoEscola", "servidorEscola"].forEach(idSelect => {
@@ -533,9 +599,7 @@
           "Professor": "Professora",
           "Diretor": "Diretora",
           "Coordenador": "Coordenadora",
-          "Secretário": "Secretária",
-          "Merendeira": "Merendeira",
-          "Auxiliar de Serviços": "Auxiliar de Serviços"
+          "Secretário": "Secretária"
         };
         const cargoExibir = (s.genero === "F" && cargoFeminino[s.cargo]) ? cargoFeminino[s.cargo] : s.cargo;
 
@@ -604,6 +668,94 @@
       renderizarResumo();
     });
 
+    // ---------- CAMPOS ----------
+    function renderizarCampos() {
+      const db = carregarDB();
+      const div = document.getElementById("tabelaCampos");
+
+      if (db.campos.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhum campo cadastrado ainda.</p>';
+        return;
+      }
+
+      const rotuloTipo = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
+
+      let html = `<div class="tabela-wrap"><table><thead><tr>
+        <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Opções</th><th>Ações</th>
+      </tr></thead><tbody>`;
+
+      db.campos.forEach(c => {
+        html += `<tr>
+          <td>${rotuloTipo[c.tipo] || c.tipo}</td>
+          <td>${c.id}</td>
+          <td>${c.label}</td>
+          <td>${c.tipoCampo || "text"}</td>
+          <td>${c.opcoes ? c.opcoes.join(", ") : "—"}</td>
+          <td><button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button></td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></div>`;
+      div.innerHTML = html;
+
+      div.querySelectorAll(".btn-rm-campo").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!confirm("Remover este campo do catálogo?")) return;
+          const db = carregarDB();
+          db.campos = db.campos.filter(c => !(c.id === btn.dataset.id && c.tipo === btn.dataset.tipo));
+          salvarDB(db);
+          renderizarCampos();
+          renderizarResumo();
+        });
+      });
+    }
+
+    document.getElementById("btnAddCampo").addEventListener("click", () => {
+      const id = document.getElementById("campoId").value.trim();
+      const label = document.getElementById("campoLabel").value.trim();
+      const tipo = document.getElementById("campoTipo").value;
+      const tipoCampo = document.getElementById("campoTipoCampo").value;
+      const opcoesTexto = document.getElementById("campoOpcoes").value.trim();
+
+      if (!id) { alert("Informe o ID."); return; }
+      if (!label) { alert("Informe o nome exibido."); return; }
+      if (!tipo) { alert("Selecione a categoria."); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) {
+        alert("O ID só pode ter letras, números e underline (_).");
+        return;
+      }
+
+      const db = carregarDB();
+      if (db.campos.find(c => c.id === id && c.tipo === tipo)) {
+        alert("Já existe um campo com esse ID nessa categoria.");
+        return;
+      }
+
+      const campo = { id, label, tipo, tipoCampo };
+      if (tipoCampo === "select") {
+        if (!opcoesTexto) { alert("Informe as opções."); return; }
+        campo.opcoes = opcoesTexto.split(",").map(s => s.trim()).filter(Boolean);
+      }
+
+      db.campos.push(campo);
+      salvarDB(db);
+
+      document.getElementById("campoId").value = "";
+      document.getElementById("campoLabel").value = "";
+      document.getElementById("campoTipo").value = "";
+      document.getElementById("campoTipoCampo").value = "text";
+      document.getElementById("campoOpcoes").value = "";
+      document.getElementById("campoOpcoesWrap").style.display = "none";
+
+      renderizarCampos();
+      renderizarResumo();
+    });
+
+    document.getElementById("campoTipoCampo").addEventListener("change", (e) => {
+      document.getElementById("campoOpcoesWrap").style.display =
+        e.target.value === "select" ? "block" : "none";
+    });
+
     // ---------- DADOS ----------
     function renderizarResumo() {
       const db = carregarDB();
@@ -618,6 +770,7 @@
         <p><strong>Escolas:</strong> ${db.escolas.length}</p>
         <p><strong>Alunos:</strong> ${db.alunos.length}</p>
         <p><strong>Servidores:</strong> ${db.servidores.length}</p>
+        <p><strong>Campos no catálogo:</strong> ${db.campos.length}</p>
         <p><strong>Tarefas:</strong> ${db.tarefas.length}</p>
       `;
 
@@ -668,7 +821,7 @@
     });
 
     document.getElementById("btnResetar").addEventListener("click", () => {
-      if (!confirm("Isso apaga TUDO (escolas, alunos, servidores, tarefas). Continuar?")) return;
+      if (!confirm("Isso apaga TUDO (escolas, alunos, servidores, tarefas, campos). Continuar?")) return;
       localStorage.removeItem(DB_KEY);
       alert("Tudo resetado!");
       location.reload();
@@ -678,6 +831,7 @@
     renderizarEscolas();
     renderizarAlunos();
     renderizarServidores();
+    renderizarCampos();
     renderizarResumo();
   </script>
 </body>
