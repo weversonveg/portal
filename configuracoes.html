@@ -560,7 +560,7 @@ tbody tr:hover td { background:var(--surface-2); }
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 400px;
+    max-width: 420px;
     width: calc(100% - 32px);
     pointer-events: none;
 }
@@ -590,7 +590,7 @@ tbody tr:hover td { background:var(--surface-2); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 @keyframes toastSair {
-    from { opacity: 1; transform: translateX(0) scale(1); max-height: 200px; }
+    from { opacity: 1; transform: translateX(0) scale(1); max-height: 300px; }
     to   { opacity: 0; transform: translateX(30px) scale(.96); max-height: 0; margin-top: -10px; }
 }
 
@@ -660,7 +660,7 @@ tbody tr:hover td { background:var(--surface-2); }
     gap: 4px;
     font-size: 11px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 3px 9px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface-2);
@@ -1351,17 +1351,17 @@ const Toast = (() => {
             const r = document.createElement('div');
             r.className = 'toast-resumo';
             const mapa = {
-                adicionados: { classe: 'add', label: 'adicionado' },
-                atualizados: { classe: 'upd', label: 'atualizado' },
-                ignorados:   { classe: 'ign', label: 'ignorado' },
-                erros:       { classe: 'err', label: 'erro' }
+                adicionados: { classe: 'add', label: 'novo', plural: 'novos' },
+                atualizados: { classe: 'upd', label: 'atualizado', plural: 'atualizados' },
+                ignorados:   { classe: 'ign', label: 'ignorado', plural: 'ignorados' },
+                erros:       { classe: 'err', label: 'erro', plural: 'erros' }
             };
             Object.entries(mapa).forEach(([chave, cfg]) => {
                 const valor = Number(resumo[chave]) || 0;
                 if (valor > 0) {
                     const item = document.createElement('span');
                     item.className = `toast-resumo-item ${cfg.classe}`;
-                    item.textContent = `${valor} ${cfg.label}${valor !== 1 ? 's' : ''}`;
+                    item.textContent = `${valor} ${valor !== 1 ? cfg.plural : cfg.label}`;
                     r.appendChild(item);
                 }
             });
@@ -1916,9 +1916,6 @@ async function handleImport(tipo, formato) {
         const arquivo = input.files[0];
         if (!arquivo) return;
 
-        const nomesTipo = { empresas: 'Empresas', cargos: 'Cargos', unidades: 'Unidades' };
-        const nomeTipo = nomesTipo[tipo] || 'Registros';
-
         try {
             const resultado = await lerArquivo(arquivo);
             const linhas = extrairDadosArquivo(resultado);
@@ -1984,12 +1981,37 @@ async function processarImportEmpresas(linhas) {
     await carregarEmpresas();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
+
     if (erros > 0 && total === 0) {
-        Toast.erro('Importação de empresas falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+        Toast.erro(
+            'Importação de empresas falhou',
+            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
+            resumo
+        );
     } else if (erros > 0) {
-        Toast.aviso('Importação de empresas concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+        Toast.aviso(
+            'Importação concluída com pendências',
+            'Alguns registros não puderam ser processados.',
+            resumo
+        );
+    } else if (adicionados > 0 && atualizados === 0) {
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'nova empresa adicionada' : 'novas empresas adicionadas'}`,
+            'A lista de empresas foi atualizada.',
+            resumo
+        );
+    } else if (adicionados === 0 && atualizados > 0) {
+        Toast.sucesso(
+            `${atualizados} ${atualizados === 1 ? 'empresa atualizada' : 'empresas atualizadas'}`,
+            'Nenhuma empresa nova foi adicionada — os registros existentes foram atualizados.',
+            resumo
+        );
     } else {
-        Toast.sucesso('Empresas importadas com sucesso', 'A lista de empresas foi atualizada.', resumo);
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`,
+            'A lista de empresas foi atualizada.',
+            resumo
+        );
     }
 }
 
@@ -2032,12 +2054,37 @@ async function processarImportCargos(linhas) {
     await carregarCargos();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
+
     if (erros > 0 && total === 0) {
-        Toast.erro('Importação de cargos falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+        Toast.erro(
+            'Importação de cargos falhou',
+            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
+            resumo
+        );
     } else if (erros > 0) {
-        Toast.aviso('Importação de cargos concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+        Toast.aviso(
+            'Importação concluída com pendências',
+            'Alguns registros não puderam ser processados.',
+            resumo
+        );
+    } else if (adicionados > 0 && atualizados === 0) {
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'novo cargo adicionado' : 'novos cargos adicionados'}`,
+            'A lista de cargos foi atualizada.',
+            resumo
+        );
+    } else if (adicionados === 0 && atualizados > 0) {
+        Toast.sucesso(
+            `${atualizados} ${atualizados === 1 ? 'cargo atualizado' : 'cargos atualizados'}`,
+            'Nenhum cargo novo foi adicionado — os registros existentes foram atualizados.',
+            resumo
+        );
     } else {
-        Toast.sucesso('Cargos importados com sucesso', 'A lista de cargos foi atualizada.', resumo);
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'novo' : 'novos'} e ${atualizados} ${atualizados === 1 ? 'atualizado' : 'atualizados'}`,
+            'A lista de cargos foi atualizada.',
+            resumo
+        );
     }
 }
 
@@ -2080,12 +2127,37 @@ async function processarImportUnidades(linhas) {
     await carregarUnidades();
     const resumo = { adicionados, atualizados, ignorados, erros };
     const total = adicionados + atualizados;
+
     if (erros > 0 && total === 0) {
-        Toast.erro('Importação de unidades falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
+        Toast.erro(
+            'Importação de unidades falhou',
+            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
+            resumo
+        );
     } else if (erros > 0) {
-        Toast.aviso('Importação de unidades concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
+        Toast.aviso(
+            'Importação concluída com pendências',
+            'Alguns registros não puderam ser processados.',
+            resumo
+        );
+    } else if (adicionados > 0 && atualizados === 0) {
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'nova unidade adicionada' : 'novas unidades adicionadas'}`,
+            'A lista de unidades foi atualizada.',
+            resumo
+        );
+    } else if (adicionados === 0 && atualizados > 0) {
+        Toast.sucesso(
+            `${atualizados} ${atualizados === 1 ? 'unidade atualizada' : 'unidades atualizadas'}`,
+            'Nenhuma unidade nova foi adicionada — os registros existentes foram atualizados.',
+            resumo
+        );
     } else {
-        Toast.sucesso('Unidades importadas com sucesso', 'A lista de unidades foi atualizada.', resumo);
+        Toast.sucesso(
+            `${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`,
+            'A lista de unidades foi atualizada.',
+            resumo
+        );
     }
 }
 
