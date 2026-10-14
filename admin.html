@@ -205,6 +205,7 @@
               <option value="date">Data</option>
               <option value="email">E-mail</option>
               <option value="select">Seleção (opções)</option>
+              <option value="escola">Escola (select de escolas)</option>
             </select>
           </div>
           <div class="campo" id="campoOpcoesWrap" style="display:none;">
@@ -255,7 +256,8 @@
     const DB_KEY = "rede_municipal_db";
 
     const CATALOGO_PADRAO = [
-      { id: "nome",               label: "Nome",                tipo: "aluno",    tipoCampo: "text",  obrigatorio: true },
+      // ---- ALUNO ----
+      { id: "nome",               label: "Nome",                tipo: "aluno",    tipoCampo: "text",   obrigatorio: true },
       { id: "escolaId",           label: "Escola",              tipo: "aluno",    tipoCampo: "escola", obrigatorio: true },
       { id: "nomeMae",            label: "Nome da mãe",         tipo: "aluno",    tipoCampo: "text" },
       { id: "nomePai",            label: "Nome do pai",         tipo: "aluno",    tipoCampo: "text" },
@@ -266,8 +268,9 @@
       { id: "telefone",           label: "Telefone",            tipo: "aluno",    tipoCampo: "text" },
       { id: "serie",              label: "Série",               tipo: "aluno",    tipoCampo: "text" },
 
-      { id: "nome",               label: "Nome",                tipo: "escola",   tipoCampo: "text",  obrigatorio: true },
-      { id: "id",                 label: "ID (slug)",           tipo: "escola",   tipoCampo: "text",  obrigatorio: true },
+      // ---- ESCOLA ----
+      { id: "nome",               label: "Nome",                tipo: "escola",   tipoCampo: "text",   obrigatorio: true },
+      { id: "codigo",             label: "ID (slug)",           tipo: "escola",   tipoCampo: "text",   obrigatorio: true },
       { id: "endereco",           label: "Endereço",            tipo: "escola",   tipoCampo: "text" },
       { id: "telefone",           label: "Telefone",            tipo: "escola",   tipoCampo: "text" },
       { id: "email",              label: "E-mail",              tipo: "escola",   tipoCampo: "email" },
@@ -275,9 +278,10 @@
       { id: "inep",               label: "Código INEP",         tipo: "escola",   tipoCampo: "text" },
       { id: "cnpj",               label: "CNPJ",                tipo: "escola",   tipoCampo: "text" },
 
-      { id: "nome",               label: "Nome",                tipo: "servidor", tipoCampo: "text",  obrigatorio: true },
+      // ---- SERVIDOR ----
+      { id: "nome",               label: "Nome",                tipo: "servidor", tipoCampo: "text",   obrigatorio: true },
       { id: "escolaId",           label: "Escola",              tipo: "servidor", tipoCampo: "escola", obrigatorio: true },
-      { id: "cargo",              label: "Cargo",               tipo: "servidor", tipoCampo: "text",  obrigatorio: true },
+      { id: "cargo",              label: "Cargo",               tipo: "servidor", tipoCampo: "text",   obrigatorio: true },
       { id: "genero",             label: "Gênero",              tipo: "servidor", tipoCampo: "select", opcoes: ["M", "F"] },
       { id: "cpf",                label: "CPF",                 tipo: "servidor", tipoCampo: "text" },
       { id: "telefone",           label: "Telefone",            tipo: "servidor", tipoCampo: "text" },
@@ -313,7 +317,6 @@
       return prefixo + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
     }
 
-    // Retorna apenas campos do catálogo de uma categoria
     function camposDoTipo(tipo) {
       const db = carregarDB();
       return db.campos.filter(c => c.tipo === tipo);
@@ -322,14 +325,12 @@
     // ============================================================
     // FORMULÁRIOS DINÂMICOS
     // ============================================================
-
-    // Renderiza um input baseado no tipoCampo
     function renderizarInput(campo, prefixo, valor = "") {
       const id = `${prefixo}_${campo.id}`;
       const tipo = campo.tipoCampo || "text";
+      const val = (valor ?? "").toString().replace(/"/g, "&quot;");
 
       if (tipo === "escola") {
-        // Select de escolas
         const db = carregarDB();
         let options = '<option value="">Selecione...</option>';
         db.escolas.forEach(e => {
@@ -348,20 +349,12 @@
         return `<select id="${id}" data-campo="${campo.id}">${options}</select>`;
       }
 
-      if (tipo === "date") {
-        return `<input type="date" id="${id}" data-campo="${campo.id}" value="${valor}">`;
-      }
-      if (tipo === "number") {
-        return `<input type="number" id="${id}" data-campo="${campo.id}" value="${valor}">`;
-      }
-      if (tipo === "email") {
-        return `<input type="email" id="${id}" data-campo="${campo.id}" value="${valor}">`;
-      }
-      // text padrão
-      return `<input type="text" id="${id}" data-campo="${campo.id}" value="${valor}">`;
+      if (tipo === "date")   return `<input type="date" id="${id}" data-campo="${campo.id}" value="${val}">`;
+      if (tipo === "number") return `<input type="number" id="${id}" data-campo="${campo.id}" value="${val}">`;
+      if (tipo === "email")  return `<input type="email" id="${id}" data-campo="${campo.id}" value="${val}">`;
+      return `<input type="text" id="${id}" data-campo="${campo.id}" value="${val}">`;
     }
 
-    // Monta o formulário de cadastro de uma categoria
     function montarFormulario(tipo, prefixo) {
       const container = document.getElementById(prefixo);
       container.innerHTML = "";
@@ -383,7 +376,6 @@
       });
     }
 
-    // Lê os valores preenchidos num formulário
     function lerFormulario(containerId) {
       const container = document.getElementById(containerId);
       const dados = {};
@@ -395,7 +387,6 @@
       return dados;
     }
 
-    // Limpa o formulário
     function limparFormulario(containerId) {
       const container = document.getElementById(containerId);
       container.querySelectorAll("[data-campo]").forEach(el => {
@@ -418,19 +409,23 @@
     // ============================================================
     // ESCOLAS
     // ============================================================
+    function nomeEscolaPorId(id) {
+      const db = carregarDB();
+      const e = db.escolas.find(x => x.id === id);
+      return e ? (e.nome || e.id) : id;
+    }
+
     function renderizarEscolas() {
       const db = carregarDB();
       const div = document.getElementById("tabelaEscolas");
 
       if (db.escolas.length === 0) {
         div.innerHTML = '<p class="vazio">Nenhuma escola cadastrada ainda.</p>';
-        atualizarSelectsEscolas();
         return;
       }
 
       const camposEscola = camposDoTipo("escola");
-      // Mostra até 4 colunas na tabela + ações
-      const colunas = camposEscola.slice(0, 4);
+      const colunas = camposEscola.slice(0, 5);
 
       let html = `<div class="tabela-wrap"><table><thead><tr>`;
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
@@ -439,7 +434,10 @@
       db.escolas.forEach(e => {
         html += `<tr>`;
         colunas.forEach(c => {
-          html += `<td>${e[c.id] || "—"}</td>`;
+          let valor = e[c.id] || "—";
+          // Se o campo for escola (raro na escola, mas possível), resolve o nome
+          if (c.tipoCampo === "escola" && e[c.id]) valor = nomeEscolaPorId(e[c.id]);
+          html += `<td>${valor}</td>`;
         });
         html += `<td><button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button></td>`;
         html += `</tr>`;
@@ -459,15 +457,12 @@
           renderizarServidores();
         });
       });
-
-      atualizarSelectsEscolas();
     }
 
     document.getElementById("btnAddEscola").addEventListener("click", () => {
       const dados = lerFormulario("formEscola");
       const camposEscola = camposDoTipo("escola");
 
-      // Validação de obrigatórios
       for (const c of camposEscola) {
         if (c.obrigatorio && !dados[c.id]) {
           alert(`O campo "${c.label}" é obrigatório.`);
@@ -475,24 +470,27 @@
         }
       }
 
-      // Valida ID específico da escola
-      if (dados.id && !/^[a-z0-9_]+$/.test(dados.id)) {
+      // Valida o ID/slug se existir
+      if (dados.codigo && !/^[a-z0-9_]+$/.test(dados.codigo)) {
         alert("O ID da escola só pode ter letras minúsculas, números e underline (_).");
         return;
       }
 
       const db = carregarDB();
 
-      if (dados.id && db.escolas.find(e => e.id === dados.id)) {
+      if (dados.codigo && db.escolas.find(e => e.id === dados.codigo)) {
         alert("Já existe uma escola com esse ID.");
         return;
       }
 
       // Monta o objeto da escola
-      const escola = { id: dados.id || gerarId("e") };
+      const escola = { id: dados.codigo || gerarId("e") };
       camposEscola.forEach(c => {
+        if (c.id === "codigo") return; // já foi usado como id
         if (dados[c.id]) escola[c.id] = dados[c.id];
       });
+      // Garante que o nome está presente
+      if (!escola.nome && dados.nome) escola.nome = dados.nome;
 
       db.escolas.push(escola);
       salvarDB(db);
@@ -500,14 +498,9 @@
       limparFormulario("formEscola");
       renderizarEscolas();
       renderizarResumo();
-      // Re-renderiza os formulários dos outros tipos (por causa do select de escola)
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
     });
-
-    function atualizarSelectsEscolas() {
-      // Não precisa mais — os selects são gerados dinamicamente
-    }
 
     // ============================================================
     // ALUNOS
@@ -522,19 +515,19 @@
       }
 
       const camposAluno = camposDoTipo("aluno");
+      // Mostra no máximo 5 colunas + ações
       const colunas = camposAluno.slice(0, 5);
 
       let html = `<div class="tabela-wrap"><table><thead><tr>`;
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
       html += `<th>Ações</th></tr></thead><tbody>`;
 
-      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
-
       db.alunos.forEach(a => {
         html += `<tr>`;
         colunas.forEach(c => {
           let valor = a[c.id] || "—";
-          if (c.id === "escolaId") valor = nomeEscola(a.escolaId);
+          // Se o campo for do tipo "escola", mostra o nome da escola
+          if (c.tipoCampo === "escola" && a[c.id]) valor = nomeEscolaPorId(a[c.id]);
           html += `<td>${valor}</td>`;
         });
         html += `<td><button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button></td>`;
@@ -601,13 +594,11 @@
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
       html += `<th>Ações</th></tr></thead><tbody>`;
 
-      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
-
       db.servidores.forEach(s => {
         html += `<tr>`;
         colunas.forEach(c => {
           let valor = s[c.id] || "—";
-          if (c.id === "escolaId") valor = nomeEscola(s.escolaId);
+          if (c.tipoCampo === "escola" && s[c.id]) valor = nomeEscolaPorId(s[c.id]);
           html += `<td>${valor}</td>`;
         });
         html += `<td><button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button></td>`;
@@ -696,7 +687,6 @@
           salvarDB(db);
           renderizarCampos();
           renderizarResumo();
-          // Re-renderiza os formulários (o campo saiu de todos)
           montarFormulario("escola", "formEscola");
           montarFormulario("aluno", "formAluno");
           montarFormulario("servidor", "formServidor");
@@ -720,7 +710,7 @@
         return;
       }
 
-      // Bloqueia IDs reservados
+      // Bloqueia IDs reservados pelo sistema
       const reservados = ["id"];
       if (reservados.includes(id)) {
         alert(`O ID "${id}" é reservado pelo sistema. Escolha outro.`);
@@ -752,7 +742,6 @@
 
       renderizarCampos();
       renderizarResumo();
-      // Re-renderiza os formulários (o campo novo aparece)
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
@@ -786,7 +775,7 @@
       if (db.escolas.length > 0) {
         html += `<h4 style="margin-top:1rem;">Alunos por escola</h4><ul>`;
         db.escolas.forEach(e => {
-          html += `<li>${e.nome}: ${porEscola[e.id] || 0} aluno(s)</li>`;
+          html += `<li>${e.nome || e.id}: ${porEscola[e.id] || 0} aluno(s)</li>`;
         });
         html += `</ul>`;
       }
