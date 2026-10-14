@@ -783,20 +783,28 @@ tbody tr:hover td { background:var(--surface-2); }
     .modal-footer { flex-direction:column-reverse; }
     .modal-footer button.btn { width:100%; }
 
-    /* Header dos modais expandidos no mobile:
-       - X no topo direito (linha própria)
-       - Botão de adicionar abaixo, ocupando toda a largura */
+    /* ============================================================
+       HEADER DOS MODAIS EXPANDIDOS NO MOBILE
+       - X em linha própria no topo, alinhado à direita
+       - Título e botão de adicionar abaixo
+       ============================================================ */
     .modal-expand-header {
-        flex-direction: column;
-        align-items: stretch;
-        position: relative;
-        padding-right: 56px; /* espaço para o X no topo direito */
-        gap: 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            ".       fechar"
+            "titulo  titulo"
+            "acoes   acoes";
+        gap: 8px 12px;
+        padding: 12px 16px 16px;
+        align-items: center;
     }
     .modal-expand-titulo-grupo {
-        padding-right: 0;
+        grid-area: titulo;
+        width: 100%;
     }
     .modal-expand-acoes {
+        grid-area: acoes;
         width: 100%;
         flex-direction: column;
         align-items: stretch;
@@ -805,13 +813,15 @@ tbody tr:hover td { background:var(--surface-2); }
         width: 100%;
         flex: 1 1 auto;
     }
-    /* O X sai do fluxo normal e fica fixo no topo direito do header */
+    /* O X fica na linha de cima, alinhado à direita */
     .modal-expand-header .modal-fechar {
-        position: absolute;
-        top: 14px;
-        right: 14px;
+        grid-area: fechar;
+        align-self: center;
+        justify-self: end;
         margin: 0;
-        z-index: 2;
+        position: static;
+        top: auto;
+        right: auto;
     }
 }
 @media (max-width:640px) {
@@ -1415,7 +1425,6 @@ const Toast = (() => {
         toast.className = `toast toast-${tipo}`;
         toast.setAttribute('role', tipo === 'erro' ? 'alert' : 'status');
 
-        // Ícone
         const iconeWrap = document.createElement('div');
         iconeWrap.className = 'toast-icone';
         const icone = document.createElement('span');
@@ -1423,7 +1432,6 @@ const Toast = (() => {
         icone.textContent = ICONES[tipo] || ICONES.info;
         iconeWrap.appendChild(icone);
 
-        // Conteúdo
         const conteudo = document.createElement('div');
         conteudo.className = 'toast-conteudo';
 
@@ -1460,7 +1468,6 @@ const Toast = (() => {
             if (r.children.length > 0) conteudo.appendChild(r);
         }
 
-        // Botão fechar
         const btnFechar = document.createElement('button');
         btnFechar.type = 'button';
         btnFechar.className = 'toast-fechar';
@@ -1470,7 +1477,6 @@ const Toast = (() => {
         iconeFechar.textContent = 'close';
         btnFechar.appendChild(iconeFechar);
 
-        // Barra de progresso
         const progresso = document.createElement('div');
         progresso.className = 'toast-progresso';
         progresso.style.animationDuration = `${duracao}ms`;
