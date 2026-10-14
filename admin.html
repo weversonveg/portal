@@ -5,26 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administração da Rede</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: #f5f7fa; color: #1a1a1a; font-size: 16px; }
 
     .topo {
       display: flex; justify-content: space-between; align-items: center;
-      background: #1e3a8a; color: #fff; padding: 1rem 2rem;
+      background: #1e3a8a; color: #fff; padding: 1rem 1.5rem;
+      flex-wrap: wrap; gap: .5rem;
     }
-    .topo h1 { font-size: 1.2rem; margin: 0; }
-    .usuario { font-size: .9rem; opacity: .9; }
+    .topo h1 { font-size: 1.1rem; margin: 0; }
+    .usuario { font-size: .85rem; opacity: .9; }
 
-    .tela { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    .tela { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
 
     .abas {
-      display: flex; gap: .5rem; margin-bottom: 1.5rem;
-      border-bottom: 2px solid #e5e7eb;
+      display: flex; gap: .3rem; margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb; overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .aba {
-      background: none; border: none; padding: .7rem 1.2rem;
-      cursor: pointer; font-size: .95rem; color: #555;
+      background: none; border: none; padding: .7rem 1rem;
+      cursor: pointer; font-size: .9rem; color: #555;
       border-bottom: 3px solid transparent; margin-bottom: -2px;
+      white-space: nowrap; flex-shrink: 0;
     }
     .aba.ativa {
       color: #1e3a8a; font-weight: 600; border-bottom-color: #1e3a8a;
@@ -34,37 +37,41 @@
     .painel.ativo { display: block; }
 
     .bloco {
-      background: #fff; border-radius: 8px; padding: 1.2rem;
+      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .bloco h3 { margin: 0 0 1rem; }
+    .bloco h3 { margin: 0 0 1rem; font-size: 1rem; }
 
     .form-linha {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: .8rem; margin-bottom: .8rem;
     }
     .campo { display: flex; flex-direction: column; }
     .campo label { font-size: .8rem; color: #555; margin-bottom: .2rem; }
     .campo input, .campo select {
-      padding: .5rem .6rem; border: 1px solid #ccc; border-radius: 4px;
+      padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
+      font-size: .95rem; width: 100%;
     }
 
     .btn-primario {
       background: #1e3a8a; color: #fff; border: none;
-      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem; font-weight: 500;
     }
     .btn-primario:hover { background: #16306e; }
     .btn-perigo {
       background: #dc2626; color: #fff; border: none;
-      padding: .3rem .7rem; border-radius: 4px; cursor: pointer;
+      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
       font-size: .8rem;
     }
 
+    .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table {
       width: 100%; border-collapse: collapse; background: #fff;
       border-radius: 8px; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,.08);
-      font-size: .9rem;
+      font-size: .9rem; min-width: 500px;
     }
     th, td {
       padding: .6rem .8rem; text-align: left;
@@ -79,6 +86,41 @@
       background: #fef3c7; border-left: 4px solid #d97706;
       padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
       font-size: .9rem; color: #78350f;
+    }
+
+    /* ========== RESPONSIVO ========== */
+    @media (max-width: 768px) {
+      .topo { padding: .8rem 1rem; }
+      .topo h1 { font-size: 1rem; }
+      .tela { margin: 1rem auto; padding: 0 .8rem; }
+
+      .bloco { padding: .8rem 1rem; }
+
+      .form-linha {
+        grid-template-columns: 1fr;
+        gap: .6rem;
+      }
+
+      .btn-primario { width: 100%; }
+      .btn-perigo { width: 100%; padding: .5rem; }
+
+      table { font-size: .85rem; min-width: 450px; }
+      th, td { padding: .5rem .6rem; }
+    }
+
+    @media (max-width: 480px) {
+      .topo { padding: .7rem .8rem; }
+      .topo h1 { font-size: .95rem; }
+      .usuario { font-size: .75rem; }
+      .tela { padding: 0 .6rem; }
+
+      .aba { padding: .6rem .8rem; font-size: .82rem; }
+      .bloco { padding: .7rem .8rem; border-radius: 6px; }
+
+      table { font-size: .8rem; min-width: 400px; }
+      th, td { padding: .45rem .5rem; }
+
+      .btn-primario { font-size: .9rem; padding: .65rem 1rem; }
     }
   </style>
 </head>
@@ -250,10 +292,12 @@
           Esses botões apagam ou restauram os dados salvos no navegador (localStorage).
           Use com cuidado — não tem como desfazer.
         </div>
-        <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
-        <button id="btnImportar" class="btn-primario">⬆ Importar JSON</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
+          <button id="btnImportar" class="btn-primario">⬆ Importar JSON</button>
+          <button id="btnResetar" class="btn-perigo">🗑 Resetar tudo</button>
+        </div>
         <input type="file" id="arquivoImport" accept=".json" style="display:none">
-        <button id="btnResetar" class="btn-perigo" style="margin-left:.5rem;">🗑 Resetar tudo</button>
       </div>
 
       <div class="bloco">
@@ -274,7 +318,6 @@
         return inicial;
       }
       const db = JSON.parse(raw);
-      // Garante que todas as coleções existem
       db.escolas = db.escolas || [];
       db.alunos = db.alunos || [];
       db.servidores = db.servidores || [];
@@ -311,7 +354,7 @@
         return;
       }
 
-      let html = `<table><thead><tr>
+      let html = `<div class="tabela-wrap"><table><thead><tr>
         <th>ID</th><th>Nome</th><th>Endereço</th><th>Ações</th>
       </tr></thead><tbody>`;
 
@@ -324,7 +367,7 @@
         </tr>`;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       div.innerHTML = html;
 
       div.querySelectorAll(".btn-rm-escola").forEach(btn => {
@@ -398,7 +441,7 @@
 
       const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
 
-      let html = `<table><thead><tr>
+      let html = `<div class="tabela-wrap"><table><thead><tr>
         <th>Nome</th><th>Escola</th><th>Mãe</th><th>Gênero</th><th>CPF</th><th>Ações</th>
       </tr></thead><tbody>`;
 
@@ -413,7 +456,7 @@
         </tr>`;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       div.innerHTML = html;
 
       div.querySelectorAll(".btn-rm-aluno").forEach(btn => {
@@ -451,7 +494,6 @@
         serie: document.getElementById("alunoSerie").value.trim()
       };
 
-      // Remove campos vazios para o sistema detectar como "faltante"
       Object.keys(aluno).forEach(k => {
         if (aluno[k] === "") delete aluno[k];
       });
@@ -459,7 +501,6 @@
       db.alunos.push(aluno);
       salvarDB(db);
 
-      // Limpa o formulário
       ["alunoNome","alunoNomeMae","alunoNomePai","alunoCpf","alunoEndereco","alunoTelefone","alunoSerie"].forEach(id => {
         document.getElementById(id).value = "";
       });
@@ -483,12 +524,11 @@
 
       const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
 
-      let html = `<table><thead><tr>
+      let html = `<div class="tabela-wrap"><table><thead><tr>
         <th>Nome</th><th>Escola</th><th>Cargo</th><th>Gênero</th><th>CPF</th><th>Ações</th>
       </tr></thead><tbody>`;
 
       db.servidores.forEach(s => {
-        // Flexão do cargo
         const cargoFeminino = {
           "Professor": "Professora",
           "Diretor": "Diretora",
@@ -509,7 +549,7 @@
         </tr>`;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       div.innerHTML = html;
 
       div.querySelectorAll(".btn-rm-servidor").forEach(btn => {
