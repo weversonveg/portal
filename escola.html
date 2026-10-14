@@ -5,56 +5,103 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel da Escola</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: #f5f7fa; color: #1a1a1a; font-size: 16px; }
 
     .topo {
       display: flex; justify-content: space-between; align-items: center;
-      background: #1e3a8a; color: #fff; padding: 1rem 2rem;
+      background: #1e3a8a; color: #fff; padding: 1rem 1.5rem;
+      flex-wrap: wrap; gap: .5rem;
     }
-    .topo h1 { font-size: 1.2rem; margin: 0; }
-    .usuario { font-size: .9rem; opacity: .9; display: flex; align-items: center; gap: .8rem; }
+    .topo h1 { font-size: 1.1rem; margin: 0; }
+    .usuario { font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
     .usuario select {
-      padding: .3rem .5rem; border-radius: 4px; border: none;
-      font-size: .85rem;
+      padding: .45rem .6rem; border-radius: 4px; border: none;
+      font-size: .9rem; max-width: 260px;
     }
 
-    .tela { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+    .tela { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
     .hidden { display: none; }
 
-    h2 { margin-top: 0; }
-    .subtitulo { color: #555; margin-bottom: 1.5rem; }
+    h2 { margin-top: 0; font-size: 1.3rem; }
+    .subtitulo { color: #555; margin-bottom: 1.2rem; font-size: .92rem; }
 
     .card-tarefa {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .card-tarefa h3 { margin: 0 0 .5rem; }
-    .card-tarefa p { margin: .2rem 0; font-size: .9rem; }
+    .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
+    .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
 
     .bloco-aluno {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .bloco-aluno h4 { margin: 0 0 .8rem; }
+    .bloco-aluno h4 { margin: 0 0 .8rem; font-size: 1rem; }
 
     .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
     .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
     .campo input, .campo select {
-      padding: .45rem .6rem; border: 1px solid #ccc; border-radius: 4px;
+      padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
+      font-size: .95rem;
     }
 
     .btn-primario {
       background: #1e3a8a; color: #fff; border: none;
-      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem; font-weight: 500;
     }
     .btn-primario:hover { background: #16306e; }
     .btn-voltar {
       background: none; border: none; color: #1e3a8a;
       cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
+      padding: .3rem 0;
     }
     .rodape-form { text-align: right; margin-top: 1.5rem; }
     .vazio { color: #888; }
+
+    /* ========== RESPONSIVO ========== */
+    @media (max-width: 768px) {
+      .topo { padding: .8rem 1rem; }
+      .topo h1 { font-size: 1rem; }
+      .usuario { font-size: .85rem; }
+      .usuario select { max-width: 180px; font-size: .85rem; }
+      .tela { margin: 1rem auto; padding: 0 .8rem; }
+
+      h2 { font-size: 1.15rem; }
+      .card-tarefa, .bloco-aluno { padding: .9rem 1rem; }
+
+      .rodape-form { text-align: stretch; }
+      .rodape-form button { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .topo {
+        padding: .7rem .8rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .4rem;
+      }
+      .topo h1 { font-size: .95rem; }
+      .usuario { width: 100%; flex-direction: column; align-items: stretch; gap: .3rem; }
+      .usuario select { max-width: 100%; width: 100%; }
+
+      .tela { padding: 0 .6rem; }
+
+      h2 { font-size: 1.05rem; }
+      .subtitulo { font-size: .85rem; }
+
+      .card-tarefa { padding: .8rem .9rem; }
+      .card-tarefa p { font-size: .82rem; }
+
+      .bloco-aluno { padding: .8rem .9rem; border-radius: 6px; }
+      .bloco-aluno h4 { font-size: .95rem; }
+
+      .campo input, .campo select { padding: .5rem .6rem; font-size: .9rem; }
+
+      .btn-primario { padding: .65rem 1rem; font-size: .9rem; }
+      .btn-voltar { font-size: .85rem; }
+    }
   </style>
 </head>
 <body>
@@ -89,7 +136,6 @@
   </section>
 
   <script>
-    // ---------- "BANCO" COMPARTILHADO ----------
     const DB_KEY = "rede_municipal_db";
 
     function carregarDB() {
@@ -111,12 +157,10 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    // ---------- ESTADO ----------
     let ESCOLA_ATUAL = null;
     let db = carregarDB();
     let tarefaAtual = null;
 
-    // ---------- NAVEGAÇÃO ----------
     const telas = {
       tarefas:    document.getElementById("tela-tarefas"),
       formulario: document.getElementById("tela-formulario"),
@@ -129,7 +173,6 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // ---------- SELETOR DE ESCOLA ----------
     function montarSeletorEscola() {
       db = carregarDB();
       const select = document.getElementById("seletorEscola");
@@ -148,7 +191,6 @@
         select.appendChild(opt);
       });
 
-      // Mantém a escola atual se ainda existir
       if (ESCOLA_ATUAL && db.escolas.find(e => e.id === ESCOLA_ATUAL)) {
         select.value = ESCOLA_ATUAL;
       } else {
@@ -163,7 +205,6 @@
       mostrarTela("tarefas");
     });
 
-    // ---------- LISTA DE TAREFAS ----------
     function carregarTarefas() {
       db = carregarDB();
       const lista = document.getElementById("listaTarefas");
@@ -192,7 +233,7 @@
           <p><strong>Campos:</strong> ${t.camposNecessarios.map(formatarLabel).join(", ")}</p>
           <p><strong>Alunos:</strong> ${t.alunos.length}</p>
           <p><strong>Status:</strong> ${t.status}</p>
-          <button class="btn-primario">Abrir</button>
+          <button class="btn-primario" style="margin-top:.6rem;">Abrir</button>
         `;
         card.querySelector("button").addEventListener("click", () => {
           abrirTarefa(t.id);
@@ -201,7 +242,6 @@
       });
     }
 
-    // ---------- ABRIR TAREFA ----------
     function abrirTarefa(tarefaId) {
       db = carregarDB();
       tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
@@ -272,7 +312,6 @@
       return mapa[campo] || campo;
     }
 
-    // ---------- SALVAR ----------
     document.getElementById("btnSalvarTodos").addEventListener("click", () => {
       db = carregarDB();
       const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
@@ -288,9 +327,7 @@
           const campo = input.dataset.campo;
           const valor = input.value.trim();
           if (valor !== "") {
-            // Atualiza o cadastro principal
             if (alunoBanco) alunoBanco[campo] = valor;
-            // Atualiza o registro dentro da tarefa
             alunoTarefa[campo] = valor;
             alunoTarefa.camposFaltando =
               (alunoTarefa.camposFaltando || []).filter(c => c !== campo);
@@ -298,7 +335,6 @@
           }
         });
 
-        // Se não falta mais nada, marca como concluído
         if (alunoTarefa.camposFaltando.length === 0) {
           alunoTarefa.status = "concluida";
         }
@@ -309,7 +345,6 @@
         return;
       }
 
-      // Verifica se a tarefa toda acabou
       const aindaPendentes = tarefaDb.alunos.some(a => a.status !== "concluida");
       tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
 
@@ -317,7 +352,6 @@
       mostrarTela("sucesso");
     });
 
-    // ---------- NAVEGAÇÃO ----------
     document.getElementById("btnVoltar").addEventListener("click", () => {
       mostrarTela("tarefas");
     });
@@ -327,7 +361,6 @@
       mostrarTela("tarefas");
     });
 
-    // ---------- INICIAR ----------
     montarSeletorEscola();
     carregarTarefas();
   </script>
