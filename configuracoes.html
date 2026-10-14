@@ -782,9 +782,37 @@ tbody tr:hover td { background:var(--surface-2); }
     .modal-box, .modal-empresas-box, .modal-cargos-box, .modal-unidades-box { max-width:100%; max-height:95vh; border-radius:12px 12px 0 0; }
     .modal-footer { flex-direction:column-reverse; }
     .modal-footer button.btn { width:100%; }
-    .modal-expand-header { flex-direction:column; align-items:stretch; }
-    .modal-expand-acoes { width:100%; }
-    .modal-expand-acoes .btn { flex:1; }
+
+    /* Header dos modais expandidos no mobile:
+       - X no topo direito (linha própria)
+       - Botão de adicionar abaixo, ocupando toda a largura */
+    .modal-expand-header {
+        flex-direction: column;
+        align-items: stretch;
+        position: relative;
+        padding-right: 56px; /* espaço para o X no topo direito */
+        gap: 12px;
+    }
+    .modal-expand-titulo-grupo {
+        padding-right: 0;
+    }
+    .modal-expand-acoes {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .modal-expand-acoes .btn {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+    /* O X sai do fluxo normal e fica fixo no topo direito do header */
+    .modal-expand-header .modal-fechar {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        margin: 0;
+        z-index: 2;
+    }
 }
 @media (max-width:640px) {
     .topbar { padding:0 12px; gap:8px; }
@@ -1686,7 +1714,6 @@ function normalizarTexto(str) {
 }
 
 function normalizarChave(str) {
-    // Remove acentos, pontuação e transforma em uppercase para comparação
     return normalizarTexto(str)
         .toUpperCase()
         .normalize('NFD')
@@ -1721,7 +1748,7 @@ function converterMoedaParaNumero(valorFormatado) {
 }
 
 /* ==========================================================
-   ORDENAÇÃO ALFABÉTICA (com suporte a acentos PT-BR)
+   ORDENAÇÃO ALFABÉTICA
    ========================================================== */
 function ordenarPorNome(lista) {
     return lista.sort((a, b) => {
@@ -1884,10 +1911,6 @@ function parsearJSON(texto) {
     } catch (e) {
         throw new Error('JSON inválido: ' + e.message);
     }
-    // Aceita 3 formatos:
-    // 1) Array de objetos
-    // 2) Objeto com chave "dados"/"data"/"items"
-    // 3) Objeto único
     if (Array.isArray(json)) return json;
     if (json && typeof json === 'object') {
         if (Array.isArray(json.dados)) return json.dados;
@@ -1939,7 +1962,6 @@ function converterDataImport(dataStr) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) return dataStr;
     const matchBR = dataStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (matchBR) return `${matchBR[3]}-${matchBR[2]}-${matchBR[1]}`;
-    // Tenta parsear datas do Excel (número serial)
     const numData = parseFloat(dataStr);
     if (!isNaN(numData) && numData > 30000 && numData < 80000) {
         const d = new Date((numData - 25569) * 86400 * 1000);
@@ -1949,13 +1971,11 @@ function converterDataImport(dataStr) {
 }
 
 function obterCampo(linha, nomes) {
-    // Busca direta
     for (const n of nomes) {
         if (linha[n] !== undefined && linha[n] !== null && normalizarTexto(linha[n]) !== '') {
             return normalizarTexto(linha[n]);
         }
     }
-    // Busca case-insensitive e sem acentos
     const nomesNorm = nomes.map(n => normalizarChave(n));
     for (const chave of Object.keys(linha)) {
         const chaveNorm = normalizarChave(chave);
@@ -1967,7 +1987,6 @@ function obterCampo(linha, nomes) {
     return '';
 }
 
-/* Helper: ao atualizar por ID, corrige o map de nomes (remove nome antigo, adiciona o novo) */
 function atualizarMapaNomes(mapaNomes, cache, idAtualizado, nomeNovo) {
     const registroAntigo = cache.find(r => r.id === idAtualizado);
     if (registroAntigo) {
@@ -2085,7 +2104,6 @@ async function processarImportEmpresas(linhas) {
             if (valor === null) { ignorados++; continue; }
             
             const dataStr = converterDataImport(obterCampo(linha, ['Último Reajuste', 'Data Reajuste', 'Reajuste', 'Data']));
-            
             const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
             
             const dados = { nome, valorTarifa: valor, dataReajuste: dataStr || null, dataAtualizacao: new Date().toISOString() };
@@ -2700,7 +2718,7 @@ new MutationObserver(mutations => {
 }).observe(document.getElementById('modalUnidades'), { attributes: true, attributeFilter: ['class'] });
 
 /* ==========================================================
-   INICIALIZAÇÃO DO FLATPICKR (campo de data moderno)
+   INICIALIZAÇÃO DO FLATPICKR
    ========================================================== */
 if (typeof flatpickr !== 'undefined') {
     flatpickrUnidade = flatpickr("#dataCadastroUnidade", {
