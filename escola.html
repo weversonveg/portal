@@ -138,15 +138,16 @@
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
-        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [] };
+        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [], campos: [] };
         localStorage.setItem(DB_KEY, JSON.stringify(inicial));
         return inicial;
       }
       const db = JSON.parse(raw);
-      db.escolas = db.escolas || [];
-      db.alunos = db.alunos || [];
+      db.escolas    = db.escolas    || [];
+      db.alunos     = db.alunos     || [];
       db.servidores = db.servidores || [];
-      db.tarefas = db.tarefas || [];
+      db.tarefas    = db.tarefas    || [];
+      db.campos     = db.campos     || [];
       return db;
     }
 
@@ -154,11 +155,27 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    const ROTULO_TIPO = {
-      aluno:    "Aluno",
-      escola:   "Escola",
-      servidor: "Servidor"
-    };
+    // ---------- CATÁLOGO ----------
+    function getCatalogo() {
+      const db = carregarDB();
+      const porTipo = { aluno: [], escola: [], servidor: [] };
+      (db.campos || []).forEach(c => {
+        if (porTipo[c.tipo]) porTipo[c.tipo].push(c);
+      });
+      return porTipo;
+    }
+
+    function definicaoDoCampo(tipo, campoId) {
+      const cat = getCatalogo();
+      return (cat[tipo] || []).find(x => x.id === campoId) || null;
+    }
+
+    function labelDoCampo(tipo, campoId) {
+      const def = definicaoDoCampo(tipo, campoId);
+      return def ? def.label : campoId;
+    }
+
+    const ROTULO_TIPO = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
 
     let ESCOLA_ATUAL = null;
     let db = carregarDB();
@@ -176,6 +193,7 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    // ---------- SELETOR DE ESCOLA ----------
     function montarSeletorEscola() {
       db = carregarDB();
       const select = document.getElementById("seletorEscola");
@@ -190,7 +208,7 @@
       db.escolas.forEach(e => {
         const opt = document.createElement("option");
         opt.value = e.id;
-        opt.textContent = e.nome;
+        opt.textContent = e.nome || e.id;
         select.appendChild(opt);
       });
 
@@ -208,6 +226,7 @@
       mostrarTela("tarefas");
     });
 
+    // ---------- LISTA DE TAREFAS ----------
     function carregarTarefas() {
       db = carregarDB();
       const lista = document.getElementById("listaTarefas");
@@ -218,8 +237,10 @@
         return;
       }
 
+      // Tarefas da escola que ainda têm pelo menos um registro pendente
       const pendentes = db.tarefas.filter(t =>
-        t.escolaId === ESCOLA_ATUAL && t.status !== "concluida"
+        t.escolaId === ESCOLA_ATUAL &&
+        (t.registros || []).some(r => r.status !== "concluida")
       );
 
       if (pendentes.length === 0) {
@@ -236,12 +257,13 @@
           .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]} (${campos.length})`)
           .join(", ") || "—";
 
+        const totalPendentes = (t.registros || []).filter(r => r.status !== "concluida").length;
+
         card.innerHTML = `
           <h3>${t.titulo}</h3>
           <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
           <p><strong>Tipos:</strong> ${tipos}</p>
-          <p><strong>Registros:</strong> ${t.registros.length}</p>
-          <p><strong>Status:</strong> ${t.status}</p>
+          <p><strong>Registros a preencher:</strong> ${totalPendentes}</p>
           <button class="btn-primario" style="margin-top:.6rem;">Abrir</button>
         `;
         card.querySelector("button").addEventListener("click", () => {
@@ -251,6 +273,7 @@
       });
     }
 
+    // ---------- ABRIR TAREFA ----------
     function abrirTarefa(tarefaId) {
       db = carregarDB();
       tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
@@ -258,10 +281,12 @@
 
       document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
 
-      // Monta lista de campos formatados
+      // Monta a lista de campos com labels bonitos
       const camposTexto = Object.entries(tarefaAtual.camposPorTipo || {})
         .filter(([_, v]) => v.length > 0)
-        .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]}: ${campos.map(formatarLabel).join(", ")}`)
+        .map(([tipo, campos]) =>
+          `${ROTULO_TIPO[tipo]}: ${campos.map(c => labelDoCampo(tipo, c)).join(", ")}`
+        )
         .join(" | ");
 
       document.getElementById("descricaoTarefa").textContent = camposTexto;
@@ -269,23 +294,34 @@
       const listaRegistros = document.getElementById("listaRegistros");
       listaRegistros.innerHTML = "";
 
-      tarefaAtual.registros.forEach((r) => {
+      // Só mostra registros pendentes
+      const pendentes = (tarefaAtual.registros || []).filter(r => r.status !== "concluida");
+
+      if (pendentes.length === 0) {
+        listaRegistros.innerHTML = "<p class='vazio'>✅ Nada para preencher nesta tarefa.</p>";
+        return;
+      }
+
+      pendentes.forEach((r) => {
         const bloco = document.createElement("div");
         bloco.className = "bloco-registro";
 
         let html = `
           <div class="cabecalho">
             <span class="tag-tipo tag-${r.tipo}">${ROTULO_TIPO[r.tipo]}</span>
-            <h4>${r.nome}</h4>
+            <h4>${r.nome || "(sem nome)"}</h4>
           </div>
         `;
 
-        (r.camposFaltando || []).forEach((campo) => {
-          const label = formatarLabel(campo);
+        (r.camposFaltando || []).forEach((campoId) => {
+          const def = definicaoDoCampo(r.tipo, campoId);
+          const label = def ? def.label : campoId;
+          const tipoCampo = def ? def.tipoCampo : "text";
+
           html += `
             <div class="campo">
               <label>${label}</label>
-              ${criarInput(campo, r[campo] || "")}
+              ${renderizarInput(tipoCampo, campoId, r[campoId] || "", def)}
             </div>
           `;
         });
@@ -297,52 +333,46 @@
       });
     }
 
-    function criarInput(campo, valor) {
-      if (campo === "restricaoAlimentar") {
-        return `
-          <select data-campo="${campo}">
-            <option value="">Selecione...</option>
-            <option value="Não" ${valor === "Não" ? "selected" : ""}>Não</option>
-            <option value="Sim" ${valor === "Sim" ? "selected" : ""}>Sim</option>
-          </select>
-        `;
+    // ---------- RENDERIZADOR DE INPUT (dinâmico por tipoCampo) ----------
+    function renderizarInput(tipoCampo, campoId, valor, def) {
+      const attr = `data-campo="${campoId}"`;
+      const val = (valor ?? "").toString().replace(/"/g, "&quot;");
+
+      if (tipoCampo === "escola") {
+        // Select de escolas
+        const dbAtual = carregarDB();
+        let options = '<option value="">Selecione...</option>';
+        dbAtual.escolas.forEach(e => {
+          const sel = (valor === e.id) ? "selected" : "";
+          options += `<option value="${e.id}" ${sel}>${e.nome}</option>`;
+        });
+        return `<select ${attr}>${options}</select>`;
       }
-      if (campo === "genero") {
-        return `
-          <select data-campo="${campo}">
-            <option value="">Selecione...</option>
-            <option value="M" ${valor === "M" ? "selected" : ""}>Masculino</option>
-            <option value="F" ${valor === "F" ? "selected" : ""}>Feminino</option>
-          </select>
-        `;
+
+      if (tipoCampo === "select") {
+        const opcoes = def && def.opcoes ? def.opcoes : [];
+        let options = '<option value="">Selecione...</option>';
+        opcoes.forEach(o => {
+          const sel = (valor === o) ? "selected" : "";
+          options += `<option value="${o}" ${sel}>${o}</option>`;
+        });
+        return `<select ${attr}>${options}</select>`;
       }
-      return `<input type="text" data-campo="${campo}" value="${valor}">`;
+
+      if (tipoCampo === "date") {
+        return `<input type="date" ${attr} value="${val}">`;
+      }
+      if (tipoCampo === "number") {
+        return `<input type="number" ${attr} value="${val}">`;
+      }
+      if (tipoCampo === "email") {
+        return `<input type="email" ${attr} value="${val}">`;
+      }
+      // text padrão
+      return `<input type="text" ${attr} value="${val}">`;
     }
 
-    function formatarLabel(campo) {
-      const mapa = {
-        // aluno
-        nomeMae: "Nome da mãe",
-        nomePai: "Nome do pai",
-        genero: "Gênero",
-        restricaoAlimentar: "Restrição alimentar",
-        endereco: "Endereço",
-        cpf: "CPF",
-        telefone: "Telefone",
-        serie: "Série",
-        // escola
-        email: "E-mail",
-        diretor: "Nome do diretor",
-        inep: "Código INEP",
-        cnpj: "CNPJ",
-        // servidor
-        cargo: "Cargo",
-        formacao: "Formação",
-        cargaHoraria: "Carga horária"
-      };
-      return mapa[campo] || campo;
-    }
-
+    // ---------- SALVAR ----------
     document.getElementById("btnSalvarTodos").addEventListener("click", () => {
       db = carregarDB();
       const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
@@ -354,10 +384,9 @@
         const tipo = bloco.dataset.tipo;
         const registroTarefa = tarefaDb.registros.find(r => r.id === registroId);
 
-        // Encontra o objeto no banco principal
-        const colecao = tipo === "aluno" ? db.alunos
-                     : tipo === "escola" ? db.escolas
-                     : db.servidores;
+        const colecao = tipo === "aluno"  ? db.alunos
+                      : tipo === "escola" ? db.escolas
+                      : db.servidores;
         const objBanco = colecao.find(x => x.id === registroId);
 
         bloco.querySelectorAll("[data-campo]").forEach((input) => {
@@ -372,7 +401,7 @@
           }
         });
 
-        if (registroTarefa.camposFaltando.length === 0) {
+        if ((registroTarefa.camposFaltando || []).length === 0) {
           registroTarefa.status = "concluida";
         }
       });
@@ -389,6 +418,7 @@
       mostrarTela("sucesso");
     });
 
+    // ---------- NAVEGAÇÃO ----------
     document.getElementById("btnVoltar").addEventListener("click", () => {
       mostrarTela("tarefas");
     });
@@ -398,6 +428,7 @@
       mostrarTela("tarefas");
     });
 
+    // ---------- INICIAR ----------
     montarSeletorEscola();
     carregarTarefas();
   </script>
