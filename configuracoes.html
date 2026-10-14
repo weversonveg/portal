@@ -945,7 +945,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_upload</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Importar Lista de Empresas</div>
-                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados das empresas. Itens existentes serão atualizados automaticamente.</div>
+                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados das empresas. Itens existentes serão atualizados automaticamente pelo ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -965,7 +965,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_download</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Exportar Lista de Empresas</div>
-                            <div class="io-card-descricao">Baixe todas as empresas cadastradas no formato que preferir. Use como backup ou modelo para novas importações.</div>
+                            <div class="io-card-descricao">Baixe todas as empresas com o ID de referência. Use como backup ou modelo — não edite a coluna ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -1062,7 +1062,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_upload</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Importar Lista de Cargos</div>
-                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados dos cargos. Itens existentes serão atualizados automaticamente.</div>
+                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados dos cargos. Itens existentes serão atualizados automaticamente pelo ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -1082,7 +1082,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_download</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Exportar Lista de Cargos</div>
-                            <div class="io-card-descricao">Baixe todos os cargos cadastrados no formato que preferir. Use como backup ou modelo para novas importações.</div>
+                            <div class="io-card-descricao">Baixe todos os cargos com o ID de referência. Use como backup ou modelo — não edite a coluna ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -1178,7 +1178,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_upload</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Importar Lista de Unidades</div>
-                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados das unidades. Itens existentes serão atualizados automaticamente.</div>
+                            <div class="io-card-descricao">Carregue um arquivo CSV ou LibreOffice (.ods) com os dados das unidades. Itens existentes serão atualizados automaticamente pelo ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -1198,7 +1198,7 @@ tbody tr:hover td { background:var(--surface-2); }
                         <div class="io-card-icone"><span class="material-symbols-outlined">cloud_download</span></div>
                         <div class="io-card-texto">
                             <div class="io-card-titulo">Exportar Lista de Unidades</div>
-                            <div class="io-card-descricao">Baixe todas as unidades cadastradas no formato que preferir. Use como backup ou modelo para novas importações.</div>
+                            <div class="io-card-descricao">Baixe todas as unidades com o ID de referência. Use como backup ou modelo — não edite a coluna ID.</div>
                         </div>
                     </div>
                     <div class="io-card-acoes">
@@ -1855,19 +1855,31 @@ function obterCampo(linha, nomes) {
     return '';
 }
 
+/* Helper: ao atualizar por ID, corrige o map de nomes (remove nome antigo, adiciona o novo) */
+function atualizarMapaNomes(mapaNomes, cache, idAtualizado, nomeNovo) {
+    const registroAntigo = cache.find(r => r.id === idAtualizado);
+    if (registroAntigo) {
+        mapaNomes.delete(normalizarChave(registroAntigo.nome));
+    }
+    mapaNomes.set(normalizarChave(nomeNovo), idAtualizado);
+}
+
 /* ==========================================================
    CONFIG: COLUNAS PARA CADA TIPO
    ========================================================== */
 const COLUNAS_EMPRESAS = [
+    { campo: 'id',           label: 'ID' },
     { campo: 'nome',         label: 'Empresa' },
     { campo: 'valorTarifa',  label: 'Valor da Tarifa', formatter: formatarMoeda },
     { campo: 'dataReajuste', label: 'Último Reajuste', formatter: formatarData }
 ];
 const COLUNAS_CARGOS = [
+    { campo: 'id',          label: 'ID' },
     { campo: 'nome',        label: 'Cargo' },
     { campo: 'dataCadastro', label: 'Data de Cadastro', formatter: formatarData }
 ];
 const COLUNAS_UNIDADES = [
+    { campo: 'id',          label: 'ID' },
     { campo: 'nome',        label: 'Unidade' },
     { campo: 'dataCadastro', label: 'Data de Cadastro', formatter: formatarData }
 ];
@@ -1943,11 +1955,13 @@ async function processarImportEmpresas(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarEmpresas();
     
-    // Map de nomes normalizados para IDs - resolve bug de duplicação na mesma importação
+    // Map de nomes normalizados para IDs (fallback quando o ID não vier no arquivo)
     const nomesProcessados = new Map();
     empresasCache.forEach(e => {
         nomesProcessados.set(normalizarChave(e.nome), e.id);
     });
+    // Set de IDs válidos no banco
+    const idsExistentes = new Set(empresasCache.map(e => e.id));
     
     for (const linha of linhas) {
         try {
@@ -1960,18 +1974,37 @@ async function processarImportEmpresas(linhas) {
             
             const dataStr = converterDataImport(obterCampo(linha, ['Último Reajuste', 'Data Reajuste', 'Reajuste', 'Data']));
             
-            const chaveNome = normalizarChave(nome);
-            const idExistente = nomesProcessados.get(chaveNome);
+            // 1) Tenta usar o ID do arquivo (prioridade máxima)
+            const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
+            
             const dados = { nome, valorTarifa: valor, dataReajuste: dataStr || null, dataAtualizacao: new Date().toISOString() };
             
-            if (idExistente) {
-                await setDoc(doc(db, 'empresas', idExistente), dados, { merge: true });
+            if (idArquivo && idsExistentes.has(idArquivo)) {
+                // ID existe no banco → atualiza esse registro, mesmo que o nome tenha mudado
+                await setDoc(doc(db, 'empresas', idArquivo), dados, { merge: true });
+                // Atualiza o map de nomes (remove nome antigo se mudou, adiciona o novo)
+                atualizarMapaNomes(nomesProcessados, empresasCache, idArquivo, nome);
                 atualizados++;
-            } else {
-                const novoDoc = doc(collection(db, 'empresas'));
-                await setDoc(novoDoc, dados);
-                nomesProcessados.set(chaveNome, novoDoc.id);
+            } else if (idArquivo && !idsExistentes.has(idArquivo)) {
+                // ID informado mas não existe no banco → cria com esse ID específico
+                await setDoc(doc(db, 'empresas', idArquivo), dados);
+                nomesProcessados.set(normalizarChave(nome), idArquivo);
+                idsExistentes.add(idArquivo);
                 adicionados++;
+            } else {
+                // Sem ID → fallback por nome
+                const chaveNome = normalizarChave(nome);
+                const idExistente = nomesProcessados.get(chaveNome);
+                if (idExistente) {
+                    await setDoc(doc(db, 'empresas', idExistente), dados, { merge: true });
+                    atualizados++;
+                } else {
+                    const novoDoc = doc(collection(db, 'empresas'));
+                    await setDoc(novoDoc, dados);
+                    nomesProcessados.set(chaveNome, novoDoc.id);
+                    idsExistentes.add(novoDoc.id);
+                    adicionados++;
+                }
             }
         } catch (e) {
             console.error('Erro ao importar linha:', e);
@@ -1983,35 +2016,15 @@ async function processarImportEmpresas(linhas) {
     const total = adicionados + atualizados;
 
     if (erros > 0 && total === 0) {
-        Toast.erro(
-            'Importação de empresas falhou',
-            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
-            resumo
-        );
+        Toast.erro('Importação de empresas falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
     } else if (erros > 0) {
-        Toast.aviso(
-            'Importação concluída com pendências',
-            'Alguns registros não puderam ser processados.',
-            resumo
-        );
+        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
     } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'nova empresa adicionada' : 'novas empresas adicionadas'}`,
-            'A lista de empresas foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova empresa adicionada' : 'novas empresas adicionadas'}`, 'A lista de empresas foi atualizada.', resumo);
     } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(
-            `${atualizados} ${atualizados === 1 ? 'empresa atualizada' : 'empresas atualizadas'}`,
-            'Nenhuma empresa nova foi adicionada — os registros existentes foram atualizados.',
-            resumo
-        );
+        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'empresa atualizada' : 'empresas atualizadas'}`, 'Nenhuma empresa nova foi adicionada — os registros existentes foram atualizados.', resumo);
     } else {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`,
-            'A lista de empresas foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de empresas foi atualizada.', resumo);
     }
 }
 
@@ -2019,11 +2032,12 @@ async function processarImportCargos(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarCargos();
     
-    // Map de nomes normalizados para IDs - resolve bug de duplicação na mesma importação
+    // Map de nomes normalizados para IDs (fallback quando o ID não vier no arquivo)
     const nomesProcessados = new Map();
     cargosCache.forEach(c => {
         nomesProcessados.set(normalizarChave(c.nome), c.id);
     });
+    const idsExistentes = new Set(cargosCache.map(c => c.id));
     
     for (const linha of linhas) {
         try {
@@ -2033,18 +2047,31 @@ async function processarImportCargos(linhas) {
             let dataStr = converterDataImport(obterCampo(linha, ['Data de Cadastro', 'Data Cadastro', 'Data', 'Cadastro']));
             if (!dataStr) dataStr = new Date().toISOString().split('T')[0];
             
-            const chaveNome = normalizarChave(nome);
-            const idExistente = nomesProcessados.get(chaveNome);
+            const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
             const dados = { nome, dataCadastro: dataStr, dataAtualizacao: new Date().toISOString() };
             
-            if (idExistente) {
-                await setDoc(doc(db, 'cargos', idExistente), dados, { merge: true });
+            if (idArquivo && idsExistentes.has(idArquivo)) {
+                await setDoc(doc(db, 'cargos', idArquivo), dados, { merge: true });
+                atualizarMapaNomes(nomesProcessados, cargosCache, idArquivo, nome);
                 atualizados++;
-            } else {
-                const novoDoc = doc(collection(db, 'cargos'));
-                await setDoc(novoDoc, dados);
-                nomesProcessados.set(chaveNome, novoDoc.id);
+            } else if (idArquivo && !idsExistentes.has(idArquivo)) {
+                await setDoc(doc(db, 'cargos', idArquivo), dados);
+                nomesProcessados.set(normalizarChave(nome), idArquivo);
+                idsExistentes.add(idArquivo);
                 adicionados++;
+            } else {
+                const chaveNome = normalizarChave(nome);
+                const idExistente = nomesProcessados.get(chaveNome);
+                if (idExistente) {
+                    await setDoc(doc(db, 'cargos', idExistente), dados, { merge: true });
+                    atualizados++;
+                } else {
+                    const novoDoc = doc(collection(db, 'cargos'));
+                    await setDoc(novoDoc, dados);
+                    nomesProcessados.set(chaveNome, novoDoc.id);
+                    idsExistentes.add(novoDoc.id);
+                    adicionados++;
+                }
             }
         } catch (e) {
             console.error('Erro:', e);
@@ -2056,35 +2083,15 @@ async function processarImportCargos(linhas) {
     const total = adicionados + atualizados;
 
     if (erros > 0 && total === 0) {
-        Toast.erro(
-            'Importação de cargos falhou',
-            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
-            resumo
-        );
+        Toast.erro('Importação de cargos falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
     } else if (erros > 0) {
-        Toast.aviso(
-            'Importação concluída com pendências',
-            'Alguns registros não puderam ser processados.',
-            resumo
-        );
+        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
     } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'novo cargo adicionado' : 'novos cargos adicionados'}`,
-            'A lista de cargos foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo cargo adicionado' : 'novos cargos adicionados'}`, 'A lista de cargos foi atualizada.', resumo);
     } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(
-            `${atualizados} ${atualizados === 1 ? 'cargo atualizado' : 'cargos atualizados'}`,
-            'Nenhum cargo novo foi adicionado — os registros existentes foram atualizados.',
-            resumo
-        );
+        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'cargo atualizado' : 'cargos atualizados'}`, 'Nenhum cargo novo foi adicionado — os registros existentes foram atualizados.', resumo);
     } else {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'novo' : 'novos'} e ${atualizados} ${atualizados === 1 ? 'atualizado' : 'atualizados'}`,
-            'A lista de cargos foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'novo' : 'novos'} e ${atualizados} ${atualizados === 1 ? 'atualizado' : 'atualizados'}`, 'A lista de cargos foi atualizada.', resumo);
     }
 }
 
@@ -2092,11 +2099,12 @@ async function processarImportUnidades(linhas) {
     let adicionados = 0, atualizados = 0, ignorados = 0, erros = 0;
     await carregarUnidades();
     
-    // Map de nomes normalizados para IDs - resolve bug de duplicação na mesma importação
+    // Map de nomes normalizados para IDs (fallback quando o ID não vier no arquivo)
     const nomesProcessados = new Map();
     unidadesCache.forEach(u => {
         nomesProcessados.set(normalizarChave(u.nome), u.id);
     });
+    const idsExistentes = new Set(unidadesCache.map(u => u.id));
     
     for (const linha of linhas) {
         try {
@@ -2106,18 +2114,31 @@ async function processarImportUnidades(linhas) {
             let dataStr = converterDataImport(obterCampo(linha, ['Data de Cadastro', 'Data Cadastro', 'Data', 'Cadastro']));
             if (!dataStr) dataStr = new Date().toISOString().split('T')[0];
             
-            const chaveNome = normalizarChave(nome);
-            const idExistente = nomesProcessados.get(chaveNome);
+            const idArquivo = normalizarTexto(obterCampo(linha, ['ID', 'Id', 'id', 'Código', 'Codigo']));
             const dados = { nome, dataCadastro: dataStr, dataAtualizacao: new Date().toISOString() };
             
-            if (idExistente) {
-                await setDoc(doc(db, 'unidades', idExistente), dados, { merge: true });
+            if (idArquivo && idsExistentes.has(idArquivo)) {
+                await setDoc(doc(db, 'unidades', idArquivo), dados, { merge: true });
+                atualizarMapaNomes(nomesProcessados, unidadesCache, idArquivo, nome);
                 atualizados++;
-            } else {
-                const novoDoc = doc(collection(db, 'unidades'));
-                await setDoc(novoDoc, dados);
-                nomesProcessados.set(chaveNome, novoDoc.id);
+            } else if (idArquivo && !idsExistentes.has(idArquivo)) {
+                await setDoc(doc(db, 'unidades', idArquivo), dados);
+                nomesProcessados.set(normalizarChave(nome), idArquivo);
+                idsExistentes.add(idArquivo);
                 adicionados++;
+            } else {
+                const chaveNome = normalizarChave(nome);
+                const idExistente = nomesProcessados.get(chaveNome);
+                if (idExistente) {
+                    await setDoc(doc(db, 'unidades', idExistente), dados, { merge: true });
+                    atualizados++;
+                } else {
+                    const novoDoc = doc(collection(db, 'unidades'));
+                    await setDoc(novoDoc, dados);
+                    nomesProcessados.set(chaveNome, novoDoc.id);
+                    idsExistentes.add(novoDoc.id);
+                    adicionados++;
+                }
             }
         } catch (e) {
             console.error('Erro:', e);
@@ -2129,35 +2150,15 @@ async function processarImportUnidades(linhas) {
     const total = adicionados + atualizados;
 
     if (erros > 0 && total === 0) {
-        Toast.erro(
-            'Importação de unidades falhou',
-            'Nenhum registro pôde ser importado. Verifique o formato das colunas.',
-            resumo
-        );
+        Toast.erro('Importação de unidades falhou', 'Nenhum registro pôde ser importado. Verifique o formato das colunas.', resumo);
     } else if (erros > 0) {
-        Toast.aviso(
-            'Importação concluída com pendências',
-            'Alguns registros não puderam ser processados.',
-            resumo
-        );
+        Toast.aviso('Importação concluída com pendências', 'Alguns registros não puderam ser processados.', resumo);
     } else if (adicionados > 0 && atualizados === 0) {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'nova unidade adicionada' : 'novas unidades adicionadas'}`,
-            'A lista de unidades foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova unidade adicionada' : 'novas unidades adicionadas'}`, 'A lista de unidades foi atualizada.', resumo);
     } else if (adicionados === 0 && atualizados > 0) {
-        Toast.sucesso(
-            `${atualizados} ${atualizados === 1 ? 'unidade atualizada' : 'unidades atualizadas'}`,
-            'Nenhuma unidade nova foi adicionada — os registros existentes foram atualizados.',
-            resumo
-        );
+        Toast.sucesso(`${atualizados} ${atualizados === 1 ? 'unidade atualizada' : 'unidades atualizadas'}`, 'Nenhuma unidade nova foi adicionada — os registros existentes foram atualizados.', resumo);
     } else {
-        Toast.sucesso(
-            `${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`,
-            'A lista de unidades foi atualizada.',
-            resumo
-        );
+        Toast.sucesso(`${adicionados} ${adicionados === 1 ? 'nova' : 'novas'} e ${atualizados} ${atualizados === 1 ? 'atualizada' : 'atualizadas'}`, 'A lista de unidades foi atualizada.', resumo);
     }
 }
 
