@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administração da Rede</title>
+  <title>Painel da Escola</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; background: #f5f7fa; color: #1a1a1a; font-size: 16px; }
@@ -14,44 +14,48 @@
       flex-wrap: wrap; gap: .5rem;
     }
     .topo h1 { font-size: 1.1rem; margin: 0; }
-    .usuario { font-size: .85rem; opacity: .9; }
-
-    .tela { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
-
-    .abas {
-      display: flex; gap: .3rem; margin-bottom: 1.5rem;
-      border-bottom: 2px solid #e5e7eb; overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .aba {
-      background: none; border: none; padding: .7rem 1rem;
-      cursor: pointer; font-size: .9rem; color: #555;
-      border-bottom: 3px solid transparent; margin-bottom: -2px;
-      white-space: nowrap; flex-shrink: 0;
-    }
-    .aba.ativa {
-      color: #1e3a8a; font-weight: 600; border-bottom-color: #1e3a8a;
+    .usuario { font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
+    .usuario select {
+      padding: .45rem .6rem; border-radius: 4px; border: none;
+      font-size: .9rem; max-width: 260px;
     }
 
-    .painel { display: none; }
-    .painel.ativo { display: block; }
+    .tela { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
+    .hidden { display: none; }
 
-    .bloco {
+    h2 { margin-top: 0; font-size: 1.3rem; }
+    .subtitulo { color: #555; margin-bottom: 1.2rem; font-size: .92rem; }
+
+    .card-tarefa {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .bloco h3 { margin: 0 0 1rem; font-size: 1rem; }
+    .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
+    .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
 
-    .form-linha {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: .8rem; margin-bottom: .8rem;
+    .bloco-registro {
+      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .campo { display: flex; flex-direction: column; }
-    .campo label { font-size: .8rem; color: #555; margin-bottom: .2rem; }
+    .bloco-registro .cabecalho {
+      display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem;
+      flex-wrap: wrap;
+    }
+    .bloco-registro h4 { margin: 0; font-size: 1rem; }
+
+    .tag-tipo {
+      display: inline-block; padding: .15rem .55rem; border-radius: 10px;
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    }
+    .tag-aluno    { background: #dbeafe; color: #1e40af; }
+    .tag-escola   { background: #dcfce7; color: #166534; }
+    .tag-servidor { background: #f3e8ff; color: #6b21a8; }
+
+    .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
+    .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
     .campo input, .campo select {
       padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
-      font-size: .95rem; width: 100%;
+      font-size: .95rem;
     }
 
     .btn-primario {
@@ -60,239 +64,81 @@
       font-size: .95rem; font-weight: 500;
     }
     .btn-primario:hover { background: #16306e; }
-    .btn-perigo {
-      background: #dc2626; color: #fff; border: none;
-      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
-      font-size: .8rem;
+    .btn-voltar {
+      background: none; border: none; color: #1e3a8a;
+      cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
+      padding: .3rem 0;
     }
-
-    .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table {
-      width: 100%; border-collapse: collapse; background: #fff;
-      border-radius: 8px; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
-      font-size: .9rem; min-width: 500px;
-    }
-    th, td {
-      padding: .6rem .8rem; text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    th { background: #1e3a8a; color: #fff; font-weight: 600; }
-    tr:hover td { background: #f9fafb; }
-
-    .vazio { color: #888; text-align: center; padding: 1.5rem; }
-
-    .aviso {
-      background: #fef3c7; border-left: 4px solid #d97706;
-      padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
-      font-size: .9rem; color: #78350f;
-    }
+    .rodape-form { text-align: right; margin-top: 1.5rem; }
+    .vazio { color: #888; }
 
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
+      .usuario select { max-width: 180px; font-size: .85rem; }
       .tela { margin: 1rem auto; padding: 0 .8rem; }
-      .bloco { padding: .8rem 1rem; }
-      .form-linha { grid-template-columns: 1fr; gap: .6rem; }
-      .btn-primario { width: 100%; }
-      .btn-perigo { width: 100%; padding: .5rem; }
-      table { font-size: .85rem; min-width: 450px; }
-      th, td { padding: .5rem .6rem; }
+      h2 { font-size: 1.15rem; }
+      .card-tarefa, .bloco-registro { padding: .9rem 1rem; }
+      .rodape-form { text-align: stretch; }
+      .rodape-form button { width: 100%; }
     }
 
     @media (max-width: 480px) {
-      .topo { padding: .7rem .8rem; }
+      .topo {
+        padding: .7rem .8rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .4rem;
+      }
       .topo h1 { font-size: .95rem; }
-      .usuario { font-size: .75rem; }
+      .usuario { width: 100%; flex-direction: column; align-items: stretch; gap: .3rem; }
+      .usuario select { max-width: 100%; width: 100%; }
       .tela { padding: 0 .6rem; }
-      .aba { padding: .6rem .8rem; font-size: .82rem; }
-      .bloco { padding: .7rem .8rem; border-radius: 6px; }
-      table { font-size: .8rem; min-width: 400px; }
-      th, td { padding: .45rem .5rem; }
-      .btn-primario { font-size: .9rem; padding: .65rem 1rem; }
+      h2 { font-size: 1.05rem; }
+      .bloco-registro { padding: .8rem .9rem; border-radius: 6px; }
+      .campo input, .campo select { padding: .5rem .6rem; font-size: .9rem; }
+      .btn-primario { padding: .65rem 1rem; font-size: .9rem; }
     }
   </style>
 </head>
 <body>
 
   <header class="topo">
-    <h1>Administração da Rede</h1>
-    <div class="usuario">Escolas, alunos, servidores e campos</div>
+    <h1>Painel da Escola</h1>
+    <div class="usuario">
+      <select id="seletorEscola"></select>
+    </div>
   </header>
 
-  <div class="tela">
-    <div class="abas">
-      <button class="aba ativa" data-aba="escolas">🏫 Escolas</button>
-      <button class="aba" data-aba="alunos">🎓 Alunos</button>
-      <button class="aba" data-aba="servidores">👩‍🏫 Servidores</button>
-      <button class="aba" data-aba="campos">📋 Campos</button>
-      <button class="aba" data-aba="dados">💾 Dados</button>
+  <section id="tela-tarefas" class="tela">
+    <h2>Tarefas Pendentes</h2>
+    <p class="subtitulo">Preencha os dados solicitados pelos setores da Secretaria.</p>
+    <div id="listaTarefas"></div>
+  </section>
+
+  <section id="tela-formulario" class="tela hidden">
+    <button id="btnVoltar" class="btn-voltar">← Voltar</button>
+    <h2 id="tituloTarefa">Tarefa</h2>
+    <p id="descricaoTarefa" class="subtitulo"></p>
+    <div id="listaRegistros"></div>
+    <div class="rodape-form">
+      <button id="btnSalvarTodos" class="btn-primario">Salvar tudo</button>
     </div>
+  </section>
 
-    <!-- ABA ESCOLAS -->
-    <div id="painel-escolas" class="painel ativo">
-      <div class="bloco">
-        <h3>Cadastrar escola</h3>
-        <div class="form-linha" id="formEscola"></div>
-        <button id="btnAddEscola" class="btn-primario">+ Adicionar escola</button>
-      </div>
-
-      <div class="bloco">
-        <h3>Escolas cadastradas</h3>
-        <div id="tabelaEscolas"></div>
-      </div>
-    </div>
-
-    <!-- ABA ALUNOS -->
-    <div id="painel-alunos" class="painel">
-      <div class="bloco">
-        <h3>Cadastrar aluno</h3>
-        <div class="form-linha" id="formAluno"></div>
-        <button id="btnAddAluno" class="btn-primario">+ Adicionar aluno</button>
-      </div>
-
-      <div class="bloco">
-        <h3>Alunos cadastrados</h3>
-        <div id="tabelaAlunos"></div>
-      </div>
-    </div>
-
-    <!-- ABA SERVIDORES -->
-    <div id="painel-servidores" class="painel">
-      <div class="bloco">
-        <h3>Cadastrar servidor</h3>
-        <div class="form-linha" id="formServidor"></div>
-        <button id="btnAddServidor" class="btn-primario">+ Adicionar servidor</button>
-      </div>
-
-      <div class="bloco">
-        <h3>Servidores cadastrados</h3>
-        <div id="tabelaServidores"></div>
-      </div>
-    </div>
-
-    <!-- ABA CAMPOS -->
-    <div id="painel-campos" class="painel">
-      <div class="bloco">
-        <h3>Cadastrar campo no catálogo</h3>
-        <p style="color:#555;font-size:.9rem;margin-top:0;">
-          Esses campos ficam disponíveis para cadastrar alunos, escolas e servidores,
-          e também para a Secretaria montar as solicitações.
-        </p>
-        <div class="form-linha">
-          <div class="campo">
-            <label>ID (sem espaços)</label>
-            <input type="text" id="campoId" placeholder="nomeMae">
-          </div>
-          <div class="campo">
-            <label>Nome exibido</label>
-            <input type="text" id="campoLabel" placeholder="Nome da mãe">
-          </div>
-          <div class="campo">
-            <label>Categoria</label>
-            <select id="campoTipo">
-              <option value="">Selecione...</option>
-              <option value="aluno">Aluno</option>
-              <option value="escola">Escola</option>
-              <option value="servidor">Servidor</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label>Tipo do campo</label>
-            <select id="campoTipoCampo">
-              <option value="text">Texto</option>
-              <option value="number">Número</option>
-              <option value="date">Data</option>
-              <option value="email">E-mail</option>
-              <option value="select">Seleção (opções)</option>
-            </select>
-          </div>
-          <div class="campo" id="campoOpcoesWrap" style="display:none;">
-            <label>Opções (separadas por vírgula)</label>
-            <input type="text" id="campoOpcoes" placeholder="M, F">
-          </div>
-          <div class="campo">
-            <label>Obrigatório no cadastro?</label>
-            <select id="campoObrigatorio">
-              <option value="nao">Não</option>
-              <option value="sim">Sim</option>
-            </select>
-          </div>
-        </div>
-        <button id="btnAddCampo" class="btn-primario">+ Adicionar campo</button>
-      </div>
-
-      <div class="bloco">
-        <h3>Campos cadastrados</h3>
-        <div id="tabelaCampos"></div>
-      </div>
-    </div>
-
-    <!-- ABA DADOS -->
-    <div id="painel-dados" class="painel">
-      <div class="bloco">
-        <h3>Gerenciar dados</h3>
-        <div class="aviso">
-          Esses botões apagam ou restauram os dados salvos no navegador (localStorage).
-          Use com cuidado — não tem como desfazer.
-        </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-          <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
-          <button id="btnImportar" class="btn-primario">⬆ Importar JSON</button>
-          <button id="btnResetar" class="btn-perigo">🗑 Resetar tudo</button>
-        </div>
-        <input type="file" id="arquivoImport" accept=".json" style="display:none">
-      </div>
-
-      <div class="bloco">
-        <h3>Resumo atual</h3>
-        <div id="resumoDados"></div>
-      </div>
-    </div>
-  </div>
+  <section id="tela-sucesso" class="tela hidden">
+    <h2>✅ Dados enviados!</h2>
+    <p>Os dados foram salvos no banco da rede municipal.</p>
+    <button id="btnVoltarTarefas" class="btn-primario">Voltar para tarefas</button>
+  </section>
 
   <script>
     const DB_KEY = "rede_municipal_db";
 
-    const CATALOGO_PADRAO = [
-      { id: "nome",               label: "Nome",                tipo: "aluno",    tipoCampo: "text",  obrigatorio: true },
-      { id: "escolaId",           label: "Escola",              tipo: "aluno",    tipoCampo: "escola", obrigatorio: true },
-      { id: "nomeMae",            label: "Nome da mãe",         tipo: "aluno",    tipoCampo: "text" },
-      { id: "nomePai",            label: "Nome do pai",         tipo: "aluno",    tipoCampo: "text" },
-      { id: "cpf",                label: "CPF do aluno",        tipo: "aluno",    tipoCampo: "text" },
-      { id: "genero",             label: "Gênero",              tipo: "aluno",    tipoCampo: "select", opcoes: ["M", "F"] },
-      { id: "restricaoAlimentar", label: "Restrição alimentar", tipo: "aluno",    tipoCampo: "select", opcoes: ["Não", "Sim"] },
-      { id: "endereco",           label: "Endereço",            tipo: "aluno",    tipoCampo: "text" },
-      { id: "telefone",           label: "Telefone",            tipo: "aluno",    tipoCampo: "text" },
-      { id: "serie",              label: "Série",               tipo: "aluno",    tipoCampo: "text" },
-
-      { id: "nome",               label: "Nome",                tipo: "escola",   tipoCampo: "text",  obrigatorio: true },
-      { id: "id",                 label: "ID (slug)",           tipo: "escola",   tipoCampo: "text",  obrigatorio: true },
-      { id: "endereco",           label: "Endereço",            tipo: "escola",   tipoCampo: "text" },
-      { id: "telefone",           label: "Telefone",            tipo: "escola",   tipoCampo: "text" },
-      { id: "email",              label: "E-mail",              tipo: "escola",   tipoCampo: "email" },
-      { id: "diretor",            label: "Nome do diretor",     tipo: "escola",   tipoCampo: "text" },
-      { id: "inep",               label: "Código INEP",         tipo: "escola",   tipoCampo: "text" },
-      { id: "cnpj",               label: "CNPJ",                tipo: "escola",   tipoCampo: "text" },
-
-      { id: "nome",               label: "Nome",                tipo: "servidor", tipoCampo: "text",  obrigatorio: true },
-      { id: "escolaId",           label: "Escola",              tipo: "servidor", tipoCampo: "escola", obrigatorio: true },
-      { id: "cargo",              label: "Cargo",               tipo: "servidor", tipoCampo: "text",  obrigatorio: true },
-      { id: "genero",             label: "Gênero",              tipo: "servidor", tipoCampo: "select", opcoes: ["M", "F"] },
-      { id: "cpf",                label: "CPF",                 tipo: "servidor", tipoCampo: "text" },
-      { id: "telefone",           label: "Telefone",            tipo: "servidor", tipoCampo: "text" },
-      { id: "email",              label: "E-mail",              tipo: "servidor", tipoCampo: "email" },
-      { id: "formacao",           label: "Formação",            tipo: "servidor", tipoCampo: "text" },
-      { id: "cargaHoraria",       label: "Carga horária",       tipo: "servidor", tipoCampo: "text" }
-    ];
-
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
-        const inicial = {
-          escolas: [], alunos: [], servidores: [], tarefas: [],
-          campos: JSON.parse(JSON.stringify(CATALOGO_PADRAO))
-        };
+        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [], campos: [] };
         localStorage.setItem(DB_KEY, JSON.stringify(inicial));
         return inicial;
       }
@@ -301,7 +147,7 @@
       db.alunos     = db.alunos     || [];
       db.servidores = db.servidores || [];
       db.tarefas    = db.tarefas    || [];
-      db.campos     = db.campos     || JSON.parse(JSON.stringify(CATALOGO_PADRAO));
+      db.campos     = db.campos     || [];
       return db;
     }
 
@@ -309,545 +155,282 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    function gerarId(prefixo) {
-      return prefixo + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-    }
-
-    // Retorna apenas campos do catálogo de uma categoria
-    function camposDoTipo(tipo) {
+    // ---------- CATÁLOGO ----------
+    function getCatalogo() {
       const db = carregarDB();
-      return db.campos.filter(c => c.tipo === tipo);
+      const porTipo = { aluno: [], escola: [], servidor: [] };
+      (db.campos || []).forEach(c => {
+        if (porTipo[c.tipo]) porTipo[c.tipo].push(c);
+      });
+      return porTipo;
     }
 
-    // ============================================================
-    // FORMULÁRIOS DINÂMICOS
-    // ============================================================
+    function definicaoDoCampo(tipo, campoId) {
+      const cat = getCatalogo();
+      return (cat[tipo] || []).find(x => x.id === campoId) || null;
+    }
 
-    // Renderiza um input baseado no tipoCampo
-    function renderizarInput(campo, prefixo, valor = "") {
-      const id = `${prefixo}_${campo.id}`;
-      const tipo = campo.tipoCampo || "text";
+    function labelDoCampo(tipo, campoId) {
+      const def = definicaoDoCampo(tipo, campoId);
+      return def ? def.label : campoId;
+    }
 
-      if (tipo === "escola") {
+    const ROTULO_TIPO = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
+
+    let ESCOLA_ATUAL = null;
+    let db = carregarDB();
+    let tarefaAtual = null;
+
+    const telas = {
+      tarefas:    document.getElementById("tela-tarefas"),
+      formulario: document.getElementById("tela-formulario"),
+      sucesso:    document.getElementById("tela-sucesso")
+    };
+
+    function mostrarTela(nome) {
+      Object.values(telas).forEach(t => t.classList.add("hidden"));
+      telas[nome].classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ---------- SELETOR DE ESCOLA ----------
+    function montarSeletorEscola() {
+      db = carregarDB();
+      const select = document.getElementById("seletorEscola");
+      select.innerHTML = "";
+
+      if (db.escolas.length === 0) {
+        select.innerHTML = '<option value="">Nenhuma escola cadastrada</option>';
+        ESCOLA_ATUAL = null;
+        return;
+      }
+
+      db.escolas.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.textContent = e.nome || e.id;
+        select.appendChild(opt);
+      });
+
+      if (ESCOLA_ATUAL && db.escolas.find(e => e.id === ESCOLA_ATUAL)) {
+        select.value = ESCOLA_ATUAL;
+      } else {
+        ESCOLA_ATUAL = db.escolas[0].id;
+        select.value = ESCOLA_ATUAL;
+      }
+    }
+
+    document.getElementById("seletorEscola").addEventListener("change", (e) => {
+      ESCOLA_ATUAL = e.target.value;
+      carregarTarefas();
+      mostrarTela("tarefas");
+    });
+
+    // ---------- LISTA DE TAREFAS ----------
+    function carregarTarefas() {
+      db = carregarDB();
+      const lista = document.getElementById("listaTarefas");
+      lista.innerHTML = "";
+
+      if (!ESCOLA_ATUAL) {
+        lista.innerHTML = "<p class='vazio'>Nenhuma escola cadastrada. Peça ao administrador.</p>";
+        return;
+      }
+
+      // Tarefas da escola que ainda têm pelo menos um registro pendente
+      const pendentes = db.tarefas.filter(t =>
+        t.escolaId === ESCOLA_ATUAL &&
+        (t.registros || []).some(r => r.status !== "concluida")
+      );
+
+      if (pendentes.length === 0) {
+        lista.innerHTML = "<p class='vazio'>🎉 Nenhuma tarefa pendente!</p>";
+        return;
+      }
+
+      pendentes.forEach((t) => {
+        const card = document.createElement("div");
+        card.className = "card-tarefa";
+
+        const tipos = Object.entries(t.camposPorTipo || {})
+          .filter(([_, v]) => v.length > 0)
+          .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]} (${campos.length})`)
+          .join(", ") || "—";
+
+        const totalPendentes = (t.registros || []).filter(r => r.status !== "concluida").length;
+
+        card.innerHTML = `
+          <h3>${t.titulo}</h3>
+          <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
+          <p><strong>Tipos:</strong> ${tipos}</p>
+          <p><strong>Registros a preencher:</strong> ${totalPendentes}</p>
+          <button class="btn-primario" style="margin-top:.6rem;">Abrir</button>
+        `;
+        card.querySelector("button").addEventListener("click", () => {
+          abrirTarefa(t.id);
+        });
+        lista.appendChild(card);
+      });
+    }
+
+    // ---------- ABRIR TAREFA ----------
+    function abrirTarefa(tarefaId) {
+      db = carregarDB();
+      tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
+      mostrarTela("formulario");
+
+      document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
+
+      // Monta a lista de campos com labels bonitos
+      const camposTexto = Object.entries(tarefaAtual.camposPorTipo || {})
+        .filter(([_, v]) => v.length > 0)
+        .map(([tipo, campos]) =>
+          `${ROTULO_TIPO[tipo]}: ${campos.map(c => labelDoCampo(tipo, c)).join(", ")}`
+        )
+        .join(" | ");
+
+      document.getElementById("descricaoTarefa").textContent = camposTexto;
+
+      const listaRegistros = document.getElementById("listaRegistros");
+      listaRegistros.innerHTML = "";
+
+      // Só mostra registros pendentes
+      const pendentes = (tarefaAtual.registros || []).filter(r => r.status !== "concluida");
+
+      if (pendentes.length === 0) {
+        listaRegistros.innerHTML = "<p class='vazio'>✅ Nada para preencher nesta tarefa.</p>";
+        return;
+      }
+
+      pendentes.forEach((r) => {
+        const bloco = document.createElement("div");
+        bloco.className = "bloco-registro";
+
+        let html = `
+          <div class="cabecalho">
+            <span class="tag-tipo tag-${r.tipo}">${ROTULO_TIPO[r.tipo]}</span>
+            <h4>${r.nome || "(sem nome)"}</h4>
+          </div>
+        `;
+
+        (r.camposFaltando || []).forEach((campoId) => {
+          const def = definicaoDoCampo(r.tipo, campoId);
+          const label = def ? def.label : campoId;
+          const tipoCampo = def ? def.tipoCampo : "text";
+
+          html += `
+            <div class="campo">
+              <label>${label}</label>
+              ${renderizarInput(tipoCampo, campoId, r[campoId] || "", def)}
+            </div>
+          `;
+        });
+
+        bloco.innerHTML = html;
+        bloco.dataset.registroId = r.id;
+        bloco.dataset.tipo = r.tipo;
+        listaRegistros.appendChild(bloco);
+      });
+    }
+
+    // ---------- RENDERIZADOR DE INPUT (dinâmico por tipoCampo) ----------
+    function renderizarInput(tipoCampo, campoId, valor, def) {
+      const attr = `data-campo="${campoId}"`;
+      const val = (valor ?? "").toString().replace(/"/g, "&quot;");
+
+      if (tipoCampo === "escola") {
         // Select de escolas
-        const db = carregarDB();
+        const dbAtual = carregarDB();
         let options = '<option value="">Selecione...</option>';
-        db.escolas.forEach(e => {
+        dbAtual.escolas.forEach(e => {
           const sel = (valor === e.id) ? "selected" : "";
           options += `<option value="${e.id}" ${sel}>${e.nome}</option>`;
         });
-        return `<select id="${id}" data-campo="${campo.id}">${options}</select>`;
+        return `<select ${attr}>${options}</select>`;
       }
 
-      if (tipo === "select") {
+      if (tipoCampo === "select") {
+        const opcoes = def && def.opcoes ? def.opcoes : [];
         let options = '<option value="">Selecione...</option>';
-        (campo.opcoes || []).forEach(o => {
+        opcoes.forEach(o => {
           const sel = (valor === o) ? "selected" : "";
           options += `<option value="${o}" ${sel}>${o}</option>`;
         });
-        return `<select id="${id}" data-campo="${campo.id}">${options}</select>`;
+        return `<select ${attr}>${options}</select>`;
       }
 
-      if (tipo === "date") {
-        return `<input type="date" id="${id}" data-campo="${campo.id}" value="${valor}">`;
+      if (tipoCampo === "date") {
+        return `<input type="date" ${attr} value="${val}">`;
       }
-      if (tipo === "number") {
-        return `<input type="number" id="${id}" data-campo="${campo.id}" value="${valor}">`;
+      if (tipoCampo === "number") {
+        return `<input type="number" ${attr} value="${val}">`;
       }
-      if (tipo === "email") {
-        return `<input type="email" id="${id}" data-campo="${campo.id}" value="${valor}">`;
+      if (tipoCampo === "email") {
+        return `<input type="email" ${attr} value="${val}">`;
       }
       // text padrão
-      return `<input type="text" id="${id}" data-campo="${campo.id}" value="${valor}">`;
+      return `<input type="text" ${attr} value="${val}">`;
     }
 
-    // Monta o formulário de cadastro de uma categoria
-    function montarFormulario(tipo, prefixo) {
-      const container = document.getElementById(prefixo);
-      container.innerHTML = "";
+    // ---------- SALVAR ----------
+    document.getElementById("btnSalvarTodos").addEventListener("click", () => {
+      db = carregarDB();
+      const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
+      const blocos = document.querySelectorAll(".bloco-registro");
+      let totalAtualizacoes = 0;
 
-      const campos = camposDoTipo(tipo);
-      if (campos.length === 0) {
-        container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado nessa categoria. Vá em Campos.</p>';
-        return;
-      }
+      blocos.forEach((bloco) => {
+        const registroId = bloco.dataset.registroId;
+        const tipo = bloco.dataset.tipo;
+        const registroTarefa = tarefaDb.registros.find(r => r.id === registroId);
 
-      campos.forEach(campo => {
-        const div = document.createElement("div");
-        div.className = "campo";
-        div.innerHTML = `
-          <label>${campo.label}${campo.obrigatorio ? " *" : ""}</label>
-          ${renderizarInput(campo, prefixo)}
-        `;
-        container.appendChild(div);
-      });
-    }
+        const colecao = tipo === "aluno"  ? db.alunos
+                      : tipo === "escola" ? db.escolas
+                      : db.servidores;
+        const objBanco = colecao.find(x => x.id === registroId);
 
-    // Lê os valores preenchidos num formulário
-    function lerFormulario(containerId) {
-      const container = document.getElementById(containerId);
-      const dados = {};
-      container.querySelectorAll("[data-campo]").forEach(el => {
-        const campoId = el.dataset.campo;
-        const valor = el.value.trim();
-        if (valor !== "") dados[campoId] = valor;
-      });
-      return dados;
-    }
-
-    // Limpa o formulário
-    function limparFormulario(containerId) {
-      const container = document.getElementById(containerId);
-      container.querySelectorAll("[data-campo]").forEach(el => {
-        el.value = "";
-      });
-    }
-
-    // ============================================================
-    // ABAS
-    // ============================================================
-    document.querySelectorAll(".aba").forEach((aba) => {
-      aba.addEventListener("click", () => {
-        document.querySelectorAll(".aba").forEach(a => a.classList.remove("ativa"));
-        document.querySelectorAll(".painel").forEach(p => p.classList.remove("ativo"));
-        aba.classList.add("ativa");
-        document.getElementById("painel-" + aba.dataset.aba).classList.add("ativo");
-      });
-    });
-
-    // ============================================================
-    // ESCOLAS
-    // ============================================================
-    function renderizarEscolas() {
-      const db = carregarDB();
-      const div = document.getElementById("tabelaEscolas");
-
-      if (db.escolas.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhuma escola cadastrada ainda.</p>';
-        atualizarSelectsEscolas();
-        return;
-      }
-
-      const camposEscola = camposDoTipo("escola");
-      // Mostra até 4 colunas na tabela + ações
-      const colunas = camposEscola.slice(0, 4);
-
-      let html = `<div class="tabela-wrap"><table><thead><tr>`;
-      colunas.forEach(c => { html += `<th>${c.label}</th>`; });
-      html += `<th>Ações</th></tr></thead><tbody>`;
-
-      db.escolas.forEach(e => {
-        html += `<tr>`;
-        colunas.forEach(c => {
-          html += `<td>${e[c.id] || "—"}</td>`;
+        bloco.querySelectorAll("[data-campo]").forEach((input) => {
+          const campo = input.dataset.campo;
+          const valor = input.value.trim();
+          if (valor !== "") {
+            if (objBanco) objBanco[campo] = valor;
+            registroTarefa[campo] = valor;
+            registroTarefa.camposFaltando =
+              (registroTarefa.camposFaltando || []).filter(c => c !== campo);
+            totalAtualizacoes++;
+          }
         });
-        html += `<td><button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button></td>`;
-        html += `</tr>`;
-      });
 
-      html += `</tbody></table></div>`;
-      div.innerHTML = html;
-
-      div.querySelectorAll(".btn-rm-escola").forEach(btn => {
-        btn.addEventListener("click", () => {
-          if (!confirm("Remover esta escola? Alunos e servidores vinculados ficarão órfãos.")) return;
-          const db = carregarDB();
-          db.escolas = db.escolas.filter(e => e.id !== btn.dataset.id);
-          salvarDB(db);
-          renderizarEscolas();
-          renderizarAlunos();
-          renderizarServidores();
-        });
-      });
-
-      atualizarSelectsEscolas();
-    }
-
-    document.getElementById("btnAddEscola").addEventListener("click", () => {
-      const dados = lerFormulario("formEscola");
-      const camposEscola = camposDoTipo("escola");
-
-      // Validação de obrigatórios
-      for (const c of camposEscola) {
-        if (c.obrigatorio && !dados[c.id]) {
-          alert(`O campo "${c.label}" é obrigatório.`);
-          return;
+        if ((registroTarefa.camposFaltando || []).length === 0) {
+          registroTarefa.status = "concluida";
         }
-      }
-
-      // Valida ID específico da escola
-      if (dados.id && !/^[a-z0-9_]+$/.test(dados.id)) {
-        alert("O ID da escola só pode ter letras minúsculas, números e underline (_).");
-        return;
-      }
-
-      const db = carregarDB();
-
-      if (dados.id && db.escolas.find(e => e.id === dados.id)) {
-        alert("Já existe uma escola com esse ID.");
-        return;
-      }
-
-      // Monta o objeto da escola
-      const escola = { id: dados.id || gerarId("e") };
-      camposEscola.forEach(c => {
-        if (dados[c.id]) escola[c.id] = dados[c.id];
       });
 
-      db.escolas.push(escola);
+      if (totalAtualizacoes === 0) {
+        alert("Nenhum dado foi preenchido.");
+        return;
+      }
+
+      const aindaPendentes = tarefaDb.registros.some(r => r.status !== "concluida");
+      tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
+
       salvarDB(db);
-
-      limparFormulario("formEscola");
-      renderizarEscolas();
-      renderizarResumo();
-      // Re-renderiza os formulários dos outros tipos (por causa do select de escola)
-      montarFormulario("aluno", "formAluno");
-      montarFormulario("servidor", "formServidor");
+      mostrarTela("sucesso");
     });
 
-    function atualizarSelectsEscolas() {
-      // Não precisa mais — os selects são gerados dinamicamente
-    }
-
-    // ============================================================
-    // ALUNOS
-    // ============================================================
-    function renderizarAlunos() {
-      const db = carregarDB();
-      const div = document.getElementById("tabelaAlunos");
-
-      if (db.alunos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum aluno cadastrado ainda.</p>';
-        return;
-      }
-
-      const camposAluno = camposDoTipo("aluno");
-      const colunas = camposAluno.slice(0, 5);
-
-      let html = `<div class="tabela-wrap"><table><thead><tr>`;
-      colunas.forEach(c => { html += `<th>${c.label}</th>`; });
-      html += `<th>Ações</th></tr></thead><tbody>`;
-
-      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
-
-      db.alunos.forEach(a => {
-        html += `<tr>`;
-        colunas.forEach(c => {
-          let valor = a[c.id] || "—";
-          if (c.id === "escolaId") valor = nomeEscola(a.escolaId);
-          html += `<td>${valor}</td>`;
-        });
-        html += `<td><button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button></td>`;
-        html += `</tr>`;
-      });
-
-      html += `</tbody></table></div>`;
-      div.innerHTML = html;
-
-      div.querySelectorAll(".btn-rm-aluno").forEach(btn => {
-        btn.addEventListener("click", () => {
-          if (!confirm("Remover este aluno?")) return;
-          const db = carregarDB();
-          db.alunos = db.alunos.filter(a => a.id !== btn.dataset.id);
-          salvarDB(db);
-          renderizarAlunos();
-          renderizarResumo();
-        });
-      });
-    }
-
-    document.getElementById("btnAddAluno").addEventListener("click", () => {
-      const dados = lerFormulario("formAluno");
-      const camposAluno = camposDoTipo("aluno");
-
-      for (const c of camposAluno) {
-        if (c.obrigatorio && !dados[c.id]) {
-          alert(`O campo "${c.label}" é obrigatório.`);
-          return;
-        }
-      }
-
-      const db = carregarDB();
-
-      const aluno = { id: gerarId("a") };
-      camposAluno.forEach(c => {
-        if (dados[c.id]) aluno[c.id] = dados[c.id];
-      });
-
-      db.alunos.push(aluno);
-      salvarDB(db);
-
-      limparFormulario("formAluno");
-      renderizarAlunos();
-      renderizarResumo();
+    // ---------- NAVEGAÇÃO ----------
+    document.getElementById("btnVoltar").addEventListener("click", () => {
+      mostrarTela("tarefas");
     });
 
-    // ============================================================
-    // SERVIDORES
-    // ============================================================
-    function renderizarServidores() {
-      const db = carregarDB();
-      const div = document.getElementById("tabelaServidores");
-
-      if (db.servidores.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum servidor cadastrado ainda.</p>';
-        return;
-      }
-
-      const camposServidor = camposDoTipo("servidor");
-      const colunas = camposServidor.slice(0, 5);
-
-      let html = `<div class="tabela-wrap"><table><thead><tr>`;
-      colunas.forEach(c => { html += `<th>${c.label}</th>`; });
-      html += `<th>Ações</th></tr></thead><tbody>`;
-
-      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
-
-      db.servidores.forEach(s => {
-        html += `<tr>`;
-        colunas.forEach(c => {
-          let valor = s[c.id] || "—";
-          if (c.id === "escolaId") valor = nomeEscola(s.escolaId);
-          html += `<td>${valor}</td>`;
-        });
-        html += `<td><button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button></td>`;
-        html += `</tr>`;
-      });
-
-      html += `</tbody></table></div>`;
-      div.innerHTML = html;
-
-      div.querySelectorAll(".btn-rm-servidor").forEach(btn => {
-        btn.addEventListener("click", () => {
-          if (!confirm("Remover este servidor?")) return;
-          const db = carregarDB();
-          db.servidores = db.servidores.filter(s => s.id !== btn.dataset.id);
-          salvarDB(db);
-          renderizarServidores();
-          renderizarResumo();
-        });
-      });
-    }
-
-    document.getElementById("btnAddServidor").addEventListener("click", () => {
-      const dados = lerFormulario("formServidor");
-      const camposServidor = camposDoTipo("servidor");
-
-      for (const c of camposServidor) {
-        if (c.obrigatorio && !dados[c.id]) {
-          alert(`O campo "${c.label}" é obrigatório.`);
-          return;
-        }
-      }
-
-      const db = carregarDB();
-
-      const servidor = { id: gerarId("s") };
-      camposServidor.forEach(c => {
-        if (dados[c.id]) servidor[c.id] = dados[c.id];
-      });
-
-      db.servidores.push(servidor);
-      salvarDB(db);
-
-      limparFormulario("formServidor");
-      renderizarServidores();
-      renderizarResumo();
+    document.getElementById("btnVoltarTarefas").addEventListener("click", () => {
+      carregarTarefas();
+      mostrarTela("tarefas");
     });
 
-    // ============================================================
-    // CAMPOS
-    // ============================================================
-    function renderizarCampos() {
-      const db = carregarDB();
-      const div = document.getElementById("tabelaCampos");
-
-      if (db.campos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum campo cadastrado ainda.</p>';
-        return;
-      }
-
-      const rotuloTipo = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
-
-      let html = `<div class="tabela-wrap"><table><thead><tr>
-        <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Obrigatório</th><th>Opções</th><th>Ações</th>
-      </tr></thead><tbody>`;
-
-      db.campos.forEach(c => {
-        html += `<tr>
-          <td>${rotuloTipo[c.tipo] || c.tipo}</td>
-          <td>${c.id}</td>
-          <td>${c.label}</td>
-          <td>${c.tipoCampo || "text"}</td>
-          <td>${c.obrigatorio ? "Sim" : "Não"}</td>
-          <td>${c.opcoes ? c.opcoes.join(", ") : "—"}</td>
-          <td><button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button></td>
-        </tr>`;
-      });
-
-      html += `</tbody></table></div>`;
-      div.innerHTML = html;
-
-      div.querySelectorAll(".btn-rm-campo").forEach(btn => {
-        btn.addEventListener("click", () => {
-          if (!confirm("Remover este campo do catálogo? Os valores já cadastrados nos registros não serão apagados.")) return;
-          const db = carregarDB();
-          db.campos = db.campos.filter(c => !(c.id === btn.dataset.id && c.tipo === btn.dataset.tipo));
-          salvarDB(db);
-          renderizarCampos();
-          renderizarResumo();
-          // Re-renderiza os formulários (o campo saiu de todos)
-          montarFormulario("escola", "formEscola");
-          montarFormulario("aluno", "formAluno");
-          montarFormulario("servidor", "formServidor");
-        });
-      });
-    }
-
-    document.getElementById("btnAddCampo").addEventListener("click", () => {
-      const id = document.getElementById("campoId").value.trim();
-      const label = document.getElementById("campoLabel").value.trim();
-      const tipo = document.getElementById("campoTipo").value;
-      const tipoCampo = document.getElementById("campoTipoCampo").value;
-      const opcoesTexto = document.getElementById("campoOpcoes").value.trim();
-      const obrigatorio = document.getElementById("campoObrigatorio").value === "sim";
-
-      if (!id) { alert("Informe o ID."); return; }
-      if (!label) { alert("Informe o nome exibido."); return; }
-      if (!tipo) { alert("Selecione a categoria."); return; }
-      if (!/^[a-zA-Z0-9_]+$/.test(id)) {
-        alert("O ID só pode ter letras, números e underline (_).");
-        return;
-      }
-
-      // Bloqueia IDs reservados
-      const reservados = ["id"];
-      if (reservados.includes(id)) {
-        alert(`O ID "${id}" é reservado pelo sistema. Escolha outro.`);
-        return;
-      }
-
-      const db = carregarDB();
-      if (db.campos.find(c => c.id === id && c.tipo === tipo)) {
-        alert("Já existe um campo com esse ID nessa categoria.");
-        return;
-      }
-
-      const campo = { id, label, tipo, tipoCampo, obrigatorio };
-      if (tipoCampo === "select") {
-        if (!opcoesTexto) { alert("Informe as opções."); return; }
-        campo.opcoes = opcoesTexto.split(",").map(s => s.trim()).filter(Boolean);
-      }
-
-      db.campos.push(campo);
-      salvarDB(db);
-
-      document.getElementById("campoId").value = "";
-      document.getElementById("campoLabel").value = "";
-      document.getElementById("campoTipo").value = "";
-      document.getElementById("campoTipoCampo").value = "text";
-      document.getElementById("campoOpcoes").value = "";
-      document.getElementById("campoOpcoesWrap").style.display = "none";
-      document.getElementById("campoObrigatorio").value = "nao";
-
-      renderizarCampos();
-      renderizarResumo();
-      // Re-renderiza os formulários (o campo novo aparece)
-      montarFormulario("escola", "formEscola");
-      montarFormulario("aluno", "formAluno");
-      montarFormulario("servidor", "formServidor");
-    });
-
-    document.getElementById("campoTipoCampo").addEventListener("change", (e) => {
-      document.getElementById("campoOpcoesWrap").style.display =
-        e.target.value === "select" ? "block" : "none";
-    });
-
-    // ============================================================
-    // DADOS
-    // ============================================================
-    function renderizarResumo() {
-      const db = carregarDB();
-      const div = document.getElementById("resumoDados");
-
-      const porEscola = {};
-      db.alunos.forEach(a => {
-        porEscola[a.escolaId] = (porEscola[a.escolaId] || 0) + 1;
-      });
-
-      let html = `
-        <p><strong>Escolas:</strong> ${db.escolas.length}</p>
-        <p><strong>Alunos:</strong> ${db.alunos.length}</p>
-        <p><strong>Servidores:</strong> ${db.servidores.length}</p>
-        <p><strong>Campos no catálogo:</strong> ${db.campos.length}</p>
-        <p><strong>Tarefas:</strong> ${db.tarefas.length}</p>
-      `;
-
-      if (db.escolas.length > 0) {
-        html += `<h4 style="margin-top:1rem;">Alunos por escola</h4><ul>`;
-        db.escolas.forEach(e => {
-          html += `<li>${e.nome}: ${porEscola[e.id] || 0} aluno(s)</li>`;
-        });
-        html += `</ul>`;
-      }
-
-      div.innerHTML = html;
-    }
-
-    document.getElementById("btnExportar").addEventListener("click", () => {
-      const db = carregarDB();
-      const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "rede_municipal_backup.json";
-      link.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("btnImportar").addEventListener("click", () => {
-      document.getElementById("arquivoImport").click();
-    });
-
-    document.getElementById("arquivoImport").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const dados = JSON.parse(ev.target.result);
-          if (!dados.escolas) throw new Error("Arquivo inválido.");
-          if (!confirm("Isso vai substituir TODOS os dados atuais. Continuar?")) return;
-          salvarDB(dados);
-          alert("Dados importados!");
-          location.reload();
-        } catch (err) {
-          alert("Erro ao importar: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    document.getElementById("btnResetar").addEventListener("click", () => {
-      if (!confirm("Isso apaga TUDO (escolas, alunos, servidores, tarefas, campos). Continuar?")) return;
-      localStorage.removeItem(DB_KEY);
-      alert("Tudo resetado!");
-      location.reload();
-    });
-
-    // ============================================================
-    // INICIAR
-    // ============================================================
-    montarFormulario("escola", "formEscola");
-    montarFormulario("aluno", "formAluno");
-    montarFormulario("servidor", "formServidor");
-
-    renderizarEscolas();
-    renderizarAlunos();
-    renderizarServidores();
-    renderizarCampos();
-    renderizarResumo();
+    // ---------- INICIAR ----------
+    montarSeletorEscola();
+    carregarTarefas();
   </script>
 </body>
 </html>
