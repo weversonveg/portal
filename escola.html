@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel da Escola (teste)</title>
+  <title>Painel da Escola</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, sans-serif; }
     body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
@@ -51,19 +51,23 @@
     }
     .rodape-form { text-align: right; margin-top: 1.5rem; }
     .vazio { color: #888; }
+    .loading { color: #888; font-style: italic; }
+    .status-pendente     { color: #d97706; font-weight: 600; }
+    .status-em_andamento { color: #1e3a8a; font-weight: 600; }
+    .status-concluida    { color: #16a34a; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <header class="topo">
-    <h1>Painel da Escola (teste)</h1>
-    <div class="usuario">Escola Municipal ABC</div>
+    <h1>Painel da Escola</h1>
+    <div class="usuario" id="nomeUsuario">—</div>
   </header>
 
   <section id="tela-tarefas" class="tela">
     <h2>Tarefas Pendentes</h2>
     <p class="subtitulo">Preencha os dados solicitados pelos setores da Secretaria.</p>
-    <div id="listaTarefas"></div>
+    <div id="listaTarefas"><p class="loading">Carregando...</p></div>
   </section>
 
   <section id="tela-formulario" class="tela hidden">
@@ -82,42 +86,17 @@
     <button id="btnVoltarTarefas" class="btn-primario">Voltar para tarefas</button>
   </section>
 
-  <script>
-    // ---------- "BANCO" COMPARTILHADO ----------
-    const DB_KEY = "rede_municipal_db";
+  <script type="module">
+    import { db, auth } from './firebase.js';
+    import {
+      collection, query, where, getDocs,
+      doc, getDoc, updateDoc, writeBatch, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    function carregarDB() {
-      const raw = localStorage.getItem(DB_KEY);
-      if (!raw) {
-        // Inicializa com dados de exemplo
-        const inicial = {
-          alunos: [
-            { id: "a1", nome: "João Silva",   escolaId: "escola_abc", nomeMae: "Maria Silva", genero: "M", cpf: "111.111.111-11" },
-            { id: "a2", nome: "Maria Souza",  escolaId: "escola_abc", nomeMae: "Ana Souza",   genero: "F" },
-            { id: "a3", nome: "Pedro Lima",   escolaId: "escola_abc", genero: "M" },
-            { id: "a4", nome: "Ana Costa",    escolaId: "escola_xyz", nomeMae: "Clara Costa", genero: "F" },
-            { id: "a5", nome: "Lucas Dias",   escolaId: "escola_xyz", endereco: "Rua A, 10" },
-            { id: "a6", nome: "Carla Nunes",  escolaId: "escola_xyz", nomeMae: "Bia Nunes", genero: "F", restricaoAlimentar: "Sim" },
-            { id: "a7", nome: "Rafael Alves", escolaId: "escola_abc", nomeMae: "Lu Alves", genero: "M", restricaoAlimentar: "Não" }
-          ],
-          tarefas: []
-        };
-        localStorage.setItem(DB_KEY, JSON.stringify(inicial));
-        return inicial;
-      }
-      return JSON.parse(raw);
-    }
-
-    function salvarDB(db) {
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-    }
-
-    // ---------- ESTADO ----------
-    const ESCOLA_ATUAL = "escola_abc"; // simula a escola logada
-    let db = carregarDB();
+    let escolaIdAtual = null;
     let tarefaAtual = null;
 
-    // ---------- NAVEGAÇÃO ----------
     const telas = {
       tarefas:    document.getElementById("tela-tarefas"),
       formulario: document.getElementById("tela-formulario"),
@@ -127,76 +106,118 @@
     function mostrarTela(nome) {
       Object.values(telas).forEach(t => t.classList.add("hidden"));
       telas[nome].classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // ---------- LISTA DE TAREFAS ----------
-    function carregarTarefas() {
-      db = carregarDB();
-      const lista = document.getElementById("listaTarefas");
-      lista.innerHTML = "";
+    // ---------- AUTH ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = "login.html"; return; }
 
-      const pendentes = db.tarefas.filter(t =>
-        t.escolaId === ESCOLA_ATUAL && t.status !== "concluida"
-      );
+      const token = await user.getIdTokenResult();
+      escolaIdAtual = token.claims.escolaId;
 
-      if (pendentes.length === 0) {
-        lista.innerHTML = "<p class='vazio'>🎉 Nenhuma tarefa pendente!</p>";
+      if (!escolaIdAtual) {
+        alert("Usuário não está vinculado a uma escola.");
         return;
       }
 
-      pendentes.forEach((t) => {
-        const card = document.createElement("div");
-        card.className = "card-tarefa";
-        card.innerHTML = `
-          <h3>${t.titulo}</h3>
-          <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
-          <p><strong>Campos:</strong> ${t.camposNecessarios.join(", ")}</p>
-          <p><strong>Alunos:</strong> ${t.alunos.length}</p>
-          <p><strong>Status:</strong> ${t.status}</p>
-          <button class="btn-primario">Abrir</button>
-        `;
-        card.querySelector("button").addEventListener("click", () => {
-          abrirTarefa(t.id);
+      document.getElementById("nomeUsuario").textContent = user.email;
+      await carregarTarefas();
+    });
+
+    // ---------- LISTA DE TAREFAS ----------
+    async function carregarTarefas() {
+      const lista = document.getElementById("listaTarefas");
+      lista.innerHTML = '<p class="loading">Carregando...</p>';
+
+      try {
+        const q = query(
+          collection(db, "tarefas"),
+          where("escolaId", "==", escolaIdAtual),
+          where("status", "in", ["pendente", "em_andamento"])
+        );
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          lista.innerHTML = "<p class='vazio'>🎉 Nenhuma tarefa pendente!</p>";
+          return;
+        }
+
+        lista.innerHTML = "";
+        snap.forEach((d) => {
+          const t = d.data();
+          const card = document.createElement("div");
+          card.className = "card-tarefa";
+          card.innerHTML = `
+            <h3>${t.titulo}</h3>
+            <p><strong>Categoria:</strong> ${t.categoria || "alunos"}</p>
+            <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
+            <p><strong>Campos:</strong> ${(t.camposNecessarios || []).map(formatarLabel).join(", ")}</p>
+            <p><strong>Itens:</strong> ${t.totalItens ?? "—"}</p>
+            <p><strong>Status:</strong> <span class="status-${t.status}">${t.status}</span></p>
+            <button class="btn-primario">Abrir</button>
+          `;
+          card.querySelector("button").addEventListener("click", () => abrirTarefa(d.id));
+          lista.appendChild(card);
         });
-        lista.appendChild(card);
-      });
+      } catch (err) {
+        console.error("Erro ao carregar tarefas:", err);
+        lista.innerHTML = "<p>Erro ao carregar tarefas.</p>";
+      }
     }
 
     // ---------- ABRIR TAREFA ----------
-    function abrirTarefa(tarefaId) {
-      db = carregarDB();
-      tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
-      mostrarTela("formulario");
+    async function abrirTarefa(tarefaId) {
+      try {
+        const tarefaSnap = await getDoc(doc(db, "tarefas", tarefaId));
+        if (!tarefaSnap.exists()) { alert("Tarefa não encontrada."); return; }
+        tarefaAtual = { id: tarefaId, ...tarefaSnap.data() };
 
-      document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
-      document.getElementById("descricaoTarefa").textContent =
-        `Campos solicitados: ${tarefaAtual.camposNecessarios.join(", ")}`;
+        mostrarTela("formulario");
 
-      const listaAlunos = document.getElementById("listaAlunos");
-      listaAlunos.innerHTML = "";
+        document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
+        document.getElementById("descricaoTarefa").textContent =
+          `Campos solicitados: ${tarefaAtual.camposNecessarios.map(formatarLabel).join(", ")}`;
 
-      tarefaAtual.alunos.forEach((a) => {
-        const bloco = document.createElement("div");
-        bloco.className = "bloco-aluno";
+        const listaAlunos = document.getElementById("listaAlunos");
+        listaAlunos.innerHTML = '<p class="loading">Carregando itens...</p>';
 
-        let html = `<h4>${a.nome}</h4>`;
+        const itensSnap = await getDocs(collection(db, "tarefas", tarefaId, "itens"));
+        listaAlunos.innerHTML = "";
 
-        (a.camposFaltando || []).forEach((campo) => {
-          const label = formatarLabel(campo);
-          html += `
-            <div class="campo">
-              <label>${label}</label>
-              ${criarInput(campo, a[campo] || "")}
-            </div>
-          `;
+        if (itensSnap.empty) {
+          listaAlunos.innerHTML = "<p>Nenhum item nesta tarefa.</p>";
+          return;
+        }
+
+        itensSnap.forEach((itemDoc) => {
+          const item = itemDoc.data();
+          const bloco = document.createElement("div");
+          bloco.className = "bloco-aluno";
+
+          let html = `<h4>${item.nome || "Sem nome"}</h4>`;
+          (item.camposFaltando || []).forEach((campo) => {
+            const label = formatarLabel(campo);
+            html += `
+              <div class="campo">
+                <label>${label}</label>
+                ${criarInput(campo, item[campo] || "")}
+              </div>
+            `;
+          });
+
+          bloco.innerHTML = html;
+          bloco.dataset.itemId = itemDoc.id;
+          bloco.dataset.itemBancoId = item.itemId;
+          listaAlunos.appendChild(bloco);
         });
-
-        bloco.innerHTML = html;
-        bloco.dataset.alunoId = a.alunoId;
-        listaAlunos.appendChild(bloco);
-      });
+      } catch (err) {
+        console.error("Erro ao abrir tarefa:", err);
+        alert("Erro ao abrir tarefa.");
+      }
     }
 
+    // ---------- INPUTS ----------
     function criarInput(campo, valor) {
       if (campo === "restricaoAlimentar") {
         return `
@@ -219,6 +240,74 @@
       return `<input type="text" data-campo="${campo}" value="${valor}">`;
     }
 
+    // ---------- SALVAR ----------
+    document.getElementById("btnSalvarTodos").addEventListener("click", async () => {
+      const blocos = document.querySelectorAll(".bloco-aluno");
+      const batch = writeBatch(db);
+      let totalAtualizacoes = 0;
+      const colecaoDestino = tarefaAtual.categoria || "alunos";
+
+      blocos.forEach((bloco) => {
+        const itemTarefaId = bloco.dataset.itemId;
+        const itemBancoId = bloco.dataset.itemBancoId;
+        const dados = {};
+
+        bloco.querySelectorAll("[data-campo]").forEach((input) => {
+          const campo = input.dataset.campo;
+          const valor = input.value.trim();
+          if (valor !== "") dados[campo] = valor;
+        });
+
+        if (Object.keys(dados).length === 0) return;
+
+        // Atualiza o documento principal na coleção de destino
+        const bancoRef = doc(db, colecaoDestino, itemBancoId);
+        batch.update(bancoRef, { ...dados, atualizadoEm: serverTimestamp() });
+
+        // Atualiza o item dentro da tarefa
+        const itemTarefaRef = doc(db, "tarefas", tarefaAtual.id, "itens", itemTarefaId);
+        batch.update(itemTarefaRef, { ...dados, status: "concluida" });
+
+        totalAtualizacoes++;
+      });
+
+      if (totalAtualizacoes === 0) {
+        alert("Nenhum dado foi preenchido.");
+        return;
+      }
+
+      // Verifica se ainda há pendentes
+      const restantesSnap = await getDocs(
+        query(
+          collection(db, "tarefas", tarefaAtual.id, "itens"),
+          where("status", "==", "pendente")
+        )
+      );
+
+      const aindaPendentes = restantesSnap.size - totalAtualizacoes;
+      const tarefaRef = doc(db, "tarefas", tarefaAtual.id);
+      batch.update(tarefaRef, {
+        status: aindaPendentes <= 0 ? "concluida" : "em_andamento",
+        atualizadoEm: serverTimestamp()
+      });
+
+      try {
+        await batch.commit();
+        mostrarTela("sucesso");
+      } catch (err) {
+        console.error("Erro ao salvar:", err);
+        alert("Erro ao salvar os dados. Tente novamente.");
+      }
+    });
+
+    // ---------- NAVEGAÇÃO ----------
+    document.getElementById("btnVoltar").addEventListener("click", () => mostrarTela("tarefas"));
+    document.getElementById("btnVoltarTarefas").addEventListener("click", async () => {
+      await carregarTarefas();
+      mostrarTela("tarefas");
+    });
+
+    // ---------- HELPERS ----------
     function formatarLabel(campo) {
       const mapa = {
         nomeMae: "Nome da mãe",
@@ -228,68 +317,19 @@
         endereco: "Endereço",
         cpf: "CPF",
         telefone: "Telefone",
-        serie: "Série"
+        serie: "Série",
+        cargo: "Cargo",
+        email: "E-mail",
+        formacao: "Formação",
+        cargaHoraria: "Carga horária",
+        dataAdmissao: "Data de admissão",
+        inep: "Código INEP",
+        diretor: "Diretor(a)",
+        numAlunos: "Nº de alunos",
+        numServidores: "Nº de servidores"
       };
       return mapa[campo] || campo;
     }
-
-    // ---------- SALVAR ----------
-    document.getElementById("btnSalvarTodos").addEventListener("click", () => {
-      db = carregarDB();
-      const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
-      const blocos = document.querySelectorAll(".bloco-aluno");
-      let totalAtualizacoes = 0;
-
-      blocos.forEach((bloco) => {
-        const alunoId = bloco.dataset.alunoId;
-        const alunoTarefa = tarefaDb.alunos.find(a => a.alunoId === alunoId);
-        const alunoBanco = db.alunos.find(a => a.id === alunoId);
-
-        bloco.querySelectorAll("[data-campo]").forEach((input) => {
-          const campo = input.dataset.campo;
-          const valor = input.value.trim();
-          if (valor !== "") {
-            // Atualiza o cadastro principal
-            if (alunoBanco) alunoBanco[campo] = valor;
-            // Atualiza o registro dentro da tarefa
-            alunoTarefa[campo] = valor;
-            alunoTarefa.camposFaltando =
-              (alunoTarefa.camposFaltando || []).filter(c => c !== campo);
-            totalAtualizacoes++;
-          }
-        });
-
-        // Se não falta mais nada, marca como concluído
-        if (alunoTarefa.camposFaltando.length === 0) {
-          alunoTarefa.status = "concluida";
-        }
-      });
-
-      if (totalAtualizacoes === 0) {
-        alert("Nenhum dado foi preenchido.");
-        return;
-      }
-
-      // Verifica se a tarefa toda acabou
-      const aindaPendentes = tarefaDb.alunos.some(a => a.status !== "concluida");
-      tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
-
-      salvarDB(db);
-      mostrarTela("sucesso");
-    });
-
-    // ---------- NAVEGAÇÃO ----------
-    document.getElementById("btnVoltar").addEventListener("click", () => {
-      mostrarTela("tarefas");
-    });
-
-    document.getElementById("btnVoltarTarefas").addEventListener("click", () => {
-      carregarTarefas();
-      mostrarTela("tarefas");
-    });
-
-    // ---------- INICIAR ----------
-    carregarTarefas();
   </script>
 </body>
 </html>
