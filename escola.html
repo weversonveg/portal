@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel da Escola (teste)</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
+
+    .topo {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #1e3a8a; color: #fff; padding: 1rem 2rem;
+    }
+    .topo h1 { font-size: 1.2rem; margin: 0; }
+    .usuario { font-size: .9rem; opacity: .9; }
+
+    .tela { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .hidden { display: none; }
+
+    h2 { margin-top: 0; }
+    .subtitulo { color: #555; margin-bottom: 1.5rem; }
+
+    .card-tarefa {
+      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .card-tarefa h3 { margin: 0 0 .5rem; }
+    .card-tarefa p { margin: .2rem 0; font-size: .9rem; }
+
+    .bloco-aluno {
+      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .bloco-aluno h4 { margin: 0 0 .8rem; }
+
+    .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
+    .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
+    .campo input, .campo select {
+      padding: .45rem .6rem; border: 1px solid #ccc; border-radius: 4px;
+    }
+
+    .btn-primario {
+      background: #1e3a8a; color: #fff; border: none;
+      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
+    }
+    .btn-primario:hover { background: #16306e; }
+    .btn-voltar {
+      background: none; border: none; color: #1e3a8a;
+      cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
+    }
+    .rodape-form { text-align: right; margin-top: 1.5rem; }
+    .vazio { color: #888; }
+  </style>
+</head>
+<body>
+
+  <header class="topo">
+    <h1>Painel da Escola (teste)</h1>
+    <div class="usuario">Escola Municipal ABC</div>
+  </header>
+
+  <section id="tela-tarefas" class="tela">
+    <h2>Tarefas Pendentes</h2>
+    <p class="subtitulo">Preencha os dados solicitados pelos setores da Secretaria.</p>
+    <div id="listaTarefas"></div>
+  </section>
+
+  <section id="tela-formulario" class="tela hidden">
+    <button id="btnVoltar" class="btn-voltar">← Voltar</button>
+    <h2 id="tituloTarefa">Tarefa</h2>
+    <p id="descricaoTarefa" class="subtitulo"></p>
+    <div id="listaAlunos"></div>
+    <div class="rodape-form">
+      <button id="btnSalvarTodos" class="btn-primario">Salvar tudo</button>
+    </div>
+  </section>
+
+  <section id="tela-sucesso" class="tela hidden">
+    <h2>✅ Dados enviados!</h2>
+    <p>Os dados foram salvos no banco da rede municipal.</p>
+    <button id="btnVoltarTarefas" class="btn-primario">Voltar para tarefas</button>
+  </section>
+
+  <script>
+    // ---------- "BANCO" COMPARTILHADO ----------
+    const DB_KEY = "rede_municipal_db";
+
+    function carregarDB() {
+      const raw = localStorage.getItem(DB_KEY);
+      if (!raw) {
+        // Inicializa com dados de exemplo
+        const inicial = {
+          alunos: [
+            { id: "a1", nome: "João Silva",   escolaId: "escola_abc", nomeMae: "Maria Silva", genero: "M", cpf: "111.111.111-11" },
+            { id: "a2", nome: "Maria Souza",  escolaId: "escola_abc", nomeMae: "Ana Souza",   genero: "F" },
+            { id: "a3", nome: "Pedro Lima",   escolaId: "escola_abc", genero: "M" },
+            { id: "a4", nome: "Ana Costa",    escolaId: "escola_xyz", nomeMae: "Clara Costa", genero: "F" },
+            { id: "a5", nome: "Lucas Dias",   escolaId: "escola_xyz", endereco: "Rua A, 10" },
+            { id: "a6", nome: "Carla Nunes",  escolaId: "escola_xyz", nomeMae: "Bia Nunes", genero: "F", restricaoAlimentar: "Sim" },
+            { id: "a7", nome: "Rafael Alves", escolaId: "escola_abc", nomeMae: "Lu Alves", genero: "M", restricaoAlimentar: "Não" }
+          ],
+          tarefas: []
+        };
+        localStorage.setItem(DB_KEY, JSON.stringify(inicial));
+        return inicial;
+      }
+      return JSON.parse(raw);
+    }
+
+    function salvarDB(db) {
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    // ---------- ESTADO ----------
+    const ESCOLA_ATUAL = "escola_abc"; // simula a escola logada
+    let db = carregarDB();
+    let tarefaAtual = null;
+
+    // ---------- NAVEGAÇÃO ----------
+    const telas = {
+      tarefas:    document.getElementById("tela-tarefas"),
+      formulario: document.getElementById("tela-formulario"),
+      sucesso:    document.getElementById("tela-sucesso")
+    };
+
+    function mostrarTela(nome) {
+      Object.values(telas).forEach(t => t.classList.add("hidden"));
+      telas[nome].classList.remove("hidden");
+    }
+
+    // ---------- LISTA DE TAREFAS ----------
+    function carregarTarefas() {
+      db = carregarDB();
+      const lista = document.getElementById("listaTarefas");
+      lista.innerHTML = "";
+
+      const pendentes = db.tarefas.filter(t =>
+        t.escolaId === ESCOLA_ATUAL && t.status !== "concluida"
+      );
+
+      if (pendentes.length === 0) {
+        lista.innerHTML = "<p class='vazio'>🎉 Nenhuma tarefa pendente!</p>";
+        return;
+      }
+
+      pendentes.forEach((t) => {
+        const card = document.createElement("div");
+        card.className = "card-tarefa";
+        card.innerHTML = `
+          <h3>${t.titulo}</h3>
+          <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
+          <p><strong>Campos:</strong> ${t.camposNecessarios.join(", ")}</p>
+          <p><strong>Alunos:</strong> ${t.alunos.length}</p>
+          <p><strong>Status:</strong> ${t.status}</p>
+          <button class="btn-primario">Abrir</button>
+        `;
+        card.querySelector("button").addEventListener("click", () => {
+          abrirTarefa(t.id);
+        });
+        lista.appendChild(card);
+      });
+    }
+
+    // ---------- ABRIR TAREFA ----------
+    function abrirTarefa(tarefaId) {
+      db = carregarDB();
+      tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
+      mostrarTela("formulario");
+
+      document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
+      document.getElementById("descricaoTarefa").textContent =
+        `Campos solicitados: ${tarefaAtual.camposNecessarios.join(", ")}`;
+
+      const listaAlunos = document.getElementById("listaAlunos");
+      listaAlunos.innerHTML = "";
+
+      tarefaAtual.alunos.forEach((a) => {
+        const bloco = document.createElement("div");
+        bloco.className = "bloco-aluno";
+
+        let html = `<h4>${a.nome}</h4>`;
+
+        (a.camposFaltando || []).forEach((campo) => {
+          const label = formatarLabel(campo);
+          html += `
+            <div class="campo">
+              <label>${label}</label>
+              ${criarInput(campo, a[campo] || "")}
+            </div>
+          `;
+        });
+
+        bloco.innerHTML = html;
+        bloco.dataset.alunoId = a.alunoId;
+        listaAlunos.appendChild(bloco);
+      });
+    }
+
+    function criarInput(campo, valor) {
+      if (campo === "restricaoAlimentar") {
+        return `
+          <select data-campo="${campo}">
+            <option value="">Selecione...</option>
+            <option value="Não" ${valor === "Não" ? "selected" : ""}>Não</option>
+            <option value="Sim" ${valor === "Sim" ? "selected" : ""}>Sim</option>
+          </select>
+        `;
+      }
+      if (campo === "genero") {
+        return `
+          <select data-campo="${campo}">
+            <option value="">Selecione...</option>
+            <option value="M" ${valor === "M" ? "selected" : ""}>Masculino</option>
+            <option value="F" ${valor === "F" ? "selected" : ""}>Feminino</option>
+          </select>
+        `;
+      }
+      return `<input type="text" data-campo="${campo}" value="${valor}">`;
+    }
+
+    function formatarLabel(campo) {
+      const mapa = {
+        nomeMae: "Nome da mãe",
+        nomePai: "Nome do pai",
+        genero: "Gênero",
+        restricaoAlimentar: "Restrição alimentar",
+        endereco: "Endereço",
+        cpf: "CPF",
+        telefone: "Telefone",
+        serie: "Série"
+      };
+      return mapa[campo] || campo;
+    }
+
+    // ---------- SALVAR ----------
+    document.getElementById("btnSalvarTodos").addEventListener("click", () => {
+      db = carregarDB();
+      const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
+      const blocos = document.querySelectorAll(".bloco-aluno");
+      let totalAtualizacoes = 0;
+
+      blocos.forEach((bloco) => {
+        const alunoId = bloco.dataset.alunoId;
+        const alunoTarefa = tarefaDb.alunos.find(a => a.alunoId === alunoId);
+        const alunoBanco = db.alunos.find(a => a.id === alunoId);
+
+        bloco.querySelectorAll("[data-campo]").forEach((input) => {
+          const campo = input.dataset.campo;
+          const valor = input.value.trim();
+          if (valor !== "") {
+            // Atualiza o cadastro principal
+            if (alunoBanco) alunoBanco[campo] = valor;
+            // Atualiza o registro dentro da tarefa
+            alunoTarefa[campo] = valor;
+            alunoTarefa.camposFaltando =
+              (alunoTarefa.camposFaltando || []).filter(c => c !== campo);
+            totalAtualizacoes++;
+          }
+        });
+
+        // Se não falta mais nada, marca como concluído
+        if (alunoTarefa.camposFaltando.length === 0) {
+          alunoTarefa.status = "concluida";
+        }
+      });
+
+      if (totalAtualizacoes === 0) {
+        alert("Nenhum dado foi preenchido.");
+        return;
+      }
+
+      // Verifica se a tarefa toda acabou
+      const aindaPendentes = tarefaDb.alunos.some(a => a.status !== "concluida");
+      tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
+
+      salvarDB(db);
+      mostrarTela("sucesso");
+    });
+
+    // ---------- NAVEGAÇÃO ----------
+    document.getElementById("btnVoltar").addEventListener("click", () => {
+      mostrarTela("tarefas");
+    });
+
+    document.getElementById("btnVoltarTarefas").addEventListener("click", () => {
+      carregarTarefas();
+      mostrarTela("tarefas");
+    });
+
+    // ---------- INICIAR ----------
+    carregarTarefas();
+  </script>
+</body>
+</html>
