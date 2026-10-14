@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administração da Rede</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
+
+    .topo {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #1e3a8a; color: #fff; padding: 1rem 2rem;
+    }
+    .topo h1 { font-size: 1.2rem; margin: 0; }
+    .usuario { font-size: .9rem; opacity: .9; }
+
+    .tela { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+
+    .abas {
+      display: flex; gap: .5rem; margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .aba {
+      background: none; border: none; padding: .7rem 1.2rem;
+      cursor: pointer; font-size: .95rem; color: #555;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+    }
+    .aba.ativa {
+      color: #1e3a8a; font-weight: 600; border-bottom-color: #1e3a8a;
+    }
+
+    .painel { display: none; }
+    .painel.ativo { display: block; }
+
+    .bloco {
+      background: #fff; border-radius: 8px; padding: 1.2rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .bloco h3 { margin: 0 0 1rem; }
+
+    .form-linha {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: .8rem; margin-bottom: .8rem;
+    }
+    .campo { display: flex; flex-direction: column; }
+    .campo label { font-size: .8rem; color: #555; margin-bottom: .2rem; }
+    .campo input, .campo select {
+      padding: .5rem .6rem; border: 1px solid #ccc; border-radius: 4px;
+    }
+
+    .btn-primario {
+      background: #1e3a8a; color: #fff; border: none;
+      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
+    }
+    .btn-primario:hover { background: #16306e; }
+    .btn-perigo {
+      background: #dc2626; color: #fff; border: none;
+      padding: .3rem .7rem; border-radius: 4px; cursor: pointer;
+      font-size: .8rem;
+    }
+
+    table {
+      width: 100%; border-collapse: collapse; background: #fff;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-size: .9rem;
+    }
+    th, td {
+      padding: .6rem .8rem; text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th { background: #1e3a8a; color: #fff; font-weight: 600; }
+    tr:hover td { background: #f9fafb; }
+
+    .vazio { color: #888; text-align: center; padding: 1.5rem; }
+
+    .aviso {
+      background: #fef3c7; border-left: 4px solid #d97706;
+      padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
+      font-size: .9rem; color: #78350f;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topo">
+    <h1>Administração da Rede</h1>
+    <div class="usuario">Cadastro de escolas, alunos e servidores</div>
+  </header>
+
+  <div class="tela">
+    <div class="abas">
+      <button class="aba ativa" data-aba="escolas">🏫 Escolas</button>
+      <button class="aba" data-aba="alunos">🎓 Alunos</button>
+      <button class="aba" data-aba="servidores">👩‍🏫 Servidores</button>
+      <button class="aba" data-aba="dados">💾 Dados</button>
+    </div>
+
+    <!-- ABA ESCOLAS -->
+    <div id="painel-escolas" class="painel ativo">
+      <div class="bloco">
+        <h3>Cadastrar escola</h3>
+        <div class="form-linha">
+          <div class="campo">
+            <label>ID (slug, sem espaços)</label>
+            <input type="text" id="escolaId" placeholder="escola_sao_jose">
+          </div>
+          <div class="campo">
+            <label>Nome da escola</label>
+            <input type="text" id="escolaNome" placeholder="Escola Municipal São José">
+          </div>
+          <div class="campo">
+            <label>Endereço (opcional)</label>
+            <input type="text" id="escolaEndereco" placeholder="Rua X, 100">
+          </div>
+        </div>
+        <button id="btnAddEscola" class="btn-primario">+ Adicionar escola</button>
+      </div>
+
+      <div class="bloco">
+        <h3>Escolas cadastradas</h3>
+        <div id="tabelaEscolas"></div>
+      </div>
+    </div>
+
+    <!-- ABA ALUNOS -->
+    <div id="painel-alunos" class="painel">
+      <div class="bloco">
+        <h3>Cadastrar aluno</h3>
+        <div class="form-linha">
+          <div class="campo">
+            <label>Nome do aluno</label>
+            <input type="text" id="alunoNome" placeholder="João Silva">
+          </div>
+          <div class="campo">
+            <label>Escola</label>
+            <select id="alunoEscola"></select>
+          </div>
+          <div class="campo">
+            <label>Nome da mãe</label>
+            <input type="text" id="alunoNomeMae" placeholder="Maria Silva">
+          </div>
+          <div class="campo">
+            <label>Nome do pai</label>
+            <input type="text" id="alunoNomePai" placeholder="José Silva">
+          </div>
+          <div class="campo">
+            <label>Gênero</label>
+            <select id="alunoGenero">
+              <option value="">—</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>CPF</label>
+            <input type="text" id="alunoCpf" placeholder="000.000.000-00">
+          </div>
+          <div class="campo">
+            <label>Restrição alimentar</label>
+            <select id="alunoRestricao">
+              <option value="">—</option>
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Endereço</label>
+            <input type="text" id="alunoEndereco" placeholder="Rua X, 100">
+          </div>
+          <div class="campo">
+            <label>Telefone</label>
+            <input type="text" id="alunoTelefone" placeholder="(00) 00000-0000">
+          </div>
+          <div class="campo">
+            <label>Série</label>
+            <input type="text" id="alunoSerie" placeholder="5º ano">
+          </div>
+        </div>
+        <button id="btnAddAluno" class="btn-primario">+ Adicionar aluno</button>
+      </div>
+
+      <div class="bloco">
+        <h3>Alunos cadastrados</h3>
+        <div id="tabelaAlunos"></div>
+      </div>
+    </div>
+
+    <!-- ABA SERVIDORES -->
+    <div id="painel-servidores" class="painel">
+      <div class="bloco">
+        <h3>Cadastrar servidor</h3>
+        <div class="form-linha">
+          <div class="campo">
+            <label>Nome do servidor</label>
+            <input type="text" id="servidorNome" placeholder="Maria Souza">
+          </div>
+          <div class="campo">
+            <label>Escola</label>
+            <select id="servidorEscola"></select>
+          </div>
+          <div class="campo">
+            <label>Cargo</label>
+            <select id="servidorCargo">
+              <option value="">—</option>
+              <option value="Professor">Professor</option>
+              <option value="Diretor">Diretor</option>
+              <option value="Coordenador">Coordenador</option>
+              <option value="Secretário">Secretário</option>
+              <option value="Merendeira">Merendeira</option>
+              <option value="Auxiliar de Serviços">Auxiliar de Serviços</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Gênero</label>
+            <select id="servidorGenero">
+              <option value="">—</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>CPF</label>
+            <input type="text" id="servidorCpf" placeholder="000.000.000-00">
+          </div>
+          <div class="campo">
+            <label>Telefone</label>
+            <input type="text" id="servidorTelefone" placeholder="(00) 00000-0000">
+          </div>
+          <div class="campo">
+            <label>E-mail</label>
+            <input type="email" id="servidorEmail" placeholder="maria@edu.gov.br">
+          </div>
+        </div>
+        <button id="btnAddServidor" class="btn-primario">+ Adicionar servidor</button>
+      </div>
+
+      <div class="bloco">
+        <h3>Servidores cadastrados</h3>
+        <div id="tabelaServidores"></div>
+      </div>
+    </div>
+
+    <!-- ABA DADOS -->
+    <div id="painel-dados" class="painel">
+      <div class="bloco">
+        <h3>Gerenciar dados de teste</h3>
+        <div class="aviso">
+          Esses botões apagam ou restauram os dados salvos no navegador (localStorage).
+          Use com cuidado — não tem como desfazer.
+        </div>
+        <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
+        <button id="btnImportar" class="btn-primario">⬆ Importar JSON</button>
+        <input type="file" id="arquivoImport" accept=".json" style="display:none">
+        <button id="btnResetar" class="btn-perigo" style="margin-left:.5rem;">🗑 Resetar tudo</button>
+      </div>
+
+      <div class="bloco">
+        <h3>Resumo atual</h3>
+        <div id="resumoDados"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DB_KEY = "rede_municipal_db";
+
+    function carregarDB() {
+      const raw = localStorage.getItem(DB_KEY);
+      if (!raw) {
+        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [] };
+        localStorage.setItem(DB_KEY, JSON.stringify(inicial));
+        return inicial;
+      }
+      const db = JSON.parse(raw);
+      // Garante que todas as coleções existem
+      db.escolas = db.escolas || [];
+      db.alunos = db.alunos || [];
+      db.servidores = db.servidores || [];
+      db.tarefas = db.tarefas || [];
+      return db;
+    }
+
+    function salvarDB(db) {
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    function gerarId(prefixo) {
+      return prefixo + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+    }
+
+    // ---------- ABAS ----------
+    document.querySelectorAll(".aba").forEach((aba) => {
+      aba.addEventListener("click", () => {
+        document.querySelectorAll(".aba").forEach(a => a.classList.remove("ativa"));
+        document.querySelectorAll(".painel").forEach(p => p.classList.remove("ativo"));
+        aba.classList.add("ativa");
+        document.getElementById("painel-" + aba.dataset.aba).classList.add("ativo");
+      });
+    });
+
+    // ---------- ESCOLAS ----------
+    function renderizarEscolas() {
+      const db = carregarDB();
+      const div = document.getElementById("tabelaEscolas");
+
+      if (db.escolas.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhuma escola cadastrada ainda.</p>';
+        atualizarSelectsEscolas();
+        return;
+      }
+
+      let html = `<table><thead><tr>
+        <th>ID</th><th>Nome</th><th>Endereço</th><th>Ações</th>
+      </tr></thead><tbody>`;
+
+      db.escolas.forEach(e => {
+        html += `<tr>
+          <td>${e.id}</td>
+          <td>${e.nome}</td>
+          <td>${e.endereco || "—"}</td>
+          <td><button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button></td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      div.innerHTML = html;
+
+      div.querySelectorAll(".btn-rm-escola").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!confirm("Remover esta escola? Alunos e servidores vinculados ficarão órfãos.")) return;
+          const db = carregarDB();
+          db.escolas = db.escolas.filter(e => e.id !== btn.dataset.id);
+          salvarDB(db);
+          renderizarEscolas();
+        });
+      });
+
+      atualizarSelectsEscolas();
+    }
+
+    document.getElementById("btnAddEscola").addEventListener("click", () => {
+      const id = document.getElementById("escolaId").value.trim();
+      const nome = document.getElementById("escolaNome").value.trim();
+      const endereco = document.getElementById("escolaEndereco").value.trim();
+
+      if (!id) { alert("Informe o ID da escola."); return; }
+      if (!nome) { alert("Informe o nome da escola."); return; }
+      if (!/^[a-z0-9_]+$/.test(id)) {
+        alert("O ID só pode ter letras minúsculas, números e underline (_).");
+        return;
+      }
+
+      const db = carregarDB();
+      if (db.escolas.find(e => e.id === id)) {
+        alert("Já existe uma escola com esse ID.");
+        return;
+      }
+
+      db.escolas.push({ id, nome, endereco });
+      salvarDB(db);
+
+      document.getElementById("escolaId").value = "";
+      document.getElementById("escolaNome").value = "";
+      document.getElementById("escolaEndereco").value = "";
+
+      renderizarEscolas();
+      renderizarResumo();
+    });
+
+    // ---------- SELECTS DE ESCOLA ----------
+    function atualizarSelectsEscolas() {
+      const db = carregarDB();
+      ["alunoEscola", "servidorEscola"].forEach(idSelect => {
+        const select = document.getElementById(idSelect);
+        const valorAtual = select.value;
+        select.innerHTML = '<option value="">Selecione...</option>';
+        db.escolas.forEach(e => {
+          const opt = document.createElement("option");
+          opt.value = e.id;
+          opt.textContent = e.nome;
+          select.appendChild(opt);
+        });
+        if (valorAtual) select.value = valorAtual;
+      });
+    }
+
+    // ---------- ALUNOS ----------
+    function renderizarAlunos() {
+      const db = carregarDB();
+      const div = document.getElementById("tabelaAlunos");
+
+      if (db.alunos.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhum aluno cadastrado ainda.</p>';
+        return;
+      }
+
+      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
+
+      let html = `<table><thead><tr>
+        <th>Nome</th><th>Escola</th><th>Mãe</th><th>Gênero</th><th>CPF</th><th>Ações</th>
+      </tr></thead><tbody>`;
+
+      db.alunos.forEach(a => {
+        html += `<tr>
+          <td>${a.nome}</td>
+          <td>${nomeEscola(a.escolaId)}</td>
+          <td>${a.nomeMae || "—"}</td>
+          <td>${a.genero || "—"}</td>
+          <td>${a.cpf || "—"}</td>
+          <td><button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button></td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      div.innerHTML = html;
+
+      div.querySelectorAll(".btn-rm-aluno").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!confirm("Remover este aluno?")) return;
+          const db = carregarDB();
+          db.alunos = db.alunos.filter(a => a.id !== btn.dataset.id);
+          salvarDB(db);
+          renderizarAlunos();
+          renderizarResumo();
+        });
+      });
+    }
+
+    document.getElementById("btnAddAluno").addEventListener("click", () => {
+      const nome = document.getElementById("alunoNome").value.trim();
+      const escolaId = document.getElementById("alunoEscola").value;
+
+      if (!nome) { alert("Informe o nome do aluno."); return; }
+      if (!escolaId) { alert("Selecione a escola."); return; }
+
+      const db = carregarDB();
+
+      const aluno = {
+        id: gerarId("a"),
+        nome,
+        escolaId,
+        nomeMae: document.getElementById("alunoNomeMae").value.trim(),
+        nomePai: document.getElementById("alunoNomePai").value.trim(),
+        genero: document.getElementById("alunoGenero").value,
+        cpf: document.getElementById("alunoCpf").value.trim(),
+        restricaoAlimentar: document.getElementById("alunoRestricao").value,
+        endereco: document.getElementById("alunoEndereco").value.trim(),
+        telefone: document.getElementById("alunoTelefone").value.trim(),
+        serie: document.getElementById("alunoSerie").value.trim()
+      };
+
+      // Remove campos vazios para o sistema detectar como "faltante"
+      Object.keys(aluno).forEach(k => {
+        if (aluno[k] === "") delete aluno[k];
+      });
+
+      db.alunos.push(aluno);
+      salvarDB(db);
+
+      // Limpa o formulário
+      ["alunoNome","alunoNomeMae","alunoNomePai","alunoCpf","alunoEndereco","alunoTelefone","alunoSerie"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      ["alunoGenero","alunoRestricao"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      renderizarAlunos();
+      renderizarResumo();
+    });
+
+    // ---------- SERVIDORES ----------
+    function renderizarServidores() {
+      const db = carregarDB();
+      const div = document.getElementById("tabelaServidores");
+
+      if (db.servidores.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhum servidor cadastrado ainda.</p>';
+        return;
+      }
+
+      const nomeEscola = (id) => (db.escolas.find(e => e.id === id) || {}).nome || id;
+
+      let html = `<table><thead><tr>
+        <th>Nome</th><th>Escola</th><th>Cargo</th><th>Gênero</th><th>CPF</th><th>Ações</th>
+      </tr></thead><tbody>`;
+
+      db.servidores.forEach(s => {
+        // Flexão do cargo
+        const cargoFeminino = {
+          "Professor": "Professora",
+          "Diretor": "Diretora",
+          "Coordenador": "Coordenadora",
+          "Secretário": "Secretária",
+          "Merendeira": "Merendeira",
+          "Auxiliar de Serviços": "Auxiliar de Serviços"
+        };
+        const cargoExibir = (s.genero === "F" && cargoFeminino[s.cargo]) ? cargoFeminino[s.cargo] : s.cargo;
+
+        html += `<tr>
+          <td>${s.nome}</td>
+          <td>${nomeEscola(s.escolaId)}</td>
+          <td>${cargoExibir}</td>
+          <td>${s.genero || "—"}</td>
+          <td>${s.cpf || "—"}</td>
+          <td><button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button></td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      div.innerHTML = html;
+
+      div.querySelectorAll(".btn-rm-servidor").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (!confirm("Remover este servidor?")) return;
+          const db = carregarDB();
+          db.servidores = db.servidores.filter(s => s.id !== btn.dataset.id);
+          salvarDB(db);
+          renderizarServidores();
+          renderizarResumo();
+        });
+      });
+    }
+
+    document.getElementById("btnAddServidor").addEventListener("click", () => {
+      const nome = document.getElementById("servidorNome").value.trim();
+      const escolaId = document.getElementById("servidorEscola").value;
+      const cargo = document.getElementById("servidorCargo").value;
+
+      if (!nome) { alert("Informe o nome do servidor."); return; }
+      if (!escolaId) { alert("Selecione a escola."); return; }
+      if (!cargo) { alert("Selecione o cargo."); return; }
+
+      const db = carregarDB();
+
+      const servidor = {
+        id: gerarId("s"),
+        nome,
+        escolaId,
+        cargo,
+        genero: document.getElementById("servidorGenero").value,
+        cpf: document.getElementById("servidorCpf").value.trim(),
+        telefone: document.getElementById("servidorTelefone").value.trim(),
+        email: document.getElementById("servidorEmail").value.trim()
+      };
+
+      Object.keys(servidor).forEach(k => {
+        if (servidor[k] === "") delete servidor[k];
+      });
+
+      db.servidores.push(servidor);
+      salvarDB(db);
+
+      ["servidorNome","servidorCpf","servidorTelefone","servidorEmail"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      ["servidorCargo","servidorGenero"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      renderizarServidores();
+      renderizarResumo();
+    });
+
+    // ---------- DADOS ----------
+    function renderizarResumo() {
+      const db = carregarDB();
+      const div = document.getElementById("resumoDados");
+
+      const porEscola = {};
+      db.alunos.forEach(a => {
+        porEscola[a.escolaId] = (porEscola[a.escolaId] || 0) + 1;
+      });
+
+      let html = `
+        <p><strong>Escolas:</strong> ${db.escolas.length}</p>
+        <p><strong>Alunos:</strong> ${db.alunos.length}</p>
+        <p><strong>Servidores:</strong> ${db.servidores.length}</p>
+        <p><strong>Tarefas:</strong> ${db.tarefas.length}</p>
+      `;
+
+      if (db.escolas.length > 0) {
+        html += `<h4 style="margin-top:1rem;">Alunos por escola</h4><ul>`;
+        db.escolas.forEach(e => {
+          html += `<li>${e.nome}: ${porEscola[e.id] || 0} aluno(s)</li>`;
+        });
+        html += `</ul>`;
+      }
+
+      div.innerHTML = html;
+    }
+
+    document.getElementById("btnExportar").addEventListener("click", () => {
+      const db = carregarDB();
+      const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "rede_municipal_backup.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnImportar").addEventListener("click", () => {
+      document.getElementById("arquivoImport").click();
+    });
+
+    document.getElementById("arquivoImport").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const dados = JSON.parse(ev.target.result);
+          if (!dados.escolas) throw new Error("Arquivo inválido.");
+          if (!confirm("Isso vai substituir TODOS os dados atuais. Continuar?")) return;
+          salvarDB(dados);
+          alert("Dados importados!");
+          location.reload();
+        } catch (err) {
+          alert("Erro ao importar: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById("btnResetar").addEventListener("click", () => {
+      if (!confirm("Isso apaga TUDO (escolas, alunos, servidores, tarefas). Continuar?")) return;
+      localStorage.removeItem(DB_KEY);
+      alert("Tudo resetado!");
+      location.reload();
+    });
+
+    // ---------- INICIAR ----------
+    renderizarEscolas();
+    renderizarAlunos();
+    renderizarServidores();
+    renderizarResumo();
+  </script>
+</body>
+</html>
