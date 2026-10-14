@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel da Escola</title>
+  <title>Painel da Secretaria</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; background: #f5f7fa; color: #1a1a1a; font-size: 16px; }
@@ -14,49 +14,63 @@
       flex-wrap: wrap; gap: .5rem;
     }
     .topo h1 { font-size: 1.1rem; margin: 0; }
-    .usuario { font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
-    .usuario select {
-      padding: .45rem .6rem; border-radius: 4px; border: none;
-      font-size: .9rem; max-width: 260px;
-    }
+    .usuario { font-size: .85rem; opacity: .9; }
 
     .tela { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
     .hidden { display: none; }
 
     h2 { margin-top: 0; font-size: 1.3rem; }
+    h3 { margin: 0 0 .5rem; font-size: 1rem; }
     .subtitulo { color: #555; margin-bottom: 1.2rem; font-size: .92rem; }
 
-    .card-tarefa {
+    .bloco {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
-    .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
-
-    .bloco-registro {
-      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
-      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
-    .bloco-registro .cabecalho {
-      display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem;
-      flex-wrap: wrap;
-    }
-    .bloco-registro h4 { margin: 0; font-size: 1rem; }
-
-    .tag-tipo {
-      display: inline-block; padding: .15rem .55rem; border-radius: 10px;
-      font-size: .7rem; font-weight: 600; text-transform: uppercase;
-    }
-    .tag-aluno    { background: #dbeafe; color: #1e40af; }
-    .tag-escola   { background: #dcfce7; color: #166534; }
-    .tag-servidor { background: #f3e8ff; color: #6b21a8; }
-
-    .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
-    .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
-    .campo input, .campo select {
-      padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
+    .bloco label { display: block; font-size: .85rem; color: #555; margin: .6rem 0 .2rem; }
+    .bloco input, .bloco select {
+      width: 100%; padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
       font-size: .95rem;
     }
+    .bloco small { color: #888; font-size: .8rem; }
+
+    .tipo-tabs {
+      display: flex; gap: .3rem; margin-bottom: .8rem;
+      border-bottom: 1px solid #e5e7eb; overflow-x: auto;
+    }
+    .tipo-tab {
+      background: none; border: none; padding: .5rem .9rem;
+      cursor: pointer; font-size: .85rem; color: #555;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      white-space: nowrap;
+    }
+    .tipo-tab.ativa {
+      color: #1e3a8a; font-weight: 600; border-bottom-color: #1e3a8a;
+    }
+
+    .catalogo {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .5rem;
+    }
+    .item-catalogo {
+      display: flex; align-items: center; gap: .5rem;
+      background: #f0f4ff; padding: .5rem .7rem; border-radius: 6px;
+      cursor: pointer; font-size: .9rem;
+    }
+    .item-catalogo input { width: auto; }
+
+    .lista-selecionados { list-style: none; padding: 0; margin: 0; }
+    .lista-selecionados li {
+      background: #e8f0fe; padding: .4rem .7rem; border-radius: 4px;
+      margin-bottom: .3rem; font-size: .9rem;
+      display: flex; justify-content: space-between; gap: .5rem;
+    }
+    .lista-selecionados li .origem {
+      font-size: .75rem; color: #1e3a8a; font-weight: 600;
+    }
+    .lista-selecionados .vazio { background: none; color: #888; padding: 0; }
+
+    .acoes { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
 
     .btn-primario {
       background: #1e3a8a; color: #fff; border: none;
@@ -64,75 +78,297 @@
       font-size: .95rem; font-weight: 500;
     }
     .btn-primario:hover { background: #16306e; }
+    .btn-secundario {
+      background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem;
+    }
+    .btn-secundario:disabled {
+      opacity: .5; cursor: not-allowed;
+    }
+    .btn-sucesso {
+      background: #16a34a; color: #fff; border: none;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem;
+    }
+    .btn-sucesso:hover { background: #15803d; }
     .btn-voltar {
       background: none; border: none; color: #1e3a8a;
       cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
       padding: .3rem 0;
     }
     .rodape-form { text-align: right; margin-top: 1.5rem; }
-    .vazio { color: #888; }
 
+    .resumo {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: .8rem; margin: 1.5rem 0;
+    }
+    .card-resumo {
+      background: #fff; border-radius: 8px; padding: 1rem;
+      text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .card-resumo h3 { font-size: 1.8rem; margin: 0; }
+    .card-resumo p { margin: .3rem 0 0; color: #555; font-size: .85rem; }
+    .card-resumo.verde h3 { color: #16a34a; }
+    .card-resumo.amarelo h3 { color: #d97706; }
+    .card-resumo.azul h3 { color: #1e3a8a; }
+    .card-resumo.roxo h3 { color: #7c3aed; }
+
+    .card-tarefa {
+      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
+    .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
+    .card-tarefa .acoes { margin-top: .8rem; }
+
+    .status-pendente   { color: #d97706; font-weight: 600; }
+    .status-em_andamento { color: #1e3a8a; font-weight: 600; }
+    .status-concluida  { color: #16a34a; font-weight: 600; }
+
+    .tabela-relatorio {
+      width: 100%; border-collapse: collapse; background: #fff;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-size: .9rem;
+    }
+    .tabela-relatorio th, .tabela-relatorio td {
+      padding: .6rem .8rem; text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .tabela-relatorio th {
+      background: #1e3a8a; color: #fff; font-weight: 600;
+    }
+    .tabela-relatorio tr:last-child td { border-bottom: none; }
+    .tabela-relatorio tr:hover td { background: #f9fafb; }
+
+    .tag-tipo {
+      display: inline-block; padding: .1rem .5rem; border-radius: 10px;
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    }
+    .tag-aluno    { background: #dbeafe; color: #1e40af; }
+    .tag-escola   { background: #dcfce7; color: #166534; }
+    .tag-servidor { background: #f3e8ff; color: #6b21a8; }
+
+    .aviso {
+      background: #fef3c7; border-left: 4px solid #d97706;
+      padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
+      font-size: .9rem; color: #78350f;
+    }
+    .aviso-vermelho {
+      background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d;
+    }
+
+    /* ========== RESPONSIVO ========== */
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
-      .usuario select { max-width: 180px; font-size: .85rem; }
       .tela { margin: 1rem auto; padding: 0 .8rem; }
+
       h2 { font-size: 1.15rem; }
-      .card-tarefa, .bloco-registro { padding: .9rem 1rem; }
+      .bloco { padding: .9rem 1rem; }
+
+      .catalogo { grid-template-columns: 1fr; }
+
+      .acoes { flex-direction: column; }
+      .acoes button { width: 100%; }
+
+      .resumo { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+      .card-resumo { padding: .8rem; }
+      .card-resumo h3 { font-size: 1.5rem; }
+
+      .btn-voltar { font-size: .85rem; }
       .rodape-form { text-align: stretch; }
       .rodape-form button { width: 100%; }
+
+      .tabela-relatorio { font-size: .82rem; }
+      .tabela-relatorio th, .tabela-relatorio td { padding: .5rem .5rem; }
     }
 
     @media (max-width: 480px) {
-      .topo {
-        padding: .7rem .8rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: .4rem;
-      }
-      .topo h1 { font-size: .95rem; }
-      .usuario { width: 100%; flex-direction: column; align-items: stretch; gap: .3rem; }
-      .usuario select { max-width: 100%; width: 100%; }
+      .topo { padding: .7rem .8rem; }
+      .topo h1 { font-size: .92rem; }
+      .usuario { font-size: .78rem; }
       .tela { padding: 0 .6rem; }
+
       h2 { font-size: 1.05rem; }
-      .bloco-registro { padding: .8rem .9rem; border-radius: 6px; }
-      .campo input, .campo select { padding: .5rem .6rem; font-size: .9rem; }
-      .btn-primario { padding: .65rem 1rem; font-size: .9rem; }
+      h3 { font-size: .95rem; }
+      .subtitulo { font-size: .85rem; }
+
+      .bloco { padding: .8rem .9rem; border-radius: 6px; }
+      .bloco input, .bloco select { padding: .5rem .6rem; font-size: .9rem; }
+
+      .card-tarefa { padding: .8rem .9rem; }
+      .card-tarefa p { font-size: .82rem; }
+
+      .btn-primario, .btn-secundario, .btn-sucesso {
+        padding: .65rem 1rem; font-size: .9rem;
+      }
+
+      .tabela-relatorio thead { display: none; }
+      .tabela-relatorio, .tabela-relatorio tbody,
+      .tabela-relatorio tr, .tabela-relatorio td {
+        display: block; width: 100%;
+      }
+      .tabela-relatorio tr {
+        background: #fff; border-radius: 6px; margin-bottom: .6rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: .5rem .7rem;
+      }
+      .tabela-relatorio td {
+        border: none; padding: .3rem 0;
+        display: flex; justify-content: space-between; gap: .5rem;
+      }
+      .tabela-relatorio td::before {
+        content: attr(data-label);
+        font-weight: 600; color: #555; font-size: .8rem;
+      }
+      .tabela-relatorio td:first-child {
+        font-weight: 600; font-size: 1rem;
+        border-bottom: 1px solid #eee; padding-bottom: .5rem; margin-bottom: .3rem;
+      }
+      .tabela-relatorio td:first-child::before { content: ""; }
     }
   </style>
 </head>
 <body>
 
   <header class="topo">
-    <h1>Painel da Escola</h1>
-    <div class="usuario">
-      <select id="seletorEscola"></select>
-    </div>
+    <h1>Painel da Secretaria</h1>
+    <div class="usuario" id="usuarioTopo">Setor: —</div>
   </header>
 
-  <section id="tela-tarefas" class="tela">
-    <h2>Tarefas Pendentes</h2>
-    <p class="subtitulo">Preencha os dados solicitados pelos setores da Secretaria.</p>
-    <div id="listaTarefas"></div>
-  </section>
-
-  <section id="tela-formulario" class="tela hidden">
-    <button id="btnVoltar" class="btn-voltar">← Voltar</button>
-    <h2 id="tituloTarefa">Tarefa</h2>
-    <p id="descricaoTarefa" class="subtitulo"></p>
-    <div id="listaRegistros"></div>
-    <div class="rodape-form">
-      <button id="btnSalvarTodos" class="btn-primario">Salvar tudo</button>
+  <!-- TELA 1: Dashboard -->
+  <section id="tela-dashboard" class="tela">
+    <h2>O que você precisa?</h2>
+    <p class="subtitulo">
+      Monte a solicitação escolhendo dados de alunos, escolas e servidores.
+      O sistema verifica o que já existe e pede só o que falta.
+    </p>
+    <div class="acoes">
+      <button id="btnNovaSolicitacao" class="btn-primario">+ Nova solicitação</button>
+      <button id="btnVerHistorico" class="btn-secundario">Ver histórico</button>
     </div>
   </section>
 
+  <!-- TELA 2: Builder -->
+  <section id="tela-builder" class="tela hidden">
+    <button id="btnVoltarDashboard" class="btn-voltar">← Voltar</button>
+    <h2>Montar solicitação</h2>
+
+    <div id="avisoSemEscolas"></div>
+
+    <div class="bloco">
+      <label>Título da solicitação</label>
+      <input type="text" id="tituloSolicitacao"
+             placeholder="Ex: Relatório de merenda com dados de alunos e escolas">
+
+      <label>Setor solicitante</label>
+      <select id="setorSolicitante">
+        <option value="">Selecione o setor...</option>
+        <option value="RH">RH</option>
+        <option value="Merenda Escolar">Merenda Escolar</option>
+        <option value="Dinâmica Escolar">Dinâmica Escolar</option>
+        <option value="TI">TI</option>
+        <option value="Comunicação">Comunicação</option>
+        <option value="Gabinete">Gabinete</option>
+      </select>
+
+      <label>Escolas de destino</label>
+      <select id="escolasDestino" multiple size="5"></select>
+      <small>Segure Ctrl (ou Cmd) para selecionar várias. No celular, toque para marcar.</small>
+    </div>
+
+    <div class="bloco">
+      <h3>Campos disponíveis</h3>
+      <p class="subtitulo">Escolha a categoria e marque os campos que você precisa.</p>
+
+      <div class="tipo-tabs">
+        <button class="tipo-tab ativa" data-tipo="aluno">🎓 Alunos</button>
+        <button class="tipo-tab" data-tipo="escola">🏫 Escolas</button>
+        <button class="tipo-tab" data-tipo="servidor">👩‍🏫 Servidores</button>
+      </div>
+
+      <div id="catalogoCampos" class="catalogo"></div>
+    </div>
+
+    <div class="bloco">
+      <h3>Campos selecionados</h3>
+      <ul id="camposSelecionados" class="lista-selecionados">
+        <li class="vazio">Nenhum campo selecionado ainda.</li>
+      </ul>
+    </div>
+
+    <div class="rodape-form">
+      <button id="btnVerificar" class="btn-primario">Verificar dados existentes</button>
+    </div>
+  </section>
+
+  <!-- TELA 3: Resultado -->
+  <section id="tela-resultado" class="tela hidden">
+    <button id="btnVoltarBuilder" class="btn-voltar">← Voltar</button>
+    <h2>Resultado da verificação</h2>
+
+    <div class="resumo">
+      <div class="card-resumo verde">
+        <h3 id="qtdCompletos">0</h3>
+        <p>Registros completos</p>
+      </div>
+      <div class="card-resumo amarelo">
+        <h3 id="qtdPendentes">0</h3>
+        <p>Registros com dados faltando</p>
+      </div>
+      <div class="card-resumo azul">
+        <h3 id="qtdEscolas">0</h3>
+        <p>Escolas envolvidas</p>
+      </div>
+      <div class="card-resumo roxo">
+        <h3 id="qtdTipos">0</h3>
+        <p>Tipos de dados</p>
+      </div>
+    </div>
+
+    <div class="acoes">
+      <button id="btnGerarTarefas" class="btn-primario">
+        Gerar solicitações para as escolas
+      </button>
+      <button id="btnRelatorioParcial" class="btn-secundario">
+        Ver relatório dos completos
+      </button>
+    </div>
+  </section>
+
+  <!-- TELA 4: Histórico -->
+  <section id="tela-historico" class="tela hidden">
+    <button id="btnVoltarDashboard2" class="btn-voltar">← Voltar</button>
+    <h2>Histórico de solicitações</h2>
+    <div id="listaHistorico"></div>
+  </section>
+
+  <!-- TELA 5: Relatório -->
+  <section id="tela-relatorio" class="tela hidden">
+    <button id="btnVoltarHistorico" class="btn-voltar">← Voltar</button>
+    <h2 id="tituloRelatorio">Relatório</h2>
+    <p id="descricaoRelatorio" class="subtitulo"></p>
+
+    <div id="avisoRelatorio"></div>
+
+    <div class="acoes" style="margin-bottom: 1rem;">
+      <button id="btnExportarCSV" class="btn-sucesso">⬇ Exportar CSV</button>
+      <button id="btnImprimir" class="btn-secundario">🖨 Imprimir</button>
+    </div>
+
+    <div id="conteudoRelatorio"></div>
+  </section>
+
+  <!-- TELA 6: Sucesso -->
   <section id="tela-sucesso" class="tela hidden">
-    <h2>✅ Dados enviados!</h2>
-    <p>Os dados foram salvos no banco da rede municipal.</p>
-    <button id="btnVoltarTarefas" class="btn-primario">Voltar para tarefas</button>
+    <h2>✅ Solicitações enviadas!</h2>
+    <p>As escolas foram notificadas e vão preencher o que falta.</p>
+    <button id="btnVoltarDashboard3" class="btn-primario">Voltar ao início</button>
   </section>
 
   <script>
+    // ---------- BANCO COMPARTILHADO (localStorage) ----------
     const DB_KEY = "rede_municipal_db";
 
     function carregarDB() {
@@ -143,10 +379,10 @@
         return inicial;
       }
       const db = JSON.parse(raw);
-      db.escolas = db.escolas || [];
-      db.alunos = db.alunos || [];
+      db.escolas    = db.escolas    || [];
+      db.alunos     = db.alunos     || [];
       db.servidores = db.servidores || [];
-      db.tarefas = db.tarefas || [];
+      db.tarefas    = db.tarefas    || [];
       return db;
     }
 
@@ -154,20 +390,65 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
+    function nomeEscola(id) {
+      const db = carregarDB();
+      const e = db.escolas.find(x => x.id === id);
+      return e ? e.nome : id;
+    }
+
+    // ---------- ESTADO ----------
+    let db = carregarDB();
+    let camposSelecionados = new Map();   // chave "tipo.campo" -> { tipo, campo, label }
+    let escolasSelecionadas = [];
+    let resultadoVerificacao = null;
+    let relatorioAtual = null;
+    let tipoAtivo = "aluno";
+
+    // ---------- CATÁLOGO POR TIPO ----------
+    const CATALOGO = {
+      aluno: [
+        { id: "nomeMae",            label: "Nome da mãe" },
+        { id: "nomePai",            label: "Nome do pai" },
+        { id: "cpf",                label: "CPF do aluno" },
+        { id: "genero",             label: "Gênero" },
+        { id: "restricaoAlimentar", label: "Restrição alimentar" },
+        { id: "endereco",           label: "Endereço" },
+        { id: "telefone",           label: "Telefone" },
+        { id: "serie",              label: "Série" }
+      ],
+      escola: [
+        { id: "endereco",           label: "Endereço da escola" },
+        { id: "telefone",           label: "Telefone da escola" },
+        { id: "email",              label: "E-mail da escola" },
+        { id: "diretor",            label: "Nome do diretor" },
+        { id: "inep",               label: "Código INEP" },
+        { id: "cnpj",               label: "CNPJ" }
+      ],
+      servidor: [
+        { id: "cargo",              label: "Cargo" },
+        { id: "genero",             label: "Gênero" },
+        { id: "cpf",                label: "CPF do servidor" },
+        { id: "telefone",           label: "Telefone" },
+        { id: "email",              label: "E-mail" },
+        { id: "formacao",           label: "Formação" },
+        { id: "cargaHoraria",       label: "Carga horária" }
+      ]
+    };
+
     const ROTULO_TIPO = {
       aluno:    "Aluno",
       escola:   "Escola",
       servidor: "Servidor"
     };
 
-    let ESCOLA_ATUAL = null;
-    let db = carregarDB();
-    let tarefaAtual = null;
-
+    // ---------- NAVEGAÇÃO ----------
     const telas = {
-      tarefas:    document.getElementById("tela-tarefas"),
-      formulario: document.getElementById("tela-formulario"),
-      sucesso:    document.getElementById("tela-sucesso")
+      dashboard: document.getElementById("tela-dashboard"),
+      builder:   document.getElementById("tela-builder"),
+      resultado: document.getElementById("tela-resultado"),
+      historico: document.getElementById("tela-historico"),
+      relatorio: document.getElementById("tela-relatorio"),
+      sucesso:   document.getElementById("tela-sucesso")
     };
 
     function mostrarTela(nome) {
@@ -176,230 +457,460 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function montarSeletorEscola() {
+    // ---------- ESCOLAS NO SELECT ----------
+    function carregarEscolasNoSelect() {
       db = carregarDB();
-      const select = document.getElementById("seletorEscola");
+      const select = document.getElementById("escolasDestino");
+      const aviso = document.getElementById("avisoSemEscolas");
+
       select.innerHTML = "";
 
       if (db.escolas.length === 0) {
-        select.innerHTML = '<option value="">Nenhuma escola cadastrada</option>';
-        ESCOLA_ATUAL = null;
+        aviso.innerHTML = `
+          <div class="aviso aviso-vermelho">
+            ⚠️ Nenhuma escola cadastrada. Vá em <strong>admin.html</strong> e cadastre escolas primeiro.
+          </div>
+        `;
         return;
       }
+
+      aviso.innerHTML = "";
 
       db.escolas.forEach(e => {
         const opt = document.createElement("option");
         opt.value = e.id;
         opt.textContent = e.nome;
+        opt.selected = true;
         select.appendChild(opt);
       });
-
-      if (ESCOLA_ATUAL && db.escolas.find(e => e.id === ESCOLA_ATUAL)) {
-        select.value = ESCOLA_ATUAL;
-      } else {
-        ESCOLA_ATUAL = db.escolas[0].id;
-        select.value = ESCOLA_ATUAL;
-      }
     }
 
-    document.getElementById("seletorEscola").addEventListener("change", (e) => {
-      ESCOLA_ATUAL = e.target.value;
-      carregarTarefas();
-      mostrarTela("tarefas");
+    // ---------- ABAS DE TIPO ----------
+    document.querySelectorAll(".tipo-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tipo-tab").forEach(t => t.classList.remove("ativa"));
+        tab.classList.add("ativa");
+        tipoAtivo = tab.dataset.tipo;
+        montarCatalogo();
+      });
     });
 
-    function carregarTarefas() {
-      db = carregarDB();
-      const lista = document.getElementById("listaTarefas");
-      lista.innerHTML = "";
+    // ---------- CATÁLOGO ----------
+    function montarCatalogo() {
+      const div = document.getElementById("catalogoCampos");
+      div.innerHTML = "";
 
-      if (!ESCOLA_ATUAL) {
-        lista.innerHTML = "<p class='vazio'>Nenhuma escola cadastrada. Peça ao administrador.</p>";
+      const campos = CATALOGO[tipoAtivo] || [];
+
+      campos.forEach((campo) => {
+        const chave = `${tipoAtivo}.${campo.id}`;
+        const label = document.createElement("label");
+        label.className = "item-catalogo";
+        label.innerHTML = `
+          <input type="checkbox" value="${chave}" ${camposSelecionados.has(chave) ? "checked" : ""}>
+          <span>${campo.label}</span>
+        `;
+        label.querySelector("input").addEventListener("change", (e) => {
+          if (e.target.checked) {
+            camposSelecionados.set(chave, {
+              tipo: tipoAtivo,
+              campo: campo.id,
+              label: campo.label
+            });
+          } else {
+            camposSelecionados.delete(chave);
+          }
+          atualizarSelecionados();
+        });
+        div.appendChild(label);
+      });
+    }
+
+    function atualizarSelecionados() {
+      const ul = document.getElementById("camposSelecionados");
+      ul.innerHTML = "";
+      if (camposSelecionados.size === 0) {
+        ul.innerHTML = '<li class="vazio">Nenhum campo selecionado ainda.</li>';
         return;
       }
+      camposSelecionados.forEach((info) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span>${info.label}</span>
+          <span class="origem">${ROTULO_TIPO[info.tipo]}</span>
+        `;
+        ul.appendChild(li);
+      });
+    }
 
-      const pendentes = db.tarefas.filter(t =>
-        t.escolaId === ESCOLA_ATUAL && t.status !== "concluida"
-      );
+    // ---------- VERIFICAR ----------
+    document.getElementById("btnVerificar").addEventListener("click", () => {
+      db = carregarDB();
+      const titulo = document.getElementById("tituloSolicitacao").value.trim();
+      const setor = document.getElementById("setorSolicitante").value;
+      const select = document.getElementById("escolasDestino");
+      escolasSelecionadas = Array.from(select.selectedOptions).map(o => o.value);
+
+      if (db.escolas.length === 0) { alert("Nenhuma escola cadastrada. Vá em admin.html."); return; }
+      if (!titulo) { alert("Informe o título."); return; }
+      if (!setor) { alert("Selecione o setor solicitante."); return; }
+      if (camposSelecionados.size === 0) { alert("Selecione ao menos um campo."); return; }
+      if (escolasSelecionadas.length === 0) { alert("Selecione ao menos uma escola."); return; }
+
+      const camposPorTipo = { aluno: [], escola: [], servidor: [] };
+      camposSelecionados.forEach((info) => {
+        camposPorTipo[info.tipo].push(info.campo);
+      });
+
+      const completos = [];
+      const pendentes = [];
+
+      // Alunos
+      if (camposPorTipo.aluno.length > 0) {
+        db.alunos.forEach((aluno) => {
+          if (!escolasSelecionadas.includes(aluno.escolaId)) return;
+          const faltando = camposPorTipo.aluno.filter(c => !aluno[c]);
+          const registro = {
+            tipo: "aluno",
+            id: aluno.id,
+            nome: aluno.nome,
+            escolaId: aluno.escolaId
+          };
+          if (faltando.length === 0) completos.push(registro);
+          else pendentes.push({ ...registro, camposFaltando: faltando });
+        });
+      }
+
+      // Escolas
+      if (camposPorTipo.escola.length > 0) {
+        db.escolas.forEach((escola) => {
+          if (!escolasSelecionadas.includes(escola.id)) return;
+          const faltando = camposPorTipo.escola.filter(c => !escola[c]);
+          const registro = {
+            tipo: "escola",
+            id: escola.id,
+            nome: escola.nome,
+            escolaId: escola.id
+          };
+          if (faltando.length === 0) completos.push(registro);
+          else pendentes.push({ ...registro, camposFaltando: faltando });
+        });
+      }
+
+      // Servidores
+      if (camposPorTipo.servidor.length > 0) {
+        db.servidores.forEach((servidor) => {
+          if (!escolasSelecionadas.includes(servidor.escolaId)) return;
+          const faltando = camposPorTipo.servidor.filter(c => !servidor[c]);
+          const registro = {
+            tipo: "servidor",
+            id: servidor.id,
+            nome: servidor.nome,
+            escolaId: servidor.escolaId
+          };
+          if (faltando.length === 0) completos.push(registro);
+          else pendentes.push({ ...registro, camposFaltando: faltando });
+        });
+      }
+
+      resultadoVerificacao = { titulo, setor, camposPorTipo, completos, pendentes };
+
+      document.getElementById("qtdCompletos").textContent = completos.length;
+      document.getElementById("qtdPendentes").textContent = pendentes.length;
+
+      const escolasEnvolvidas = new Set([
+        ...completos.map(c => c.escolaId),
+        ...pendentes.map(p => p.escolaId)
+      ]);
+      document.getElementById("qtdEscolas").textContent = escolasEnvolvidas.size;
+
+      const tipos = Object.entries(camposPorTipo).filter(([_, v]) => v.length > 0).length;
+      document.getElementById("qtdTipos").textContent = tipos;
+
+      mostrarTela("resultado");
+    });
+
+    // ---------- GERAR TAREFAS ----------
+    document.getElementById("btnGerarTarefas").addEventListener("click", () => {
+      db = carregarDB();
+      const { titulo, setor, camposPorTipo, pendentes } = resultadoVerificacao;
 
       if (pendentes.length === 0) {
-        lista.innerHTML = "<p class='vazio'>🎉 Nenhuma tarefa pendente!</p>";
+        alert("Nenhuma pendência. Nada a enviar às escolas.");
         return;
       }
 
-      pendentes.forEach((t) => {
+      const porEscola = {};
+      pendentes.forEach((p) => {
+        if (!porEscola[p.escolaId]) porEscola[p.escolaId] = [];
+        porEscola[p.escolaId].push(p);
+      });
+
+      Object.entries(porEscola).forEach(([escolaId, registros]) => {
+        const tarefa = {
+          id: "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+          escolaId,
+          titulo,
+          setorSolicitante: setor,
+          camposPorTipo,
+          status: "pendente",
+          criadoEm: new Date().toISOString(),
+          registros: registros.map(r => ({
+            tipo: r.tipo,
+            id: r.id,
+            nome: r.nome,
+            camposFaltando: r.camposFaltando,
+            status: "pendente"
+          }))
+        };
+        db.tarefas.push(tarefa);
+      });
+
+      salvarDB(db);
+      mostrarTela("sucesso");
+    });
+
+    // ---------- RELATÓRIO PARCIAL ----------
+    document.getElementById("btnRelatorioParcial").addEventListener("click", () => {
+      const { titulo, camposPorTipo, completos } = resultadoVerificacao;
+      const dbAtual = carregarDB();
+
+      relatorioAtual = {
+        titulo,
+        camposPorTipo,
+        registros: completos.map(r => {
+          const colecao = r.tipo === "aluno"    ? dbAtual.alunos
+                        : r.tipo === "escola"   ? dbAtual.escolas
+                        : dbAtual.servidores;
+          const obj = colecao.find(x => x.id === r.id) || {};
+          return { tipo: r.tipo, dados: obj };
+        })
+      };
+
+      renderizarRelatorio();
+      mostrarTela("relatorio");
+    });
+
+    // ---------- HISTÓRICO ----------
+    function carregarHistorico() {
+      db = carregarDB();
+      const lista = document.getElementById("listaHistorico");
+      lista.innerHTML = "";
+
+      if (db.tarefas.length === 0) {
+        lista.innerHTML = "<p>Nenhuma solicitação ainda.</p>";
+        return;
+      }
+
+      const ordenadas = [...db.tarefas].reverse();
+
+      ordenadas.forEach((t) => {
         const card = document.createElement("div");
         card.className = "card-tarefa";
+
+        const botaoRelatorio = t.status === "concluida"
+          ? `<button class="btn-sucesso btn-relatorio" data-id="${t.id}">📄 Gerar relatório</button>`
+          : `<button class="btn-secundario" disabled title="Aguardando a escola completar os dados">📄 Relatório indisponível</button>`;
 
         const tipos = Object.entries(t.camposPorTipo || {})
           .filter(([_, v]) => v.length > 0)
           .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]} (${campos.length})`)
           .join(", ") || "—";
 
+        const totalRegistros = (t.registros || []).length;
+
         card.innerHTML = `
           <h3>${t.titulo}</h3>
+          <p><strong>Escola:</strong> ${nomeEscola(t.escolaId)}</p>
           <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
           <p><strong>Tipos:</strong> ${tipos}</p>
-          <p><strong>Registros:</strong> ${t.registros.length}</p>
-          <p><strong>Status:</strong> ${t.status}</p>
-          <button class="btn-primario" style="margin-top:.6rem;">Abrir</button>
+          <p><strong>Status:</strong> <span class="status-${t.status}">${t.status}</span></p>
+          <p><strong>Registros:</strong> ${totalRegistros}</p>
+          <div class="acoes">${botaoRelatorio}</div>
         `;
-        card.querySelector("button").addEventListener("click", () => {
-          abrirTarefa(t.id);
-        });
         lista.appendChild(card);
       });
-    }
 
-    function abrirTarefa(tarefaId) {
-      db = carregarDB();
-      tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
-      mostrarTela("formulario");
-
-      document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
-
-      // Monta lista de campos formatados
-      const camposTexto = Object.entries(tarefaAtual.camposPorTipo || {})
-        .filter(([_, v]) => v.length > 0)
-        .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]}: ${campos.map(formatarLabel).join(", ")}`)
-        .join(" | ");
-
-      document.getElementById("descricaoTarefa").textContent = camposTexto;
-
-      const listaRegistros = document.getElementById("listaRegistros");
-      listaRegistros.innerHTML = "";
-
-      tarefaAtual.registros.forEach((r) => {
-        const bloco = document.createElement("div");
-        bloco.className = "bloco-registro";
-
-        let html = `
-          <div class="cabecalho">
-            <span class="tag-tipo tag-${r.tipo}">${ROTULO_TIPO[r.tipo]}</span>
-            <h4>${r.nome}</h4>
-          </div>
-        `;
-
-        (r.camposFaltando || []).forEach((campo) => {
-          const label = formatarLabel(campo);
-          html += `
-            <div class="campo">
-              <label>${label}</label>
-              ${criarInput(campo, r[campo] || "")}
-            </div>
-          `;
+      lista.querySelectorAll(".btn-relatorio").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          gerarRelatorioDaTarefa(btn.dataset.id);
         });
-
-        bloco.innerHTML = html;
-        bloco.dataset.registroId = r.id;
-        bloco.dataset.tipo = r.tipo;
-        listaRegistros.appendChild(bloco);
       });
     }
 
-    function criarInput(campo, valor) {
-      if (campo === "restricaoAlimentar") {
-        return `
-          <select data-campo="${campo}">
-            <option value="">Selecione...</option>
-            <option value="Não" ${valor === "Não" ? "selected" : ""}>Não</option>
-            <option value="Sim" ${valor === "Sim" ? "selected" : ""}>Sim</option>
-          </select>
-        `;
-      }
-      if (campo === "genero") {
-        return `
-          <select data-campo="${campo}">
-            <option value="">Selecione...</option>
-            <option value="M" ${valor === "M" ? "selected" : ""}>Masculino</option>
-            <option value="F" ${valor === "F" ? "selected" : ""}>Feminino</option>
-          </select>
-        `;
-      }
-      return `<input type="text" data-campo="${campo}" value="${valor}">`;
-    }
+    // ---------- GERAR RELATÓRIO A PARTIR DE UMA TAREFA ----------
+    function gerarRelatorioDaTarefa(tarefaId) {
+      db = carregarDB();
+      const tarefa = db.tarefas.find(t => t.id === tarefaId);
+      if (!tarefa) { alert("Tarefa não encontrada."); return; }
 
-    function formatarLabel(campo) {
-      const mapa = {
-        // aluno
-        nomeMae: "Nome da mãe",
-        nomePai: "Nome do pai",
-        genero: "Gênero",
-        restricaoAlimentar: "Restrição alimentar",
-        endereco: "Endereço",
-        cpf: "CPF",
-        telefone: "Telefone",
-        serie: "Série",
-        // escola
-        email: "E-mail",
-        diretor: "Nome do diretor",
-        inep: "Código INEP",
-        cnpj: "CNPJ",
-        // servidor
-        cargo: "Cargo",
-        formacao: "Formação",
-        cargaHoraria: "Carga horária"
+      const registros = (tarefa.registros || []).map(r => {
+        const colecao = r.tipo === "aluno"    ? db.alunos
+                      : r.tipo === "escola"   ? db.escolas
+                      : db.servidores;
+        const obj = colecao.find(x => x.id === r.id) || {};
+        return { tipo: r.tipo, dados: obj };
+      });
+
+      relatorioAtual = {
+        titulo: tarefa.titulo,
+        camposPorTipo: tarefa.camposPorTipo || {},
+        registros,
+        escolaId: nomeEscola(tarefa.escolaId),
+        setor: tarefa.setorSolicitante
       };
-      return mapa[campo] || campo;
+
+      renderizarRelatorio();
+      mostrarTela("relatorio");
     }
 
-    document.getElementById("btnSalvarTodos").addEventListener("click", () => {
-      db = carregarDB();
-      const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
-      const blocos = document.querySelectorAll(".bloco-registro");
-      let totalAtualizacoes = 0;
+    // ---------- RENDERIZA RELATÓRIO MISTO ----------
+    function renderizarRelatorio() {
+      const { titulo, camposPorTipo, registros, escolaId, setor } = relatorioAtual;
 
-      blocos.forEach((bloco) => {
-        const registroId = bloco.dataset.registroId;
-        const tipo = bloco.dataset.tipo;
-        const registroTarefa = tarefaDb.registros.find(r => r.id === registroId);
-
-        // Encontra o objeto no banco principal
-        const colecao = tipo === "aluno" ? db.alunos
-                     : tipo === "escola" ? db.escolas
-                     : db.servidores;
-        const objBanco = colecao.find(x => x.id === registroId);
-
-        bloco.querySelectorAll("[data-campo]").forEach((input) => {
-          const campo = input.dataset.campo;
-          const valor = input.value.trim();
-          if (valor !== "") {
-            if (objBanco) objBanco[campo] = valor;
-            registroTarefa[campo] = valor;
-            registroTarefa.camposFaltando =
-              (registroTarefa.camposFaltando || []).filter(c => c !== campo);
-            totalAtualizacoes++;
-          }
+      // Monta colunas na ordem: aluno, escola, servidor
+      const colunas = [];
+      ["aluno", "escola", "servidor"].forEach((tipo) => {
+        (camposPorTipo[tipo] || []).forEach((campo) => {
+          const def = CATALOGO[tipo].find(c => c.id === campo);
+          colunas.push({
+            tipo,
+            campo,
+            label: def ? def.label : campo
+          });
         });
-
-        if (registroTarefa.camposFaltando.length === 0) {
-          registroTarefa.status = "concluida";
-        }
       });
 
-      if (totalAtualizacoes === 0) {
-        alert("Nenhum dado foi preenchido.");
+      document.getElementById("tituloRelatorio").textContent = titulo;
+      document.getElementById("descricaoRelatorio").textContent =
+        `${registros.length} registro(s) • ${colunas.length} coluna(s)` +
+        (escolaId ? ` • Escola: ${escolaId}` : "") +
+        (setor ? ` • Setor: ${setor}` : "");
+
+      const aviso = document.getElementById("avisoRelatorio");
+      if (registros.length === 0) {
+        aviso.innerHTML = `<div class="aviso">Nenhum registro encontrado para este relatório.</div>`;
+      } else {
+        aviso.innerHTML = "";
+      }
+
+      const container = document.getElementById("conteudoRelatorio");
+      if (registros.length === 0) { container.innerHTML = ""; return; }
+
+      let html = `<table class="tabela-relatorio"><thead><tr>`;
+      html += `<th>Tipo</th><th>Nome</th>`;
+      colunas.forEach(col => {
+        html += `<th>${col.label}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      registros.forEach(r => {
+        const tagClasse = `tag-${r.tipo}`;
+        html += `<tr>`;
+        html += `<td data-label="Tipo"><span class="tag-tipo ${tagClasse}">${ROTULO_TIPO[r.tipo]}</span></td>`;
+        html += `<td data-label="Nome">${r.dados.nome || "—"}</td>`;
+        colunas.forEach(col => {
+          const valor = (col.tipo === r.tipo) ? (r.dados[col.campo] ?? "—") : "—";
+          html += `<td data-label="${col.label}">${valor}</td>`;
+        });
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // ---------- EXPORTAR CSV ----------
+    document.getElementById("btnExportarCSV").addEventListener("click", () => {
+      if (!relatorioAtual || relatorioAtual.registros.length === 0) {
+        alert("Nada para exportar.");
         return;
       }
 
-      const aindaPendentes = tarefaDb.registros.some(r => r.status !== "concluida");
-      tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
+      const { camposPorTipo, registros, titulo } = relatorioAtual;
 
-      salvarDB(db);
-      mostrarTela("sucesso");
+      const colunas = [];
+      ["aluno", "escola", "servidor"].forEach((tipo) => {
+        (camposPorTipo[tipo] || []).forEach((campo) => {
+          const def = CATALOGO[tipo].find(c => c.id === campo);
+          colunas.push({
+            tipo,
+            campo,
+            label: `${ROTULO_TIPO[tipo]} - ${def ? def.label : campo}`
+          });
+        });
+      });
+
+      const linhas = [];
+      linhas.push(["Tipo", "Nome", ...colunas.map(c => c.label)].join(";"));
+
+      registros.forEach(r => {
+        const linha = [
+          ROTULO_TIPO[r.tipo],
+          r.dados.nome || "",
+          ...colunas.map(col => {
+            const valor = (col.tipo === r.tipo) ? (r.dados[col.campo] ?? "") : "";
+            return `"${valor.toString().replace(/"/g, '""')}"`;
+          })
+        ];
+        linhas.push(linha.join(";"));
+      });
+
+      const csv = "\uFEFF" + linhas.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${titulo.replace(/\s+/g, "_")}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
     });
 
-    document.getElementById("btnVoltar").addEventListener("click", () => {
-      mostrarTela("tarefas");
+    // ---------- IMPRIMIR ----------
+    document.getElementById("btnImprimir").addEventListener("click", () => {
+      window.print();
     });
 
-    document.getElementById("btnVoltarTarefas").addEventListener("click", () => {
-      carregarTarefas();
-      mostrarTela("tarefas");
+    // ---------- NAVEGAÇÃO ----------
+    document.getElementById("btnNovaSolicitacao").addEventListener("click", () => {
+      camposSelecionados.clear();
+      atualizarSelecionados();
+      document.getElementById("tituloSolicitacao").value = "";
+      document.getElementById("setorSolicitante").value = "";
+      document.getElementById("usuarioTopo").textContent = "Setor: —";
+      tipoAtivo = "aluno";
+      document.querySelectorAll(".tipo-tab").forEach(t => {
+        t.classList.toggle("ativa", t.dataset.tipo === "aluno");
+      });
+      montarCatalogo();
+      carregarEscolasNoSelect();
+      mostrarTela("builder");
     });
 
-    montarSeletorEscola();
-    carregarTarefas();
+    document.getElementById("btnVoltarDashboard").addEventListener("click", () => mostrarTela("dashboard"));
+    document.getElementById("btnVoltarBuilder").addEventListener("click", () => mostrarTela("builder"));
+    document.getElementById("btnVoltarDashboard2").addEventListener("click", () => mostrarTela("dashboard"));
+    document.getElementById("btnVoltarDashboard3").addEventListener("click", () => mostrarTela("dashboard"));
+
+    document.getElementById("btnVoltarHistorico").addEventListener("click", () => {
+      carregarHistorico();
+      mostrarTela("historico");
+    });
+
+    document.getElementById("btnVerHistorico").addEventListener("click", () => {
+      carregarHistorico();
+      mostrarTela("historico");
+    });
+
+    document.getElementById("setorSolicitante").addEventListener("change", (e) => {
+      document.getElementById("usuarioTopo").textContent =
+        "Setor: " + (e.target.value || "—");
+    });
+
+    // ---------- INICIAR ----------
+    montarCatalogo();
+    carregarEscolasNoSelect();
   </script>
 </body>
 </html>
