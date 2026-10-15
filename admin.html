@@ -70,6 +70,7 @@
       padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
       font-size: .8rem;
     }
+    .btn-secundario:hover { background: #e8f0fe; }
 
     .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table {
@@ -96,16 +97,16 @@
       background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d;
     }
 
-    /* Selo */
     .selo {
       display: inline-flex; align-items: center; gap: .2rem;
-      font-size: .85rem; font-weight: 600;
+      font-size: .8rem; font-weight: 600;
       padding: .15rem .5rem; border-radius: 10px;
+      white-space: nowrap;
     }
-    .selo-atual        { background: #dcfce7; color: #166534; }
-    .selo-atencao      { background: #fef3c7; color: #78350f; }
-    .selo-desatualizado{ background: #fee2e2; color: #7f1d1d; }
-    .selo-nunca        { background: #f3f4f6; color: #6b7280; }
+    .selo-atual         { background: #dcfce7; color: #166534; }
+    .selo-atencao       { background: #fef3c7; color: #78350f; }
+    .selo-desatualizado { background: #fee2e2; color: #7f1d1d; }
+    .selo-nunca         { background: #f3f4f6; color: #6b7280; }
 
     .evento-badge {
       display: inline-block; padding: .15rem .5rem; border-radius: 10px;
@@ -115,6 +116,8 @@
     .evento-servidor { background: #f3e8ff; color: #6b21a8; }
     .evento-inativo  { background: #f3f4f6; color: #9ca3af; }
 
+    .acoes-tabela { display: flex; gap: .3rem; flex-wrap: wrap; }
+
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
@@ -123,8 +126,10 @@
       .form-linha { grid-template-columns: 1fr; gap: .6rem; }
       .btn-primario { width: 100%; }
       .btn-perigo { width: 100%; padding: .5rem; }
+      .btn-secundario { width: 100%; padding: .5rem; }
       table { font-size: .85rem; min-width: 450px; }
       th, td { padding: .5rem .6rem; }
+      .acoes-tabela { flex-direction: column; }
     }
 
     @media (max-width: 480px) {
@@ -270,8 +275,8 @@
       <div class="bloco">
         <h3>Cadastrar evento</h3>
         <p style="color:#555;font-size:.9rem;margin-top:0;">
-          Eventos são usados pela Secretaria para pedir confirmação de dados em massa
-          (rematrícula, censo, início de ano etc.). Escolas não passam por evento.
+          Eventos são usados pela Secretaria para pedir confirmação de dados em massa.
+          Escolas não passam por evento.
         </p>
         <div class="form-linha">
           <div class="campo">
@@ -318,10 +323,25 @@
     <!-- ABA DADOS -->
     <div id="painel-dados" class="painel">
       <div class="bloco">
+        <h3>Manutenção dos selos</h3>
+        <div class="aviso">
+          Use esses botões para corrigir o selo de registros antigos.
+          O selo é calculado com base na <strong>última atualização</strong> do registro
+          e no <strong>último evento confirmado</strong>.
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
+          <button id="btnRecalcularTodos" class="btn-primario">🔄 Recalcular todos os selos</button>
+        </div>
+        <p style="font-size:.85rem;color:#555;margin:0;">
+          Marca <strong>todos</strong> os alunos e servidores como <strong>atualizados agora</strong>.
+          Útil quando você acabou de cadastrar muita gente e quer que todos comecem como 🟢.
+        </p>
+      </div>
+
+      <div class="bloco">
         <h3>Gerenciar dados</h3>
         <div class="aviso">
           Esses botões apagam ou restauram os dados salvos no navegador (localStorage).
-          Use com cuidado — não tem como desfazer.
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
           <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
@@ -417,15 +437,15 @@
       return e ? (e.nome || e.id) : id;
     }
 
-    // ---------- SELO ----------
-    // Calcula o selo de um registro baseado nos eventos do mesmo tipo.
-    // - Nunca confirmado -> ⚪
-    // - Confirmado no evento mais recente -> 🟢
-    // - Confirmado no penúltimo evento -> 🟡
-    // - Confirmado em evento mais antigo ou desconhecido -> 🔴
+    // ============================================================
+    // SELO
+    // ============================================================
     function calcularSelo(registro, tipo) {
-      if (!registro.confirmadoEm || !registro.ultimoEvento) {
-        return { emoji: "⚪", texto: "Nunca confirmado", classe: "selo-nunca" };
+      const temConfirmacao = !!registro.confirmadoEm;
+      const temEdicao = !!registro.atualizadoEm;
+
+      if (!temConfirmacao && !temEdicao) {
+        return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
       }
 
       const db = carregarDB();
@@ -434,18 +454,105 @@
         .sort((a, b) => {
           const da = a.dataInicio ? new Date(a.dataInicio) : new Date(0);
           const db2 = b.dataInicio ? new Date(b.dataInicio) : new Date(0);
-          return db2 - da; // mais recente primeiro
+          return db2 - da;
         });
 
+      const dataRef = registro.confirmadoEm || registro.atualizadoEm;
+
+      // Sem eventos cadastrados: tudo que foi editado é 🟢
       if (eventos.length === 0) {
-        return { emoji: "🟢", texto: "Sem eventos cadastrados", classe: "selo-atual" };
+        return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
       }
 
-      const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
+      // Nunca confirmou evento: compara com data do evento mais recente
+      if (!registro.ultimoEvento) {
+        const dataEventoMaisRecente = eventos[0].dataInicio
+          ? new Date(eventos[0].dataInicio)
+          : new Date(0);
+        const dataRefObj = dataRef ? new Date(dataRef) : new Date(0);
 
-      if (pos === 0)  return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
-      if (pos === 1)  return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
+        if (dataRefObj >= dataEventoMaisRecente) {
+          return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
+        }
+
+        const eventosDepois = eventos.filter(e => {
+          const d = e.dataInicio ? new Date(e.dataInicio) : new Date(0);
+          return d > dataRefObj;
+        });
+
+        if (eventosDepois.length === 0) return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
+        if (eventosDepois.length === 1) return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
+        return                                 { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
+      }
+
+      // Confirmou por evento
+      const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
+      if (pos === 0) return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
+      if (pos === 1) return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
       return             { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
+    }
+
+    // Marca um registro como atual: grava confirmadoEm e ultimoEvento
+    function marcarComoAtual(registroId, tipo) {
+      const db = carregarDB();
+      const colecao = tipo === "aluno"  ? db.alunos
+                    : tipo === "escola" ? db.escolas
+                    : db.servidores;
+      const obj = colecao.find(x => x.id === registroId);
+      if (!obj) return;
+
+      const agora = new Date().toISOString();
+
+      const eventos = (db.eventos || [])
+        .filter(e => e.tipo === tipo && e.ativo)
+        .sort((a, b) => {
+          const da = a.dataInicio ? new Date(a.dataInicio) : new Date(0);
+          const db2 = b.dataInicio ? new Date(b.dataInicio) : new Date(0);
+          return db2 - da;
+        });
+
+      if (eventos.length > 0) {
+        obj.ultimoEvento = eventos[0].id;
+      } else {
+        obj.ultimoEvento = null;
+      }
+
+      obj.confirmadoEm = agora;
+      obj.atualizadoEm = agora;
+      obj.atualizadoPor = "admin";
+
+      salvarDB(db);
+      renderizarAlunos();
+      renderizarServidores();
+      renderizarResumo();
+    }
+
+    // Marca TODOS os registros como atuais
+    function recalcularTodosOsSelos() {
+      const db = carregarDB();
+      const agora = new Date().toISOString();
+
+      db.alunos.forEach(a => {
+        const eventos = (db.eventos || [])
+          .filter(e => e.tipo === "aluno" && e.ativo)
+          .sort((x, y) => new Date(y.dataInicio || 0) - new Date(x.dataInicio || 0));
+        a.ultimoEvento = eventos[0] ? eventos[0].id : null;
+        a.confirmadoEm = agora;
+        a.atualizadoEm = agora;
+        a.atualizadoPor = "admin";
+      });
+
+      db.servidores.forEach(s => {
+        const eventos = (db.eventos || [])
+          .filter(e => e.tipo === "servidor" && e.ativo)
+          .sort((x, y) => new Date(y.dataInicio || 0) - new Date(x.dataInicio || 0));
+        s.ultimoEvento = eventos[0] ? eventos[0].id : null;
+        s.confirmadoEm = agora;
+        s.atualizadoEm = agora;
+        s.atualizadoPor = "admin";
+      });
+
+      salvarDB(db);
     }
 
     // ============================================================
@@ -487,7 +594,7 @@
 
       const campos = camposDoTipo(tipo);
       if (campos.length === 0) {
-        container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado nessa categoria. Vá em Campos.</p>';
+        container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado nessa categoria.</p>';
         return;
       }
 
@@ -558,7 +665,9 @@
           if (c.tipoCampo === "escola" && e[c.id]) valor = nomeEscolaPorId(e[c.id]);
           html += `<td>${valor}</td>`;
         });
-        html += `<td><button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button></td>`;
+        html += `<td><div class="acoes-tabela">
+          <button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button>
+        </div></td>`;
         html += `</tr>`;
       });
 
@@ -567,7 +676,7 @@
 
       div.querySelectorAll(".btn-rm-escola").forEach(btn => {
         btn.addEventListener("click", () => {
-          if (!confirm("Remover esta escola? Alunos e servidores vinculados ficarão órfãos.")) return;
+          if (!confirm("Remover esta escola?")) return;
           const db = carregarDB();
           db.escolas = db.escolas.filter(e => e.id !== btn.dataset.id);
           salvarDB(db);
@@ -595,17 +704,18 @@
       }
 
       const db = carregarDB();
-
       if (dados.codigo && db.escolas.find(e => e.id === dados.codigo)) {
         alert("Já existe uma escola com esse ID.");
         return;
       }
 
+      const agora = new Date().toISOString();
       const escola = {
         id: dados.codigo || gerarId("e"),
-        criadoEm: new Date().toISOString(),
-        atualizadoEm: new Date().toISOString(),
-        atualizadoPor: "admin"
+        criadoEm: agora,
+        atualizadoEm: agora,
+        atualizadoPor: "admin",
+        confirmadoEm: agora   // escola já nasce atual
       };
       camposEscola.forEach(c => {
         if (c.id === "codigo") return;
@@ -652,12 +762,21 @@
           if (c.tipoCampo === "escola" && a[c.id]) valor = nomeEscolaPorId(a[c.id]);
           html += `<td>${valor}</td>`;
         });
-        html += `<td><button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button></td>`;
+        html += `<td><div class="acoes-tabela">
+          <button class="btn-secundario btn-marcar-atual" data-id="${a.id}" data-tipo="aluno">✓ Marcar como atual</button>
+          <button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button>
+        </div></td>`;
         html += `</tr>`;
       });
 
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-marcar-atual").forEach(btn => {
+        btn.addEventListener("click", () => {
+          marcarComoAtual(btn.dataset.id, btn.dataset.tipo);
+        });
+      });
 
       div.querySelectorAll(".btn-rm-aluno").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -683,12 +802,14 @@
       }
 
       const db = carregarDB();
+      const agora = new Date().toISOString();
 
       const aluno = {
         id: gerarId("a"),
-        criadoEm: new Date().toISOString(),
-        atualizadoEm: new Date().toISOString(),
-        atualizadoPor: "admin"
+        criadoEm: agora,
+        atualizadoEm: agora,
+        atualizadoPor: "admin",
+        confirmadoEm: agora   // já nasce 🟢
       };
       camposAluno.forEach(c => {
         if (dados[c.id]) aluno[c.id] = dados[c.id];
@@ -731,12 +852,21 @@
           if (c.tipoCampo === "escola" && s[c.id]) valor = nomeEscolaPorId(s[c.id]);
           html += `<td>${valor}</td>`;
         });
-        html += `<td><button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button></td>`;
+        html += `<td><div class="acoes-tabela">
+          <button class="btn-secundario btn-marcar-atual" data-id="${s.id}" data-tipo="servidor">✓ Marcar como atual</button>
+          <button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button>
+        </div></td>`;
         html += `</tr>`;
       });
 
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-marcar-atual").forEach(btn => {
+        btn.addEventListener("click", () => {
+          marcarComoAtual(btn.dataset.id, btn.dataset.tipo);
+        });
+      });
 
       div.querySelectorAll(".btn-rm-servidor").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -762,12 +892,14 @@
       }
 
       const db = carregarDB();
+      const agora = new Date().toISOString();
 
       const servidor = {
         id: gerarId("s"),
-        criadoEm: new Date().toISOString(),
-        atualizadoEm: new Date().toISOString(),
-        atualizadoPor: "admin"
+        criadoEm: agora,
+        atualizadoEm: agora,
+        atualizadoPor: "admin",
+        confirmadoEm: agora
       };
       camposServidor.forEach(c => {
         if (dados[c.id]) servidor[c.id] = dados[c.id];
@@ -796,7 +928,7 @@
       const rotuloTipo = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
 
       let html = `<div class="tabela-wrap"><table><thead><tr>
-        <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Obrigatório</th><th>Validade</th><th>Opções</th><th>Ações</th>
+        <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Obrig.</th><th>Validade</th><th>Opções</th><th>Ações</th>
       </tr></thead><tbody>`;
 
       db.campos.forEach(c => {
@@ -916,10 +1048,10 @@
           <td>${e.dataInicio || "—"}</td>
           <td>${e.dataFim || "—"}</td>
           <td>${e.ativo ? "Sim" : "Não"}</td>
-          <td>
+          <td><div class="acoes-tabela">
             <button class="btn-secundario btn-toggle-evento" data-id="${e.id}">${e.ativo ? "Desativar" : "Ativar"}</button>
             <button class="btn-perigo btn-rm-evento" data-id="${e.id}">Remover</button>
-          </td>
+          </div></td>
         </tr>`;
       });
 
@@ -933,6 +1065,8 @@
           if (ev) ev.ativo = !ev.ativo;
           salvarDB(db);
           renderizarEventos();
+          renderizarAlunos();
+          renderizarServidores();
         });
       });
 
@@ -1003,7 +1137,6 @@
         porEscola[a.escolaId] = (porEscola[a.escolaId] || 0) + 1;
       });
 
-      // Contagem de selos
       const selosAlunos = { atual: 0, atencao: 0, desatualizado: 0, nunca: 0 };
       db.alunos.forEach(a => {
         const s = calcularSelo(a, "aluno").texto;
@@ -1011,6 +1144,15 @@
         else if (s === "Atenção") selosAlunos.atencao++;
         else if (s === "Desatualizado") selosAlunos.desatualizado++;
         else selosAlunos.nunca++;
+      });
+
+      const selosServidores = { atual: 0, atencao: 0, desatualizado: 0, nunca: 0 };
+      db.servidores.forEach(s => {
+        const selo = calcularSelo(s, "servidor").texto;
+        if (selo === "Atual") selosServidores.atual++;
+        else if (selo === "Atenção") selosServidores.atencao++;
+        else if (selo === "Desatualizado") selosServidores.desatualizado++;
+        else selosServidores.nunca++;
       });
 
       let html = `
@@ -1029,6 +1171,13 @@
         `;
       }
 
+      if (db.servidores.length > 0) {
+        html += `
+          <h4 style="margin-top:1rem;">Qualidade dos dados (servidores)</h4>
+          <p>🟢 ${selosServidores.atual} atual • 🟡 ${selosServidores.atencao} atenção • 🔴 ${selosServidores.desatualizado} desatualizado • ⚪ ${selosServidores.nunca} nunca</p>
+        `;
+      }
+
       if (db.escolas.length > 0) {
         html += `<h4 style="margin-top:1rem;">Alunos por escola</h4><ul>`;
         db.escolas.forEach(e => {
@@ -1039,6 +1188,15 @@
 
       div.innerHTML = html;
     }
+
+    document.getElementById("btnRecalcularTodos").addEventListener("click", () => {
+      if (!confirm("Isso vai marcar TODOS os alunos e servidores como atualizados agora. Continuar?")) return;
+      recalcularTodosOsSelos();
+      renderizarAlunos();
+      renderizarServidores();
+      renderizarResumo();
+      alert("Selos recalculados!");
+    });
 
     document.getElementById("btnExportar").addEventListener("click", () => {
       const db = carregarDB();
