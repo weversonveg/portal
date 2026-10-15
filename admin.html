@@ -96,6 +96,9 @@
     .aviso-vermelho {
       background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d;
     }
+    .aviso-verde {
+      background: #dcfce7; border-left-color: #16a34a; color: #166534;
+    }
 
     .selo {
       display: inline-flex; align-items: center; gap: .2rem;
@@ -325,7 +328,6 @@
       <div class="bloco">
         <h3>Manutenção dos selos</h3>
         <div class="aviso">
-          Use esses botões para corrigir o selo de registros antigos.
           O selo é calculado com base na <strong>última atualização</strong> do registro
           e no <strong>último evento confirmado</strong>.
         </div>
@@ -334,7 +336,23 @@
         </div>
         <p style="font-size:.85rem;color:#555;margin:0;">
           Marca <strong>todos</strong> os alunos e servidores como <strong>atualizados agora</strong>.
-          Útil quando você acabou de cadastrar muita gente e quer que todos comecem como 🟢.
+        </p>
+      </div>
+
+      <div class="bloco">
+        <h3>Manutenção do catálogo</h3>
+        <div class="aviso">
+          Se algum campo padrão estiver faltando (ex: <strong>nome</strong> no servidor),
+          use o botão abaixo para adicionar <strong>sem apagar os dados existentes</strong>.
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
+          <button id="btnMigrarCatalogo" class="btn-primario">📥 Migrar catálogo padrão</button>
+          <button id="btnRecarregarCatalogo" class="btn-secundario">🔄 Recarregar catálogo padrão</button>
+        </div>
+        <p style="font-size:.85rem;color:#555;margin:0;">
+          <strong>Migrar</strong>: adiciona apenas os campos que faltam.<br>
+          <strong>Recarregar</strong>: substitui o catálogo inteiro pelo padrão
+          (campos customizados serão perdidos).
         </p>
       </div>
 
@@ -413,13 +431,45 @@
       db.alunos     = db.alunos     || [];
       db.servidores = db.servidores || [];
       db.tarefas    = db.tarefas    || [];
-      db.campos     = db.campos     || JSON.parse(JSON.stringify(CATALOGO_PADRAO));
+      db.campos     = db.campos     || [];
       db.eventos    = db.eventos    || [];
       return db;
     }
 
     function salvarDB(db) {
       localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    // ---------- MIGRAÇÃO DO CATÁLOGO ----------
+    // Adiciona campos padrão que faltam, sem apagar nada
+    function migrarCatalogo() {
+      const db = carregarDB();
+      let adicionados = 0;
+
+      CATALOGO_PADRAO.forEach(campoPadrao => {
+        const existe = db.campos.find(c =>
+          c.id === campoPadrao.id && c.tipo === campoPadrao.tipo
+        );
+        if (!existe) {
+          db.campos.push({ ...campoPadrao });
+          adicionados++;
+        }
+      });
+
+      if (adicionados > 0) {
+        salvarDB(db);
+        console.log(`Catálogo migrado: ${adicionados} campo(s) adicionado(s).`);
+      }
+
+      return adicionados;
+    }
+
+    // ---------- RECARREGAR CATÁLOGO PADRÃO ----------
+    // Substitui o catálogo inteiro pelo padrão
+    function recarregarCatalogoPadrao() {
+      const db = carregarDB();
+      db.campos = JSON.parse(JSON.stringify(CATALOGO_PADRAO));
+      salvarDB(db);
     }
 
     function gerarId(prefixo) {
@@ -459,12 +509,10 @@
 
       const dataRef = registro.confirmadoEm || registro.atualizadoEm;
 
-      // Sem eventos cadastrados: tudo que foi editado é 🟢
       if (eventos.length === 0) {
         return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
       }
 
-      // Nunca confirmou evento: compara com data do evento mais recente
       if (!registro.ultimoEvento) {
         const dataEventoMaisRecente = eventos[0].dataInicio
           ? new Date(eventos[0].dataInicio)
@@ -485,14 +533,12 @@
         return                                 { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
       }
 
-      // Confirmou por evento
       const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
       if (pos === 0) return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
       if (pos === 1) return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
       return             { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
     }
 
-    // Marca um registro como atual: grava confirmadoEm e ultimoEvento
     function marcarComoAtual(registroId, tipo) {
       const db = carregarDB();
       const colecao = tipo === "aluno"  ? db.alunos
@@ -511,12 +557,7 @@
           return db2 - da;
         });
 
-      if (eventos.length > 0) {
-        obj.ultimoEvento = eventos[0].id;
-      } else {
-        obj.ultimoEvento = null;
-      }
-
+      obj.ultimoEvento = eventos.length > 0 ? eventos[0].id : null;
       obj.confirmadoEm = agora;
       obj.atualizadoEm = agora;
       obj.atualizadoPor = "admin";
@@ -527,7 +568,6 @@
       renderizarResumo();
     }
 
-    // Marca TODOS os registros como atuais
     function recalcularTodosOsSelos() {
       const db = carregarDB();
       const agora = new Date().toISOString();
@@ -588,15 +628,26 @@
       return `<input type="text" id="${id}" data-campo="${campo.id}" value="${val}">`;
     }
 
+    // Monta formulário com ordenação por prioridade:
+    // "nome" primeiro, "escolaId" segundo, depois mantém a ordem do catálogo.
     function montarFormulario(tipo, prefixo) {
       const container = document.getElementById(prefixo);
       container.innerHTML = "";
 
-      const campos = camposDoTipo(tipo);
+      let campos = camposDoTipo(tipo);
       if (campos.length === 0) {
         container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado nessa categoria.</p>';
         return;
       }
+
+      const prioridade = { nome: 1, escolaId: 2, codigo: 1 };
+
+      campos = [...campos].sort((a, b) => {
+        const pa = prioridade[a.id] || 99;
+        const pb = prioridade[b.id] || 99;
+        if (pa !== pb) return pa - pb;
+        return 0;
+      });
 
       campos.forEach(campo => {
         const div = document.createElement("div");
@@ -715,7 +766,7 @@
         criadoEm: agora,
         atualizadoEm: agora,
         atualizadoPor: "admin",
-        confirmadoEm: agora   // escola já nasce atual
+        confirmadoEm: agora
       };
       camposEscola.forEach(c => {
         if (c.id === "codigo") return;
@@ -809,7 +860,7 @@
         criadoEm: agora,
         atualizadoEm: agora,
         atualizadoPor: "admin",
-        confirmadoEm: agora   // já nasce 🟢
+        confirmadoEm: agora
       };
       camposAluno.forEach(c => {
         if (dados[c.id]) aluno[c.id] = dados[c.id];
@@ -1198,6 +1249,31 @@
       alert("Selos recalculados!");
     });
 
+    document.getElementById("btnMigrarCatalogo").addEventListener("click", () => {
+      const adicionados = migrarCatalogo();
+      if (adicionados > 0) {
+        alert(`${adicionados} campo(s) adicionado(s) ao catálogo.`);
+        renderizarCampos();
+        renderizarResumo();
+        montarFormulario("escola", "formEscola");
+        montarFormulario("aluno", "formAluno");
+        montarFormulario("servidor", "formServidor");
+      } else {
+        alert("Catálogo já está completo. Nenhum campo adicionado.");
+      }
+    });
+
+    document.getElementById("btnRecarregarCatalogo").addEventListener("click", () => {
+      if (!confirm("Isso vai SUBSTITUIR o catálogo inteiro pelo padrão. Campos customizados serão perdidos. Continuar?")) return;
+      recarregarCatalogoPadrao();
+      renderizarCampos();
+      renderizarResumo();
+      montarFormulario("escola", "formEscola");
+      montarFormulario("aluno", "formAluno");
+      montarFormulario("servidor", "formServidor");
+      alert("Catálogo recarregado!");
+    });
+
     document.getElementById("btnExportar").addEventListener("click", () => {
       const db = carregarDB();
       const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
@@ -1243,6 +1319,8 @@
     // ============================================================
     // INICIAR
     // ============================================================
+    migrarCatalogo();   // <-- garante que o catálogo tem todos os campos padrão
+
     montarFormulario("escola", "formEscola");
     montarFormulario("aluno", "formAluno");
     montarFormulario("servidor", "formServidor");
