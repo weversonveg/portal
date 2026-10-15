@@ -32,10 +32,17 @@
     }
     .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
     .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
+    .card-tarefa.evento {
+      border-left: 4px solid #7c3aed;
+    }
+    .card-tarefa.evento h3 { color: #6d28d9; }
 
     .bloco-registro {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .bloco-registro.evento {
+      border-left: 4px solid #7c3aed;
     }
     .bloco-registro .cabecalho {
       display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem;
@@ -50,6 +57,7 @@
     .tag-aluno    { background: #dbeafe; color: #1e40af; }
     .tag-escola   { background: #dcfce7; color: #166534; }
     .tag-servidor { background: #f3e8ff; color: #6b21a8; }
+    .tag-evento   { background: #ede9fe; color: #6d28d9; }
 
     .campo { margin-bottom: .6rem; display: flex; flex-direction: column; }
     .campo label { font-size: .85rem; color: #555; margin-bottom: .2rem; }
@@ -64,6 +72,18 @@
       font-size: .95rem; font-weight: 500;
     }
     .btn-primario:hover { background: #16306e; }
+    .btn-sucesso {
+      background: #16a34a; color: #fff; border: none;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem; font-weight: 500;
+    }
+    .btn-sucesso:hover { background: #15803d; }
+    .btn-evento {
+      background: #7c3aed; color: #fff; border: none;
+      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
+      font-size: .95rem; font-weight: 500;
+    }
+    .btn-evento:hover { background: #6d28d9; }
     .btn-voltar {
       background: none; border: none; color: #1e3a8a;
       cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
@@ -71,6 +91,46 @@
     }
     .rodape-form { text-align: right; margin-top: 1.5rem; }
     .vazio { color: #888; }
+
+    .aviso {
+      background: #fef3c7; border-left: 4px solid #d97706;
+      padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
+      font-size: .9rem; color: #78350f;
+    }
+    .aviso-roxo {
+      background: #f3e8ff; border-left-color: #7c3aed; color: #4c1d95;
+    }
+    .aviso-verde {
+      background: #dcfce7; border-left-color: #16a34a; color: #166534;
+    }
+
+    /* Barra de confirmação em massa */
+    .barra-confirmar {
+      background: #f3e8ff; border-radius: 8px; padding: .8rem 1rem;
+      margin-bottom: 1rem; display: flex; gap: .5rem; align-items: center;
+      flex-wrap: wrap; border-left: 4px solid #7c3aed;
+    }
+    .barra-confirmar .texto {
+      flex: 1; font-size: .9rem; color: #4c1d95;
+    }
+    .barra-confirmar button {
+      background: #7c3aed; color: #fff; border: none;
+      padding: .6rem 1rem; border-radius: 4px; cursor: pointer;
+      font-size: .9rem; font-weight: 500;
+    }
+    .barra-confirmar button:hover { background: #6d28d9; }
+
+    /* Selo */
+    .selo {
+      display: inline-flex; align-items: center; gap: .2rem;
+      font-size: .8rem; font-weight: 600;
+      padding: .15rem .5rem; border-radius: 10px;
+      white-space: nowrap;
+    }
+    .selo-atual         { background: #dcfce7; color: #166534; }
+    .selo-atencao       { background: #fef3c7; color: #78350f; }
+    .selo-desatualizado { background: #fee2e2; color: #7f1d1d; }
+    .selo-nunca         { background: #f3f4f6; color: #6b7280; }
 
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
@@ -81,6 +141,8 @@
       .card-tarefa, .bloco-registro { padding: .9rem 1rem; }
       .rodape-form { text-align: stretch; }
       .rodape-form button { width: 100%; }
+      .barra-confirmar { flex-direction: column; align-items: stretch; }
+      .barra-confirmar button { width: 100%; }
     }
 
     @media (max-width: 480px) {
@@ -97,7 +159,9 @@
       h2 { font-size: 1.05rem; }
       .bloco-registro { padding: .8rem .9rem; border-radius: 6px; }
       .campo input, .campo select { padding: .5rem .6rem; font-size: .9rem; }
-      .btn-primario { padding: .65rem 1rem; font-size: .9rem; }
+      .btn-primario, .btn-sucesso, .btn-evento {
+        padding: .65rem 1rem; font-size: .9rem;
+      }
     }
   </style>
 </head>
@@ -120,6 +184,7 @@
     <button id="btnVoltar" class="btn-voltar">← Voltar</button>
     <h2 id="tituloTarefa">Tarefa</h2>
     <p id="descricaoTarefa" class="subtitulo"></p>
+    <div id="barraConfirmar"></div>
     <div id="listaRegistros"></div>
     <div class="rodape-form">
       <button id="btnSalvarTodos" class="btn-primario">Salvar tudo</button>
@@ -138,7 +203,7 @@
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
-        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [], campos: [] };
+        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [], campos: [], eventos: [] };
         localStorage.setItem(DB_KEY, JSON.stringify(inicial));
         return inicial;
       }
@@ -148,6 +213,7 @@
       db.servidores = db.servidores || [];
       db.tarefas    = db.tarefas    || [];
       db.campos     = db.campos     || [];
+      db.eventos    = db.eventos    || [];
       return db;
     }
 
@@ -155,7 +221,6 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    // ---------- CATÁLOGO ----------
     function getCatalogo() {
       const db = carregarDB();
       const porTipo = { aluno: [], escola: [], servidor: [] };
@@ -173,6 +238,30 @@
     function labelDoCampo(tipo, campoId) {
       const def = definicaoDoCampo(tipo, campoId);
       return def ? def.label : campoId;
+    }
+
+    function calcularSelo(registro, tipo) {
+      if (!registro.confirmadoEm || !registro.ultimoEvento) {
+        return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
+      }
+
+      const db = carregarDB();
+      const eventos = (db.eventos || [])
+        .filter(e => e.tipo === tipo)
+        .sort((a, b) => {
+          const da = a.dataInicio ? new Date(a.dataInicio) : new Date(0);
+          const db2 = b.dataInicio ? new Date(b.dataInicio) : new Date(0);
+          return db2 - da;
+        });
+
+      if (eventos.length === 0) {
+        return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
+      }
+
+      const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
+      if (pos === 0) return { emoji: "🟢", texto: "Atual",       classe: "selo-atual" };
+      if (pos === 1) return { emoji: "🟡", texto: "Atenção",     classe: "selo-atencao" };
+      return             { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
     }
 
     const ROTULO_TIPO = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
@@ -237,7 +326,6 @@
         return;
       }
 
-      // Tarefas da escola que ainda têm pelo menos um registro pendente
       const pendentes = db.tarefas.filter(t =>
         t.escolaId === ESCOLA_ATUAL &&
         (t.registros || []).some(r => r.status !== "concluida")
@@ -250,7 +338,8 @@
 
       pendentes.forEach((t) => {
         const card = document.createElement("div");
-        card.className = "card-tarefa";
+        const ehEvento = !!t.eventoId;
+        card.className = "card-tarefa" + (ehEvento ? " evento" : "");
 
         const tipos = Object.entries(t.camposPorTipo || {})
           .filter(([_, v]) => v.length > 0)
@@ -259,8 +348,12 @@
 
         const totalPendentes = (t.registros || []).filter(r => r.status !== "concluida").length;
 
+        const tagEvento = ehEvento
+          ? `<span class="tag-tipo tag-evento">🔄 Evento</span> `
+          : "";
+
         card.innerHTML = `
-          <h3>${t.titulo}</h3>
+          <h3>${tagEvento}${t.titulo}</h3>
           <p><strong>Setor:</strong> ${t.setorSolicitante}</p>
           <p><strong>Tipos:</strong> ${tipos}</p>
           <p><strong>Registros a preencher:</strong> ${totalPendentes}</p>
@@ -279,9 +372,11 @@
       tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
       mostrarTela("formulario");
 
-      document.getElementById("tituloTarefa").textContent = tarefaAtual.titulo;
+      const ehEvento = !!tarefaAtual.eventoId;
 
-      // Monta a lista de campos com labels bonitos
+      document.getElementById("tituloTarefa").textContent =
+        (ehEvento ? "🔄 " : "") + tarefaAtual.titulo;
+
       const camposTexto = Object.entries(tarefaAtual.camposPorTipo || {})
         .filter(([_, v]) => v.length > 0)
         .map(([tipo, campos]) =>
@@ -291,10 +386,26 @@
 
       document.getElementById("descricaoTarefa").textContent = camposTexto;
 
+      // Barra de confirmação em massa (só em eventos)
+      const barra = document.getElementById("barraConfirmar");
+      if (ehEvento) {
+        barra.innerHTML = `
+          <div class="barra-confirmar">
+            <span class="texto">
+              💡 <strong>Evento:</strong> confirme os dados abaixo.
+              Se estiver tudo certo, use o botão ao lado para confirmar todos de uma vez.
+            </span>
+            <button id="btnConfirmarTudo">✓ Confirmar todos</button>
+          </div>
+        `;
+        document.getElementById("btnConfirmarTudo").addEventListener("click", confirmarTudo);
+      } else {
+        barra.innerHTML = "";
+      }
+
       const listaRegistros = document.getElementById("listaRegistros");
       listaRegistros.innerHTML = "";
 
-      // Só mostra registros pendentes
       const pendentes = (tarefaAtual.registros || []).filter(r => r.status !== "concluida");
 
       if (pendentes.length === 0) {
@@ -304,7 +415,13 @@
 
       pendentes.forEach((r) => {
         const bloco = document.createElement("div");
-        bloco.className = "bloco-registro";
+        bloco.className = "bloco-registro" + (ehEvento ? " evento" : "");
+
+        // Recupera o registro completo do banco para pré-popular
+        const colecao = r.tipo === "aluno" ? db.alunos
+                      : r.tipo === "escola" ? db.escolas
+                      : db.servidores;
+        const objBanco = colecao.find(x => x.id === r.id) || {};
 
         let html = `
           <div class="cabecalho">
@@ -317,11 +434,12 @@
           const def = definicaoDoCampo(r.tipo, campoId);
           const label = def ? def.label : campoId;
           const tipoCampo = def ? def.tipoCampo : "text";
+          const valorAtual = objBanco[campoId] || "";
 
           html += `
             <div class="campo">
               <label>${label}</label>
-              ${renderizarInput(tipoCampo, campoId, r[campoId] || "", def)}
+              ${renderizarInput(tipoCampo, campoId, valorAtual, def)}
             </div>
           `;
         });
@@ -333,13 +451,12 @@
       });
     }
 
-    // ---------- RENDERIZADOR DE INPUT (dinâmico por tipoCampo) ----------
+    // ---------- RENDERIZADOR DE INPUT ----------
     function renderizarInput(tipoCampo, campoId, valor, def) {
       const attr = `data-campo="${campoId}"`;
       const val = (valor ?? "").toString().replace(/"/g, "&quot;");
 
       if (tipoCampo === "escola") {
-        // Select de escolas
         const dbAtual = carregarDB();
         let options = '<option value="">Selecione...</option>';
         dbAtual.escolas.forEach(e => {
@@ -359,17 +476,49 @@
         return `<select ${attr}>${options}</select>`;
       }
 
-      if (tipoCampo === "date") {
-        return `<input type="date" ${attr} value="${val}">`;
-      }
-      if (tipoCampo === "number") {
-        return `<input type="number" ${attr} value="${val}">`;
-      }
-      if (tipoCampo === "email") {
-        return `<input type="email" ${attr} value="${val}">`;
-      }
-      // text padrão
+      if (tipoCampo === "date")   return `<input type="date" ${attr} value="${val}">`;
+      if (tipoCampo === "number") return `<input type="number" ${attr} value="${val}">`;
+      if (tipoCampo === "email")  return `<input type="email" ${attr} value="${val}">`;
       return `<input type="text" ${attr} value="${val}">`;
+    }
+
+    // ---------- CONFIRMAR TUDO (só em evento) ----------
+    function confirmarTudo() {
+      const blocos = document.querySelectorAll(".bloco-registro");
+      let algum = false;
+
+      blocos.forEach((bloco) => {
+        bloco.querySelectorAll("[data-campo]").forEach((input) => {
+          if (!input.value || input.value.trim() === "") {
+            // Se estiver vazio, tenta manter o valor atual do registro
+            // (busca no banco)
+            const registroId = bloco.dataset.registroId;
+            const tipo = bloco.dataset.tipo;
+            const campoId = input.dataset.campo;
+
+            const dbAtual = carregarDB();
+            const colecao = tipo === "aluno" ? dbAtual.alunos
+                          : tipo === "escola" ? dbAtual.escolas
+                          : dbAtual.servidores;
+            const obj = colecao.find(x => x.id === registroId);
+            if (obj && obj[campoId]) {
+              input.value = obj[campoId];
+            }
+          }
+          algum = true;
+        });
+      });
+
+      if (!algum) {
+        alert("Nada para confirmar.");
+        return;
+      }
+
+      // Marca visualmente que tudo está preenchido
+      blocos.forEach(b => b.style.borderLeftColor = "#16a34a");
+
+      // Chama o salvar normal
+      document.getElementById("btnSalvarTodos").click();
     }
 
     // ---------- SALVAR ----------
@@ -378,6 +527,9 @@
       const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
       const blocos = document.querySelectorAll(".bloco-registro");
       let totalAtualizacoes = 0;
+
+      const ehEvento = !!tarefaDb.eventoId;
+      const agora = new Date().toISOString();
 
       blocos.forEach((bloco) => {
         const registroId = bloco.dataset.registroId;
@@ -393,7 +545,11 @@
           const campo = input.dataset.campo;
           const valor = input.value.trim();
           if (valor !== "") {
-            if (objBanco) objBanco[campo] = valor;
+            if (objBanco) {
+              objBanco[campo] = valor;
+              objBanco.atualizadoEm = agora;
+              objBanco.atualizadoPor = ESCOLA_ATUAL;
+            }
             registroTarefa[campo] = valor;
             registroTarefa.camposFaltando =
               (registroTarefa.camposFaltando || []).filter(c => c !== campo);
@@ -401,8 +557,17 @@
           }
         });
 
+        // Se está tudo confirmado, marca como concluído
         if ((registroTarefa.camposFaltando || []).length === 0) {
           registroTarefa.status = "concluida";
+
+          // Se for evento, marca o evento e data de confirmação
+          if (ehEvento && objBanco) {
+            objBanco.ultimoEvento = tarefaDb.eventoId;
+            objBanco.confirmadoEm = agora;
+            objBanco.atualizadoEm = agora;
+            objBanco.atualizadoPor = ESCOLA_ATUAL;
+          }
         }
       });
 
@@ -413,6 +578,7 @@
 
       const aindaPendentes = tarefaDb.registros.some(r => r.status !== "concluida");
       tarefaDb.status = aindaPendentes ? "em_andamento" : "concluida";
+      tarefaDb.atualizadoEm = agora;
 
       salvarDB(db);
       mostrarTela("sucesso");
