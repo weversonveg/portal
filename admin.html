@@ -57,12 +57,9 @@
 
     .badge-validade {
       display: inline-block;
-      font-size: .62rem;
-      font-weight: 700;
-      padding: .1rem .4rem;
-      border-radius: 8px;
-      text-transform: uppercase;
-      letter-spacing: .3px;
+      font-size: .62rem; font-weight: 700;
+      padding: .1rem .4rem; border-radius: 8px;
+      text-transform: uppercase; letter-spacing: .3px;
       white-space: nowrap;
     }
     .badge-nunca  { background: #f3f4f6; color: #6b7280; }
@@ -86,6 +83,12 @@
       font-size: .8rem;
     }
     .btn-secundario:hover { background: #e8f0fe; }
+    .btn-editar {
+      background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a;
+      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
+      font-size: .8rem;
+    }
+    .btn-editar:hover { background: #e8f0fe; }
 
     .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table {
@@ -107,12 +110,6 @@
       background: #fef3c7; border-left: 4px solid #d97706;
       padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
       font-size: .9rem; color: #78350f;
-    }
-    .aviso-vermelho {
-      background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d;
-    }
-    .aviso-verde {
-      background: #dcfce7; border-left-color: #16a34a; color: #166534;
     }
 
     .filtros-campos {
@@ -136,7 +133,6 @@
       display: flex; align-items: baseline; gap: .5rem;
       margin-bottom: .4rem; font-size: .88rem; flex-wrap: wrap;
     }
-    .painel-validade .linha-validade .badge-validade { flex-shrink: 0; }
     .painel-validade .linha-validade .campos-nomes { color: #555; }
     .painel-validade .linha-validade .qtd { color: #888; font-size: .8rem; }
 
@@ -165,6 +161,37 @@
 
     .acoes-tabela { display: flex; gap: .3rem; flex-wrap: wrap; }
 
+    /* ---------- MODAL ---------- */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      justify-content: center; align-items: center;
+      padding: 1rem;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal-overlay.aberto { display: flex; }
+
+    .modal {
+      background: #fff; border-radius: 8px;
+      width: 100%; max-width: 600px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 1.2rem 1.5rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,.3);
+    }
+    .modal h3 {
+      margin: 0 0 1rem; font-size: 1.1rem;
+      color: #1e3a8a;
+      border-bottom: 2px solid #e5e7eb; padding-bottom: .5rem;
+    }
+    .modal .form-linha { margin-bottom: .5rem; }
+    .modal .rodape {
+      display: flex; gap: .5rem; justify-content: flex-end;
+      margin-top: 1rem; padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
     @media (max-width: 768px) {
       .topo { padding: .8rem 1rem; }
       .topo h1 { font-size: 1rem; }
@@ -172,11 +199,13 @@
       .bloco { padding: .8rem 1rem; }
       .form-linha { grid-template-columns: 1fr; gap: .6rem; }
       .btn-primario { width: 100%; }
-      .btn-perigo { width: 100%; padding: .5rem; }
-      .btn-secundario { width: 100%; padding: .5rem; }
+      .btn-perigo, .btn-secundario, .btn-editar { width: 100%; padding: .5rem; }
       table { font-size: .85rem; min-width: 450px; }
       th, td { padding: .5rem .6rem; }
       .acoes-tabela { flex-direction: column; }
+      .modal { padding: 1rem; }
+      .modal .rodape { flex-direction: column; }
+      .modal .rodape button { width: 100%; }
     }
 
     @media (max-width: 480px) {
@@ -282,7 +311,7 @@
             <input type="text" id="campoOpcoes" placeholder="M, F">
           </div>
           <div class="campo">
-            <label>Obrigatório no cadastro?</label>
+            <label>Obrigatório?</label>
             <select id="campoObrigatorio">
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
@@ -291,9 +320,9 @@
           <div class="campo">
             <label>Validade</label>
             <select id="campoValidade">
-              <option value="nunca">🔒 Nunca muda (CPF, data de nascimento)</option>
-              <option value="evento">🔄 Confirma por evento (endereço, telefone)</option>
-              <option value="livre">✏️ Livre (e-mail, preferências)</option>
+              <option value="nunca">🔒 Nunca muda</option>
+              <option value="evento">🔄 Confirma por evento</option>
+              <option value="livre">✏️ Livre</option>
             </select>
           </div>
         </div>
@@ -315,10 +344,6 @@
     <div id="painel-eventos" class="painel">
       <div class="bloco">
         <h3>Cadastrar evento</h3>
-        <p style="color:#555;font-size:.9rem;margin-top:0;">
-          Eventos são usados pela Secretaria para pedir confirmação de dados em massa.
-          Quando todas as escolas confirmarem, o evento é encerrado automaticamente.
-        </p>
         <div class="form-linha">
           <div class="campo">
             <label>ID (slug)</label>
@@ -364,15 +389,8 @@
     <div id="painel-dados" class="painel">
       <div class="bloco">
         <h3>Manutenção dos selos</h3>
-        <div class="aviso">
-          O selo é calculado com base na <strong>última atualização</strong> do registro
-          e no <strong>último evento confirmado</strong>.
-        </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
-          <button id="btnRecalcularTodos" class="btn-primario">🔄 Recalcular todos os selos</button>
-        </div>
+        <button id="btnRecalcularTodos" class="btn-primario">🔄 Recalcular todos os selos</button>
       </div>
-
       <div class="bloco">
         <h3>Manutenção do catálogo</h3>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
@@ -380,12 +398,10 @@
           <button id="btnRecarregarCatalogo" class="btn-secundario">🔄 Recarregar catálogo padrão</button>
         </div>
       </div>
-
       <div class="bloco painel-validade">
         <h3>Resumo de validade dos campos</h3>
         <div id="resumoValidade"></div>
       </div>
-
       <div class="bloco">
         <h3>Gerenciar dados</h3>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
@@ -395,10 +411,21 @@
         </div>
         <input type="file" id="arquivoImport" accept=".json" style="display:none">
       </div>
-
       <div class="bloco">
         <h3>Resumo atual</h3>
         <div id="resumoDados"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDIÇÃO -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalTitulo">Editar</h3>
+      <div class="form-linha" id="modalForm"></div>
+      <div class="rodape">
+        <button id="btnCancelarEdicao" class="btn-secundario">Cancelar</button>
+        <button id="btnSalvarEdicao" class="btn-primario">Salvar</button>
       </div>
     </div>
   </div>
@@ -525,9 +552,7 @@
     function calcularSelo(registro, tipo) {
       const temConfirmacao = !!registro.confirmadoEm;
       const temEdicao = !!registro.atualizadoEm;
-      if (!temConfirmacao && !temEdicao) {
-        return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
-      }
+      if (!temConfirmacao && !temEdicao) return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
       const db = carregarDB();
       const eventos = (db.eventos || []).filter(e => e.tipo === tipo)
         .sort((a, b) => {
@@ -605,6 +630,7 @@
       const id = `${prefixo}_${campo.id}`;
       const tipo = campo.tipoCampo || "text";
       const val = (valor ?? "").toString().replace(/"/g, "&quot;");
+
       if (tipo === "escola") {
         const db = carregarDB();
         let options = '<option value="">Selecione...</option>';
@@ -647,10 +673,7 @@
         const div = document.createElement("div");
         div.className = "campo";
         div.innerHTML = `
-          <label>
-            ${campo.label}${campo.obrigatorio ? " *" : ""}
-            ${getBadgeValidade(campo.validade)}
-          </label>
+          <label>${campo.label}${campo.obrigatorio ? " *" : ""} ${getBadgeValidade(campo.validade)}</label>
           ${renderizarInput(campo, prefixo)}
         `;
         container.appendChild(div);
@@ -682,6 +705,169 @@
       });
     });
 
+    // ============================================================
+    // MODAL DE EDIÇÃO
+    // ============================================================
+    let edicaoAtual = null; // { tipo, id }
+
+    function abrirEdicao(tipo, id) {
+      const db = carregarDB();
+      const colecao = tipo === "aluno" ? db.alunos
+                    : tipo === "escola" ? db.escolas
+                    : tipo === "servidor" ? db.servidores
+                    : db.eventos;
+      const obj = colecao.find(x => x.id === id);
+      if (!obj) { alert("Registro não encontrado."); return; }
+
+      edicaoAtual = { tipo, id };
+
+      const tituloMap = {
+        aluno: "✏️ Editar aluno",
+        escola: "✏️ Editar escola",
+        servidor: "✏️ Editar servidor",
+        evento: "✏️ Editar evento"
+      };
+      document.getElementById("modalTitulo").textContent = tituloMap[tipo];
+
+      const container = document.getElementById("modalForm");
+      container.innerHTML = "";
+
+      if (tipo === "evento") {
+        // Evento tem campos próprios, não usa o catálogo
+        container.innerHTML = `
+          <div class="campo">
+            <label>Nome exibido</label>
+            <input type="text" id="editEventoLabel" value="${(obj.label || "").replace(/"/g, "&quot;")}">
+          </div>
+          <div class="campo">
+            <label>Tipo</label>
+            <select id="editEventoTipo">
+              <option value="aluno" ${obj.tipo === "aluno" ? "selected" : ""}>Aluno</option>
+              <option value="servidor" ${obj.tipo === "servidor" ? "selected" : ""}>Servidor</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Data de início</label>
+            <input type="date" id="editEventoDataInicio" value="${obj.dataInicio || ""}">
+          </div>
+          <div class="campo">
+            <label>Data de fim</label>
+            <input type="date" id="editEventoDataFim" value="${obj.dataFim || ""}">
+          </div>
+          <div class="campo">
+            <label>Ativo?</label>
+            <select id="editEventoAtivo">
+              <option value="sim" ${obj.ativo ? "selected" : ""}>Sim</option>
+              <option value="nao" ${!obj.ativo ? "selected" : ""}>Não</option>
+            </select>
+          </div>
+        `;
+      } else {
+        const campos = camposDoTipo(tipo);
+        const prioridade = { nome: 1, escolaId: 2 };
+        const ordenados = [...campos].sort((a, b) => {
+          const pa = prioridade[a.id] || 99;
+          const pb = prioridade[b.id] || 99;
+          if (pa !== pb) return pa - pb;
+          return 0;
+        });
+        ordenados.forEach(campo => {
+          const div = document.createElement("div");
+          div.className = "campo";
+          div.innerHTML = `
+            <label>${campo.label}${campo.obrigatorio ? " *" : ""} ${getBadgeValidade(campo.validade)}</label>
+            ${renderizarInput(campo, "modal", obj[campo.id] || "")}
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      document.getElementById("modalOverlay").classList.add("aberto");
+    }
+
+    function fecharModal() {
+      document.getElementById("modalOverlay").classList.remove("aberto");
+      edicaoAtual = null;
+    }
+
+    document.getElementById("btnCancelarEdicao").addEventListener("click", fecharModal);
+    document.getElementById("modalOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "modalOverlay") fecharModal();
+    });
+
+    document.getElementById("btnSalvarEdicao").addEventListener("click", () => {
+      if (!edicaoAtual) return;
+      const db = carregarDB();
+      const { tipo, id } = edicaoAtual;
+
+      const agora = new Date().toISOString();
+
+      if (tipo === "evento") {
+        const ev = db.eventos.find(e => e.id === id);
+        if (!ev) { alert("Evento não encontrado."); return; }
+
+        ev.label = document.getElementById("editEventoLabel").value.trim();
+        ev.tipo = document.getElementById("editEventoTipo").value;
+        ev.dataInicio = document.getElementById("editEventoDataInicio").value;
+        ev.dataFim = document.getElementById("editEventoDataFim").value;
+        ev.ativo = document.getElementById("editEventoAtivo").value === "sim";
+
+        salvarDB(db);
+        fecharModal();
+        renderizarEventos();
+        renderizarResumo();
+        return;
+      }
+
+      // Aluno, escola ou servidor
+      const colecao = tipo === "aluno" ? db.alunos
+                    : tipo === "escola" ? db.escolas
+                    : db.servidores;
+      const obj = colecao.find(x => x.id === id);
+      if (!obj) { alert("Registro não encontrado."); return; }
+
+      const campos = camposDoTipo(tipo);
+      const dados = {};
+      document.getElementById("modalForm").querySelectorAll("[data-campo]").forEach(el => {
+        const campoId = el.dataset.campo;
+        const valor = el.value.trim();
+        dados[campoId] = valor;
+      });
+
+      // Valida obrigatórios
+      for (const c of campos) {
+        if (c.obrigatorio && !dados[c.id]) {
+          alert(`O campo "${c.label}" é obrigatório.`);
+          return;
+        }
+      }
+
+      // Aplica alterações
+      campos.forEach(c => {
+        if (dados[c.id] === undefined || dados[c.id] === "") {
+          delete obj[c.id];
+        } else {
+          obj[c.id] = dados[c.id];
+        }
+      });
+
+      obj.atualizadoEm = agora;
+      obj.atualizadoPor = "admin";
+      obj.confirmadoEm = agora;
+
+      salvarDB(db);
+      fecharModal();
+
+      if (tipo === "escola")  { renderizarEscolas(); renderizarAlunos(); renderizarServidores(); }
+      if (tipo === "aluno")   { renderizarAlunos(); }
+      if (tipo === "servidor"){ renderizarServidores(); }
+
+      renderizarResumo();
+    });
+
+    // ============================================================
+    // ESCOLAS
+    // ============================================================
     function renderizarEscolas() {
       const db = carregarDB();
       const div = document.getElementById("tabelaEscolas");
@@ -702,12 +888,17 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
+          <button class="btn-editar btn-edit-escola" data-id="${e.id}">✏️ Editar</button>
           <button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-edit-escola").forEach(btn => {
+        btn.addEventListener("click", () => abrirEdicao("escola", btn.dataset.id));
+      });
       div.querySelectorAll(".btn-rm-escola").forEach(btn => {
         btn.addEventListener("click", () => {
           if (!confirm("Remover esta escola?")) return;
@@ -741,6 +932,9 @@
       montarFormulario("servidor", "formServidor");
     });
 
+    // ============================================================
+    // ALUNOS
+    // ============================================================
     function renderizarAlunos() {
       const db = carregarDB();
       const div = document.getElementById("tabelaAlunos");
@@ -764,13 +958,18 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
-          <button class="btn-secundario btn-marcar-atual" data-id="${a.id}" data-tipo="aluno">✓ Marcar como atual</button>
+          <button class="btn-editar btn-edit-aluno" data-id="${a.id}">✏️ Editar</button>
+          <button class="btn-secundario btn-marcar-atual" data-id="${a.id}" data-tipo="aluno">✓ Atual</button>
           <button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-edit-aluno").forEach(btn => {
+        btn.addEventListener("click", () => abrirEdicao("aluno", btn.dataset.id));
+      });
       div.querySelectorAll(".btn-marcar-atual").forEach(btn => {
         btn.addEventListener("click", () => marcarComoAtual(btn.dataset.id, btn.dataset.tipo));
       });
@@ -804,6 +1003,9 @@
       renderizarResumo();
     });
 
+    // ============================================================
+    // SERVIDORES
+    // ============================================================
     function renderizarServidores() {
       const db = carregarDB();
       const div = document.getElementById("tabelaServidores");
@@ -827,13 +1029,18 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
-          <button class="btn-secundario btn-marcar-atual" data-id="${s.id}" data-tipo="servidor">✓ Marcar como atual</button>
+          <button class="btn-editar btn-edit-servidor" data-id="${s.id}">✏️ Editar</button>
+          <button class="btn-secundario btn-marcar-atual" data-id="${s.id}" data-tipo="servidor">✓ Atual</button>
           <button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-edit-servidor").forEach(btn => {
+        btn.addEventListener("click", () => abrirEdicao("servidor", btn.dataset.id));
+      });
       div.querySelectorAll(".btn-marcar-atual").forEach(btn => {
         btn.addEventListener("click", () => marcarComoAtual(btn.dataset.id, btn.dataset.tipo));
       });
@@ -867,8 +1074,10 @@
       renderizarResumo();
     });
 
+    // ============================================================
+    // CAMPOS
+    // ============================================================
     let filtroCampos = "todos";
-
     document.querySelectorAll(".filtro-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("ativo"));
@@ -882,16 +1091,14 @@
       const db = carregarDB();
       const div = document.getElementById("tabelaCampos");
       let campos = db.campos;
-      if (filtroCampos !== "todos") {
-        campos = campos.filter(c => (c.validade || "nunca") === filtroCampos);
-      }
+      if (filtroCampos !== "todos") campos = campos.filter(c => (c.validade || "nunca") === filtroCampos);
       if (campos.length === 0) {
         div.innerHTML = '<p class="vazio">Nenhum campo encontrado com esse filtro.</p>';
         return;
       }
       const rotuloTipo = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
       let html = `<div class="tabela-wrap"><table><thead><tr>
-        <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Obrig.</th><th>Validade</th><th>Opções</th><th>Ações</th>
+        <th>Categoria</th><th>ID</th><th>Nome</th><th>Tipo</th><th>Obrig.</th><th>Validade</th><th>Opções</th><th>Ações</th>
       </tr></thead><tbody>`;
       campos.forEach(c => {
         html += `<tr>
@@ -1009,6 +1216,9 @@
       div.innerHTML = html;
     }
 
+    // ============================================================
+    // EVENTOS
+    // ============================================================
     function renderizarEventos() {
       const db = carregarDB();
       const div = document.getElementById("tabelaEventos");
@@ -1039,6 +1249,7 @@
           <td>${e.dataFim || "—"}</td>
           <td>${statusTexto}</td>
           <td><div class="acoes-tabela">
+            <button class="btn-editar btn-edit-evento" data-id="${e.id}">✏️ Editar</button>
             <button class="btn-secundario btn-toggle-evento" data-id="${e.id}">${e.ativo ? "Desativar" : "Reativar"}</button>
             <button class="btn-perigo btn-rm-evento" data-id="${e.id}">Remover</button>
           </div></td>
@@ -1046,6 +1257,10 @@
       });
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-edit-evento").forEach(btn => {
+        btn.addEventListener("click", () => abrirEdicao("evento", btn.dataset.id));
+      });
       div.querySelectorAll(".btn-toggle-evento").forEach(btn => {
         btn.addEventListener("click", () => {
           const db = carregarDB();
@@ -1090,10 +1305,7 @@
       const db = carregarDB();
       if (db.eventos.find(e => e.id === id)) { alert("Já existe um evento com esse ID."); return; }
 
-      db.eventos.push({
-        id, label, tipo, dataInicio, dataFim, ativo,
-        criadoEm: new Date().toISOString()
-      });
+      db.eventos.push({ id, label, tipo, dataInicio, dataFim, ativo, criadoEm: new Date().toISOString() });
       salvarDB(db);
 
       document.getElementById("eventoId").value = "";
@@ -1109,6 +1321,9 @@
       renderizarServidores();
     });
 
+    // ============================================================
+    // RESUMO
+    // ============================================================
     function renderizarResumo() {
       const db = carregarDB();
       const div = document.getElementById("resumoDados");
@@ -1160,6 +1375,9 @@
       div.innerHTML = html;
     }
 
+    // ============================================================
+    // AÇÕES GERAIS
+    // ============================================================
     document.getElementById("btnRecalcularTodos").addEventListener("click", () => {
       if (!confirm("Isso vai marcar TODOS os alunos e servidores como atualizados agora. Continuar?")) return;
       recalcularTodosOsSelos();
@@ -1237,6 +1455,7 @@
       location.reload();
     });
 
+    // INICIAR
     migrarCatalogo();
     montarFormulario("escola", "formEscola");
     montarFormulario("aluno", "formAluno");
