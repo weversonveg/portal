@@ -32,18 +32,14 @@
     }
     .card-tarefa h3 { margin: 0 0 .5rem; font-size: 1rem; }
     .card-tarefa p { margin: .2rem 0; font-size: .88rem; }
-    .card-tarefa.evento {
-      border-left: 4px solid #7c3aed;
-    }
+    .card-tarefa.evento { border-left: 4px solid #7c3aed; }
     .card-tarefa.evento h3 { color: #6d28d9; }
 
     .bloco-registro {
       background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
       margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
     }
-    .bloco-registro.evento {
-      border-left: 4px solid #7c3aed;
-    }
+    .bloco-registro.evento { border-left: 4px solid #7c3aed; }
     .bloco-registro .cabecalho {
       display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem;
       flex-wrap: wrap;
@@ -104,7 +100,6 @@
       background: #dcfce7; border-left-color: #16a34a; color: #166534;
     }
 
-    /* Barra de confirmação em massa */
     .barra-confirmar {
       background: #f3e8ff; border-radius: 8px; padding: .8rem 1rem;
       margin-bottom: 1rem; display: flex; gap: .5rem; align-items: center;
@@ -120,7 +115,6 @@
     }
     .barra-confirmar button:hover { background: #6d28d9; }
 
-    /* Selo */
     .selo {
       display: inline-flex; align-items: center; gap: .2rem;
       font-size: .8rem; font-weight: 600;
@@ -241,7 +235,10 @@
     }
 
     function calcularSelo(registro, tipo) {
-      if (!registro.confirmadoEm || !registro.ultimoEvento) {
+      const temConfirmacao = !!registro.confirmadoEm;
+      const temEdicao = !!registro.atualizadoEm;
+
+      if (!temConfirmacao && !temEdicao) {
         return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
       }
 
@@ -254,13 +251,35 @@
           return db2 - da;
         });
 
+      const dataRef = registro.confirmadoEm || registro.atualizadoEm;
+
       if (eventos.length === 0) {
         return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
       }
 
+      if (!registro.ultimoEvento) {
+        const dataEventoMaisRecente = eventos[0].dataInicio
+          ? new Date(eventos[0].dataInicio)
+          : new Date(0);
+        const dataRefObj = dataRef ? new Date(dataRef) : new Date(0);
+
+        if (dataRefObj >= dataEventoMaisRecente) {
+          return { emoji: "🟢", texto: "Atual", classe: "selo-atual" };
+        }
+
+        const eventosDepois = eventos.filter(e => {
+          const d = e.dataInicio ? new Date(e.dataInicio) : new Date(0);
+          return d > dataRefObj;
+        });
+
+        if (eventosDepois.length === 0) return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
+        if (eventosDepois.length === 1) return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
+        return                                 { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
+      }
+
       const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
-      if (pos === 0) return { emoji: "🟢", texto: "Atual",       classe: "selo-atual" };
-      if (pos === 1) return { emoji: "🟡", texto: "Atenção",     classe: "selo-atencao" };
+      if (pos === 0) return { emoji: "🟢", texto: "Atual",         classe: "selo-atual" };
+      if (pos === 1) return { emoji: "🟡", texto: "Atenção",       classe: "selo-atencao" };
       return             { emoji: "🔴", texto: "Desatualizado", classe: "selo-desatualizado" };
     }
 
@@ -282,7 +301,6 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // ---------- SELETOR DE ESCOLA ----------
     function montarSeletorEscola() {
       db = carregarDB();
       const select = document.getElementById("seletorEscola");
@@ -315,7 +333,6 @@
       mostrarTela("tarefas");
     });
 
-    // ---------- LISTA DE TAREFAS ----------
     function carregarTarefas() {
       db = carregarDB();
       const lista = document.getElementById("listaTarefas");
@@ -366,7 +383,6 @@
       });
     }
 
-    // ---------- ABRIR TAREFA ----------
     function abrirTarefa(tarefaId) {
       db = carregarDB();
       tarefaAtual = db.tarefas.find(t => t.id === tarefaId);
@@ -386,7 +402,6 @@
 
       document.getElementById("descricaoTarefa").textContent = camposTexto;
 
-      // Barra de confirmação em massa (só em eventos)
       const barra = document.getElementById("barraConfirmar");
       if (ehEvento) {
         barra.innerHTML = `
@@ -417,7 +432,6 @@
         const bloco = document.createElement("div");
         bloco.className = "bloco-registro" + (ehEvento ? " evento" : "");
 
-        // Recupera o registro completo do banco para pré-popular
         const colecao = r.tipo === "aluno" ? db.alunos
                       : r.tipo === "escola" ? db.escolas
                       : db.servidores;
@@ -451,7 +465,6 @@
       });
     }
 
-    // ---------- RENDERIZADOR DE INPUT ----------
     function renderizarInput(tipoCampo, campoId, valor, def) {
       const attr = `data-campo="${campoId}"`;
       const val = (valor ?? "").toString().replace(/"/g, "&quot;");
@@ -482,7 +495,6 @@
       return `<input type="text" ${attr} value="${val}">`;
     }
 
-    // ---------- CONFIRMAR TUDO (só em evento) ----------
     function confirmarTudo() {
       const blocos = document.querySelectorAll(".bloco-registro");
       let algum = false;
@@ -490,8 +502,6 @@
       blocos.forEach((bloco) => {
         bloco.querySelectorAll("[data-campo]").forEach((input) => {
           if (!input.value || input.value.trim() === "") {
-            // Se estiver vazio, tenta manter o valor atual do registro
-            // (busca no banco)
             const registroId = bloco.dataset.registroId;
             const tipo = bloco.dataset.tipo;
             const campoId = input.dataset.campo;
@@ -514,14 +524,10 @@
         return;
       }
 
-      // Marca visualmente que tudo está preenchido
       blocos.forEach(b => b.style.borderLeftColor = "#16a34a");
-
-      // Chama o salvar normal
       document.getElementById("btnSalvarTodos").click();
     }
 
-    // ---------- SALVAR ----------
     document.getElementById("btnSalvarTodos").addEventListener("click", () => {
       db = carregarDB();
       const tarefaDb = db.tarefas.find(t => t.id === tarefaAtual.id);
@@ -557,11 +563,9 @@
           }
         });
 
-        // Se está tudo confirmado, marca como concluído
         if ((registroTarefa.camposFaltando || []).length === 0) {
           registroTarefa.status = "concluida";
 
-          // Se for evento, marca o evento e data de confirmação
           if (ehEvento && objBanco) {
             objBanco.ultimoEvento = tarefaDb.eventoId;
             objBanco.confirmadoEm = agora;
@@ -584,7 +588,6 @@
       mostrarTela("sucesso");
     });
 
-    // ---------- NAVEGAÇÃO ----------
     document.getElementById("btnVoltar").addEventListener("click", () => {
       mostrarTela("tarefas");
     });
@@ -594,7 +597,6 @@
       mostrarTela("tarefas");
     });
 
-    // ---------- INICIAR ----------
     montarSeletorEscola();
     carregarTarefas();
   </script>
