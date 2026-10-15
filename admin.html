@@ -48,11 +48,29 @@
       gap: .8rem; margin-bottom: .8rem;
     }
     .campo { display: flex; flex-direction: column; }
-    .campo label { font-size: .8rem; color: #555; margin-bottom: .2rem; }
+    .campo label {
+      font-size: .8rem; color: #555; margin-bottom: .2rem;
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap;
+    }
     .campo input, .campo select {
       padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
       font-size: .95rem; width: 100%;
     }
+
+    /* Badge de validade no formulário */
+    .badge-validade {
+      display: inline-block;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: .1rem .4rem;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+    .badge-nunca  { background: #f3f4f6; color: #6b7280; }
+    .badge-evento { background: #fef3c7; color: #78350f; }
+    .badge-livre  { background: #dbeafe; color: #1e40af; }
 
     .btn-primario {
       background: #1e3a8a; color: #fff; border: none;
@@ -98,6 +116,41 @@
     }
     .aviso-verde {
       background: #dcfce7; border-left-color: #16a34a; color: #166534;
+    }
+
+    /* Filtro de campos */
+    .filtros-campos {
+      display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem;
+    }
+    .filtro-btn {
+      background: #fff; color: #555; border: 1px solid #ccc;
+      padding: .35rem .7rem; border-radius: 20px; cursor: pointer;
+      font-size: .8rem;
+    }
+    .filtro-btn.ativo {
+      background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+    }
+
+    /* Painel de validade */
+    .painel-validade .grupo-tipo {
+      margin-bottom: 1.2rem;
+    }
+    .painel-validade .grupo-tipo h4 {
+      margin: 0 0 .5rem; font-size: .95rem;
+      border-bottom: 1px solid #e5e7eb; padding-bottom: .3rem;
+    }
+    .painel-validade .linha-validade {
+      display: flex; align-items: baseline; gap: .5rem;
+      margin-bottom: .4rem; font-size: .88rem;
+    }
+    .painel-validade .linha-validade .badge-validade {
+      flex-shrink: 0;
+    }
+    .painel-validade .linha-validade .campos-nomes {
+      color: #555;
+    }
+    .painel-validade .linha-validade .qtd {
+      color: #888; font-size: .8rem;
     }
 
     .selo {
@@ -258,9 +311,9 @@
           <div class="campo">
             <label>Validade</label>
             <select id="campoValidade">
-              <option value="nunca">Nunca muda (CPF, data de nascimento)</option>
-              <option value="evento">Confirma por evento (endereço, telefone)</option>
-              <option value="livre">Livre (e-mail, preferências)</option>
+              <option value="nunca">🔒 Nunca muda (CPF, data de nascimento)</option>
+              <option value="evento">🔄 Confirma por evento (endereço, telefone)</option>
+              <option value="livre">✏️ Livre (e-mail, preferências)</option>
             </select>
           </div>
         </div>
@@ -269,6 +322,12 @@
 
       <div class="bloco">
         <h3>Campos cadastrados</h3>
+        <div class="filtros-campos">
+          <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
+          <button class="filtro-btn" data-filtro="nunca">🔒 Nunca muda</button>
+          <button class="filtro-btn" data-filtro="evento">🔄 Por evento</button>
+          <button class="filtro-btn" data-filtro="livre">✏️ Livre</button>
+        </div>
         <div id="tabelaCampos"></div>
       </div>
     </div>
@@ -355,6 +414,14 @@
         </p>
       </div>
 
+      <div class="bloco painel-validade">
+        <h3>Resumo de validade dos campos</h3>
+        <p style="color:#555;font-size:.9rem;margin-top:0;">
+          Veja quais campos precisam de confirmação por evento e quais nunca mudam.
+        </p>
+        <div id="resumoValidade"></div>
+      </div>
+
       <div class="bloco">
         <h3>Gerenciar dados</h3>
         <div class="aviso">
@@ -392,7 +459,7 @@
       { id: "telefone",           label: "Telefone",            tipo: "aluno",    tipoCampo: "text",                       validade: "evento" },
       { id: "serie",              label: "Série",               tipo: "aluno",    tipoCampo: "text",                       validade: "evento" },
 
-      // ---- ESCOLA ---- (o campo "codigo" foi removido — ID é gerado automaticamente)
+      // ---- ESCOLA ----
       { id: "nome",               label: "Nome",                tipo: "escola",   tipoCampo: "text",   obrigatorio: true,  validade: "nunca" },
       { id: "endereco",           label: "Endereço",            tipo: "escola",   tipoCampo: "text",                       validade: "nunca" },
       { id: "telefone",           label: "Telefone",            tipo: "escola",   tipoCampo: "text",                       validade: "livre" },
@@ -416,7 +483,6 @@
     // ============================================================
     // UTILITÁRIOS
     // ============================================================
-
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
@@ -442,22 +508,20 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    // Gera slug a partir de um texto (usado para o ID automático)
     function gerarSlug(texto) {
       return (texto || "")
         .toString()
         .toLowerCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")   // remove acentos
-        .replace(/[^a-z0-9\s-]/g, "")      // remove caracteres especiais
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
         .trim()
-        .replace(/\s+/g, "_")              // espaços viram _
-        .replace(/-+/g, "_")               // hífens viram _
-        .replace(/_+/g, "_")               // _ duplicados viram 1
-        .replace(/^_|_$/g, "");            // remove _ das pontas
+        .replace(/\s+/g, "_")
+        .replace(/-+/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_|_$/g, "");
     }
 
-    // Gera um ID único baseado no nome (com sufixo _2, _3 se necessário)
     function gerarIdUnico(nomeBase, tipo, db) {
       let slug = gerarSlug(nomeBase);
       if (!slug) slug = tipo;
@@ -478,18 +542,32 @@
     }
 
     // ============================================================
+    // BADGE DE VALIDADE
+    // ============================================================
+    function getBadgeValidade(validade) {
+      if (validade === "nunca") {
+        return `<span class="badge-validade badge-nunca" title="Este campo nunca muda e não precisa ser confirmado">🔒 Nunca</span>`;
+      }
+      if (validade === "evento") {
+        return `<span class="badge-validade badge-evento" title="Este campo precisa ser confirmado em eventos (matrícula, rematrícula, censo)">🔄 Evento</span>`;
+      }
+      if (validade === "livre") {
+        return `<span class="badge-validade badge-livre" title="Este campo pode ser atualizado a qualquer momento">✏️ Livre</span>`;
+      }
+      return "";
+    }
+
+    // ============================================================
     // MIGRAÇÃO
     // ============================================================
     function migrarCatalogo() {
       const db = carregarDB();
       let mudou = false;
 
-      // 1. Remove o campo "codigo" da categoria escola (não é mais usado)
       const antes = db.campos.length;
       db.campos = db.campos.filter(c => !(c.id === "codigo" && c.tipo === "escola"));
       if (db.campos.length !== antes) mudou = true;
 
-      // 2. Adiciona campos padrão que faltam
       CATALOGO_PADRAO.forEach(campoPadrao => {
         const existe = db.campos.find(c =>
           c.id === campoPadrao.id && c.tipo === campoPadrao.tipo
@@ -672,7 +750,6 @@
         return;
       }
 
-      // Ordenação: nome primeiro, escolaId segundo, resto na ordem do catálogo
       const prioridade = { nome: 1, escolaId: 2 };
       campos = [...campos].sort((a, b) => {
         const pa = prioridade[a.id] || 99;
@@ -685,7 +762,10 @@
         const div = document.createElement("div");
         div.className = "campo";
         div.innerHTML = `
-          <label>${campo.label}${campo.obrigatorio ? " *" : ""}</label>
+          <label>
+            ${campo.label}${campo.obrigatorio ? " *" : ""}
+            ${getBadgeValidade(campo.validade)}
+          </label>
           ${renderizarInput(campo, prefixo)}
         `;
         container.appendChild(div);
@@ -783,8 +863,6 @@
 
       const db = carregarDB();
       const agora = new Date().toISOString();
-
-      // ID gerado automaticamente a partir do nome
       const id = gerarIdUnico(dados.nome || "escola", "escola", db);
 
       const escola = {
@@ -993,12 +1071,28 @@
     // ============================================================
     // CAMPOS
     // ============================================================
+    let filtroCampos = "todos";
+
+    document.querySelectorAll(".filtro-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("ativo"));
+        btn.classList.add("ativo");
+        filtroCampos = btn.dataset.filtro;
+        renderizarCampos();
+      });
+    });
+
     function renderizarCampos() {
       const db = carregarDB();
       const div = document.getElementById("tabelaCampos");
 
-      if (db.campos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum campo cadastrado ainda.</p>';
+      let campos = db.campos;
+      if (filtroCampos !== "todos") {
+        campos = campos.filter(c => (c.validade || "nunca") === filtroCampos);
+      }
+
+      if (campos.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhum campo encontrado com esse filtro.</p>';
         return;
       }
 
@@ -1008,14 +1102,14 @@
         <th>Categoria</th><th>ID</th><th>Nome exibido</th><th>Tipo</th><th>Obrig.</th><th>Validade</th><th>Opções</th><th>Ações</th>
       </tr></thead><tbody>`;
 
-      db.campos.forEach(c => {
+      campos.forEach(c => {
         html += `<tr>
           <td>${rotuloTipo[c.tipo] || c.tipo}</td>
           <td>${c.id}</td>
           <td>${c.label}</td>
           <td>${c.tipoCampo || "text"}</td>
           <td>${c.obrigatorio ? "Sim" : "Não"}</td>
-          <td>${c.validade || "nunca"}</td>
+          <td>${getBadgeValidade(c.validade)}</td>
           <td>${c.opcoes ? c.opcoes.join(", ") : "—"}</td>
           <td><button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button></td>
         </tr>`;
@@ -1032,6 +1126,7 @@
           salvarDB(db);
           renderizarCampos();
           renderizarResumo();
+          renderizarResumoValidade();
           montarFormulario("escola", "formEscola");
           montarFormulario("aluno", "formAluno");
           montarFormulario("servidor", "formServidor");
@@ -1088,6 +1183,7 @@
 
       renderizarCampos();
       renderizarResumo();
+      renderizarResumoValidade();
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
@@ -1097,6 +1193,56 @@
       document.getElementById("campoOpcoesWrap").style.display =
         e.target.value === "select" ? "block" : "none";
     });
+
+    // ============================================================
+    // RESUMO DE VALIDADE (painel na aba Dados)
+    // ============================================================
+    function renderizarResumoValidade() {
+      const db = carregarDB();
+      const div = document.getElementById("resumoValidade");
+
+      if (db.campos.length === 0) {
+        div.innerHTML = '<p class="vazio">Nenhum campo cadastrado ainda.</p>';
+        return;
+      }
+
+      const rotuloTipo = { aluno: "🎓 Alunos", escola: "🏫 Escolas", servidor: "👩‍🏫 Servidores" };
+      const rotuloValidade = {
+        nunca:  { emoji: "🔒", texto: "Nunca muda",     classe: "badge-nunca" },
+        evento: { emoji: "🔄", texto: "Confirma por evento", classe: "badge-evento" },
+        livre:  { emoji: "✏️", texto: "Livre",           classe: "badge-livre" }
+      };
+
+      let html = "";
+
+      ["aluno", "escola", "servidor"].forEach((tipo) => {
+        const campos = db.campos.filter(c => c.tipo === tipo);
+        if (campos.length === 0) return;
+
+        html += `<div class="grupo-tipo">`;
+        html += `<h4>${rotuloTipo[tipo]}</h4>`;
+
+        ["nunca", "evento", "livre"].forEach((val) => {
+          const lista = campos.filter(c => (c.validade || "nunca") === val);
+          if (lista.length === 0) return;
+
+          const info = rotuloValidade[val];
+          const nomes = lista.map(c => c.label).join(", ");
+
+          html += `
+            <div class="linha-validade">
+              <span class="badge-validade ${info.classe}">${info.emoji} ${info.texto}</span>
+              <span class="qtd">(${lista.length})</span>
+              <span class="campos-nomes">${nomes}</span>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      });
+
+      div.innerHTML = html;
+    }
 
     // ============================================================
     // EVENTOS
@@ -1280,6 +1426,7 @@
       if (mudou) {
         renderizarCampos();
         renderizarResumo();
+        renderizarResumoValidade();
         montarFormulario("escola", "formEscola");
         montarFormulario("aluno", "formAluno");
         montarFormulario("servidor", "formServidor");
@@ -1294,6 +1441,7 @@
       recarregarCatalogoPadrao();
       renderizarCampos();
       renderizarResumo();
+      renderizarResumoValidade();
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
@@ -1357,6 +1505,7 @@
     renderizarCampos();
     renderizarEventos();
     renderizarResumo();
+    renderizarResumoValidade();
   </script>
 </body>
 </html>
