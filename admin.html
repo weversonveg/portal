@@ -342,8 +342,8 @@
       <div class="bloco">
         <h3>Manutenção do catálogo</h3>
         <div class="aviso">
-          Se algum campo padrão estiver faltando (ex: <strong>nome</strong> no servidor),
-          use o botão abaixo para adicionar <strong>sem apagar os dados existentes</strong>.
+          Se algum campo padrão estiver faltando, use o botão abaixo para adicionar
+          <strong>sem apagar os dados existentes</strong>.
         </div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
           <button id="btnMigrarCatalogo" class="btn-primario">📥 Migrar catálogo padrão</button>
@@ -351,8 +351,7 @@
         </div>
         <p style="font-size:.85rem;color:#555;margin:0;">
           <strong>Migrar</strong>: adiciona apenas os campos que faltam.<br>
-          <strong>Recarregar</strong>: substitui o catálogo inteiro pelo padrão
-          (campos customizados serão perdidos).
+          <strong>Recarregar</strong>: substitui o catálogo inteiro pelo padrão.
         </p>
       </div>
 
@@ -393,9 +392,8 @@
       { id: "telefone",           label: "Telefone",            tipo: "aluno",    tipoCampo: "text",                       validade: "evento" },
       { id: "serie",              label: "Série",               tipo: "aluno",    tipoCampo: "text",                       validade: "evento" },
 
-      // ---- ESCOLA ----
+      // ---- ESCOLA ---- (o campo "codigo" foi removido — ID é gerado automaticamente)
       { id: "nome",               label: "Nome",                tipo: "escola",   tipoCampo: "text",   obrigatorio: true,  validade: "nunca" },
-      { id: "codigo",             label: "ID (slug)",           tipo: "escola",   tipoCampo: "text",   obrigatorio: true,  validade: "nunca" },
       { id: "endereco",           label: "Endereço",            tipo: "escola",   tipoCampo: "text",                       validade: "nunca" },
       { id: "telefone",           label: "Telefone",            tipo: "escola",   tipoCampo: "text",                       validade: "livre" },
       { id: "email",              label: "E-mail",              tipo: "escola",   tipoCampo: "email",                      validade: "livre" },
@@ -414,6 +412,10 @@
       { id: "formacao",           label: "Formação",            tipo: "servidor", tipoCampo: "text",                       validade: "livre" },
       { id: "cargaHoraria",       label: "Carga horária",       tipo: "servidor", tipoCampo: "text",                       validade: "evento" }
     ];
+
+    // ============================================================
+    // UTILITÁRIOS
+    // ============================================================
 
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
@@ -440,40 +442,72 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
-    // ---------- MIGRAÇÃO DO CATÁLOGO ----------
-    // Adiciona campos padrão que faltam, sem apagar nada
+    // Gera slug a partir de um texto (usado para o ID automático)
+    function gerarSlug(texto) {
+      return (texto || "")
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")   // remove acentos
+        .replace(/[^a-z0-9\s-]/g, "")      // remove caracteres especiais
+        .trim()
+        .replace(/\s+/g, "_")              // espaços viram _
+        .replace(/-+/g, "_")               // hífens viram _
+        .replace(/_+/g, "_")               // _ duplicados viram 1
+        .replace(/^_|_$/g, "");            // remove _ das pontas
+    }
+
+    // Gera um ID único baseado no nome (com sufixo _2, _3 se necessário)
+    function gerarIdUnico(nomeBase, tipo, db) {
+      let slug = gerarSlug(nomeBase);
+      if (!slug) slug = tipo;
+
+      let id = slug;
+      let contador = 2;
+
+      const colecao = tipo === "aluno"  ? db.alunos
+                    : tipo === "escola" ? db.escolas
+                    : db.servidores;
+
+      while (colecao.find(x => x.id === id)) {
+        id = `${slug}_${contador}`;
+        contador++;
+      }
+
+      return id;
+    }
+
+    // ============================================================
+    // MIGRAÇÃO
+    // ============================================================
     function migrarCatalogo() {
       const db = carregarDB();
-      let adicionados = 0;
+      let mudou = false;
 
+      // 1. Remove o campo "codigo" da categoria escola (não é mais usado)
+      const antes = db.campos.length;
+      db.campos = db.campos.filter(c => !(c.id === "codigo" && c.tipo === "escola"));
+      if (db.campos.length !== antes) mudou = true;
+
+      // 2. Adiciona campos padrão que faltam
       CATALOGO_PADRAO.forEach(campoPadrao => {
         const existe = db.campos.find(c =>
           c.id === campoPadrao.id && c.tipo === campoPadrao.tipo
         );
         if (!existe) {
           db.campos.push({ ...campoPadrao });
-          adicionados++;
+          mudou = true;
         }
       });
 
-      if (adicionados > 0) {
-        salvarDB(db);
-        console.log(`Catálogo migrado: ${adicionados} campo(s) adicionado(s).`);
-      }
-
-      return adicionados;
+      if (mudou) salvarDB(db);
+      return mudou;
     }
 
-    // ---------- RECARREGAR CATÁLOGO PADRÃO ----------
-    // Substitui o catálogo inteiro pelo padrão
     function recarregarCatalogoPadrao() {
       const db = carregarDB();
       db.campos = JSON.parse(JSON.stringify(CATALOGO_PADRAO));
       salvarDB(db);
-    }
-
-    function gerarId(prefixo) {
-      return prefixo + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
     }
 
     function camposDoTipo(tipo) {
@@ -628,8 +662,6 @@
       return `<input type="text" id="${id}" data-campo="${campo.id}" value="${val}">`;
     }
 
-    // Monta formulário com ordenação por prioridade:
-    // "nome" primeiro, "escolaId" segundo, depois mantém a ordem do catálogo.
     function montarFormulario(tipo, prefixo) {
       const container = document.getElementById(prefixo);
       container.innerHTML = "";
@@ -640,8 +672,8 @@
         return;
       }
 
-      const prioridade = { nome: 1, escolaId: 2, codigo: 1 };
-
+      // Ordenação: nome primeiro, escolaId segundo, resto na ordem do catálogo
+      const prioridade = { nome: 1, escolaId: 2 };
       campos = [...campos].sort((a, b) => {
         const pa = prioridade[a.id] || 99;
         const pb = prioridade[b.id] || 99;
@@ -749,30 +781,22 @@
         }
       }
 
-      if (dados.codigo && !/^[a-z0-9_]+$/.test(dados.codigo)) {
-        alert("O ID da escola só pode ter letras minúsculas, números e underline (_).");
-        return;
-      }
-
       const db = carregarDB();
-      if (dados.codigo && db.escolas.find(e => e.id === dados.codigo)) {
-        alert("Já existe uma escola com esse ID.");
-        return;
-      }
-
       const agora = new Date().toISOString();
+
+      // ID gerado automaticamente a partir do nome
+      const id = gerarIdUnico(dados.nome || "escola", "escola", db);
+
       const escola = {
-        id: dados.codigo || gerarId("e"),
+        id,
         criadoEm: agora,
         atualizadoEm: agora,
         atualizadoPor: "admin",
         confirmadoEm: agora
       };
       camposEscola.forEach(c => {
-        if (c.id === "codigo") return;
         if (dados[c.id]) escola[c.id] = dados[c.id];
       });
-      if (!escola.nome && dados.nome) escola.nome = dados.nome;
 
       db.escolas.push(escola);
       salvarDB(db);
@@ -854,9 +878,10 @@
 
       const db = carregarDB();
       const agora = new Date().toISOString();
+      const id = gerarIdUnico(dados.nome || "aluno", "aluno", db);
 
       const aluno = {
-        id: gerarId("a"),
+        id,
         criadoEm: agora,
         atualizadoEm: agora,
         atualizadoPor: "admin",
@@ -944,9 +969,10 @@
 
       const db = carregarDB();
       const agora = new Date().toISOString();
+      const id = gerarIdUnico(dados.nome || "servidor", "servidor", db);
 
       const servidor = {
-        id: gerarId("s"),
+        id,
         criadoEm: agora,
         atualizadoEm: agora,
         atualizadoPor: "admin",
@@ -1250,16 +1276,16 @@
     });
 
     document.getElementById("btnMigrarCatalogo").addEventListener("click", () => {
-      const adicionados = migrarCatalogo();
-      if (adicionados > 0) {
-        alert(`${adicionados} campo(s) adicionado(s) ao catálogo.`);
+      const mudou = migrarCatalogo();
+      if (mudou) {
         renderizarCampos();
         renderizarResumo();
         montarFormulario("escola", "formEscola");
         montarFormulario("aluno", "formAluno");
         montarFormulario("servidor", "formServidor");
+        alert("Catálogo atualizado!");
       } else {
-        alert("Catálogo já está completo. Nenhum campo adicionado.");
+        alert("Catálogo já está atualizado. Nenhuma mudança.");
       }
     });
 
@@ -1319,7 +1345,7 @@
     // ============================================================
     // INICIAR
     // ============================================================
-    migrarCatalogo();   // <-- garante que o catálogo tem todos os campos padrão
+    migrarCatalogo();
 
     montarFormulario("escola", "formEscola");
     montarFormulario("aluno", "formAluno");
