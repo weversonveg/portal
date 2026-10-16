@@ -4,219 +4,217 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administração da Rede</title>
+  <link rel="stylesheet" href="tema.css">
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; background: #f5f7fa; color: #1a1a1a; font-size: 16px; }
-
-    .topo {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #1e3a8a; color: #fff; padding: 1rem 1.5rem;
-      flex-wrap: wrap; gap: .5rem;
-    }
-    .topo h1 { font-size: 1.1rem; margin: 0; }
-    .usuario { font-size: .85rem; opacity: .9; }
-
-    .tela { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
-
-    .abas {
-      display: flex; gap: .3rem; margin-bottom: 1.5rem;
-      border-bottom: 2px solid #e5e7eb; overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .aba {
-      background: none; border: none; padding: .7rem 1rem;
-      cursor: pointer; font-size: .9rem; color: #555;
-      border-bottom: 3px solid transparent; margin-bottom: -2px;
-      white-space: nowrap; flex-shrink: 0;
-    }
-    .aba.ativa { color: #1e3a8a; font-weight: 600; border-bottom-color: #1e3a8a; }
-
-    .painel { display: none; }
-    .painel.ativo { display: block; }
-
-    .bloco {
-      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
-      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
-    .bloco h3 { margin: 0 0 1rem; font-size: 1rem; }
-
-    .form-linha {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: .8rem; margin-bottom: .8rem;
-    }
-    .campo { display: flex; flex-direction: column; }
-    .campo label {
-      font-size: .8rem; color: #555; margin-bottom: .2rem;
-      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap;
-    }
-    .campo input, .campo select {
-      padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 4px;
-      font-size: .95rem; width: 100%;
+    /* Ajustes específicos desta página, se necessário */
+    .toast-container {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      pointer-events: none;
     }
 
-    .badge-validade {
-      display: inline-block;
-      font-size: .62rem; font-weight: 700;
-      padding: .1rem .4rem; border-radius: 8px;
-      text-transform: uppercase; letter-spacing: .3px;
-      white-space: nowrap;
-    }
-    .badge-nunca  { background: #f3f4f6; color: #6b7280; }
-    .badge-evento { background: #fef3c7; color: #78350f; }
-    .badge-livre  { background: #dbeafe; color: #1e40af; }
-
-    .btn-primario {
-      background: #1e3a8a; color: #fff; border: none;
-      padding: .7rem 1.2rem; border-radius: 4px; cursor: pointer;
-      font-size: .95rem; font-weight: 500;
-    }
-    .btn-primario:hover { background: #16306e; }
-    .btn-perigo {
-      background: #dc2626; color: #fff; border: none;
-      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
-      font-size: .8rem;
-    }
-    .btn-secundario {
-      background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a;
-      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
-      font-size: .8rem;
-    }
-    .btn-secundario:hover { background: #e8f0fe; }
-    .btn-editar {
-      background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a;
-      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
-      font-size: .8rem;
-    }
-    .btn-editar:hover { background: #e8f0fe; }
-
-    .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table {
-      width: 100%; border-collapse: collapse; background: #fff;
-      border-radius: 8px; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
-      font-size: .9rem; min-width: 500px;
-    }
-    th, td {
-      padding: .6rem .8rem; text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    th { background: #1e3a8a; color: #fff; font-weight: 600; }
-    tr:hover td { background: #f9fafb; }
-
-    .vazio { color: #888; text-align: center; padding: 1.5rem; }
-
-    .aviso {
-      background: #fef3c7; border-left: 4px solid #d97706;
-      padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
-      font-size: .9rem; color: #78350f;
-    }
-    .aviso-vermelho { background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d; }
-
-    .filtros-campos {
-      display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem;
-    }
-    .filtro-btn {
-      background: #fff; color: #555; border: 1px solid #ccc;
-      padding: .35rem .7rem; border-radius: 20px; cursor: pointer;
-      font-size: .8rem;
-    }
-    .filtro-btn.ativo {
-      background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+    .toast {
+      background: #fff;
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      min-width: 300px;
+      max-width: 420px;
+      pointer-events: auto;
+      animation: toastIn 250ms cubic-bezier(0.16, 1, 0.3, 1);
+      border-left: 4px solid var(--cor-primaria);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--cor-texto);
+      line-height: 1.5;
     }
 
-    .painel-validade .grupo-tipo { margin-bottom: 1.2rem; }
-    .painel-validade .grupo-tipo h4 {
-      margin: 0 0 .5rem; font-size: .95rem;
-      border-bottom: 1px solid #e5e7eb; padding-bottom: .3rem;
+    .toast.saindo {
+      animation: toastOut 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
     }
-    .painel-validade .linha-validade {
-      display: flex; align-items: baseline; gap: .5rem;
-      margin-bottom: .4rem; font-size: .88rem; flex-wrap: wrap;
+
+    .toast--sucesso { border-left-color: var(--cor-sucesso); }
+    .toast--erro    { border-left-color: var(--cor-perigo); }
+    .toast--aviso   { border-left-color: var(--cor-atencao); }
+    .toast--info    { border-left-color: var(--cor-info); }
+
+    .toast .icone {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .painel-validade .linha-validade .campos-nomes { color: #555; }
-    .painel-validade .linha-validade .qtd { color: #888; font-size: .8rem; }
 
-    .selo {
-      display: inline-flex; align-items: center; gap: .2rem;
-      font-size: .8rem; font-weight: 600;
-      padding: .15rem .5rem; border-radius: 10px;
-      white-space: nowrap;
+    .toast--sucesso .icone { color: var(--cor-sucesso); }
+    .toast--erro .icone    { color: var(--cor-perigo); }
+    .toast--aviso .icone   { color: var(--cor-atencao); }
+    .toast--info .icone    { color: var(--cor-info); }
+
+    .toast .conteudo {
+      flex: 1;
     }
-    .selo-atual         { background: #dcfce7; color: #166534; }
-    .selo-atencao       { background: #fef3c7; color: #78350f; }
-    .selo-desatualizado { background: #fee2e2; color: #7f1d1d; }
-    .selo-nunca         { background: #f3f4f6; color: #6b7280; }
 
-    .evento-badge {
-      display: inline-block; padding: .15rem .5rem; border-radius: 10px;
-      font-size: .7rem; font-weight: 600;
+    .toast .titulo {
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+      font-size: 0.88rem;
     }
-    .evento-aluno    { background: #dbeafe; color: #1e40af; }
-    .evento-servidor { background: #f3e8ff; color: #6b21a8; }
-    .evento-inativo  { background: #f3f4f6; color: #9ca3af; }
 
-    .status-evento-ativo     { color: #16a34a; font-weight: 600; }
-    .status-evento-inativo   { color: #9ca3af; font-weight: 600; }
-    .status-evento-concluido { color: #1e3a8a; font-weight: 600; }
+    .toast .mensagem {
+      font-size: 0.82rem;
+      color: var(--cor-texto-medio);
+    }
 
-    .acoes-tabela { display: flex; gap: .3rem; flex-wrap: wrap; }
+    .toast .fechar {
+      background: none;
+      border: none;
+      color: var(--cor-texto-suave);
+      cursor: pointer;
+      padding: 0.15rem;
+      border-radius: 4px;
+      transition: all 150ms;
+    }
 
-    /* ---------- MODAL ---------- */
+    .toast .fechar:hover {
+      background: var(--cor-fundo);
+      color: var(--cor-texto);
+    }
+
+    @keyframes toastIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* Ícone nos botões */
+    .btn-primario svg,
+    .btn-secundario svg,
+    .btn-editar svg,
+    .btn-perigo svg,
+    .btn-sucesso svg,
+    .btn-evento svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton 1.5s infinite;
+      border-radius: 4px;
+      height: 16px;
+      margin: 0.5rem 0;
+    }
+
+    @keyframes skeleton {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Sobreposição de modal */
     .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.5);
-      display: none;
-      justify-content: center; align-items: center;
-      padding: 1rem;
-      z-index: 1000;
-      overflow-y: auto;
-    }
-    .modal-overlay.aberto { display: flex; }
-    .modal {
-      background: #fff; border-radius: 8px;
-      width: 100%; max-width: 600px;
-      max-height: 90vh; overflow-y: auto;
-      padding: 1.2rem 1.5rem;
-      box-shadow: 0 10px 40px rgba(0,0,0,.3);
-    }
-    .modal h3 {
-      margin: 0 0 1rem; font-size: 1.1rem;
-      color: #1e3a8a;
-      border-bottom: 2px solid #e5e7eb; padding-bottom: .5rem;
-    }
-    .modal .rodape {
-      display: flex; gap: .5rem; justify-content: flex-end;
-      margin-top: 1rem; padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      background: rgba(17, 24, 39, 0.65);
     }
 
-    @media (max-width: 768px) {
-      .topo { padding: .8rem 1rem; }
-      .topo h1 { font-size: 1rem; }
-      .tela { margin: 1rem auto; padding: 0 .8rem; }
-      .bloco { padding: .8rem 1rem; }
-      .form-linha { grid-template-columns: 1fr; gap: .6rem; }
-      .btn-primario { width: 100%; }
-      .btn-perigo, .btn-secundario, .btn-editar { width: 100%; padding: .5rem; }
-      table { font-size: .85rem; min-width: 450px; }
-      th, td { padding: .5rem .6rem; }
-      .acoes-tabela { flex-direction: column; }
-      .modal { padding: 1rem; }
-      .modal .rodape { flex-direction: column; }
-      .modal .rodape button { width: 100%; }
+    /* Ajustes finos */
+    .acoes-tabela {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
     }
 
-    @media (max-width: 480px) {
-      .topo { padding: .7rem .8rem; }
-      .topo h1 { font-size: .95rem; }
-      .usuario { font-size: .75rem; }
-      .tela { padding: 0 .6rem; }
-      .aba { padding: .6rem .8rem; font-size: .82rem; }
-      .bloco { padding: .7rem .8rem; border-radius: 6px; }
-      table { font-size: .8rem; min-width: 400px; }
-      th, td { padding: .45rem .5rem; }
-      .btn-primario { font-size: .9rem; padding: .65rem 1rem; }
+    .acoes-tabela button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Empty state customizado */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: var(--cor-fundo-alt);
+      border: 2px dashed var(--cor-borda);
+      border-radius: var(--raio-lg);
+      margin: 0.5rem 0;
+    }
+
+    .empty-state .icone-grande {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 1rem;
+      color: var(--cor-texto-suave);
+      opacity: 0.6;
+    }
+
+    .empty-state h4 {
+      margin: 0 0 0.4rem;
+      font-size: 1rem;
+      color: var(--cor-texto);
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--cor-texto-claro);
+      font-size: 0.85rem;
+    }
+
+    /* Aviso inline com ícone */
+    .aviso {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .aviso svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    /* Botões com ícone de loading */
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      right: 0.8rem;
+      top: 50%;
+      margin-top: -7px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -229,12 +227,49 @@
 
   <div class="tela">
     <div class="abas">
-      <button class="aba ativa" data-aba="escolas">🏫 Escolas</button>
-      <button class="aba" data-aba="alunos">🎓 Alunos</button>
-      <button class="aba" data-aba="servidores">👩‍🏫 Servidores</button>
-      <button class="aba" data-aba="campos">📋 Campos</button>
-      <button class="aba" data-aba="eventos">🔄 Eventos</button>
-      <button class="aba" data-aba="dados">💾 Dados</button>
+      <button class="aba ativa" data-aba="escolas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+        </svg>
+        Escolas
+      </button>
+      <button class="aba" data-aba="alunos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        Alunos
+      </button>
+      <button class="aba" data-aba="servidores">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Servidores
+      </button>
+      <button class="aba" data-aba="campos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+        </svg>
+        Campos
+      </button>
+      <button class="aba" data-aba="eventos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Eventos
+      </button>
+      <button class="aba" data-aba="dados">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline; vertical-align:-3px; margin-right:4px;">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        Dados
+      </button>
     </div>
 
     <!-- ABA ESCOLAS -->
@@ -242,7 +277,13 @@
       <div class="bloco">
         <h3>Cadastrar escola</h3>
         <div class="form-linha" id="formEscola"></div>
-        <button id="btnAddEscola" class="btn-primario">+ Adicionar escola</button>
+        <button id="btnAddEscola" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar escola
+        </button>
       </div>
       <div class="bloco">
         <h3>Escolas cadastradas</h3>
@@ -255,7 +296,13 @@
       <div class="bloco">
         <h3>Cadastrar aluno</h3>
         <div class="form-linha" id="formAluno"></div>
-        <button id="btnAddAluno" class="btn-primario">+ Adicionar aluno</button>
+        <button id="btnAddAluno" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar aluno
+        </button>
       </div>
       <div class="bloco">
         <h3>Alunos cadastrados</h3>
@@ -268,7 +315,13 @@
       <div class="bloco">
         <h3>Cadastrar servidor</h3>
         <div class="form-linha" id="formServidor"></div>
-        <button id="btnAddServidor" class="btn-primario">+ Adicionar servidor</button>
+        <button id="btnAddServidor" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar servidor
+        </button>
       </div>
       <div class="bloco">
         <h3>Servidores cadastrados</h3>
@@ -329,7 +382,13 @@
             </select>
           </div>
         </div>
-        <button id="btnAddCampo" class="btn-primario">+ Adicionar campo</button>
+        <button id="btnAddCampo" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar campo
+        </button>
       </div>
 
       <div class="bloco">
@@ -348,7 +407,7 @@
     <div id="painel-eventos" class="painel">
       <div class="bloco">
         <h3>Cadastrar evento</h3>
-        <p style="color:#555;font-size:.9rem;margin-top:0;">
+        <p style="color:var(--cor-texto-claro);font-size:.85rem;margin-top:0;">
           Eventos são usados pela Secretaria para pedir confirmação de dados em massa.
           Quando todas as escolas confirmarem, o evento é encerrado automaticamente.
         </p>
@@ -385,9 +444,14 @@
             </select>
           </div>
         </div>
-        <button id="btnAddEvento" class="btn-primario">+ Adicionar evento</button>
+        <button id="btnAddEvento" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar evento
+        </button>
       </div>
-
       <div class="bloco">
         <h3>Eventos cadastrados</h3>
         <div id="tabelaEventos"></div>
@@ -398,10 +462,9 @@
     <div id="painel-dados" class="painel">
       <div class="bloco">
         <h3>Importar dados</h3>
-        <p style="color:#555;font-size:.9rem;margin-top:0;">
+        <p style="color:var(--cor-texto-claro);font-size:.85rem;margin-top:0;">
           Importe de um arquivo <strong>CSV</strong> ou <strong>JSON</strong>.
-          No CSV, a primeira linha precisa ter os <strong>IDs dos campos</strong>
-          (ex: <code>nome,escolaId,cpf,nomeMae,genero</code>).
+          No CSV, a primeira linha precisa ter os <strong>IDs dos campos</strong>.
         </p>
 
         <div class="form-linha">
@@ -423,19 +486,27 @@
         </div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
-          <button id="btnImportarCSV" class="btn-primario">⬆ Importar CSV</button>
-          <button id="btnModeloCSV" class="btn-secundario">📄 Baixar modelo CSV</button>
+          <button id="btnImportarCSV" class="btn-primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Importar CSV
+          </button>
+          <button id="btnModeloCSV" class="btn-secundario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+            </svg>
+            Baixar modelo
+          </button>
         </div>
         <input type="file" id="arquivoCSV" accept=".csv,text/csv" style="display:none">
       </div>
 
       <div class="bloco">
         <h3>Exportar dados</h3>
-        <p style="color:#555;font-size:.9rem;margin-top:0;">
-          Baixe os dados em <strong>CSV</strong> (abre no Excel/Sheets) ou
-          <strong>JSON</strong> (backup completo).
-        </p>
-
         <div class="form-linha">
           <div class="campo">
             <label>Tipo de dado</label>
@@ -448,23 +519,59 @@
         </div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
-          <button id="btnExportarCSV" class="btn-primario">⬇ Exportar CSV</button>
-          <button id="btnExportarCompleto" class="btn-primario">⬇ Backup completo (JSON)</button>
-          <button id="btnImportarCompleto" class="btn-secundario">⬆ Restaurar backup (JSON)</button>
+          <button id="btnExportarCSV" class="btn-primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportar CSV
+          </button>
+          <button id="btnExportarCompleto" class="btn-primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            Backup completo
+          </button>
+          <button id="btnImportarCompleto" class="btn-secundario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Restaurar
+          </button>
         </div>
         <input type="file" id="arquivoImport" accept=".json" style="display:none">
       </div>
 
       <div class="bloco">
-        <h3>Manutenção dos selos</h3>
-        <button id="btnRecalcularTodos" class="btn-primario">🔄 Recalcular todos os selos</button>
-      </div>
-
-      <div class="bloco">
-        <h3>Manutenção do catálogo</h3>
+        <h3>Manutenção</h3>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-          <button id="btnMigrarCatalogo" class="btn-primario">📥 Migrar catálogo padrão</button>
-          <button id="btnRecarregarCatalogo" class="btn-secundario">🔄 Recarregar catálogo padrão</button>
+          <button id="btnRecalcularTodos" class="btn-primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Recalcular selos
+          </button>
+          <button id="btnMigrarCatalogo" class="btn-primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Migrar catálogo
+          </button>
+          <button id="btnRecarregarCatalogo" class="btn-secundario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Recarregar catálogo
+          </button>
         </div>
       </div>
 
@@ -475,7 +582,14 @@
 
       <div class="bloco">
         <h3>Zona de perigo</h3>
-        <button id="btnResetar" class="btn-perigo">🗑 Resetar tudo</button>
+        <button id="btnResetar" class="btn-perigo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+          </svg>
+          Resetar tudo
+        </button>
       </div>
 
       <div class="bloco">
@@ -485,6 +599,9 @@
     </div>
   </div>
 
+  <!-- Container de Toasts -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <!-- MODAL DE EDIÇÃO -->
   <div id="modalOverlay" class="modal-overlay">
     <div class="modal">
@@ -492,12 +609,75 @@
       <div class="form-linha" id="modalForm"></div>
       <div class="rodape">
         <button id="btnCancelarEdicao" class="btn-secundario">Cancelar</button>
-        <button id="btnSalvarEdicao" class="btn-primario">Salvar</button>
+        <button id="btnSalvarEdicao" class="btn-primario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Salvar
+        </button>
       </div>
     </div>
   </div>
 
   <script>
+    // ============================================================
+    // SISTEMA DE TOASTS
+    // ============================================================
+    const ICONES_TOAST = {
+      sucesso: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+      erro:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+      aviso:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      info:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+    };
+
+    function toast(mensagem, tipo = "info", titulo = null, duracao = 4000) {
+      const container = document.getElementById("toastContainer");
+      const el = document.createElement("div");
+      el.className = `toast toast--${tipo}`;
+
+      const tituloPadrao = {
+        sucesso: "Sucesso",
+        erro: "Erro",
+        aviso: "Atenção",
+        info: "Informação"
+      }[tipo];
+
+      el.innerHTML = `
+        <div class="icone">${ICONES_TOAST[tipo]}</div>
+        <div class="conteudo">
+          <div class="titulo">${titulo || tituloPadrao}</div>
+          <div class="mensagem">${mensagem}</div>
+        </div>
+        <button class="fechar" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      `;
+
+      container.appendChild(el);
+
+      const fechar = () => {
+        el.classList.add("saindo");
+        setTimeout(() => el.remove(), 200);
+      };
+
+      el.querySelector(".fechar").addEventListener("click", fechar);
+
+      if (duracao > 0) {
+        setTimeout(fechar, duracao);
+      }
+    }
+
+    // Substitui o alert() por toast
+    function notificar(mensagem, tipo = "info") {
+      toast(mensagem, tipo);
+    }
+
+    // ============================================================
+    // BANCO
+    // ============================================================
     const DB_KEY = "rede_municipal_db";
 
     const CATALOGO_PADRAO = [
@@ -532,9 +712,6 @@
       { id: "cargaHoraria",       label: "Carga horária",       tipo: "servidor", tipoCampo: "text",                       validade: "evento" }
     ];
 
-    // ============================================================
-    // BANCO
-    // ============================================================
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
@@ -558,9 +735,6 @@
 
     function salvarDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-    // ============================================================
-    // UTILITÁRIOS
-    // ============================================================
     function gerarSlug(texto) {
       return (texto || "").toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -622,9 +796,6 @@
       return e ? (e.nome || e.id) : id;
     }
 
-    // ============================================================
-    // SELO
-    // ============================================================
     function calcularSelo(registro, tipo) {
       const temConfirmacao = !!registro.confirmadoEm;
       const temEdicao = !!registro.atualizadoEm;
@@ -680,6 +851,7 @@
       renderizarAlunos();
       renderizarServidores();
       renderizarResumo();
+      toast("Registro marcado como atualizado", "sucesso");
     }
 
     function recalcularTodosOsSelos() {
@@ -704,9 +876,6 @@
       salvarDB(db);
     }
 
-    // ============================================================
-    // FORMULÁRIOS DINÂMICOS
-    // ============================================================
     function renderizarInput(campo, prefixo, valor = "") {
       const id = `${prefixo}_${campo.id}`;
       const tipo = campo.tipoCampo || "text";
@@ -786,9 +955,6 @@
       });
     });
 
-    // ============================================================
-    // MODAL DE EDIÇÃO (genérico: aluno, escola, servidor, evento, campo)
-    // ============================================================
     let edicaoAtual = null;
 
     function abrirEdicao(tipo, id) {
@@ -798,15 +964,15 @@
                     : tipo === "servidor" ? db.servidores
                     : db.eventos;
       const obj = colecao.find(x => x.id === id);
-      if (!obj) { alert("Registro não encontrado."); return; }
+      if (!obj) { toast("Registro não encontrado.", "erro"); return; }
 
       edicaoAtual = { tipo, id };
 
       const tituloMap = {
-        aluno: "✏️ Editar aluno",
-        escola: "✏️ Editar escola",
-        servidor: "✏️ Editar servidor",
-        evento: "✏️ Editar evento"
+        aluno: "Editar aluno",
+        escola: "Editar escola",
+        servidor: "Editar servidor",
+        evento: "Editar evento"
       };
       document.getElementById("modalTitulo").textContent = tituloMap[tipo];
 
@@ -865,32 +1031,27 @@
       document.getElementById("modalOverlay").classList.add("aberto");
     }
 
-    // ============================================================
-    // EDIÇÃO DE CAMPO (do catálogo)
-    // ============================================================
     function abrirEdicaoCampo(campoId, tipoCampo) {
       const db = carregarDB();
       const campo = db.campos.find(c => c.id === campoId && c.tipo === tipoCampo);
-      if (!campo) { alert("Campo não encontrado."); return; }
+      if (!campo) { toast("Campo não encontrado.", "erro"); return; }
 
       edicaoAtual = { tipo: "campo", id: campoId, tipoCampo: tipoCampo };
 
-      document.getElementById("modalTitulo").textContent =
-        `✏️ Editar campo — ${campo.label}`;
+      document.getElementById("modalTitulo").textContent = `Editar campo — ${campo.label}`;
 
       const container = document.getElementById("modalForm");
       container.innerHTML = `
         <div class="campo">
           <label>ID (não pode ser alterado)</label>
-          <input type="text" value="${campo.id}" disabled
-                 style="background:#f3f4f6; color:#888;">
+          <input type="text" value="${campo.id}" disabled>
         </div>
         <div class="campo">
           <label>Categoria (não pode ser alterada)</label>
           <input type="text" value="${
             campo.tipo === "aluno" ? "Aluno" :
             campo.tipo === "escola" ? "Escola" : "Servidor"
-          }" disabled style="background:#f3f4f6; color:#888;">
+          }" disabled>
         </div>
         <div class="campo">
           <label>Nome exibido</label>
@@ -907,12 +1068,9 @@
             <option value="escola" ${campo.tipoCampo === "escola" ? "selected" : ""}>Escola (select de escolas)</option>
           </select>
         </div>
-        <div class="campo" id="editCampoOpcoesWrap"
-             style="display: ${campo.tipoCampo === "select" ? "flex" : "none"};">
+        <div class="campo" id="editCampoOpcoesWrap" style="display: ${campo.tipoCampo === "select" ? "flex" : "none"};">
           <label>Opções (separadas por vírgula)</label>
-          <input type="text" id="editCampoOpcoes"
-                 value="${(campo.opcoes || []).join(", ")}"
-                 placeholder="M, F">
+          <input type="text" id="editCampoOpcoes" value="${(campo.opcoes || []).join(", ")}" placeholder="M, F">
         </div>
         <div class="campo">
           <label>Obrigatório?</label>
@@ -955,10 +1113,9 @@
       const { tipo, id } = edicaoAtual;
       const agora = new Date().toISOString();
 
-      // ---- EVENTO ----
       if (tipo === "evento") {
         const ev = db.eventos.find(e => e.id === id);
-        if (!ev) { alert("Evento não encontrado."); return; }
+        if (!ev) { toast("Evento não encontrado.", "erro"); return; }
 
         ev.label = document.getElementById("editEventoLabel").value.trim();
         ev.tipo = document.getElementById("editEventoTipo").value;
@@ -970,14 +1127,14 @@
         fecharModal();
         renderizarEventos();
         renderizarResumo();
+        toast("Evento atualizado com sucesso.", "sucesso");
         return;
       }
 
-      // ---- CAMPO ----
       if (tipo === "campo") {
         const tipoCampo_ = edicaoAtual.tipoCampo;
         const campo = db.campos.find(c => c.id === id && c.tipo === tipoCampo_);
-        if (!campo) { alert("Campo não encontrado."); return; }
+        if (!campo) { toast("Campo não encontrado.", "erro"); return; }
 
         const label = document.getElementById("editCampoLabel").value.trim();
         const tipoCampoNovo = document.getElementById("editCampoTipoCampo").value;
@@ -985,7 +1142,7 @@
         const obrigatorio = document.getElementById("editCampoObrigatorio").value === "sim";
         const validade = document.getElementById("editCampoValidade").value;
 
-        if (!label) { alert("Informe o nome exibido."); return; }
+        if (!label) { toast("Informe o nome exibido.", "aviso"); return; }
 
         campo.label = label;
         campo.tipoCampo = tipoCampoNovo;
@@ -993,7 +1150,7 @@
         campo.validade = validade;
 
         if (tipoCampoNovo === "select") {
-          if (!opcoesTexto) { alert("Informe as opções."); return; }
+          if (!opcoesTexto) { toast("Informe as opções.", "aviso"); return; }
           campo.opcoes = opcoesTexto.split(",").map(s => s.trim()).filter(Boolean);
         } else {
           delete campo.opcoes;
@@ -1008,15 +1165,15 @@
         montarFormulario("escola", "formEscola");
         montarFormulario("aluno", "formAluno");
         montarFormulario("servidor", "formServidor");
+        toast("Campo atualizado com sucesso.", "sucesso");
         return;
       }
 
-      // ---- ALUNO / ESCOLA / SERVIDOR ----
       const colecao = tipo === "aluno" ? db.alunos
                     : tipo === "escola" ? db.escolas
                     : db.servidores;
       const obj = colecao.find(x => x.id === id);
-      if (!obj) { alert("Registro não encontrado."); return; }
+      if (!obj) { toast("Registro não encontrado.", "erro"); return; }
 
       const campos = camposDoTipo(tipo);
       const dados = {};
@@ -1026,7 +1183,7 @@
 
       for (const c of campos) {
         if (c.obrigatorio && !dados[c.id]) {
-          alert(`O campo "${c.label}" é obrigatório.`);
+          toast(`O campo "${c.label}" é obrigatório.`, "aviso");
           return;
         }
       }
@@ -1051,16 +1208,40 @@
       if (tipo === "servidor"){ renderizarServidores(); }
 
       renderizarResumo();
+      toast(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} atualizado com sucesso.`, "sucesso");
     });
 
     // ============================================================
-    // ESCOLAS
+    // RENDERIZAÇÃO DAS TABELAS
     // ============================================================
+
+    // Ícone de editar
+    const ICONE_EDITAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const ICONE_REMOVER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+    const ICONE_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const ICONE_POWER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>`;
+
+    function emptyState(icone, titulo, mensagem) {
+      return `
+        <div class="empty-state">
+          <div class="icone-grande">${icone}</div>
+          <h4>${titulo}</h4>
+          <p>${mensagem}</p>
+        </div>
+      `;
+    }
+
+    const ICONE_ESCOLA_VAZIA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>`;
+    const ICONE_ALUNO_VAZIO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    const ICONE_SERVIDOR_VAZIO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+    const ICONE_CAMPO_VAZIO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>`;
+    const ICONE_EVENTO_VAZIO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+
     function renderizarEscolas() {
       const db = carregarDB();
       const div = document.getElementById("tabelaEscolas");
       if (db.escolas.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhuma escola cadastrada ainda.</p>';
+        div.innerHTML = emptyState(ICONE_ESCOLA_VAZIA, "Nenhuma escola cadastrada", "Comece cadastrando a primeira escola da rede.");
         return;
       }
       const camposEscola = camposDoTipo("escola");
@@ -1076,8 +1257,8 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
-          <button class="btn-editar btn-edit-escola" data-id="${e.id}">✏️ Editar</button>
-          <button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button>
+          <button class="btn-editar btn-edit-escola" data-id="${e.id}">${ICONE_EDITAR} Editar</button>
+          <button class="btn-perigo btn-rm-escola" data-id="${e.id}">${ICONE_REMOVER} Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
@@ -1096,6 +1277,7 @@
           renderizarEscolas();
           renderizarAlunos();
           renderizarServidores();
+          toast("Escola removida.", "sucesso");
         });
       });
     }
@@ -1104,7 +1286,7 @@
       const dados = lerFormulario("formEscola");
       const camposEscola = camposDoTipo("escola");
       for (const c of camposEscola) {
-        if (c.obrigatorio && !dados[c.id]) { alert(`O campo "${c.label}" é obrigatório.`); return; }
+        if (c.obrigatorio && !dados[c.id]) { toast(`O campo "${c.label}" é obrigatório.`, "aviso"); return; }
       }
       const db = carregarDB();
       const agora = new Date().toISOString();
@@ -1118,22 +1300,20 @@
       renderizarResumo();
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
+      toast(`Escola "${escola.nome}" cadastrada.`, "sucesso");
     });
 
-    // ============================================================
-    // ALUNOS
-    // ============================================================
     function renderizarAlunos() {
       const db = carregarDB();
       const div = document.getElementById("tabelaAlunos");
       if (db.alunos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum aluno cadastrado ainda.</p>';
+        div.innerHTML = emptyState(ICONE_ALUNO_VAZIO, "Nenhum aluno cadastrado", "Cadastre alunos manualmente ou importe um CSV na aba Dados.");
         return;
       }
       const camposAluno = camposDoTipo("aluno");
       const colunas = camposAluno.slice(0, 4);
       let html = `<div class="tabela-wrap"><table><thead><tr>`;
-      html += `<th>Selo</th>`;
+      html += `<th>Status</th>`;
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
       html += `<th>Ações</th></tr></thead><tbody>`;
       db.alunos.forEach(a => {
@@ -1146,9 +1326,9 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
-          <button class="btn-editar btn-edit-aluno" data-id="${a.id}">✏️ Editar</button>
-          <button class="btn-secundario btn-marcar-atual" data-id="${a.id}" data-tipo="aluno">✓ Atual</button>
-          <button class="btn-perigo btn-rm-aluno" data-id="${a.id}">Remover</button>
+          <button class="btn-editar btn-edit-aluno" data-id="${a.id}">${ICONE_EDITAR} Editar</button>
+          <button class="btn-secundario btn-marcar-atual" data-id="${a.id}" data-tipo="aluno">${ICONE_CHECK} Atual</button>
+          <button class="btn-perigo btn-rm-aluno" data-id="${a.id}">${ICONE_REMOVER} Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
@@ -1169,6 +1349,7 @@
           salvarDB(db);
           renderizarAlunos();
           renderizarResumo();
+          toast("Aluno removido.", "sucesso");
         });
       });
     }
@@ -1177,7 +1358,7 @@
       const dados = lerFormulario("formAluno");
       const camposAluno = camposDoTipo("aluno");
       for (const c of camposAluno) {
-        if (c.obrigatorio && !dados[c.id]) { alert(`O campo "${c.label}" é obrigatório.`); return; }
+        if (c.obrigatorio && !dados[c.id]) { toast(`O campo "${c.label}" é obrigatório.`, "aviso"); return; }
       }
       const db = carregarDB();
       const agora = new Date().toISOString();
@@ -1189,22 +1370,20 @@
       limparFormulario("formAluno");
       renderizarAlunos();
       renderizarResumo();
+      toast(`Aluno "${aluno.nome}" cadastrado.`, "sucesso");
     });
 
-    // ============================================================
-    // SERVIDORES
-    // ============================================================
     function renderizarServidores() {
       const db = carregarDB();
       const div = document.getElementById("tabelaServidores");
       if (db.servidores.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum servidor cadastrado ainda.</p>';
+        div.innerHTML = emptyState(ICONE_SERVIDOR_VAZIO, "Nenhum servidor cadastrado", "Cadastre professores, diretores e demais servidores.");
         return;
       }
       const camposServidor = camposDoTipo("servidor");
       const colunas = camposServidor.slice(0, 4);
       let html = `<div class="tabela-wrap"><table><thead><tr>`;
-      html += `<th>Selo</th>`;
+      html += `<th>Status</th>`;
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
       html += `<th>Ações</th></tr></thead><tbody>`;
       db.servidores.forEach(s => {
@@ -1217,9 +1396,9 @@
           html += `<td>${valor}</td>`;
         });
         html += `<td><div class="acoes-tabela">
-          <button class="btn-editar btn-edit-servidor" data-id="${s.id}">✏️ Editar</button>
-          <button class="btn-secundario btn-marcar-atual" data-id="${s.id}" data-tipo="servidor">✓ Atual</button>
-          <button class="btn-perigo btn-rm-servidor" data-id="${s.id}">Remover</button>
+          <button class="btn-editar btn-edit-servidor" data-id="${s.id}">${ICONE_EDITAR} Editar</button>
+          <button class="btn-secundario btn-marcar-atual" data-id="${s.id}" data-tipo="servidor">${ICONE_CHECK} Atual</button>
+          <button class="btn-perigo btn-rm-servidor" data-id="${s.id}">${ICONE_REMOVER} Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
@@ -1240,6 +1419,7 @@
           salvarDB(db);
           renderizarServidores();
           renderizarResumo();
+          toast("Servidor removido.", "sucesso");
         });
       });
     }
@@ -1248,7 +1428,7 @@
       const dados = lerFormulario("formServidor");
       const camposServidor = camposDoTipo("servidor");
       for (const c of camposServidor) {
-        if (c.obrigatorio && !dados[c.id]) { alert(`O campo "${c.label}" é obrigatório.`); return; }
+        if (c.obrigatorio && !dados[c.id]) { toast(`O campo "${c.label}" é obrigatório.`, "aviso"); return; }
       }
       const db = carregarDB();
       const agora = new Date().toISOString();
@@ -1260,11 +1440,10 @@
       limparFormulario("formServidor");
       renderizarServidores();
       renderizarResumo();
+      toast(`Servidor "${servidor.nome}" cadastrado.`, "sucesso");
     });
 
-    // ============================================================
-    // CAMPOS
-    // ============================================================
+    // --- CAMPOS ---
     let filtroCampos = "todos";
     document.querySelectorAll(".filtro-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -1281,7 +1460,7 @@
       let campos = db.campos;
       if (filtroCampos !== "todos") campos = campos.filter(c => (c.validade || "nunca") === filtroCampos);
       if (campos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum campo encontrado com esse filtro.</p>';
+        div.innerHTML = emptyState(ICONE_CAMPO_VAZIO, "Nenhum campo encontrado", "Ajuste o filtro ou cadastre um novo campo.");
         return;
       }
       const rotuloTipo = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
@@ -1291,15 +1470,15 @@
       campos.forEach(c => {
         html += `<tr>
           <td>${rotuloTipo[c.tipo] || c.tipo}</td>
-          <td>${c.id}</td>
+          <td><code style="font-size:.82rem; background: var(--cor-fundo); padding: 2px 6px; border-radius: 4px;">${c.id}</code></td>
           <td>${c.label}</td>
           <td>${c.tipoCampo || "text"}</td>
           <td>${c.obrigatorio ? "Sim" : "Não"}</td>
           <td>${getBadgeValidade(c.validade)}</td>
           <td>${c.opcoes ? c.opcoes.join(", ") : "—"}</td>
           <td><div class="acoes-tabela">
-            <button class="btn-editar btn-edit-campo" data-id="${c.id}" data-tipo="${c.tipo}">✏️ Editar</button>
-            <button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button>
+            <button class="btn-editar btn-edit-campo" data-id="${c.id}" data-tipo="${c.tipo}">${ICONE_EDITAR} Editar</button>
+            <button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">${ICONE_REMOVER} Remover</button>
           </div></td>
         </tr>`;
       });
@@ -1321,6 +1500,7 @@
           montarFormulario("escola", "formEscola");
           montarFormulario("aluno", "formAluno");
           montarFormulario("servidor", "formServidor");
+          toast("Campo removido.", "sucesso");
         });
       });
     }
@@ -1334,22 +1514,22 @@
       const obrigatorio = document.getElementById("campoObrigatorio").value === "sim";
       const validade = document.getElementById("campoValidade").value;
 
-      if (!id) { alert("Informe o ID."); return; }
-      if (!label) { alert("Informe o nome exibido."); return; }
-      if (!tipo) { alert("Selecione a categoria."); return; }
-      if (!/^[a-zA-Z0-9_]+$/.test(id)) { alert("O ID só pode ter letras, números e underline (_)."); return; }
+      if (!id) { toast("Informe o ID.", "aviso"); return; }
+      if (!label) { toast("Informe o nome exibido.", "aviso"); return; }
+      if (!tipo) { toast("Selecione a categoria.", "aviso"); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) { toast("O ID só pode ter letras, números e underline.", "aviso"); return; }
 
       const reservados = ["id", "criadoEm", "atualizadoEm", "atualizadoPor", "ultimoEvento", "confirmadoEm"];
-      if (reservados.includes(id)) { alert(`O ID "${id}" é reservado. Escolha outro.`); return; }
+      if (reservados.includes(id)) { toast(`O ID "${id}" é reservado.`, "aviso"); return; }
 
       const db = carregarDB();
       if (db.campos.find(c => c.id === id && c.tipo === tipo)) {
-        alert("Já existe um campo com esse ID nessa categoria.");
+        toast("Já existe um campo com esse ID nessa categoria.", "aviso");
         return;
       }
       const campo = { id, label, tipo, tipoCampo, obrigatorio, validade };
       if (tipoCampo === "select") {
-        if (!opcoesTexto) { alert("Informe as opções."); return; }
+        if (!opcoesTexto) { toast("Informe as opções.", "aviso"); return; }
         campo.opcoes = opcoesTexto.split(",").map(s => s.trim()).filter(Boolean);
       }
       db.campos.push(campo);
@@ -1368,6 +1548,7 @@
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
+      toast(`Campo "${label}" adicionado.`, "sucesso");
     });
 
     document.getElementById("campoTipoCampo").addEventListener("change", (e) => {
@@ -1411,14 +1592,12 @@
       div.innerHTML = html;
     }
 
-    // ============================================================
-    // EVENTOS
-    // ============================================================
+    // --- EVENTOS ---
     function renderizarEventos() {
       const db = carregarDB();
       const div = document.getElementById("tabelaEventos");
       if (db.eventos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum evento cadastrado ainda.</p>';
+        div.innerHTML = emptyState(ICONE_EVENTO_VAZIO, "Nenhum evento cadastrado", "Crie eventos como Rematrícula ou Censo para pedir confirmação em massa.");
         return;
       }
       const rotuloTipo = { aluno: "Aluno", servidor: "Servidor" };
@@ -1438,15 +1617,15 @@
         }
         html += `<tr>
           <td><span class="evento-badge ${ativoClasse}">${rotuloTipo[e.tipo] || e.tipo}</span></td>
-          <td>${e.id}</td>
+          <td><code style="font-size:.82rem; background: var(--cor-fundo); padding: 2px 6px; border-radius: 4px;">${e.id}</code></td>
           <td>${e.label}</td>
           <td>${e.dataInicio || "—"}</td>
           <td>${e.dataFim || "—"}</td>
           <td>${statusTexto}</td>
           <td><div class="acoes-tabela">
-            <button class="btn-editar btn-edit-evento" data-id="${e.id}">✏️ Editar</button>
-            <button class="btn-secundario btn-toggle-evento" data-id="${e.id}">${e.ativo ? "Desativar" : "Reativar"}</button>
-            <button class="btn-perigo btn-rm-evento" data-id="${e.id}">Remover</button>
+            <button class="btn-editar btn-edit-evento" data-id="${e.id}">${ICONE_EDITAR} Editar</button>
+            <button class="btn-secundario btn-toggle-evento" data-id="${e.id}">${ICONE_POWER} ${e.ativo ? "Desativar" : "Reativar"}</button>
+            <button class="btn-perigo btn-rm-evento" data-id="${e.id}">${ICONE_REMOVER} Remover</button>
           </div></td>
         </tr>`;
       });
@@ -1468,6 +1647,7 @@
           renderizarEventos();
           renderizarAlunos();
           renderizarServidores();
+          toast(ev.ativo ? "Evento reativado." : "Evento desativado.", "sucesso");
         });
       });
       div.querySelectorAll(".btn-rm-evento").forEach(btn => {
@@ -1480,6 +1660,7 @@
           renderizarAlunos();
           renderizarServidores();
           renderizarResumo();
+          toast("Evento removido.", "sucesso");
         });
       });
     }
@@ -1492,13 +1673,13 @@
       const dataFim = document.getElementById("eventoDataFim").value;
       const ativo = document.getElementById("eventoAtivo").value === "sim";
 
-      if (!id) { alert("Informe o ID."); return; }
-      if (!label) { alert("Informe o nome exibido."); return; }
-      if (!tipo) { alert("Selecione o tipo."); return; }
-      if (!/^[a-z0-9_]+$/.test(id)) { alert("O ID só pode ter letras minúsculas, números e underline (_)."); return; }
+      if (!id) { toast("Informe o ID.", "aviso"); return; }
+      if (!label) { toast("Informe o nome exibido.", "aviso"); return; }
+      if (!tipo) { toast("Selecione o tipo.", "aviso"); return; }
+      if (!/^[a-z0-9_]+$/.test(id)) { toast("O ID só pode ter letras minúsculas, números e underline.", "aviso"); return; }
 
       const db = carregarDB();
-      if (db.eventos.find(e => e.id === id)) { alert("Já existe um evento com esse ID."); return; }
+      if (db.eventos.find(e => e.id === id)) { toast("Já existe um evento com esse ID.", "aviso"); return; }
 
       db.eventos.push({
         id, label, tipo, dataInicio, dataFim, ativo,
@@ -1517,11 +1698,10 @@
       renderizarResumo();
       renderizarAlunos();
       renderizarServidores();
+      toast(`Evento "${label}" criado.`, "sucesso");
     });
 
-    // ============================================================
-    // IMPORTAR CSV
-    // ============================================================
+    // --- IMPORTAR CSV ---
     document.getElementById("btnImportarCSV").addEventListener("click", () => {
       document.getElementById("arquivoCSV").click();
     });
@@ -1539,7 +1719,7 @@
           const texto = ev.target.result;
           const linhas = parseCSV(texto);
 
-          if (linhas.length < 2) { alert("CSV vazio ou sem dados."); return; }
+          if (linhas.length < 2) { toast("CSV vazio ou sem dados.", "aviso"); return; }
 
           const cabecalho = linhas[0].map(h => h.trim());
           const dados = linhas.slice(1).filter(l => l.some(c => c.trim() !== ""));
@@ -1577,7 +1757,6 @@
               if (mesmoNome.length === 1) {
                 existente = mesmoNome[0];
               } else if (mesmoNome.length > 1) {
-                console.warn(`Ambíguo: 2+ registros com nome "${obj.nome}". Pulado.`);
                 pulados++;
                 return;
               }
@@ -1608,11 +1787,10 @@
 
           salvarDB(db);
 
-          alert(
-            `Importação concluída!\n\n` +
-            `✅ Adicionados: ${adicionados}\n` +
-            `🔄 Atualizados: ${atualizados}\n` +
-            `⏭ Pulados: ${pulados}`
+          toast(
+            `Importação concluída: ${adicionados} adicionado(s), ${atualizados} atualizado(s), ${pulados} pulado(s).`,
+            "sucesso",
+            "Importação"
           );
 
           e.target.value = "";
@@ -1622,15 +1800,12 @@
           if (tipo === "servidor") renderizarServidores();
           renderizarResumo();
         } catch (err) {
-          alert("Erro ao importar CSV: " + err.message);
+          toast("Erro ao importar CSV: " + err.message, "erro");
         }
       };
       reader.readAsText(file, "UTF-8");
     });
 
-    // ============================================================
-    // PARSE CSV
-    // ============================================================
     function parseCSV(texto) {
       const primeiraLinha = texto.split(/\r?\n/)[0] || "";
       const sep = (primeiraLinha.split(";").length > primeiraLinha.split(",").length) ? ";" : ",";
@@ -1673,9 +1848,7 @@
       return linhas;
     }
 
-    // ============================================================
-    // EXPORTAR CSV
-    // ============================================================
+    // --- EXPORTAR CSV ---
     document.getElementById("btnExportarCSV").addEventListener("click", () => {
       const tipo = document.getElementById("tipoExportacao").value;
       const db = carregarDB();
@@ -1684,7 +1857,7 @@
                     : tipo === "escola" ? db.escolas
                     : db.servidores;
 
-      if (colecao.length === 0) { alert("Nada para exportar."); return; }
+      if (colecao.length === 0) { toast("Nada para exportar.", "aviso"); return; }
 
       const campos = db.campos.filter(c => c.tipo === tipo);
       const colunas = ["id", ...campos.map(c => c.id)];
@@ -1711,11 +1884,10 @@
       link.download = `${tipo}s_${new Date().toISOString().split("T")[0]}.csv`;
       link.click();
       URL.revokeObjectURL(url);
+      toast(`Exportados ${colecao.length} registro(s).`, "sucesso");
     });
 
-    // ============================================================
-    // MODELO CSV
-    // ============================================================
+    // --- MODELO CSV ---
     document.getElementById("btnModeloCSV").addEventListener("click", () => {
       const tipo = document.getElementById("tipoImportacao").value;
       const db = carregarDB();
@@ -1739,11 +1911,10 @@
       link.download = `modelo_${tipo}.csv`;
       link.click();
       URL.revokeObjectURL(url);
+      toast("Modelo baixado.", "sucesso");
     });
 
-    // ============================================================
-    // BACKUP COMPLETO (JSON)
-    // ============================================================
+    // --- BACKUP COMPLETO ---
     document.getElementById("btnExportarCompleto").addEventListener("click", () => {
       const db = carregarDB();
       const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
@@ -1753,6 +1924,7 @@
       link.download = `backup_completo_${new Date().toISOString().split("T")[0]}.json`;
       link.click();
       URL.revokeObjectURL(url);
+      toast("Backup completo baixado.", "sucesso");
     });
 
     document.getElementById("btnImportarCompleto").addEventListener("click", () => {
@@ -1772,23 +1944,21 @@
           }
           if (!confirm("Isso vai substituir TODOS os dados atuais. Continuar?")) return;
           salvarDB(dados);
-          alert("Backup restaurado!");
-          location.reload();
+          toast("Backup restaurado com sucesso.", "sucesso");
+          setTimeout(() => location.reload(), 800);
         } catch (err) {
-          alert("Erro ao restaurar: " + err.message);
+          toast("Erro ao restaurar: " + err.message, "erro");
         }
       };
       reader.readAsText(file);
     });
 
-    // ============================================================
-    // RESETAR / RECALCULAR
-    // ============================================================
+    // --- RESETAR / RECALCULAR ---
     document.getElementById("btnResetar").addEventListener("click", () => {
       if (!confirm("Isso apaga TUDO. Continuar?")) return;
       localStorage.removeItem(DB_KEY);
-      alert("Tudo resetado!");
-      location.reload();
+      toast("Dados resetados. Recarregando...", "sucesso");
+      setTimeout(() => location.reload(), 800);
     });
 
     document.getElementById("btnRecalcularTodos").addEventListener("click", () => {
@@ -1797,7 +1967,7 @@
       renderizarAlunos();
       renderizarServidores();
       renderizarResumo();
-      alert("Selos recalculados!");
+      toast("Todos os selos recalculados.", "sucesso");
     });
 
     document.getElementById("btnMigrarCatalogo").addEventListener("click", () => {
@@ -1809,14 +1979,14 @@
         montarFormulario("escola", "formEscola");
         montarFormulario("aluno", "formAluno");
         montarFormulario("servidor", "formServidor");
-        alert("Catálogo atualizado!");
+        toast("Catálogo atualizado.", "sucesso");
       } else {
-        alert("Catálogo já está atualizado.");
+        toast("Catálogo já está atualizado.", "info");
       }
     });
 
     document.getElementById("btnRecarregarCatalogo").addEventListener("click", () => {
-      if (!confirm("Isso vai SUBSTITUIR o catálogo inteiro pelo padrão. Campos customizados serão perdidos. Continuar?")) return;
+      if (!confirm("Isso vai SUBSTITUIR o catálogo inteiro pelo padrão. Continuar?")) return;
       recarregarCatalogoPadrao();
       renderizarCampos();
       renderizarResumo();
@@ -1824,12 +1994,10 @@
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
-      alert("Catálogo recarregado!");
+      toast("Catálogo recarregado.", "sucesso");
     });
 
-    // ============================================================
-    // RESUMO
-    // ============================================================
+    // --- RESUMO ---
     function renderizarResumo() {
       const db = carregarDB();
       const div = document.getElementById("resumoDados");
