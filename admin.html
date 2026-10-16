@@ -89,6 +89,11 @@
       font-size: .8rem;
     }
     .btn-editar:hover { background: #e8f0fe; }
+    .btn-sucesso {
+      background: #16a34a; color: #fff; border: none;
+      padding: .5rem 1rem; border-radius: 4px; cursor: pointer;
+      font-size: .85rem; font-weight: 500;
+    }
 
     .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table {
@@ -111,6 +116,7 @@
       padding: .8rem 1rem; border-radius: 4px; margin-bottom: 1rem;
       font-size: .9rem; color: #78350f;
     }
+    .aviso-vermelho { background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d; }
 
     .filtros-campos {
       display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem;
@@ -172,7 +178,6 @@
       overflow-y: auto;
     }
     .modal-overlay.aberto { display: flex; }
-
     .modal {
       background: #fff; border-radius: 8px;
       width: 100%; max-width: 600px;
@@ -185,7 +190,6 @@
       color: #1e3a8a;
       border-bottom: 2px solid #e5e7eb; padding-bottom: .5rem;
     }
-    .modal .form-linha { margin-bottom: .5rem; }
     .modal .rodape {
       display: flex; gap: .5rem; justify-content: flex-end;
       margin-top: 1rem; padding-top: 1rem;
@@ -238,6 +242,7 @@
       <button class="aba" data-aba="dados">💾 Dados</button>
     </div>
 
+    <!-- ABA ESCOLAS -->
     <div id="painel-escolas" class="painel ativo">
       <div class="bloco">
         <h3>Cadastrar escola</h3>
@@ -250,6 +255,7 @@
       </div>
     </div>
 
+    <!-- ABA ALUNOS -->
     <div id="painel-alunos" class="painel">
       <div class="bloco">
         <h3>Cadastrar aluno</h3>
@@ -262,6 +268,7 @@
       </div>
     </div>
 
+    <!-- ABA SERVIDORES -->
     <div id="painel-servidores" class="painel">
       <div class="bloco">
         <h3>Cadastrar servidor</h3>
@@ -274,6 +281,7 @@
       </div>
     </div>
 
+    <!-- ABA CAMPOS -->
     <div id="painel-campos" class="painel">
       <div class="bloco">
         <h3>Cadastrar campo no catálogo</h3>
@@ -341,9 +349,14 @@
       </div>
     </div>
 
+    <!-- ABA EVENTOS -->
     <div id="painel-eventos" class="painel">
       <div class="bloco">
         <h3>Cadastrar evento</h3>
+        <p style="color:#555;font-size:.9rem;margin-top:0;">
+          Eventos são usados pela Secretaria para pedir confirmação de dados em massa.
+          Quando todas as escolas confirmarem, o evento é encerrado automaticamente.
+        </p>
         <div class="form-linha">
           <div class="campo">
             <label>ID (slug)</label>
@@ -386,31 +399,90 @@
       </div>
     </div>
 
+    <!-- ABA DADOS -->
     <div id="painel-dados" class="painel">
+      <div class="bloco">
+        <h3>Importar dados</h3>
+        <p style="color:#555;font-size:.9rem;margin-top:0;">
+          Importe de um arquivo <strong>CSV</strong> ou <strong>JSON</strong>.
+          No CSV, a primeira linha precisa ter os <strong>IDs dos campos</strong>
+          (ex: <code>nome,escolaId,cpf,nomeMae,genero</code>).
+        </p>
+
+        <div class="form-linha">
+          <div class="campo">
+            <label>Tipo de dado a importar</label>
+            <select id="tipoImportacao">
+              <option value="aluno">Aluno</option>
+              <option value="escola">Escola</option>
+              <option value="servidor">Servidor</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Se o registro já existir</label>
+            <select id="modoImportacao">
+              <option value="pular">Pular (não sobrescrever)</option>
+              <option value="atualizar">Atualizar (sobrescrever)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
+          <button id="btnImportarCSV" class="btn-primario">⬆ Importar CSV</button>
+          <button id="btnModeloCSV" class="btn-secundario">📄 Baixar modelo CSV</button>
+        </div>
+        <input type="file" id="arquivoCSV" accept=".csv,text/csv" style="display:none">
+      </div>
+
+      <div class="bloco">
+        <h3>Exportar dados</h3>
+        <p style="color:#555;font-size:.9rem;margin-top:0;">
+          Baixe os dados em <strong>CSV</strong> (abre no Excel/Sheets) ou
+          <strong>JSON</strong> (backup completo).
+        </p>
+
+        <div class="form-linha">
+          <div class="campo">
+            <label>Tipo de dado</label>
+            <select id="tipoExportacao">
+              <option value="aluno">Aluno</option>
+              <option value="escola">Escola</option>
+              <option value="servidor">Servidor</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
+          <button id="btnExportarCSV" class="btn-primario">⬇ Exportar CSV</button>
+          <button id="btnExportarCompleto" class="btn-primario">⬇ Backup completo (JSON)</button>
+          <button id="btnImportarCompleto" class="btn-secundario">⬆ Restaurar backup (JSON)</button>
+        </div>
+        <input type="file" id="arquivoImport" accept=".json" style="display:none">
+      </div>
+
       <div class="bloco">
         <h3>Manutenção dos selos</h3>
         <button id="btnRecalcularTodos" class="btn-primario">🔄 Recalcular todos os selos</button>
       </div>
+
       <div class="bloco">
         <h3>Manutenção do catálogo</h3>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
           <button id="btnMigrarCatalogo" class="btn-primario">📥 Migrar catálogo padrão</button>
           <button id="btnRecarregarCatalogo" class="btn-secundario">🔄 Recarregar catálogo padrão</button>
         </div>
       </div>
+
       <div class="bloco painel-validade">
         <h3>Resumo de validade dos campos</h3>
         <div id="resumoValidade"></div>
       </div>
+
       <div class="bloco">
-        <h3>Gerenciar dados</h3>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-          <button id="btnExportar" class="btn-primario">⬇ Exportar tudo (JSON)</button>
-          <button id="btnImportar" class="btn-primario">⬆ Importar JSON</button>
-          <button id="btnResetar" class="btn-perigo">🗑 Resetar tudo</button>
-        </div>
-        <input type="file" id="arquivoImport" accept=".json" style="display:none">
+        <h3>Zona de perigo</h3>
+        <button id="btnResetar" class="btn-perigo">🗑 Resetar tudo</button>
       </div>
+
       <div class="bloco">
         <h3>Resumo atual</h3>
         <div id="resumoDados"></div>
@@ -465,6 +537,9 @@
       { id: "cargaHoraria",       label: "Carga horária",       tipo: "servidor", tipoCampo: "text",                       validade: "evento" }
     ];
 
+    // ============================================================
+    // BANCO
+    // ============================================================
     function carregarDB() {
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) {
@@ -488,6 +563,9 @@
 
     function salvarDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
+    // ============================================================
+    // UTILITÁRIOS
+    // ============================================================
     function gerarSlug(texto) {
       return (texto || "").toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -549,10 +627,15 @@
       return e ? (e.nome || e.id) : id;
     }
 
+    // ============================================================
+    // SELO
+    // ============================================================
     function calcularSelo(registro, tipo) {
       const temConfirmacao = !!registro.confirmadoEm;
       const temEdicao = !!registro.atualizadoEm;
-      if (!temConfirmacao && !temEdicao) return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
+      if (!temConfirmacao && !temEdicao) {
+        return { emoji: "⚪", texto: "Nunca", classe: "selo-nunca" };
+      }
       const db = carregarDB();
       const eventos = (db.eventos || []).filter(e => e.tipo === tipo)
         .sort((a, b) => {
@@ -626,6 +709,9 @@
       salvarDB(db);
     }
 
+    // ============================================================
+    // FORMULÁRIOS DINÂMICOS
+    // ============================================================
     function renderizarInput(campo, prefixo, valor = "") {
       const id = `${prefixo}_${campo.id}`;
       const tipo = campo.tipoCampo || "text";
@@ -708,7 +794,7 @@
     // ============================================================
     // MODAL DE EDIÇÃO
     // ============================================================
-    let edicaoAtual = null; // { tipo, id }
+    let edicaoAtual = null;
 
     function abrirEdicao(tipo, id) {
       const db = carregarDB();
@@ -733,7 +819,6 @@
       container.innerHTML = "";
 
       if (tipo === "evento") {
-        // Evento tem campos próprios, não usa o catálogo
         container.innerHTML = `
           <div class="campo">
             <label>Nome exibido</label>
@@ -799,7 +884,6 @@
       if (!edicaoAtual) return;
       const db = carregarDB();
       const { tipo, id } = edicaoAtual;
-
       const agora = new Date().toISOString();
 
       if (tipo === "evento") {
@@ -819,7 +903,6 @@
         return;
       }
 
-      // Aluno, escola ou servidor
       const colecao = tipo === "aluno" ? db.alunos
                     : tipo === "escola" ? db.escolas
                     : db.servidores;
@@ -829,12 +912,9 @@
       const campos = camposDoTipo(tipo);
       const dados = {};
       document.getElementById("modalForm").querySelectorAll("[data-campo]").forEach(el => {
-        const campoId = el.dataset.campo;
-        const valor = el.value.trim();
-        dados[campoId] = valor;
+        dados[el.dataset.campo] = el.value.trim();
       });
 
-      // Valida obrigatórios
       for (const c of campos) {
         if (c.obrigatorio && !dados[c.id]) {
           alert(`O campo "${c.label}" é obrigatório.`);
@@ -842,7 +922,6 @@
         }
       }
 
-      // Aplica alterações
       campos.forEach(c => {
         if (dados[c.id] === undefined || dados[c.id] === "") {
           delete obj[c.id];
@@ -1305,7 +1384,10 @@
       const db = carregarDB();
       if (db.eventos.find(e => e.id === id)) { alert("Já existe um evento com esse ID."); return; }
 
-      db.eventos.push({ id, label, tipo, dataInicio, dataFim, ativo, criadoEm: new Date().toISOString() });
+      db.eventos.push({
+        id, label, tipo, dataInicio, dataFim, ativo,
+        criadoEm: new Date().toISOString()
+      });
       salvarDB(db);
 
       document.getElementById("eventoId").value = "";
@@ -1319,6 +1401,320 @@
       renderizarResumo();
       renderizarAlunos();
       renderizarServidores();
+    });
+
+    // ============================================================
+    // IMPORTAR CSV
+    // ============================================================
+    document.getElementById("btnImportarCSV").addEventListener("click", () => {
+      document.getElementById("arquivoCSV").click();
+    });
+
+    document.getElementById("arquivoCSV").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const tipo = document.getElementById("tipoImportacao").value;
+      const modo = document.getElementById("modoImportacao").value;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const texto = ev.target.result;
+          const linhas = parseCSV(texto);
+
+          if (linhas.length < 2) {
+            alert("CSV vazio ou sem dados.");
+            return;
+          }
+
+          const cabecalho = linhas[0].map(h => h.trim());
+          const dados = linhas.slice(1).filter(l => l.some(c => c.trim() !== ""));
+
+          const db = carregarDB();
+          const colecao = tipo === "aluno" ? db.alunos
+                        : tipo === "escola" ? db.escolas
+                        : db.servidores;
+
+          let adicionados = 0;
+          let atualizados = 0;
+          let pulados = 0;
+          const agora = new Date().toISOString();
+
+          dados.forEach((linha) => {
+            const obj = {};
+            cabecalho.forEach((col, i) => {
+              if (col === "") return;
+              const valor = (linha[i] || "").trim();
+              if (valor !== "") obj[col] = valor;
+            });
+
+            if (Object.keys(obj).length === 0) return;
+
+            let existente = null;
+
+            // TRAVA 1: Se tem id, procura por id
+            if (obj.id) {
+              existente = colecao.find(x => x.id === obj.id);
+            }
+
+            // TRAVA 2: Se não achou por id, procura por nome
+            if (!existente && obj.nome) {
+              const mesmoNome = colecao.filter(x =>
+                (x.nome || "").trim().toLowerCase() === obj.nome.trim().toLowerCase()
+              );
+              if (mesmoNome.length === 1) {
+                existente = mesmoNome[0];
+              } else if (mesmoNome.length > 1) {
+                console.warn(`Ambíguo: 2+ registros com nome "${obj.nome}". Pulado.`);
+                pulados++;
+                return;
+              }
+            }
+
+            // Gera ID se for novo e não tiver
+            if (!existente && !obj.id) {
+              obj.id = gerarIdUnico(obj.nome || tipo, tipo, db);
+            }
+
+            if (existente) {
+              if (modo === "pular") { pulados++; return; }
+              Object.keys(obj).forEach(k => {
+                if (k !== "id") existente[k] = obj[k];
+              });
+              existente.atualizadoEm = agora;
+              existente.atualizadoPor = "importação";
+              existente.confirmadoEm = agora;
+              atualizados++;
+            } else {
+              obj.criadoEm = agora;
+              obj.atualizadoEm = agora;
+              obj.atualizadoPor = "importação";
+              obj.confirmadoEm = agora;
+              colecao.push(obj);
+              adicionados++;
+            }
+          });
+
+          salvarDB(db);
+
+          alert(
+            `Importação concluída!\n\n` +
+            `✅ Adicionados: ${adicionados}\n` +
+            `🔄 Atualizados: ${atualizados}\n` +
+            `⏭ Pulados: ${pulados}`
+          );
+
+          e.target.value = "";
+
+          if (tipo === "aluno")    renderizarAlunos();
+          if (tipo === "escola")   { renderizarEscolas(); renderizarAlunos(); renderizarServidores(); }
+          if (tipo === "servidor") renderizarServidores();
+          renderizarResumo();
+        } catch (err) {
+          alert("Erro ao importar CSV: " + err.message);
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    });
+
+    // ============================================================
+    // PARSE CSV
+    // ============================================================
+    function parseCSV(texto) {
+      const primeiraLinha = texto.split(/\r?\n/)[0] || "";
+      const sep = (primeiraLinha.split(";").length > primeiraLinha.split(",").length) ? ";" : ",";
+
+      const linhas = [];
+      let campoAtual = "";
+      let linhaAtual = [];
+      let dentroAspas = false;
+
+      for (let i = 0; i < texto.length; i++) {
+        const c = texto[i];
+        const proximo = texto[i + 1];
+
+        if (c === '"') {
+          if (dentroAspas && proximo === '"') {
+            campoAtual += '"';
+            i++;
+          } else {
+            dentroAspas = !dentroAspas;
+          }
+        } else if (c === sep && !dentroAspas) {
+          linhaAtual.push(campoAtual);
+          campoAtual = "";
+        } else if ((c === "\n" || c === "\r") && !dentroAspas) {
+          if (c === "\r" && proximo === "\n") i++;
+          linhaAtual.push(campoAtual);
+          linhas.push(linhaAtual);
+          linhaAtual = [];
+          campoAtual = "";
+        } else {
+          campoAtual += c;
+        }
+      }
+
+      if (campoAtual !== "" || linhaAtual.length > 0) {
+        linhaAtual.push(campoAtual);
+        linhas.push(linhaAtual);
+      }
+
+      return linhas;
+    }
+
+    // ============================================================
+    // EXPORTAR CSV
+    // ============================================================
+    document.getElementById("btnExportarCSV").addEventListener("click", () => {
+      const tipo = document.getElementById("tipoExportacao").value;
+      const db = carregarDB();
+
+      const colecao = tipo === "aluno" ? db.alunos
+                    : tipo === "escola" ? db.escolas
+                    : db.servidores;
+
+      if (colecao.length === 0) { alert("Nada para exportar."); return; }
+
+      const campos = db.campos.filter(c => c.tipo === tipo);
+      const colunas = ["id", ...campos.map(c => c.id)];
+
+      const linhas = [];
+      linhas.push(colunas.join(";"));
+
+      colecao.forEach(obj => {
+        const linha = colunas.map(col => {
+          let valor = obj[col] ?? "";
+          valor = valor.toString().replace(/"/g, '""');
+          if (/[;"\n]/.test(valor)) valor = `"${valor}"`;
+          return valor;
+        });
+        linhas.push(linha.join(";"));
+      });
+
+      const csv = "\uFEFF" + linhas.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${tipo}s_${new Date().toISOString().split("T")[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ============================================================
+    // MODELO CSV
+    // ============================================================
+    document.getElementById("btnModeloCSV").addEventListener("click", () => {
+      const tipo = document.getElementById("tipoImportacao").value;
+      const db = carregarDB();
+      const campos = db.campos.filter(c => c.tipo === tipo);
+
+      const cabecalho = ["id", ...campos.map(c => c.id)];
+      const exemplo = ["", ...campos.map(c => {
+        if (c.tipoCampo === "escola") return db.escolas[0] ? db.escolas[0].id : "escola_id";
+        if (c.tipoCampo === "select") return (c.opcoes && c.opcoes[0]) || "";
+        if (c.tipoCampo === "date") return "2000-01-01";
+        if (c.tipoCampo === "email") return "exemplo@email.com";
+        if (c.tipoCampo === "number") return "0";
+        return `exemplo_${c.id}`;
+      })];
+
+      const csv = "\uFEFF" + [cabecalho.join(";"), exemplo.join(";")].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `modelo_${tipo}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ============================================================
+    // BACKUP COMPLETO (JSON)
+    // ============================================================
+    document.getElementById("btnExportarCompleto").addEventListener("click", () => {
+      const db = carregarDB();
+      const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `backup_completo_${new Date().toISOString().split("T")[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnImportarCompleto").addEventListener("click", () => {
+      document.getElementById("arquivoImport").click();
+    });
+
+    document.getElementById("arquivoImport").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const dados = JSON.parse(ev.target.result);
+          if (!dados.escolas || !dados.alunos || !dados.servidores) {
+            throw new Error("Arquivo inválido.");
+          }
+          if (!confirm("Isso vai substituir TODOS os dados atuais. Continuar?")) return;
+          salvarDB(dados);
+          alert("Backup restaurado!");
+          location.reload();
+        } catch (err) {
+          alert("Erro ao restaurar: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // ============================================================
+    // RESETAR / RECALCULAR
+    // ============================================================
+    document.getElementById("btnResetar").addEventListener("click", () => {
+      if (!confirm("Isso apaga TUDO. Continuar?")) return;
+      localStorage.removeItem(DB_KEY);
+      alert("Tudo resetado!");
+      location.reload();
+    });
+
+    document.getElementById("btnRecalcularTodos").addEventListener("click", () => {
+      if (!confirm("Marcar TODOS os alunos e servidores como atualizados agora. Continuar?")) return;
+      recalcularTodosOsSelos();
+      renderizarAlunos();
+      renderizarServidores();
+      renderizarResumo();
+      alert("Selos recalculados!");
+    });
+
+    document.getElementById("btnMigrarCatalogo").addEventListener("click", () => {
+      const mudou = migrarCatalogo();
+      if (mudou) {
+        renderizarCampos();
+        renderizarResumo();
+        renderizarResumoValidade();
+        montarFormulario("escola", "formEscola");
+        montarFormulario("aluno", "formAluno");
+        montarFormulario("servidor", "formServidor");
+        alert("Catálogo atualizado!");
+      } else {
+        alert("Catálogo já está atualizado.");
+      }
+    });
+
+    document.getElementById("btnRecarregarCatalogo").addEventListener("click", () => {
+      if (!confirm("Isso vai SUBSTITUIR o catálogo inteiro pelo padrão. Campos customizados serão perdidos. Continuar?")) return;
+      recarregarCatalogoPadrao();
+      renderizarCampos();
+      renderizarResumo();
+      renderizarResumoValidade();
+      montarFormulario("escola", "formEscola");
+      montarFormulario("aluno", "formAluno");
+      montarFormulario("servidor", "formServidor");
+      alert("Catálogo recarregado!");
     });
 
     // ============================================================
@@ -1376,86 +1772,8 @@
     }
 
     // ============================================================
-    // AÇÕES GERAIS
-    // ============================================================
-    document.getElementById("btnRecalcularTodos").addEventListener("click", () => {
-      if (!confirm("Isso vai marcar TODOS os alunos e servidores como atualizados agora. Continuar?")) return;
-      recalcularTodosOsSelos();
-      renderizarAlunos();
-      renderizarServidores();
-      renderizarResumo();
-      alert("Selos recalculados!");
-    });
-
-    document.getElementById("btnMigrarCatalogo").addEventListener("click", () => {
-      const mudou = migrarCatalogo();
-      if (mudou) {
-        renderizarCampos();
-        renderizarResumo();
-        renderizarResumoValidade();
-        montarFormulario("escola", "formEscola");
-        montarFormulario("aluno", "formAluno");
-        montarFormulario("servidor", "formServidor");
-        alert("Catálogo atualizado!");
-      } else {
-        alert("Catálogo já está atualizado. Nenhuma mudança.");
-      }
-    });
-
-    document.getElementById("btnRecarregarCatalogo").addEventListener("click", () => {
-      if (!confirm("Isso vai SUBSTITUIR o catálogo inteiro pelo padrão. Campos customizados serão perdidos. Continuar?")) return;
-      recarregarCatalogoPadrao();
-      renderizarCampos();
-      renderizarResumo();
-      renderizarResumoValidade();
-      montarFormulario("escola", "formEscola");
-      montarFormulario("aluno", "formAluno");
-      montarFormulario("servidor", "formServidor");
-      alert("Catálogo recarregado!");
-    });
-
-    document.getElementById("btnExportar").addEventListener("click", () => {
-      const db = carregarDB();
-      const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "rede_municipal_backup.json";
-      link.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("btnImportar").addEventListener("click", () => {
-      document.getElementById("arquivoImport").click();
-    });
-
-    document.getElementById("arquivoImport").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const dados = JSON.parse(ev.target.result);
-          if (!dados.escolas) throw new Error("Arquivo inválido.");
-          if (!confirm("Isso vai substituir TODOS os dados atuais. Continuar?")) return;
-          salvarDB(dados);
-          alert("Dados importados!");
-          location.reload();
-        } catch (err) {
-          alert("Erro ao importar: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    document.getElementById("btnResetar").addEventListener("click", () => {
-      if (!confirm("Isso apaga TUDO. Continuar?")) return;
-      localStorage.removeItem(DB_KEY);
-      alert("Tudo resetado!");
-      location.reload();
-    });
-
     // INICIAR
+    // ============================================================
     migrarCatalogo();
     montarFormulario("escola", "formEscola");
     montarFormulario("aluno", "formAluno");
