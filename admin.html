@@ -89,11 +89,6 @@
       font-size: .8rem;
     }
     .btn-editar:hover { background: #e8f0fe; }
-    .btn-sucesso {
-      background: #16a34a; color: #fff; border: none;
-      padding: .5rem 1rem; border-radius: 4px; cursor: pointer;
-      font-size: .85rem; font-weight: 500;
-    }
 
     .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table {
@@ -792,7 +787,7 @@
     });
 
     // ============================================================
-    // MODAL DE EDIÇÃO
+    // MODAL DE EDIÇÃO (genérico: aluno, escola, servidor, evento, campo)
     // ============================================================
     let edicaoAtual = null;
 
@@ -870,6 +865,80 @@
       document.getElementById("modalOverlay").classList.add("aberto");
     }
 
+    // ============================================================
+    // EDIÇÃO DE CAMPO (do catálogo)
+    // ============================================================
+    function abrirEdicaoCampo(campoId, tipoCampo) {
+      const db = carregarDB();
+      const campo = db.campos.find(c => c.id === campoId && c.tipo === tipoCampo);
+      if (!campo) { alert("Campo não encontrado."); return; }
+
+      edicaoAtual = { tipo: "campo", id: campoId, tipoCampo: tipoCampo };
+
+      document.getElementById("modalTitulo").textContent =
+        `✏️ Editar campo — ${campo.label}`;
+
+      const container = document.getElementById("modalForm");
+      container.innerHTML = `
+        <div class="campo">
+          <label>ID (não pode ser alterado)</label>
+          <input type="text" value="${campo.id}" disabled
+                 style="background:#f3f4f6; color:#888;">
+        </div>
+        <div class="campo">
+          <label>Categoria (não pode ser alterada)</label>
+          <input type="text" value="${
+            campo.tipo === "aluno" ? "Aluno" :
+            campo.tipo === "escola" ? "Escola" : "Servidor"
+          }" disabled style="background:#f3f4f6; color:#888;">
+        </div>
+        <div class="campo">
+          <label>Nome exibido</label>
+          <input type="text" id="editCampoLabel" value="${(campo.label || "").replace(/"/g, "&quot;")}">
+        </div>
+        <div class="campo">
+          <label>Tipo do campo</label>
+          <select id="editCampoTipoCampo">
+            <option value="text"   ${campo.tipoCampo === "text"   ? "selected" : ""}>Texto</option>
+            <option value="number" ${campo.tipoCampo === "number" ? "selected" : ""}>Número</option>
+            <option value="date"   ${campo.tipoCampo === "date"   ? "selected" : ""}>Data</option>
+            <option value="email"  ${campo.tipoCampo === "email"  ? "selected" : ""}>E-mail</option>
+            <option value="select" ${campo.tipoCampo === "select" ? "selected" : ""}>Seleção (opções)</option>
+            <option value="escola" ${campo.tipoCampo === "escola" ? "selected" : ""}>Escola (select de escolas)</option>
+          </select>
+        </div>
+        <div class="campo" id="editCampoOpcoesWrap"
+             style="display: ${campo.tipoCampo === "select" ? "flex" : "none"};">
+          <label>Opções (separadas por vírgula)</label>
+          <input type="text" id="editCampoOpcoes"
+                 value="${(campo.opcoes || []).join(", ")}"
+                 placeholder="M, F">
+        </div>
+        <div class="campo">
+          <label>Obrigatório?</label>
+          <select id="editCampoObrigatorio">
+            <option value="nao" ${!campo.obrigatorio ? "selected" : ""}>Não</option>
+            <option value="sim" ${campo.obrigatorio  ? "selected" : ""}>Sim</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Validade</label>
+          <select id="editCampoValidade">
+            <option value="nunca"  ${(campo.validade || "nunca") === "nunca"  ? "selected" : ""}>🔒 Nunca muda</option>
+            <option value="evento" ${campo.validade === "evento" ? "selected" : ""}>🔄 Confirma por evento</option>
+            <option value="livre"  ${campo.validade === "livre"  ? "selected" : ""}>✏️ Livre</option>
+          </select>
+        </div>
+      `;
+
+      document.getElementById("editCampoTipoCampo").addEventListener("change", (e) => {
+        document.getElementById("editCampoOpcoesWrap").style.display =
+          e.target.value === "select" ? "flex" : "none";
+      });
+
+      document.getElementById("modalOverlay").classList.add("aberto");
+    }
+
     function fecharModal() {
       document.getElementById("modalOverlay").classList.remove("aberto");
       edicaoAtual = null;
@@ -886,6 +955,7 @@
       const { tipo, id } = edicaoAtual;
       const agora = new Date().toISOString();
 
+      // ---- EVENTO ----
       if (tipo === "evento") {
         const ev = db.eventos.find(e => e.id === id);
         if (!ev) { alert("Evento não encontrado."); return; }
@@ -903,6 +973,45 @@
         return;
       }
 
+      // ---- CAMPO ----
+      if (tipo === "campo") {
+        const tipoCampo_ = edicaoAtual.tipoCampo;
+        const campo = db.campos.find(c => c.id === id && c.tipo === tipoCampo_);
+        if (!campo) { alert("Campo não encontrado."); return; }
+
+        const label = document.getElementById("editCampoLabel").value.trim();
+        const tipoCampoNovo = document.getElementById("editCampoTipoCampo").value;
+        const opcoesTexto = document.getElementById("editCampoOpcoes").value.trim();
+        const obrigatorio = document.getElementById("editCampoObrigatorio").value === "sim";
+        const validade = document.getElementById("editCampoValidade").value;
+
+        if (!label) { alert("Informe o nome exibido."); return; }
+
+        campo.label = label;
+        campo.tipoCampo = tipoCampoNovo;
+        campo.obrigatorio = obrigatorio;
+        campo.validade = validade;
+
+        if (tipoCampoNovo === "select") {
+          if (!opcoesTexto) { alert("Informe as opções."); return; }
+          campo.opcoes = opcoesTexto.split(",").map(s => s.trim()).filter(Boolean);
+        } else {
+          delete campo.opcoes;
+        }
+
+        salvarDB(db);
+        fecharModal();
+
+        renderizarCampos();
+        renderizarResumo();
+        renderizarResumoValidade();
+        montarFormulario("escola", "formEscola");
+        montarFormulario("aluno", "formAluno");
+        montarFormulario("servidor", "formServidor");
+        return;
+      }
+
+      // ---- ALUNO / ESCOLA / SERVIDOR ----
       const colecao = tipo === "aluno" ? db.alunos
                     : tipo === "escola" ? db.escolas
                     : db.servidores;
@@ -1188,11 +1297,18 @@
           <td>${c.obrigatorio ? "Sim" : "Não"}</td>
           <td>${getBadgeValidade(c.validade)}</td>
           <td>${c.opcoes ? c.opcoes.join(", ") : "—"}</td>
-          <td><button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button></td>
+          <td><div class="acoes-tabela">
+            <button class="btn-editar btn-edit-campo" data-id="${c.id}" data-tipo="${c.tipo}">✏️ Editar</button>
+            <button class="btn-perigo btn-rm-campo" data-id="${c.id}" data-tipo="${c.tipo}">Remover</button>
+          </div></td>
         </tr>`;
       });
       html += `</tbody></table></div>`;
       div.innerHTML = html;
+
+      div.querySelectorAll(".btn-edit-campo").forEach(btn => {
+        btn.addEventListener("click", () => abrirEdicaoCampo(btn.dataset.id, btn.dataset.tipo));
+      });
       div.querySelectorAll(".btn-rm-campo").forEach(btn => {
         btn.addEventListener("click", () => {
           if (!confirm("Remover este campo do catálogo?")) return;
@@ -1423,10 +1539,7 @@
           const texto = ev.target.result;
           const linhas = parseCSV(texto);
 
-          if (linhas.length < 2) {
-            alert("CSV vazio ou sem dados.");
-            return;
-          }
+          if (linhas.length < 2) { alert("CSV vazio ou sem dados."); return; }
 
           const cabecalho = linhas[0].map(h => h.trim());
           const dados = linhas.slice(1).filter(l => l.some(c => c.trim() !== ""));
@@ -1453,12 +1566,10 @@
 
             let existente = null;
 
-            // TRAVA 1: Se tem id, procura por id
             if (obj.id) {
               existente = colecao.find(x => x.id === obj.id);
             }
 
-            // TRAVA 2: Se não achou por id, procura por nome
             if (!existente && obj.nome) {
               const mesmoNome = colecao.filter(x =>
                 (x.nome || "").trim().toLowerCase() === obj.nome.trim().toLowerCase()
@@ -1472,7 +1583,6 @@
               }
             }
 
-            // Gera ID se for novo e não tiver
             if (!existente && !obj.id) {
               obj.id = gerarIdUnico(obj.nome || tipo, tipo, db);
             }
