@@ -4,127 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administração da Rede</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ============================================================
-       TEMA CORPORATIVO - Sistema Administrativo
+       RESET E BASE
        ============================================================ */
-
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #2d3748;
-      background: #edf2f7;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #18181b;
+      background: #fafafa;
     }
 
     h1, h2, h3, h4 {
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: bold;
-      color: #1a365d;
-      margin: 0 0 8px 0;
+      font-family: inherit;
+      font-weight: 600;
+      line-height: 1.3;
+      color: #18181b;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.01em;
     }
-    h1 { font-size: 16px; }
-    h2 { font-size: 14px; }
-    h3 { font-size: 13px; }
-    h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    h1 { font-size: 18px; font-weight: 700; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 14px; }
+    h4 { font-size: 12px; color: #71717a; font-weight: 500; }
 
-    p { margin: 0 0 8px 0; }
+    p { margin: 0 0 12px 0; }
 
     a {
-      color: #2c5282;
-      text-decoration: underline;
+      color: #4f46e5;
+      text-decoration: none;
+      transition: color 120ms ease;
     }
+    a:hover { color: #4338ca; text-decoration: underline; }
 
     /* ============================================================
        TOPO
        ============================================================ */
     .topo {
-      background: #1a365d;
-      color: #fff;
-      padding: 8px 16px;
-      border-bottom: 3px solid #2c5282;
+      background: #ffffff;
+      border-bottom: 1px solid #e4e4e7;
+      padding: 0 24px;
+      height: 56px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      gap: 16px;
       flex-wrap: wrap;
-      gap: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .topo h1 {
-      color: #fff;
+      color: #18181b;
       font-size: 15px;
-      font-weight: bold;
+      font-weight: 600;
       margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topo h1::before {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #4f46e5;
+      border-radius: 5px;
+      flex-shrink: 0;
     }
 
     .topo .usuario {
-      color: #fff;
-      font-size: 12px;
-      font-weight: normal;
+      color: #71717a;
+      font-size: 13px;
+      font-weight: 400;
     }
 
     .topo .usuario select {
-      background: #fff;
-      color: #2d3748;
-      border: 1px solid #2c5282;
-      padding: 3px 6px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      background: #ffffff;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .topo .usuario select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     /* ============================================================
        LAYOUT
        ============================================================ */
     .tela {
-      max-width: 1200px;
-      margin: 12px auto;
-      padding: 0 12px;
+      max-width: 1160px;
+      margin: 24px auto;
+      padding: 0 24px;
     }
 
     .hidden { display: none; }
 
     /* ============================================================
-       ABAS
+       ABAS (estilo underline moderno)
        ============================================================ */
     .abas {
       display: flex;
-      gap: 0;
-      margin-bottom: 12px;
-      border-bottom: 2px solid #1a365d;
+      gap: 4px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e4e4e7;
       overflow-x: auto;
+      scrollbar-width: none;
     }
+    .abas::-webkit-scrollbar { display: none; }
 
     .aba {
-      background: #e2e8f0;
-      border: 1px solid #cbd5e0;
-      border-bottom: none;
-      padding: 6px 14px;
+      background: none;
+      border: none;
+      padding: 10px 14px;
       cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
-      color: #4a5568;
-      margin-right: 2px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #71717a;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
       white-space: nowrap;
+      transition: color 120ms ease, border-color 120ms ease;
+      border-radius: 0;
     }
 
     .aba:hover {
-      background: #cbd5e0;
-      color: #1a365d;
+      color: #18181b;
     }
 
     .aba.ativa {
-      background: #1a365d;
-      color: #fff;
-      border-color: #1a365d;
+      color: #18181b;
+      font-weight: 600;
+      border-bottom-color: #4f46e5;
     }
 
     /* ============================================================
@@ -136,20 +173,22 @@
        BLOCOS
        ============================================================ */
     .bloco {
-      background: #fff;
-      border: 1px solid #cbd5e0;
-      padding: 12px 14px;
-      margin-bottom: 12px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     }
 
     .bloco h3 {
-      margin: 0 0 10px 0;
-      font-size: 12px;
-      color: #1a365d;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #e2e8f0;
+      margin: 0 0 16px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #18181b;
+      padding: 0;
+      border: none;
+      letter-spacing: -0.01em;
     }
 
     /* ============================================================
@@ -158,24 +197,24 @@
     .form-linha {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 14px;
+      margin-bottom: 14px;
     }
 
     .campo {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 6px;
     }
 
     .campo label,
     .bloco label {
-      font-size: 11px;
-      font-weight: bold;
-      color: #4a5568;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      margin: 0 0 2px 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: #3f3f46;
+      letter-spacing: 0;
+      margin: 0;
+      text-transform: none;
     }
 
     .campo input,
@@ -185,12 +224,29 @@
     .bloco select,
     .bloco textarea {
       width: 100%;
-      padding: 4px 6px;
-      border: 1px solid #a0aec0;
-      background: #fff;
-      font-family: Arial, Helvetica, sans-serif;
+      padding: 8px 11px;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      background: #ffffff;
+      font-family: inherit;
       font-size: 13px;
-      color: #2d3748;
+      color: #18181b;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+      outline: none;
+    }
+
+    .campo input::placeholder,
+    .campo textarea::placeholder {
+      color: #a1a1aa;
+    }
+
+    .campo input:hover,
+    .campo select:hover,
+    .campo textarea:hover,
+    .bloco input:hover,
+    .bloco select:hover,
+    .bloco textarea:hover {
+      border-color: #d4d4d8;
     }
 
     .campo input:focus,
@@ -199,20 +255,20 @@
     .bloco input:focus,
     .bloco select:focus,
     .bloco textarea:focus {
-      outline: none;
-      border-color: #2c5282;
-      background: #fffef5;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     .campo input:disabled,
     .campo select:disabled {
-      background: #edf2f7;
-      color: #718096;
+      background: #fafafa;
+      color: #a1a1aa;
+      cursor: not-allowed;
     }
 
     .campo small, .bloco small {
-      color: #718096;
-      font-size: 11px;
+      color: #71717a;
+      font-size: 12px;
     }
 
     /* ============================================================
@@ -220,122 +276,157 @@
        ============================================================ */
     .btn-primario,
     button.btn-primario {
-      background: #1a365d;
-      color: #fff;
-      border: 1px solid #1a365d;
-      padding: 5px 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
+      background: #18181b;
+      color: #ffffff;
+      border: 1px solid #18181b;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      display: inline-block;
+      transition: background 120ms ease, border-color 120ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      letter-spacing: 0;
     }
 
     .btn-primario:hover {
-      background: #2c5282;
-      border-color: #2c5282;
+      background: #27272a;
+      border-color: #27272a;
+    }
+
+    .btn-primario:active {
+      background: #3f3f46;
     }
 
     .btn-secundario {
-      background: #e2e8f0;
-      color: #2d3748;
-      border: 1px solid #a0aec0;
-      padding: 5px 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
+      background: #ffffff;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      display: inline-block;
+      transition: background 120ms ease, border-color 120ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      letter-spacing: 0;
     }
 
     .btn-secundario:hover {
-      background: #cbd5e0;
+      background: #fafafa;
+      border-color: #d4d4d8;
     }
 
     .btn-perigo {
-      background: #fff;
-      color: #9b2c2c;
-      border: 1px solid #9b2c2c;
-      padding: 3px 8px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      font-weight: bold;
+      background: #ffffff;
+      color: #dc2626;
+      border: 1px solid #e4e4e7;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+      white-space: nowrap;
+      letter-spacing: 0;
     }
 
     .btn-perigo:hover {
-      background: #9b2c2c;
-      color: #fff;
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #b91c1c;
     }
 
     .btn-editar {
-      background: #fff;
-      color: #2c5282;
-      border: 1px solid #a0aec0;
-      padding: 3px 8px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      font-weight: bold;
+      background: #ffffff;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
+      transition: background 120ms ease, border-color 120ms ease;
+      white-space: nowrap;
+      letter-spacing: 0;
     }
 
     .btn-editar:hover {
-      background: #ebf4ff;
-      border-color: #2c5282;
+      background: #fafafa;
+      border-color: #d4d4d8;
     }
 
     .btn-sucesso {
-      background: #22543d;
-      color: #fff;
-      border: 1px solid #22543d;
-      padding: 5px 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
+      background: #16a34a;
+      color: #ffffff;
+      border: 1px solid #16a34a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
+      transition: background 120ms ease, border-color 120ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     .btn-sucesso:hover {
-      background: #2f855a;
+      background: #15803d;
+      border-color: #15803d;
     }
 
     .btn-evento {
-      background: #744210;
-      color: #fff;
-      border: 1px solid #744210;
-      padding: 5px 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: bold;
+      background: #4f46e5;
+      color: #ffffff;
+      border: 1px solid #4f46e5;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      text-transform: uppercase;
+      transition: background 120ms ease, border-color 120ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     .btn-evento:hover {
-      background: #975a16;
+      background: #4338ca;
+      border-color: #4338ca;
     }
 
     .btn-voltar {
       background: none;
       border: none;
-      color: #2c5282;
+      color: #71717a;
       cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      font-family: inherit;
+      font-size: 13px;
       padding: 0;
-      text-decoration: underline;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 120ms ease;
     }
 
     .btn-voltar:hover {
-      color: #1a365d;
+      color: #18181b;
     }
 
     /* ============================================================
@@ -343,40 +434,51 @@
        ============================================================ */
     .tabela-wrap {
       overflow-x: auto;
-      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      border: 1px solid #e4e4e7;
+      background: #ffffff;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      background: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
     }
 
     table th {
-      background: #1a365d;
-      color: #fff;
-      font-weight: bold;
-      padding: 6px 8px;
+      background: #fafafa;
+      color: #71717a;
+      font-weight: 500;
+      padding: 10px 14px;
       text-align: left;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      border: 1px solid #2c5282;
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: none;
+      border-bottom: 1px solid #e4e4e7;
       white-space: nowrap;
     }
 
     table td {
-      padding: 5px 8px;
-      border: 1px solid #e2e8f0;
-      color: #2d3748;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f4f4f5;
+      color: #18181b;
       vertical-align: middle;
-      font-size: 12px;
+      font-size: 13px;
     }
 
-    table tbody tr:nth-child(even) td { background: #f7fafc; }
-    table tbody tr:hover td { background: #ebf4ff; }
+    table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table tbody tr {
+      transition: background 120ms ease;
+    }
+
+    table tbody tr:hover td {
+      background: #fafafa;
+    }
 
     /* ============================================================
        BADGES
@@ -385,67 +487,72 @@
     .selo,
     .evento-badge,
     .tag-tipo {
-      display: inline-block;
-      padding: 1px 6px;
-      font-size: 10px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      border: 1px solid;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 999px;
+      letter-spacing: 0;
+      text-transform: none;
+      border: 1px solid transparent;
+      white-space: nowrap;
     }
 
-    .badge-nunca  { background: #e2e8f0; color: #4a5568; border-color: #a0aec0; }
-    .badge-evento { background: #fefcbf; color: #744210; border-color: #d69e2e; }
-    .badge-livre  { background: #bee3f8; color: #2a4365; border-color: #4299e1; }
+    .badge-nunca  { background: #f4f4f5; color: #52525b; }
+    .badge-evento { background: #fef3c7; color: #92400e; }
+    .badge-livre  { background: #dbeafe; color: #1e40af; }
 
-    .selo-atual         { background: #c6f6d5; color: #22543d; border-color: #38a169; }
-    .selo-atencao       { background: #fefcbf; color: #744210; border-color: #d69e2e; }
-    .selo-desatualizado { background: #fed7d7; color: #742a2a; border-color: #e53e3e; }
-    .selo-nunca         { background: #e2e8f0; color: #4a5568; border-color: #a0aec0; }
+    .selo-atual         { background: #dcfce7; color: #166534; }
+    .selo-atencao       { background: #fef3c7; color: #92400e; }
+    .selo-desatualizado { background: #fee2e2; color: #991b1b; }
+    .selo-nunca         { background: #f4f4f5; color: #52525b; }
 
-    .evento-aluno    { background: #bee3f8; color: #2a4365; border-color: #4299e1; }
-    .evento-servidor { background: #e9d8fd; color: #44337a; border-color: #9f7aea; }
-    .evento-inativo  { background: #e2e8f0; color: #718096; border-color: #a0aec0; }
+    .evento-aluno    { background: #e0e7ff; color: #3730a3; }
+    .evento-servidor { background: #f3e8ff; color: #6b21a8; }
+    .evento-inativo  { background: #f4f4f5; color: #71717a; }
 
-    .tag-aluno    { background: #bee3f8; color: #2a4365; border-color: #4299e1; }
-    .tag-escola   { background: #c6f6d5; color: #22543d; border-color: #38a169; }
-    .tag-servidor { background: #e9d8fd; color: #44337a; border-color: #9f7aea; }
-    .tag-evento   { background: #fefcbf; color: #744210; border-color: #d69e2e; }
+    .tag-aluno    { background: #e0e7ff; color: #3730a3; }
+    .tag-escola   { background: #dcfce7; color: #166534; }
+    .tag-servidor { background: #f3e8ff; color: #6b21a8; }
+    .tag-evento   { background: #fef3c7; color: #92400e; }
 
-    .status-evento-ativo     { color: #22543d; font-weight: bold; }
-    .status-evento-inativo   { color: #718096; font-weight: bold; }
-    .status-evento-concluido { color: #2c5282; font-weight: bold; }
+    .status-evento-ativo     { color: #16a34a; font-weight: 500; }
+    .status-evento-inativo   { color: #a1a1aa; font-weight: 500; }
+    .status-evento-concluido { color: #4f46e5; font-weight: 500; }
 
-    .status-pendente     { color: #744210; font-weight: bold; }
-    .status-em_andamento { color: #2c5282; font-weight: bold; }
-    .status-concluida    { color: #22543d; font-weight: bold; }
+    .status-pendente     { color: #d97706; font-weight: 500; }
+    .status-em_andamento { color: #4f46e5; font-weight: 500; }
+    .status-concluida    { color: #16a34a; font-weight: 500; }
 
     /* ============================================================
        AVISOS
        ============================================================ */
     .aviso {
-      background: #fefcbf;
-      border: 1px solid #d69e2e;
-      border-left: 4px solid #744210;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      font-size: 12px;
-      color: #744210;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.5;
     }
 
-    .aviso-vermelho { background: #fed7d7; border-color: #e53e3e; color: #742a2a; }
-    .aviso-roxo { background: #ebf4ff; border-color: #2c5282; color: #1a365d; }
-    .aviso-verde { background: #c6f6d5; border-color: #38a169; color: #22543d; }
+    .aviso-vermelho { background: #fef2f2; border-color: #fecaca; color: #7f1d1d; }
+    .aviso-roxo { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+    .aviso-verde { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }
 
     /* ============================================================
        VAZIO
        ============================================================ */
     .vazio {
-      color: #718096;
+      color: #71717a;
       text-align: center;
-      padding: 20px;
-      font-size: 12px;
-      font-style: italic;
+      padding: 32px 20px;
+      font-size: 13px;
+      font-style: normal;
     }
 
     /* ============================================================
@@ -455,27 +562,31 @@
       list-style: none;
       padding: 0;
       margin: 0;
-    }
-
-    .lista-selecionados li {
-      background: #edf2f7;
-      border: 1px solid #cbd5e0;
-      padding: 4px 8px;
-      margin-bottom: 3px;
-      font-size: 12px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
       gap: 6px;
     }
 
+    .lista-selecionados li {
+      background: #fafafa;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
     .lista-selecionados li .ordem {
-      background: #1a365d;
-      color: #fff;
-      font-size: 10px;
-      font-weight: bold;
-      width: 18px;
-      height: 18px;
+      background: #18181b;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 500;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -484,19 +595,19 @@
 
     .lista-selecionados li .texto { flex: 1; }
     .lista-selecionados li .origem {
-      font-size: 10px;
-      color: #2c5282;
-      font-weight: bold;
-      background: #fff;
-      padding: 1px 6px;
-      border: 1px solid #a0aec0;
-      text-transform: uppercase;
+      font-size: 11px;
+      color: #71717a;
+      font-weight: 500;
+      background: #ffffff;
+      padding: 1px 8px;
+      border: 1px solid #e4e4e7;
+      border-radius: 999px;
     }
 
     .lista-selecionados .vazio {
       background: none;
       border: none;
-      color: #718096;
+      color: #71717a;
       padding: 0;
     }
 
@@ -506,53 +617,65 @@
     .catalogo {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 4px;
+      gap: 8px;
     }
 
     .item-catalogo-wrapper {
-      background: #fff;
-      border: 1px solid #cbd5e0;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 120ms ease;
+    }
+
+    .item-catalogo-wrapper:hover {
+      border-color: #d4d4d8;
     }
 
     .item-catalogo {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 8px;
+      gap: 10px;
+      padding: 10px 12px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
+      transition: background 120ms ease;
     }
 
-    .item-catalogo:hover { background: #ebf4ff; }
+    .item-catalogo:hover { background: #fafafa; }
 
     .item-catalogo input[type="checkbox"] {
-      width: 14px;
-      height: 14px;
-      accent-color: #1a365d;
+      width: 15px;
+      height: 15px;
+      accent-color: #4f46e5;
+      cursor: pointer;
     }
 
     .item-filtro {
-      padding: 5px 8px;
-      border-top: 1px solid #e2e8f0;
-      background: #edf2f7;
+      padding: 8px 12px 10px 12px;
+      border-top: 1px solid #e4e4e7;
+      background: #fafafa;
     }
 
     .item-filtro label {
-      font-size: 10px;
-      color: #4a5568;
-      font-weight: bold;
-      text-transform: uppercase;
+      font-size: 11px;
+      color: #71717a;
+      font-weight: 500;
       display: block;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     .item-filtro select {
       width: 100%;
-      padding: 3px 5px;
-      border: 1px solid #a0aec0;
-      background: #fff;
-      font-family: Arial, Helvetica, sans-serif;
+      padding: 5px 8px;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      background: #ffffff;
+      font-family: inherit;
       font-size: 12px;
+      color: #18181b;
     }
 
     /* ============================================================
@@ -560,43 +683,46 @@
        ============================================================ */
     .tipo-tabs {
       display: flex;
-      gap: 0;
-      margin-bottom: 8px;
-      border-bottom: 1px solid #cbd5e0;
+      gap: 2px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #e4e4e7;
       overflow-x: auto;
     }
 
     .tipo-tab {
-      background: #edf2f7;
-      border: 1px solid #cbd5e0;
-      border-bottom: none;
-      padding: 4px 12px;
+      background: none;
+      border: none;
+      padding: 8px 12px;
       cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      font-weight: bold;
-      color: #4a5568;
-      text-transform: uppercase;
-      margin-right: 2px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #71717a;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
       white-space: nowrap;
+      transition: color 120ms ease, border-color 120ms ease;
     }
 
+    .tipo-tab:hover { color: #18181b; }
+
     .tipo-tab.ativa {
-      background: #1a365d;
-      color: #fff;
-      border-color: #1a365d;
+      color: #18181b;
+      font-weight: 600;
+      border-bottom-color: #4f46e5;
     }
 
     /* ============================================================
        BARRA DE PESQUISA
        ============================================================ */
     .barra-pesquisa-historico {
-      background: #fff;
-      border: 1px solid #cbd5e0;
-      padding: 8px 10px;
-      margin-bottom: 10px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
       display: flex;
-      gap: 6px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -604,102 +730,130 @@
     .barra-pesquisa-historico input {
       flex: 1;
       min-width: 200px;
-      padding: 4px 8px;
-      border: 1px solid #a0aec0;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      padding: 8px 11px;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: #18181b;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+      outline: none;
+    }
+
+    .barra-pesquisa-historico input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     .barra-pesquisa-historico .contador {
-      font-size: 11px;
-      color: #718096;
+      font-size: 12px;
+      color: #71717a;
       white-space: nowrap;
     }
 
     .barra-pesquisa-historico .limpar {
-      background: #e2e8f0;
-      border: 1px solid #a0aec0;
-      color: #2d3748;
-      padding: 4px 10px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      color: #18181b;
+      padding: 7px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 120ms ease;
     }
 
+    .barra-pesquisa-historico .limpar:hover { background: #fafafa; }
+
     /* ============================================================
-       FILTROS DE CAMPOS
+       FILTROS
        ============================================================ */
     .filtros-campos {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
     }
 
     .filtro-btn {
-      background: #edf2f7;
-      color: #4a5568;
-      border: 1px solid #cbd5e0;
-      padding: 3px 10px;
+      background: #ffffff;
+      color: #52525b;
+      border: 1px solid #e4e4e7;
+      padding: 5px 12px;
+      border-radius: 999px;
       cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .filtro-btn:hover {
+      background: #fafafa;
+      border-color: #d4d4d8;
     }
 
     .filtro-btn.ativo {
-      background: #1a365d;
-      color: #fff;
-      border-color: #1a365d;
+      background: #18181b;
+      color: #ffffff;
+      border-color: #18181b;
     }
 
     /* ============================================================
        CARDS DE TAREFA
        ============================================================ */
     .card-tarefa {
-      background: #fff;
-      border: 1px solid #cbd5e0;
-      padding: 10px 12px;
-      margin-bottom: 8px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .card-tarefa:hover {
+      border-color: #d4d4d8;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     .card-tarefa.evento {
-      border-left: 4px solid #744210;
+      border-left: 3px solid #4f46e5;
     }
 
     .card-tarefa h3 {
-      margin: 0 0 6px 0;
-      font-size: 13px;
-      color: #1a365d;
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      color: #18181b;
+      font-weight: 600;
       border: none;
       padding: 0;
-      text-transform: none;
     }
 
     .card-tarefa p {
-      margin: 2px 0;
-      font-size: 12px;
-      color: #4a5568;
+      margin: 4px 0;
+      font-size: 13px;
+      color: #52525b;
     }
 
     /* ============================================================
        PROGRESSO
        ============================================================ */
     .progresso {
-      height: 8px;
-      background: #e2e8f0;
-      border: 1px solid #cbd5e0;
+      height: 6px;
+      background: #f4f4f5;
+      border-radius: 999px;
       overflow: hidden;
-      margin: 6px 0;
+      margin: 10px 0;
     }
 
     .progresso .barra {
       height: 100%;
-      background: #2c5282;
-      transition: width 300ms;
+      background: #4f46e5;
+      border-radius: 999px;
+      transition: width 300ms ease;
     }
 
     /* ============================================================
@@ -708,46 +862,62 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
       display: none;
       justify-content: center;
       align-items: center;
-      padding: 12px;
+      padding: 16px;
       z-index: 1000;
       overflow-y: auto;
     }
 
     .modal-overlay.aberto {
       display: flex;
+      animation: fadeIn 150ms ease;
     }
 
     .modal {
-      background: #fff;
-      border: 2px solid #1a365d;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
       width: 100%;
-      max-width: 600px;
+      max-width: 560px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+      animation: slideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .modal h3 {
-      margin: 0 0 12px 0;
-      font-size: 13px;
-      color: #1a365d;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #cbd5e0;
+      margin: 0 0 20px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #18181b;
+      padding: 0;
+      border: none;
+      letter-spacing: -0.01em;
     }
 
     .modal .rodape {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       justify-content: flex-end;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #cbd5e0;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e4e4e7;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
     }
 
     /* ============================================================
@@ -755,82 +925,100 @@
        ============================================================ */
     .toast-container {
       position: fixed;
-      top: 12px;
-      right: 12px;
+      top: 16px;
+      right: 16px;
       z-index: 9999;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       pointer-events: none;
     }
 
     .toast {
-      background: #fff;
-      border: 1px solid #cbd5e0;
-      border-left: 4px solid #1a365d;
-      padding: 8px 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 13px;
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 10px;
       min-width: 280px;
       max-width: 400px;
       pointer-events: auto;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+      animation: toastIn 250ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .toast--sucesso { border-left-color: #22543d; }
-    .toast--erro    { border-left-color: #9b2c2c; }
-    .toast--aviso   { border-left-color: #744210; }
-    .toast--info    { border-left-color: #2c5282; }
+    .toast.saindo { animation: toastOut 150ms ease forwards; }
 
-    .toast .titulo { font-weight: bold; margin-bottom: 2px; text-transform: uppercase; font-size: 11px; }
-    .toast .mensagem { color: #4a5568; }
+    .toast--sucesso { border-left: 3px solid #16a34a; }
+    .toast--erro    { border-left: 3px solid #dc2626; }
+    .toast--aviso   { border-left: 3px solid #d97706; }
+    .toast--info    { border-left: 3px solid #4f46e5; }
+
+    .toast .titulo {
+      font-weight: 600;
+      margin-bottom: 2px;
+      font-size: 13px;
+      color: #18181b;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .toast--sucesso .titulo { color: #15803d; }
+    .toast--erro .titulo    { color: #b91c1c; }
+    .toast--aviso .titulo   { color: #b45309; }
+    .toast--info .titulo    { color: #4338ca; }
+
+    .toast .mensagem { color: #52525b; line-height: 1.4; }
+
     .toast .fechar {
       background: none;
       border: none;
-      color: #718096;
+      color: #a1a1aa;
       cursor: pointer;
-      font-size: 14px;
-      padding: 0 4px;
-      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+      font-family: inherit;
+      transition: color 120ms ease;
     }
-    .toast .fechar:hover { color: #1a365d; }
-    .toast .icone { display: none; }
+    .toast .fechar:hover { color: #18181b; }
+
+    @keyframes toastIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastOut {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(20px); opacity: 0; }
+    }
 
     /* ============================================================
        AÇÕES DA TABELA
        ============================================================ */
     .acoes-tabela {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
-    }
-
-    .btn-primario svg,
-    .btn-secundario svg,
-    .btn-editar svg,
-    .btn-perigo svg,
-    .btn-sucesso svg {
-      display: none;
     }
 
     /* ============================================================
        RESPONSIVO
        ============================================================ */
     @media (max-width: 768px) {
-      .topo { padding: 6px 10px; }
-      .topo h1 { font-size: 13px; }
-      .tela { margin: 8px auto; padding: 0 8px; }
-      .bloco { padding: 10px; }
-      .form-linha { grid-template-columns: 1fr; }
-      .btn-primario, .btn-secundario, .btn-sucesso { width: 100%; text-align: center; }
+      .topo { padding: 0 16px; height: auto; min-height: 56px; }
+      .tela { margin: 16px auto; padding: 0 16px; }
+      .bloco { padding: 16px; }
+      .form-linha { grid-template-columns: 1fr; gap: 12px; }
+      .btn-primario, .btn-secundario, .btn-sucesso, .btn-evento { width: 100%; justify-content: center; }
       .btn-perigo, .btn-editar { width: 100%; }
-      table { font-size: 11px; }
-      table th, table td { padding: 4px 6px; }
+      table { font-size: 12px; }
+      table th, table td { padding: 8px 10px; }
       .acoes-tabela { flex-direction: column; }
       .catalogo { grid-template-columns: 1fr; }
-      .modal { padding: 12px; }
+      .modal { padding: 20px; }
       .modal .rodape { flex-direction: column; }
       .modal .rodape button { width: 100%; }
     }
@@ -841,10 +1029,10 @@
     @media print {
       .topo, .abas, .acoes, .btn-voltar, .filtros-campos { display: none !important; }
       body { background: #fff; font-size: 11px; }
-      .bloco { border: 1px solid #999; page-break-inside: avoid; }
+      .bloco { border: 1px solid #ccc; box-shadow: none; page-break-inside: avoid; }
       table { font-size: 10px; border: 1px solid #999; }
-      table th { background: #ddd !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      table td { border: 1px solid #ccc; }
+      table th { background: #f4f4f5 !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      table td { border-bottom: 1px solid #ddd; }
     }
   </style>
 </head>
@@ -1038,7 +1226,7 @@
             </select>
           </div>
         </div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
           <button id="btnImportarCSV" class="btn-primario">Importar CSV</button>
           <button id="btnModeloCSV" class="btn-secundario">Baixar modelo</button>
         </div>
@@ -1057,7 +1245,7 @@
             </select>
           </div>
         </div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
           <button id="btnExportarCSV" class="btn-primario">Exportar CSV</button>
           <button id="btnExportarCompleto" class="btn-primario">Backup (JSON)</button>
           <button id="btnImportarCompleto" class="btn-secundario">Restaurar backup</button>
@@ -1072,7 +1260,7 @@
 
       <div class="bloco">
         <h3>Manutenção do catálogo</h3>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button id="btnMigrarCatalogo" class="btn-primario">Migrar catálogo padrão</button>
           <button id="btnRecarregarCatalogo" class="btn-secundario">Recarregar catálogo</button>
         </div>
@@ -1275,7 +1463,7 @@
       const temConfirmacao = !!registro.confirmadoEm;
       const temEdicao = !!registro.atualizadoEm;
       if (!temConfirmacao && !temEdicao) {
-        return { emoji: "○", texto: "Nunca", classe: "selo-nunca" };
+        return { texto: "Nunca", classe: "selo-nunca" };
       }
       const db = carregarDB();
       const eventos = (db.eventos || []).filter(e => e.tipo === tipo)
@@ -1285,23 +1473,23 @@
           return db2 - da;
         });
       const dataRef = registro.confirmadoEm || registro.atualizadoEm;
-      if (eventos.length === 0) return { emoji: "OK", texto: "Atual", classe: "selo-atual" };
+      if (eventos.length === 0) return { texto: "Atual", classe: "selo-atual" };
       if (!registro.ultimoEvento) {
         const dataEvt = eventos[0].dataInicio ? new Date(eventos[0].dataInicio) : new Date(0);
         const dataRefObj = dataRef ? new Date(dataRef) : new Date(0);
-        if (dataRefObj >= dataEvt) return { emoji: "OK", texto: "Atual", classe: "selo-atual" };
+        if (dataRefObj >= dataEvt) return { texto: "Atual", classe: "selo-atual" };
         const depois = eventos.filter(e => {
           const d = e.dataInicio ? new Date(e.dataInicio) : new Date(0);
           return d > dataRefObj;
         });
-        if (depois.length === 0) return { emoji: "OK", texto: "Atual",         classe: "selo-atual" };
-        if (depois.length === 1) return { emoji: "!",  texto: "Atenção",       classe: "selo-atencao" };
-        return                          { emoji: "X",  texto: "Desatualizado", classe: "selo-desatualizado" };
+        if (depois.length === 0) return { texto: "Atual",         classe: "selo-atual" };
+        if (depois.length === 1) return { texto: "Atenção",       classe: "selo-atencao" };
+        return                          { texto: "Desatualizado", classe: "selo-desatualizado" };
       }
       const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
-      if (pos === 0) return { emoji: "OK", texto: "Atual",         classe: "selo-atual" };
-      if (pos === 1) return { emoji: "!",  texto: "Atenção",       classe: "selo-atencao" };
-      return             { emoji: "X",  texto: "Desatualizado", classe: "selo-desatualizado" };
+      if (pos === 0) return { texto: "Atual",         classe: "selo-atual" };
+      if (pos === 1) return { texto: "Atenção",       classe: "selo-atencao" };
+      return             { texto: "Desatualizado", classe: "selo-desatualizado" };
     }
 
     function marcarComoAtual(registroId, tipo) {
@@ -1779,7 +1967,7 @@
       db.alunos.forEach(a => {
         const selo = calcularSelo(a, "aluno");
         html += `<tr>`;
-        html += `<td><span class="selo ${selo.classe}">${selo.emoji} ${selo.texto}</span></td>`;
+        html += `<td><span class="selo ${selo.classe}">${selo.texto}</span></td>`;
         colunas.forEach(c => {
           let valor = a[c.id] || "—";
           if (c.tipoCampo === "escola" && a[c.id]) valor = nomeEscolaPorId(a[c.id]);
@@ -1852,7 +2040,7 @@
       db.servidores.forEach(s => {
         const selo = calcularSelo(s, "servidor");
         html += `<tr>`;
-        html += `<td><span class="selo ${selo.classe}">${selo.emoji} ${selo.texto}</span></td>`;
+        html += `<td><span class="selo ${selo.classe}">${selo.texto}</span></td>`;
         colunas.forEach(c => {
           let valor = s[c.id] || "—";
           if (c.tipoCampo === "escola" && s[c.id]) valor = nomeEscolaPorId(s[c.id]);
@@ -2038,17 +2226,17 @@
       ["aluno", "escola", "servidor"].forEach((tipo) => {
         const campos = db.campos.filter(c => c.tipo === tipo);
         if (campos.length === 0) return;
-        html += `<div style="margin-bottom:12px;"><h4>${rotuloTipo[tipo]}</h4>`;
+        html += `<div style="margin-bottom:16px;"><h4>${rotuloTipo[tipo]}</h4>`;
         ["nunca", "evento", "livre"].forEach((val) => {
           const lista = campos.filter(c => (c.validade || "nunca") === val);
           if (lista.length === 0) return;
           const info = rotuloValidade[val];
           const nomes = lista.map(c => c.label).join(", ");
           html += `
-            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px;font-size:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;">
               <span class="badge-validade ${info.classe}">${info.texto}</span>
-              <span style="color:#718096;font-size:11px;">(${lista.length})</span>
-              <span style="color:#4a5568;">${nomes}</span>
+              <span style="color:#71717a;font-size:12px;">(${lista.length})</span>
+              <span style="color:#52525b;">${nomes}</span>
             </div>
           `;
         });
@@ -2457,15 +2645,15 @@
         <p><strong>Tarefas:</strong> ${db.tarefas.length}</p>
       `;
       if (db.alunos.length > 0) {
-        html += `<h4 style="margin-top:10px;">Qualidade dos dados (alunos)</h4>
+        html += `<h4 style="margin-top:14px;">Qualidade dos dados (alunos)</h4>
           <p>Atual: ${selosAlunos.atual} • Atenção: ${selosAlunos.atencao} • Desatualizado: ${selosAlunos.desatualizado} • Nunca: ${selosAlunos.nunca}</p>`;
       }
       if (db.servidores.length > 0) {
-        html += `<h4 style="margin-top:10px;">Qualidade dos dados (servidores)</h4>
+        html += `<h4 style="margin-top:14px;">Qualidade dos dados (servidores)</h4>
           <p>Atual: ${selosServidores.atual} • Atenção: ${selosServidores.atencao} • Desatualizado: ${selosServidores.desatualizado} • Nunca: ${selosServidores.nunca}</p>`;
       }
       if (db.escolas.length > 0) {
-        html += `<h4 style="margin-top:10px;">Alunos por escola</h4><ul>`;
+        html += `<h4 style="margin-top:14px;">Alunos por escola</h4><ul>`;
         db.escolas.forEach(e => { html += `<li>${e.nome || e.id}: ${porEscola[e.id] || 0} aluno(s)</li>`; });
         html += `</ul>`;
       }
