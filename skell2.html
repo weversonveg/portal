@@ -1,469 +1,285 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel da Secretaria</title>
-  <style>
-    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f5f7fa; color: #1a1a1a; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal SEMED - Divinópolis</title>
+    <style>
+        /* Configurações Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .topo {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #1e3a8a; color: #fff; padding: 1rem 2rem;
-    }
-    .topo h1 { font-size: 1.2rem; margin: 0; }
-    .usuario button {
-      background: #fff; color: #1e3a8a; border: none;
-      padding: .4rem .8rem; border-radius: 4px; cursor: pointer;
-    }
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
 
-    .tela { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-    .hidden { display: none; }
+        /* Container Principal (simula a tela de celular) */
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
 
-    h2 { margin-top: 0; }
-    h3 { margin: 0 0 .5rem; }
-    .subtitulo { color: #555; margin-bottom: 1.5rem; }
+        /* Cabeçalho Roxo (Baseado na imagem) */
+        .header {
+            background-color: #5b259b; /* Roxo institucional */
+            padding: 30px 20px 40px 20px;
+            color: white;
+            text-align: left;
+        }
 
-    .bloco {
-      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
-      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
-    .bloco label { display: block; font-size: .85rem; color: #555; margin: .6rem 0 .2rem; }
-    .bloco input, .bloco select {
-      width: 100%; padding: .45rem .6rem; border: 1px solid #ccc; border-radius: 4px;
-    }
-    .bloco small { color: #888; font-size: .8rem; }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
 
-    .catalogo {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: .5rem;
-    }
-    .item-catalogo {
-      display: flex; align-items: center; gap: .5rem;
-      background: #f0f4ff; padding: .5rem .7rem; border-radius: 6px;
-      cursor: pointer; font-size: .9rem;
-    }
-    .item-catalogo input { width: auto; }
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #ff6b00; /* Laranja da logo */
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
 
-    .lista-selecionados {
-      list-style: none; padding: 0; margin: 0;
-    }
-    .lista-selecionados li {
-      background: #e8f0fe; padding: .4rem .7rem; border-radius: 4px;
-      margin-bottom: .3rem; font-size: .9rem;
-    }
-    .lista-selecionados .vazio { background: none; color: #888; padding: 0; }
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
 
-    .acoes { display: flex; gap: .8rem; margin-top: 1rem; }
+        .logo-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
 
-    .btn-primario {
-      background: #1e3a8a; color: #fff; border: none;
-      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
-    }
-    .btn-primario:hover { background: #16306e; }
-    .btn-secundario {
-      background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a;
-      padding: .6rem 1.2rem; border-radius: 4px; cursor: pointer;
-    }
-    .btn-voltar {
-      background: none; border: none; color: #1e3a8a;
-      cursor: pointer; margin-bottom: 1rem; font-size: .9rem;
-    }
-    .rodape-form { text-align: right; margin-top: 1.5rem; }
+        .portal-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
 
-    .resumo {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 1rem; margin: 1.5rem 0;
-    }
-    .card-resumo {
-      background: #fff; border-radius: 8px; padding: 1.2rem;
-      text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
-    .card-resumo h3 { font-size: 2rem; margin: 0; }
-    .card-resumo p { margin: .3rem 0 0; color: #555; font-size: .9rem; }
-    .card-resumo.verde h3 { color: #16a34a; }
-    .card-resumo.amarelo h3 { color: #d97706; }
-    .card-resumo.azul h3 { color: #1e3a8a; }
+        .portal-badge::before {
+            content: '🔒';
+            margin-right: 5px;
+            font-size: 10px;
+        }
 
-    .card-tarefa {
-      background: #fff; border-radius: 8px; padding: 1rem 1.2rem;
-      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
-    .card-tarefa h3 { margin: 0 0 .5rem; }
-    .card-tarefa p { margin: .2rem 0; font-size: .9rem; }
+        .header h2 {
+            font-size: 28px;
+            line-height: 1.2;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
 
-    .loading { color: #888; font-style: italic; }
-  </style>
+        .header p.subtitle {
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        /* Área do Conteúdo (Links) */
+        .content {
+            padding: 30px 20px;
+            flex: 1;
+            background-color: #ffffff;
+        }
+
+        .content h3 {
+            font-size: 24px;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .content p.desc {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        /* Seções de Links */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #5b259b;
+            margin: 20px 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Estilo dos Botões/Links */
+        .link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .link-btn:hover {
+            background-color: #f0eaff;
+            border-color: #5b259b;
+            transform: translateY(-2px);
+        }
+
+        .link-btn span.icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .link-btn .text {
+            flex: 1;
+            font-size: 15px;
+        }
+
+        .link-btn .arrow {
+            color: #5b259b;
+            font-weight: bold;
+        }
+
+        /* Estilos específicos para botões de destaque (Redes Sociais) */
+        .social-btn {
+            background-color: #ffffff;
+            border: 2px solid #5b259b;
+            color: #5b259b;
+        }
+        
+        .social-btn:hover {
+            background-color: #5b259b;
+            color: white;
+        }
+
+        .social-btn .arrow { color: inherit; }
+
+        /* Rodapé */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+        }
+    </style>
 </head>
 <body>
 
-  <header class="topo">
-    <h1>Painel da Secretaria</h1>
-    <div class="usuario">
-      <span id="nomeUsuario">Carregando...</span>
-      <button id="btnSair">Sair</button>
+    <div class="container">
+        <!-- Cabeçalho Roxo -->
+        <header class="header">
+            <div class="logo-area">
+                <div class="logo-icon">📚</div>
+                <div class="logo-text">
+                    <h1>Recursos Humanos</h1>
+                    <p>Secretaria Municipal de Educação</p>
+                </div>
+            </div>
+            
+            <div class="portal-badge">Portal Corporativo</div>
+            
+            <h2>Gestão simplificada de benefícios.</h2>
+            <p class="subtitle">Acesse os sistemas oficiais, redes sociais e canais de atendimento da SEMED.</p>
+        </header>
+
+        <!-- Área de Links -->
+        <main class="content">
+            <h3>Bem-vindo(a)</h3>
+            <p class="desc">Selecione um dos serviços abaixo:</p>
+
+            <!-- Redes Sociais e Download -->
+            <div class="section-title">Canais de Comunicação</div>
+            
+            <a href="#" class="link-btn social-btn" target="_blank">
+                <span class="icon">📸</span>
+                <span class="text">Instagram SEMED</span>
+                <span class="arrow">➔</span>
+            </a>
+            
+            <a href="#" class="link-btn social-btn" target="_blank">
+                <span class="icon">▶️</span>
+                <span class="text">Canal do YouTube</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="#" class="link-btn social-btn" target="_blank">
+                <span class="icon">🏛️</span>
+                <span class="text">Prefeitura de Divinópolis</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="#" class="link-btn social-btn" target="_blank">
+                <span class="icon">⬇️</span>
+                <span class="text">Downloads de Arquivos</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <!-- Sistemas Betha -->
+            <div class="section-title">Sistemas Betha</div>
+
+            <a href="https://conecta.beta.cloud" class="link-btn" target="_blank">
+                <span class="icon">☁️</span>
+                <span class="text">Conecta Betha</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="https://assinador.betha.cloud" class="link-btn" target="_blank">
+                <span class="icon">✍️</span>
+                <span class="text">Assinador Betha</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="https://protocolo.betha.cloud" class="link-btn" target="_blank">
+                <span class="icon">📄</span>
+                <span class="text">Protocolo Betha</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="https://documentos.betha.cloud" class="link-btn" target="_blank">
+                <span class="icon">📁</span>
+                <span class="text">Documentos Betha</span>
+                <span class="arrow">➔</span>
+            </a>
+
+            <a href="https://minhafolga.betha.cloud" class="link-btn" target="_blank">
+                <span class="icon">📅</span>
+                <span class="text">Minha Folga Betha</span>
+                <span class="arrow">➔</span>
+            </a>
+
+        </main>
+
+        <!-- Rodapé -->
+        <footer class="footer">
+            &copy; 2024 SEMED - Divinópolis. Todos os direitos reservados.
+        </footer>
     </div>
-  </header>
 
-  <!-- TELA 1: Dashboard -->
-  <section id="tela-dashboard" class="tela">
-    <h2>O que você precisa?</h2>
-    <p class="subtitulo">
-      Monte a solicitação. O sistema verifica o que já existe
-      e pede à escola só o que falta.
-    </p>
-    <div class="acoes">
-      <button id="btnNovaSolicitacao" class="btn-primario">+ Nova solicitação</button>
-      <button id="btnVerHistorico" class="btn-secundario">Ver histórico</button>
-    </div>
-  </section>
-
-  <!-- TELA 2: Builder -->
-  <section id="tela-builder" class="tela hidden">
-    <button id="btnVoltarDashboard" class="btn-voltar">← Voltar</button>
-    <h2>Montar solicitação</h2>
-
-    <div class="bloco">
-      <label>Título da solicitação</label>
-      <input type="text" id="tituloSolicitacao"
-             placeholder="Ex: Relatório de alunos para merenda">
-
-      <label>Setor solicitante</label>
-      <input type="text" id="setorSolicitante" readonly>
-
-      <label>Escolas de destino</label>
-      <select id="escolasDestino" multiple size="5"></select>
-      <small>Segure Ctrl (ou Cmd) para selecionar várias.</small>
-    </div>
-
-    <div class="bloco">
-      <h3>Campos disponíveis</h3>
-      <p class="subtitulo">Marque os campos que você precisa neste relatório.</p>
-      <div id="catalogoCampos" class="catalogo"></div>
-    </div>
-
-    <div class="bloco">
-      <h3>Campos selecionados</h3>
-      <ul id="camposSelecionados" class="lista-selecionados">
-        <li class="vazio">Nenhum campo selecionado ainda.</li>
-      </ul>
-    </div>
-
-    <div class="rodape-form">
-      <button id="btnVerificar" class="btn-primario">Verificar dados existentes</button>
-    </div>
-  </section>
-
-  <!-- TELA 3: Resultado -->
-  <section id="tela-resultado" class="tela hidden">
-    <button id="btnVoltarBuilder" class="btn-voltar">← Voltar</button>
-    <h2>Resultado da verificação</h2>
-
-    <div class="resumo">
-      <div class="card-resumo verde">
-        <h3 id="qtdCompletos">0</h3>
-        <p>Alunos com todos os dados</p>
-      </div>
-      <div class="card-resumo amarelo">
-        <h3 id="qtdPendentes">0</h3>
-        <p>Alunos com dados faltando</p>
-      </div>
-      <div class="card-resumo azul">
-        <h3 id="qtdEscolas">0</h3>
-        <p>Escolas envolvidas</p>
-      </div>
-    </div>
-
-    <div class="acoes">
-      <button id="btnGerarTarefas" class="btn-primario">
-        Gerar solicitações para as escolas
-      </button>
-    </div>
-  </section>
-
-  <!-- TELA 4: Histórico -->
-  <section id="tela-historico" class="tela hidden">
-    <button id="btnVoltarDashboard2" class="btn-voltar">← Voltar</button>
-    <h2>Histórico de solicitações</h2>
-    <div id="listaHistorico" class="lista">
-      <p class="loading">Carregando...</p>
-    </div>
-  </section>
-
-  <!-- TELA 5: Sucesso -->
-  <section id="tela-sucesso" class="tela hidden">
-    <h2>✅ Solicitações enviadas!</h2>
-    <p>As escolas foram notificadas e vão preencher o que falta.</p>
-    <button id="btnVoltarDashboard3" class="btn-primario">Voltar ao início</button>
-  </section>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, collection, query, where, getDocs,
-      doc, addDoc, writeBatch, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // ⚠️ TROQUE PELAS SUAS CREDENCIAIS
-    const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "SEU_PROJETO.firebaseapp.com",
-      projectId: "SEU_PROJETO",
-      storageBucket: "SEU_PROJETO.appspot.com",
-      messagingSenderId: "SEU_SENDER_ID",
-      appId: "SEU_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Catálogo de campos disponíveis
-    const CATALOGO = [
-      { id: "nomeMae",            label: "Nome da mãe" },
-      { id: "nomePai",            label: "Nome do pai" },
-      { id: "cpf",                label: "CPF do aluno" },
-      { id: "genero",             label: "Gênero" },
-      { id: "restricaoAlimentar", label: "Restrição alimentar" },
-      { id: "endereco",           label: "Endereço" },
-      { id: "telefone",           label: "Telefone" },
-      { id: "serie",              label: "Série" }
-    ];
-
-    let setorAtual = null;
-    let camposSelecionados = new Set();
-    let escolasSelecionadas = [];
-    let resultadoVerificacao = null;
-
-    const telas = {
-      dashboard: document.getElementById("tela-dashboard"),
-      builder:   document.getElementById("tela-builder"),
-      resultado: document.getElementById("tela-resultado"),
-      historico: document.getElementById("tela-historico"),
-      sucesso:   document.getElementById("tela-sucesso")
-    };
-
-    function mostrarTela(nome) {
-      Object.values(telas).forEach(t => t.classList.add("hidden"));
-      telas[nome].classList.remove("hidden");
-    }
-
-    // ---- Autenticação ----
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "login.html"; return; }
-
-      const token = await user.getIdTokenResult();
-      setorAtual = token.claims.setor || "Secretaria";
-
-      document.getElementById("nomeUsuario").textContent = user.email;
-      document.getElementById("setorSolicitante").value = setorAtual;
-
-      await carregarEscolas();
-      montarCatalogo();
-    });
-
-    document.getElementById("btnSair").addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
-    });
-
-    // ---- Escolas ----
-    async function carregarEscolas() {
-      const select = document.getElementById("escolasDestino");
-      select.innerHTML = "";
-      try {
-        const snap = await getDocs(collection(db, "escolas"));
-        snap.forEach((d) => {
-          const e = d.data();
-          const opt = document.createElement("option");
-          opt.value = d.id;
-          opt.textContent = e.nome || d.id;
-          select.appendChild(opt);
-        });
-      } catch (err) {
-        console.error("Erro ao carregar escolas:", err);
-      }
-    }
-
-    // ---- Catálogo ----
-    function montarCatalogo() {
-      const div = document.getElementById("catalogoCampos");
-      div.innerHTML = "";
-      CATALOGO.forEach((campo) => {
-        const label = document.createElement("label");
-        label.className = "item-catalogo";
-        label.innerHTML = `
-          <input type="checkbox" value="${campo.id}">
-          <span>${campo.label}</span>
-        `;
-        label.querySelector("input").addEventListener("change", (e) => {
-          if (e.target.checked) camposSelecionados.add(campo.id);
-          else camposSelecionados.delete(campo.id);
-          atualizarSelecionados();
-        });
-        div.appendChild(label);
-      });
-    }
-
-    function atualizarSelecionados() {
-      const ul = document.getElementById("camposSelecionados");
-      ul.innerHTML = "";
-      if (camposSelecionados.size === 0) {
-        ul.innerHTML = '<li class="vazio">Nenhum campo selecionado ainda.</li>';
-        return;
-      }
-      camposSelecionados.forEach((id) => {
-        const campo = CATALOGO.find(c => c.id === id);
-        const li = document.createElement("li");
-        li.textContent = campo ? campo.label : id;
-        ul.appendChild(li);
-      });
-    }
-
-    // ---- Verificar ----
-    document.getElementById("btnVerificar").addEventListener("click", async () => {
-      const titulo = document.getElementById("tituloSolicitacao").value.trim();
-      const select = document.getElementById("escolasDestino");
-      escolasSelecionadas = Array.from(select.selectedOptions).map(o => o.value);
-
-      if (!titulo) { alert("Informe o título."); return; }
-      if (camposSelecionados.size === 0) { alert("Selecione ao menos um campo."); return; }
-      if (escolasSelecionadas.length === 0) { alert("Selecione ao menos uma escola."); return; }
-
-      const campos = Array.from(camposSelecionados);
-
-      // Firestore limita "in" a 30 valores — quebramos em lotes
-      const completos = [];
-      const pendentes = [];
-
-      for (let i = 0; i < escolasSelecionadas.length; i += 30) {
-        const lote = escolasSelecionadas.slice(i, i + 30);
-        const snap = await getDocs(
-          query(collection(db, "alunos"), where("escolaId", "in", lote))
-        );
-        snap.forEach((d) => {
-          const aluno = d.data();
-          const faltando = campos.filter(c => !aluno[c]);
-          if (faltando.length === 0) completos.push({ id: d.id, ...aluno });
-          else pendentes.push({ id: d.id, ...aluno, camposFaltando: faltando });
-        });
-      }
-
-      resultadoVerificacao = { titulo, campos, completos, pendentes };
-
-      document.getElementById("qtdCompletos").textContent = completos.length;
-      document.getElementById("qtdPendentes").textContent = pendentes.length;
-      const escolasEnvolvidas = new Set(pendentes.map(p => p.escolaId));
-      document.getElementById("qtdEscolas").textContent = escolasEnvolvidas.size;
-
-      mostrarTela("resultado");
-    });
-
-    // ---- Gerar tarefas ----
-    document.getElementById("btnGerarTarefas").addEventListener("click", async () => {
-      const { titulo, campos, pendentes } = resultadoVerificacao;
-
-      if (pendentes.length === 0) {
-        alert("Nenhuma pendência. Nada a enviar às escolas.");
-        return;
-      }
-
-      // Agrupa por escola
-      const porEscola = {};
-      pendentes.forEach((p) => {
-        if (!porEscola[p.escolaId]) porEscola[p.escolaId] = [];
-        porEscola[p.escolaId].push(p);
-      });
-
-      const batch = writeBatch(db);
-
-      for (const [escolaId, alunos] of Object.entries(porEscola)) {
-        const tarefaRef = doc(collection(db, "tarefas"));
-        batch.set(tarefaRef, {
-          escolaId,
-          titulo,
-          setorSolicitante: setorAtual,
-          camposNecessarios: campos,
-          totalAlunos: alunos.length,
-          status: "pendente",
-          criadoEm: serverTimestamp()
-        });
-
-        alunos.forEach((a) => {
-          const alunoRef = doc(collection(db, "tarefas", tarefaRef.id, "alunos"));
-          batch.set(alunoRef, {
-            alunoId: a.id,
-            nome: a.nome || "Sem nome",
-            camposFaltando: a.camposFaltando,
-            status: "pendente"
-          });
-        });
-      }
-
-      await batch.commit();
-      mostrarTela("sucesso");
-    });
-
-    // ---- Histórico ----
-    async function carregarHistorico() {
-      const lista = document.getElementById("listaHistorico");
-      lista.innerHTML = '<p class="loading">Carregando...</p>';
-
-      const snap = await getDocs(
-        query(collection(db, "tarefas"),
-              where("setorSolicitante", "==", setorAtual))
-      );
-
-      if (snap.empty) {
-        lista.innerHTML = "<p>Nenhuma solicitação ainda.</p>";
-        return;
-      }
-
-      lista.innerHTML = "";
-      snap.forEach((d) => {
-        const t = d.data();
-        const card = document.createElement("div");
-        card.className = "card-tarefa";
-        card.innerHTML = `
-          <h3>${t.titulo}</h3>
-          <p><strong>Escola:</strong> ${t.escolaId}</p>
-          <p><strong>Status:</strong> ${t.status}</p>
-          <p><strong>Alunos:</strong> ${t.totalAlunos}</p>
-        `;
-        lista.appendChild(card);
-      });
-    }
-
-    // ---- Navegação ----
-    document.getElementById("btnNovaSolicitacao").addEventListener("click", () => {
-      camposSelecionados.clear();
-      atualizarSelecionados();
-      document.getElementById("tituloSolicitacao").value = "";
-      montarCatalogo();
-      mostrarTela("builder");
-    });
-
-    document.getElementById("btnVoltarDashboard").addEventListener("click", () => {
-      mostrarTela("dashboard");
-    });
-    document.getElementById("btnVoltarBuilder").addEventListener("click", () => {
-      mostrarTela("builder");
-    });
-    document.getElementById("btnVoltarDashboard2").addEventListener("click", () => {
-      mostrarTela("dashboard");
-    });
-    document.getElementById("btnVoltarDashboard3").addEventListener("click", () => {
-      mostrarTela("dashboard");
-    });
-
-    document.getElementById("btnVerHistorico").addEventListener("click", async () => {
-      await carregarHistorico();
-      mostrarTela("historico");
-    });
-  </script>
 </body>
 </html>
