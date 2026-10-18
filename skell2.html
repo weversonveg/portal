@@ -1,1775 +1,328 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel da Secretaria</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    body {
-      margin: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-      color: #18181b;
-      background: #fafafa;
-    }
-    h1, h2, h3, h4 { font-weight: 600; line-height: 1.3; color: #18181b; margin: 0 0 12px 0; letter-spacing: -0.01em; }
-    h1 { font-size: 18px; font-weight: 700; }
-    h2 { font-size: 16px; }
-    h3 { font-size: 14px; }
-    h4 { font-size: 12px; color: #71717a; font-weight: 500; }
-    p { margin: 0 0 12px 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Corporativo - SEMED Divinópolis</title>
+    <style>
+        /* Importação de fonte institucional */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    .topo {
-      background: #ffffff;
-      border-bottom: 1px solid #e4e4e7;
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .topo h1 {
-      color: #18181b;
-      font-size: 15px;
-      font-weight: 600;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .topo h1::before {
-      content: "";
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      background: #4f46e5;
-      border-radius: 5px;
-      flex-shrink: 0;
-    }
-    .topo .usuario { color: #71717a; font-size: 13px; font-weight: 400; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
-    .tela { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
-    .hidden { display: none; }
+        body {
+            background-color: #e5e7eb; /* Fundo cinza claro institucional */
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
 
-    .bloco {
-      background: #ffffff;
-      border: 1px solid #e4e4e7;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-    .bloco h3 {
-      margin: 0 0 16px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #18181b;
-      padding: 0;
-      border: none;
-    }
+        /* Container Principal */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
 
-    .campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    .campo label, .bloco label {
-      font-size: 12px;
-      font-weight: 500;
-      color: #3f3f46;
-      margin: 0;
-    }
-    .campo input, .campo select, .campo textarea,
-    .bloco input, .bloco select, .bloco textarea {
-      width: 100%;
-      padding: 8px 11px;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      background: #ffffff;
-      font-family: inherit;
-      font-size: 13px;
-      color: #18181b;
-      transition: border-color 120ms ease, box-shadow 120ms ease;
-      outline: none;
-    }
-    .campo input:focus, .campo select:focus, .campo textarea:focus,
-    .bloco input:focus, .bloco select:focus, .bloco textarea:focus {
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-    .campo small, .bloco small { color: #71717a; font-size: 12px; }
+        /* Cabeçalho Institucional (Roxo Escuro) */
+        .header {
+            background-color: #3b0764; /* Roxo bem escuro e sério */
+            padding: 40px 24px 32px 24px;
+            color: #ffffff;
+            border-bottom: 4px solid #ca8a04; /* Detalhe em dourado corporativo */
+        }
 
-    .btn-primario {
-      background: #18181b; color: #fff;
-      border: 1px solid #18181b;
-      padding: 8px 14px; border-radius: 6px;
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 120ms ease;
-      display: inline-flex; align-items: center; gap: 6px;
-      white-space: nowrap;
-    }
-    .btn-primario:hover { background: #27272a; border-color: #27272a; }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
 
-    .btn-secundario {
-      background: #fff; color: #18181b;
-      border: 1px solid #e4e4e7;
-      padding: 8px 14px; border-radius: 6px;
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 120ms ease;
-      display: inline-flex; align-items: center; gap: 6px;
-      white-space: nowrap;
-    }
-    .btn-secundario:hover { background: #fafafa; border-color: #d4d4d8; }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #ffffff;
+            border-radius: 4px; /* Cantos menos arredondados */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .btn-perigo {
-      background: #fff; color: #dc2626;
-      border: 1px solid #e4e4e7;
-      padding: 6px 12px; border-radius: 6px;
-      font-family: inherit; font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 120ms ease;
-      white-space: nowrap;
-    }
-    .btn-perigo:hover { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: #3b0764;
+        }
 
-    .btn-sucesso {
-      background: #16a34a; color: #fff;
-      border: 1px solid #16a34a;
-      padding: 8px 14px; border-radius: 6px;
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 120ms ease;
-      display: inline-flex; align-items: center; gap: 6px;
-      white-space: nowrap;
-    }
-    .btn-sucesso:hover { background: #15803d; border-color: #15803d; }
+        .logo-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
 
-    .btn-evento {
-      background: #4f46e5; color: #fff;
-      border: 1px solid #4f46e5;
-      padding: 8px 14px; border-radius: 6px;
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 120ms ease;
-      display: inline-flex; align-items: center; gap: 6px;
-      white-space: nowrap;
-    }
-    .btn-evento:hover { background: #4338ca; border-color: #4338ca; }
+        .logo-text p {
+            font-size: 13px;
+            color: #d8b4fe;
+            margin-top: 4px;
+        }
 
-    .btn-voltar {
-      background: none; border: none;
-      color: #71717a; cursor: pointer;
-      font-family: inherit; font-size: 13px;
-      padding: 0; margin-bottom: 12px;
-      display: inline-flex; align-items: center; gap: 4px;
-    }
-    .btn-voltar:hover { color: #18181b; }
+        .portal-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
 
-    .acoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .header h2 {
+            font-size: 24px;
+            line-height: 1.3;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
 
-    .resumo {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin: 20px 0;
-    }
-    .card-resumo {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 10px;
-      padding: 18px;
-      text-align: center;
-    }
-    .card-resumo h3 { font-size: 28px; margin: 0; font-weight: 700; }
-    .card-resumo p { margin: 4px 0 0 0; color: #71717a; font-size: 12px; }
-    .card-resumo.verde h3 { color: #16a34a; }
-    .card-resumo.amarelo h3 { color: #d97706; }
-    .card-resumo.azul h3 { color: #4f46e5; }
-    .card-resumo.roxo h3 { color: #7c3aed; }
+        .header p.subtitle {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e9d5ff;
+        }
 
-    .catalogo {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 8px;
-    }
-    .item-catalogo-wrapper {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .item-catalogo-wrapper:hover { border-color: #d4d4d8; }
-    .item-catalogo {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; cursor: pointer; font-size: 13px;
-    }
-    .item-catalogo:hover { background: #fafafa; }
-    .item-catalogo input[type="checkbox"] {
-      width: 15px; height: 15px; accent-color: #4f46e5; cursor: pointer;
-    }
-    .item-filtro {
-      padding: 8px 12px 10px;
-      border-top: 1px solid #e4e4e7;
-      background: #fafafa;
-    }
-    .item-filtro label {
-      font-size: 11px; color: #71717a; font-weight: 500;
-      display: block; margin-bottom: 4px;
-    }
-    .item-filtro select {
-      width: 100%; padding: 5px 8px;
-      border: 1px solid #e4e4e7; border-radius: 6px;
-      background: #fff; font-family: inherit; font-size: 12px;
-    }
+        /* Área de Conteúdo */
+        .content {
+            padding: 32px 24px;
+            flex: 1;
+            background-color: #ffffff;
+        }
 
-    .tipo-tabs {
-      display: flex; gap: 2px; margin-bottom: 12px;
-      border-bottom: 1px solid #e4e4e7; overflow-x: auto;
-    }
-    .tipo-tab {
-      background: none; border: none;
-      padding: 8px 12px; cursor: pointer;
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      color: #71717a;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px; white-space: nowrap;
-    }
-    .tipo-tab:hover { color: #18181b; }
-    .tipo-tab.ativa { color: #18181b; font-weight: 600; border-bottom-color: #4f46e5; }
+        .content h3 {
+            font-size: 18px;
+            color: #111827;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
 
-    .lista-selecionados { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .lista-selecionados li {
-      background: #fafafa;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      padding: 8px 12px; font-size: 13px;
-      display: flex; justify-content: space-between; align-items: center; gap: 8px;
-    }
-    .lista-selecionados li .ordem {
-      background: #18181b; color: #fff;
-      font-size: 11px; font-weight: 500;
-      width: 20px; height: 20px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .lista-selecionados li .texto { flex: 1; }
-    .lista-selecionados li .origem {
-      font-size: 11px; color: #71717a; font-weight: 500;
-      background: #fff; padding: 1px 8px;
-      border: 1px solid #e4e4e7; border-radius: 999px;
-    }
-    .lista-selecionados .vazio { background: none; border: none; color: #71717a; padding: 0; }
+        .content p.desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
-    .filtro-badge {
-      background: #4f46e5; color: #fff;
-      font-size: 11px; padding: 2px 8px;
-      border-radius: 999px; margin-left: 4px; font-weight: 500;
-      display: inline-block;
-    }
+        /* Títulos das Seções */
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            margin: 24px 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-    .barra-ordenacao {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .barra-ordenacao label { font-size: 12px; font-weight: 500; color: #3f3f46; margin: 0; }
-    .barra-ordenacao select {
-      padding: 6px 10px;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      color: #18181b;
-      background: #fff;
-      cursor: pointer;
-    }
-    .barra-ordenacao select:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
-    }
+        /* Lista de Links Corporativa */
+        .link-list {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
 
-    .barra-pesquisa-historico {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 16px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .barra-pesquisa-historico input {
-      flex: 1; min-width: 200px;
-      padding: 8px 11px;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      font-family: inherit; font-size: 13px;
-      outline: none;
-    }
-    .barra-pesquisa-historico input:focus {
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
-    }
-    .barra-pesquisa-historico .contador { font-size: 12px; color: #71717a; white-space: nowrap; }
-    .barra-pesquisa-historico .limpar {
-      background: #fff; border: 1px solid #e4e4e7;
-      color: #18181b; padding: 7px 12px;
-      border-radius: 6px; cursor: pointer;
-      font-family: inherit; font-size: 12px; font-weight: 500;
-    }
-    .barra-pesquisa-historico .limpar:hover { background: #fafafa; }
+        .link-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            text-decoration: none;
+            color: #374151;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s ease;
+        }
 
-    .card-tarefa {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 10px;
-      padding: 18px 20px;
-      margin-bottom: 12px;
-      transition: border-color 120ms ease, box-shadow 120ms ease;
-    }
-    .card-tarefa:hover { border-color: #d4d4d8; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .card-tarefa.evento { border-left: 3px solid #4f46e5; }
-    .card-tarefa h3 { margin: 0 0 8px 0; font-size: 15px; font-weight: 600; }
-    .card-tarefa p { margin: 4px 0; font-size: 13px; color: #52525b; }
+        .link-item:last-child {
+            border-bottom: none;
+        }
 
-    .meta-linha {
-      display: flex; gap: 8px; align-items: center;
-      flex-wrap: wrap; margin: 6px 0;
-      font-size: 12px; color: #71717a;
-    }
-    .badge-uso {
-      background: #f4f4f5; color: #52525b;
-      padding: 2px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 500;
-      display: inline-flex; align-items: center; gap: 4px;
-    }
-    .badge-validado {
-      background: #dcfce7; color: #166534;
-      padding: 2px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 500;
-    }
-    .badge-desatualizado {
-      background: #fee2e2; color: #991b1b;
-      padding: 2px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 500;
-    }
-    .lista-validacoes {
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: #f9fafb;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #52525b;
-      line-height: 1.6;
-    }
-    .lista-validacoes .linha { display: flex; align-items: center; gap: 6px; }
-    .lista-validacoes .linha strong { color: #18181b; }
+        .link-item:hover {
+            background-color: #f3f4f6;
+        }
 
-    .progresso {
-      height: 6px;
-      background: #f4f4f5;
-      border-radius: 999px;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .progresso .barra {
-      height: 100%;
-      background: #4f46e5;
-      border-radius: 999px;
-      transition: width 300ms ease;
-    }
+        .link-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 16px;
+            fill: #9ca3af;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .status-pendente     { color: #d97706; font-weight: 500; }
-    .status-em_andamento { color: #4f46e5; font-weight: 500; }
-    .status-concluida    { color: #16a34a; font-weight: 500; }
+        .link-item:hover .link-icon {
+            fill: #3b0764;
+        }
 
-    .cabecalho-relatorio {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .cabecalho-relatorio h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; }
-    .cabecalho-relatorio .meta { color: #52525b; font-size: 13px; margin-bottom: 14px; line-height: 1.6; }
-    .cabecalho-relatorio .descricao {
-      background: #f9fafb;
-      border-left: 3px solid #4f46e5;
-      padding: 12px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: #18181b;
-      white-space: pre-wrap;
-      margin-bottom: 14px;
-      line-height: 1.55;
-    }
-    .cabecalho-relatorio .descricao.vazia {
-      background: #fafafa;
-      border-left-color: #e4e4e7;
-      color: #a1a1aa;
-      font-style: italic;
-    }
-    .cabecalho-relatorio .campos-lista { font-size: 13px; color: #52525b; }
-    .cabecalho-relatorio .campos-lista strong { color: #18181b; }
-    .cabecalho-relatorio .campos-lista ul { margin: 6px 0 0 0; padding-left: 18px; }
-    .cabecalho-relatorio .campos-lista li { margin-bottom: 3px; line-height: 1.5; }
+        .link-text {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+        }
 
-    .qualidade {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 14px;
-      background: #f9fafb;
-      border-radius: 8px;
-      padding: 12px;
-    }
-    .qualidade .item { text-align: center; font-size: 12px; color: #52525b; }
-    .qualidade .item strong { display: block; font-size: 20px; margin-bottom: 2px; font-weight: 700; }
-    .qualidade .atual strong         { color: #16a34a; }
-    .qualidade .atencao strong       { color: #d97706; }
-    .qualidade .desatualizado strong { color: #dc2626; }
-    .qualidade .nunca strong         { color: #a1a1aa; }
+        .link-arrow {
+            color: #d1d5db;
+            font-size: 16px;
+            transition: color 0.2s ease;
+        }
 
-    .grupo-relatorio { margin-bottom: 24px; }
-    .grupo-relatorio h3 {
-      font-size: 14px;
-      margin: 0 0 12px 0;
-      font-weight: 600;
-      color: #18181b;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .grupo-relatorio h3 .contador { font-size: 12px; font-weight: 400; color: #71717a; }
+        .link-item:hover .link-arrow {
+            color: #3b0764;
+        }
 
-    .tabela-wrap {
-      overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid #e4e4e7;
-      background: #fff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      font-size: 13px;
-    }
-    table th {
-      background: #fafafa;
-      color: #71717a;
-      font-weight: 500;
-      padding: 10px 14px;
-      text-align: left;
-      font-size: 12px;
-      border-bottom: 1px solid #e4e4e7;
-      white-space: nowrap;
-    }
-    table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #f4f4f5;
-      color: #18181b;
-      vertical-align: middle;
-    }
-    table tbody tr:last-child td { border-bottom: none; }
-    table tbody tr:hover td { background: #fafafa; }
-    table .escola-tag { font-size: 12px; color: #71717a; }
-
-    .selo {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 500;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-    .selo-atual         { background: #dcfce7; color: #166534; }
-    .selo-atencao       { background: #fef3c7; color: #92400e; }
-    .selo-desatualizado { background: #fee2e2; color: #991b1b; }
-    .selo-nunca         { background: #f4f4f5; color: #52525b; }
-
-    .vazio { color: #71717a; text-align: center; padding: 32px 20px; font-size: 13px; }
-
-    .aviso {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #78350f;
-      line-height: 1.5;
-    }
-    .aviso-vermelho { background: #fef2f2; border-color: #fecaca; color: #7f1d1d; }
-    .aviso-roxo { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
-    .aviso-verde { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }
-
-    .toast-container {
-      position: fixed;
-      top: 16px; right: 16px;
-      z-index: 9999;
-      display: flex; flex-direction: column; gap: 8px;
-      pointer-events: none;
-    }
-    .toast {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-family: inherit;
-      font-size: 13px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      min-width: 280px; max-width: 400px;
-      pointer-events: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-      animation: toastIn 250ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .toast.saindo { animation: toastOut 150ms ease forwards; }
-    .toast--sucesso { border-left: 3px solid #16a34a; }
-    .toast--erro    { border-left: 3px solid #dc2626; }
-    .toast--aviso   { border-left: 3px solid #d97706; }
-    .toast--info    { border-left: 3px solid #4f46e5; }
-    .toast .titulo { font-weight: 600; margin-bottom: 2px; font-size: 13px; color: #18181b; }
-    .toast--sucesso .titulo { color: #15803d; }
-    .toast--erro .titulo    { color: #b91c1c; }
-    .toast--aviso .titulo   { color: #b45309; }
-    .toast--info .titulo    { color: #4338ca; }
-    .toast .mensagem { color: #52525b; line-height: 1.4; }
-    .toast .fechar {
-      background: none; border: none;
-      color: #a1a1aa; cursor: pointer;
-      font-size: 16px; line-height: 1; padding: 0 2px;
-    }
-    .toast .fechar:hover { color: #18181b; }
-    @keyframes toastIn {
-      from { transform: translateX(20px); opacity: 0; }
-      to   { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes toastOut {
-      from { transform: translateX(0); opacity: 1; }
-      to   { transform: translateX(20px); opacity: 0; }
-    }
-
-    .stat-evento {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .stat-evento .item {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 8px;
-      padding: 14px;
-      text-align: center;
-      font-size: 12px;
-      color: #52525b;
-    }
-    .stat-evento .item strong { display: block; font-size: 22px; margin-bottom: 2px; font-weight: 700; }
-    .stat-evento .item.total strong       { color: #4f46e5; }
-    .stat-evento .item.confirmados strong { color: #16a34a; }
-    .stat-evento .item.pendentes strong   { color: #d97706; }
-
-    @media (max-width: 768px) {
-      .topo { padding: 0 16px; height: auto; min-height: 56px; }
-      .tela { margin: 16px auto; padding: 0 16px; }
-      .bloco { padding: 16px; }
-      .acoes { flex-direction: column; }
-      .acoes button { width: 100%; justify-content: center; }
-      .resumo { grid-template-columns: repeat(2, 1fr); }
-      .qualidade { grid-template-columns: repeat(2, 1fr); }
-      .stat-evento { grid-template-columns: 1fr; }
-      .catalogo { grid-template-columns: 1fr; }
-      table th, table td { padding: 8px 10px; }
-    }
-
-    @media print {
-      .topo, .acoes, .btn-voltar, .barra-pesquisa-historico,
-      .barra-ordenacao, .tipo-tabs { display: none !important; }
-      body { background: #fff; }
-      .bloco, .cabecalho-relatorio, .card-tarefa, .grupo-relatorio {
-        box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid;
-      }
-      .cabecalho-relatorio .descricao,
-      .cabecalho-relatorio .campos-lista,
-      #qualidadeRelatorio,
-      #avisoRelatorio,
-      .col-selo { display: none !important; }
-      table { font-size: 10px; border: 1px solid #999; }
-      table th { background: #eee !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      table td { border-bottom: 1px solid #ddd; }
-    }
-  </style>
+        /* Rodapé */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+        }
+    </style>
 </head>
 <body>
 
-  <header class="topo">
-    <h1>Painel da Secretaria</h1>
-    <div class="usuario" id="usuarioTopo">Setor: —</div>
-  </header>
+    <div class="container">
+        <!-- Cabeçalho Roxo Escuro -->
+        <header class="header">
+            <div class="logo-area">
+                <!-- Ícone de livro institucional em SVG -->
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 4H7C5.89543 4 5 4.89543 5 6V18C5 19.1046 5.89543 20 7 20H21V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 6C5 4.89543 4.10457 4 3 4V18C4.10457 18 5 18.8954 5 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>Recursos Humanos</h1>
+                    <p>Secretaria Municipal de Educação</p>
+                </div>
+            </div>
+            
+            <div class="portal-badge">Portal Corporativo</div>
+            
+            <h2>Gestão de Acessos e Benefícios.</h2>
+            <p class="subtitle">Ambiente restrito para servidores. Utilize os links oficiais abaixo para acessar os sistemas integrados e canais institucionais.</p>
+        </header>
 
-  <section id="tela-dashboard" class="tela">
-    <h2>O que você precisa?</h2>
-    <p style="color:#71717a;margin-bottom:20px;">
-      Monte a solicitação escolhendo dados de alunos, escolas e servidores.
-      A ordem em que você marcar os campos será a ordem do relatório.
-    </p>
-    <div class="acoes">
-      <button id="btnNovaSolicitacao" class="btn-primario">+ Nova solicitação</button>
-      <button id="btnVerHistorico" class="btn-secundario">Ver histórico</button>
-      <button id="btnDispararEvento" class="btn-evento">Disparar evento</button>
-    </div>
-  </section>
+        <!-- Área de Links -->
+        <main class="content">
+            <h3>Acessos Rápidos</h3>
+            <p class="desc">Selecione o serviço desejado no diretório abaixo.</p>
 
-  <section id="tela-builder" class="tela hidden">
-    <button id="btnVoltarDashboard" class="btn-voltar">← Voltar</button>
-    <h2>Montar solicitação</h2>
+            <!-- Canais Oficiais -->
+            <div class="section-title">Canais e Portais</div>
+            <div class="link-list">
+                <a href="#" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18Z"/></svg>
+                    </div>
+                    <span class="link-text">Instagram Institucional</span>
+                    <span class="link-arrow">›</span>
+                </a>
+                
+                <a href="#" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21.5821 5.21387C21.4292 4.6517 20.9926 4.20541 20.432 4.04223L12.9205 1.88428C12.3209 1.71172 11.6791 1.71172 11.0795 1.88428L3.56798 4.04223C3.00739 4.20541 2.57077 4.6517 2.41785 5.21387C1.67286 7.8568 1.67286 12.1432 2.41785 14.7861C2.57077 15.3483 3.00739 15.7946 3.56798 15.9578L11.0795 18.1157C11.6791 18.2883 12.3209 18.2883 12.9205 18.1157L20.432 15.9578C20.9926 15.7946 21.4292 15.3483 21.5821 14.7861C22.3271 12.1432 22.3271 7.8568 21.5821 5.21387ZM10 15V9L15 12L10 15Z"/></svg>
+                    </div>
+                    <span class="link-text">Canal no YouTube</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-    <div id="avisoSemEscolas"></div>
+                <a href="#" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7L12 12L22 7L12 2Z"/><path d="M2 17L12 22L22 17"/><path d="M2 12L12 17L22 12"/></svg>
+                    </div>
+                    <span class="link-text">Prefeitura de Divinópolis</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-    <div class="bloco">
-      <label>Título da solicitação</label>
-      <input type="text" id="tituloSolicitacao" placeholder="Ex: Relatório de merenda">
+                <a href="#" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15"/><path d="M7 10L12 15L17 10"/><path d="M12 15V3"/></svg>
+                    </div>
+                    <span class="link-text">Downloads e Documentos</span>
+                    <span class="link-arrow">›</span>
+                </a>
+            </div>
 
-      <label>Descrição (opcional)</label>
-      <textarea id="descricaoSolicitacao" placeholder="Ex: Levantamento para o programa de merenda." rows="3"></textarea>
-      <small>Essa descrição aparece no relatório e no CSV.</small>
+            <!-- Sistemas Betha -->
+            <div class="section-title">Ecossistema Betha</div>
+            <div class="link-list">
+                <a href="https://conecta.beta.cloud" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M18 10H16V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V10H6C4.89543 10 4 10.8954 4 12V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V12C20 10.8954 19.1046 10 18 10ZM10 7C10 5.89543 10.8954 5 12 5C13.1046 5 14 5.89543 14 7V10H10V7Z"/></svg>
+                    </div>
+                    <span class="link-text">Conecta Betha</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-      <label>Setor solicitante</label>
-      <select id="setorSolicitante">
-        <option value="">Selecione o setor...</option>
-        <option value="RH">RH</option>
-        <option value="Merenda Escolar">Merenda Escolar</option>
-        <option value="Dinâmica Escolar">Dinâmica Escolar</option>
-        <option value="TI">TI</option>
-        <option value="Comunicação">Comunicação</option>
-        <option value="Gabinete">Gabinete</option>
-      </select>
+                <a href="https://assinador.betha.cloud" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 20H21"/><path d="M16.5 3.5C17.3284 2.67157 18.6716 2.67157 19.5 3.5C20.3284 4.32843 20.3284 5.67157 19.5 6.5L7 19L3 20L4 16L16.5 3.5Z"/></svg>
+                    </div>
+                    <span class="link-text">Assinador Betha</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-      <label>Escolas de destino</label>
-      <select id="escolasDestino" multiple size="5"></select>
-      <small>Segure Ctrl (ou Cmd) para selecionar várias.</small>
-    </div>
+                <a href="https://protocolo.betha.cloud" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"/><path d="M14 2V8H20"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                    </div>
+                    <span class="link-text">Protocolo Betha</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-    <div class="bloco">
-      <h3>Campos disponíveis</h3>
-      <p style="color:#71717a;font-size:13px;margin-bottom:12px;">
-        Escolha a categoria e marque os campos que você precisa.
-        Campos com opções (tipo seleção) permitem filtrar por um valor específico.
-      </p>
-      <div class="tipo-tabs">
-        <button class="tipo-tab ativa" data-tipo="aluno">Alunos</button>
-        <button class="tipo-tab" data-tipo="escola">Escolas</button>
-        <button class="tipo-tab" data-tipo="servidor">Servidores</button>
-      </div>
-      <div id="catalogoCampos" class="catalogo"></div>
-    </div>
+                <a href="https://documentos.betha.cloud" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H9L11 6H20C20.5304 6 21.0391 6.21071 21.4142 6.58579C21.7893 6.96086 22 7.46957 22 8V19Z"/></svg>
+                    </div>
+                    <span class="link-text">Documentos Betha</span>
+                    <span class="link-arrow">›</span>
+                </a>
 
-    <div class="bloco">
-      <h3>Campos selecionados</h3>
-      <p style="color:#71717a;font-size:13px;margin-bottom:12px;">
-        A ordem abaixo é a ordem que vai aparecer no relatório.
-      </p>
-      <ul id="camposSelecionados" class="lista-selecionados">
-        <li class="vazio">Nenhum campo selecionado ainda.</li>
-      </ul>
-    </div>
+                <a href="https://minhafolga.betha.cloud" class="link-item" target="_blank">
+                    <div class="link-icon">
+                        <svg viewBox="0 0 24 24"><path d="M8 2V6"/><path d="M16 2V6"/><path d="M3 10H21"/><path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z"/><path d="M12 14L13.5 17.5L17 16L15.5 12.5L12 14Z"/></svg>
+                    </div>
+                    <span class="link-text">Minha Folga Betha</span>
+                    <span class="link-arrow">›</span>
+                </a>
+            </div>
 
-    <div style="text-align:right;margin-top:20px;">
-      <button id="btnVerificar" class="btn-primario">Verificar dados existentes</button>
-    </div>
-  </section>
+        </main>
 
-  <section id="tela-resultado" class="tela hidden">
-    <button id="btnVoltarBuilder" class="btn-voltar">← Voltar</button>
-    <h2>Resultado da verificação</h2>
-
-    <div class="resumo">
-      <div class="card-resumo verde"><h3 id="qtdCompletos">0</h3><p>Registros completos</p></div>
-      <div class="card-resumo amarelo"><h3 id="qtdPendentes">0</h3><p>Registros com dados faltando</p></div>
-      <div class="card-resumo azul"><h3 id="qtdEscolas">0</h3><p>Escolas envolvidas</p></div>
-      <div class="card-resumo roxo"><h3 id="qtdTipos">0</h3><p>Tipos de dados</p></div>
-    </div>
-
-    <div class="acoes">
-      <button id="btnGerarTarefas" class="btn-primario">Gerar solicitações para as escolas</button>
-      <button id="btnRelatorioParcial" class="btn-secundario">Ver relatório dos completos</button>
-    </div>
-  </section>
-
-  <section id="tela-historico" class="tela hidden">
-    <button id="btnVoltarDashboard2" class="btn-voltar">← Voltar</button>
-    <h2>Histórico de solicitações</h2>
-    <p style="color:#71717a;margin-bottom:20px;">
-      Cada linha é uma solicitação. Use os botões para validar, marcar como desatualizado ou excluir.
-    </p>
-
-    <div class="barra-ordenacao">
-      <label>Ordenar por:</label>
-      <select id="ordenacaoHistorico">
-        <option value="recentes">Mais recentes</option>
-        <option value="usados">Mais utilizados</option>
-        <option value="validados">Validados primeiro</option>
-        <option value="desatualizados">Desatualizados primeiro</option>
-        <option value="antigos">Mais antigos</option>
-      </select>
-    </div>
-
-    <div class="barra-pesquisa-historico">
-      <input type="text" id="pesquisaHistorico" placeholder="Pesquisar relatórios salvos...">
-      <span class="contador" id="contadorHistorico"></span>
-      <button class="limpar" id="btnLimparPesquisaHistorico">Limpar</button>
+        <!-- Rodapé -->
+        <footer class="footer">
+            &copy; 2024 SEMED - Prefeitura Municipal de Divinópolis.<br>Todos os direitos reservados.
+        </footer>
     </div>
 
-    <div id="listaHistorico"></div>
-  </section>
-
-  <section id="tela-relatorio" class="tela hidden">
-    <button id="btnVoltarHistorico" class="btn-voltar">← Voltar</button>
-
-    <div class="cabecalho-relatorio">
-      <h2 id="tituloRelatorio">Relatório</h2>
-      <div class="meta" id="metaRelatorio"></div>
-      <div class="descricao vazia" id="descricaoRelatorio">Sem descrição.</div>
-      <div class="campos-lista" id="camposRelatorio"></div>
-      <div id="qualidadeRelatorio"></div>
-    </div>
-
-    <div id="avisoRelatorio"></div>
-
-    <div class="acoes" style="margin-bottom:16px;">
-      <button id="btnExportarCSV" class="btn-sucesso">Exportar CSV</button>
-      <button id="btnImprimir" class="btn-secundario">Imprimir</button>
-    </div>
-
-    <div id="conteudoRelatorio"></div>
-  </section>
-
-  <section id="tela-evento" class="tela hidden">
-    <button id="btnVoltarDashboardEvento" class="btn-voltar">← Voltar</button>
-    <h2>Disparar evento</h2>
-    <p style="color:#71717a;margin-bottom:20px;">
-      Escolha um evento para pedir às escolas a confirmação dos campos que
-      mudam por evento (endereço, telefone, escola, série etc.).
-    </p>
-
-    <div id="avisoSemEventos"></div>
-
-    <div class="bloco">
-      <label>Evento</label>
-      <select id="selectEvento"></select>
-      <small id="infoEvento" style="display:block;margin-top:6px;"></small>
-      <div id="statusEvento"></div>
-
-      <label>Escolas de destino</label>
-      <select id="escolasEvento" multiple size="5"></select>
-      <small>Segure Ctrl (ou Cmd) para selecionar várias.</small>
-    </div>
-
-    <div class="bloco">
-      <h3>Campos que serão pedidos</h3>
-      <div id="previaCamposEvento"></div>
-    </div>
-
-    <div style="text-align:right;margin-top:20px;">
-      <button id="btnConfirmarEvento" class="btn-evento">Disparar evento</button>
-    </div>
-  </section>
-
-  <section id="tela-sucesso-evento" class="tela hidden">
-    <h2>Evento disparado!</h2>
-    <p>As escolas foram notificadas e vão confirmar os dados.</p>
-    <button id="btnVoltarDashboardEvento2" class="btn-primario">Voltar ao início</button>
-  </section>
-
-  <section id="tela-sucesso" class="tela hidden">
-    <h2>Solicitações enviadas!</h2>
-    <p>As escolas foram notificadas e vão preencher o que falta.</p>
-    <button id="btnVoltarDashboard3" class="btn-primario">Voltar ao início</button>
-  </section>
-
-  <div id="toastContainer" class="toast-container"></div>
-
-  <script>
-    function toast(mensagem, tipo = "info", titulo = null, duracao = 4000) {
-      const container = document.getElementById("toastContainer");
-      const el = document.createElement("div");
-      el.className = `toast toast--${tipo}`;
-      const tituloPadrao = { sucesso: "Sucesso", erro: "Erro", aviso: "Atenção", info: "Informação" }[tipo];
-      el.innerHTML = `
-        <div class="conteudo">
-          <div class="titulo">${titulo || tituloPadrao}</div>
-          <div class="mensagem">${mensagem}</div>
-        </div>
-        <button class="fechar" aria-label="Fechar">×</button>
-      `;
-      container.appendChild(el);
-      const fechar = () => { el.classList.add("saindo"); setTimeout(() => el.remove(), 200); };
-      el.querySelector(".fechar").addEventListener("click", fechar);
-      if (duracao > 0) setTimeout(fechar, duracao);
-    }
-
-    const DB_KEY = "rede_municipal_db";
-
-    function carregarDB() {
-      const raw = localStorage.getItem(DB_KEY);
-      if (!raw) {
-        const inicial = { escolas: [], alunos: [], servidores: [], tarefas: [], campos: [], eventos: [] };
-        localStorage.setItem(DB_KEY, JSON.stringify(inicial));
-        return inicial;
-      }
-      const db = JSON.parse(raw);
-      db.escolas    = db.escolas    || [];
-      db.alunos     = db.alunos     || [];
-      db.servidores = db.servidores || [];
-      db.tarefas    = db.tarefas    || [];
-      db.campos     = db.campos     || [];
-      db.eventos    = db.eventos    || [];
-      return db;
-    }
-    function salvarDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-
-    function nomeEscola(id) {
-      const db = carregarDB();
-      const e = db.escolas.find(x => x.id === id);
-      return e ? (e.nome || e.id) : id;
-    }
-    function getCatalogo() {
-      const db = carregarDB();
-      const porTipo = { aluno: [], escola: [], servidor: [] };
-      (db.campos || []).forEach(c => { if (porTipo[c.tipo]) porTipo[c.tipo].push(c); });
-      return porTipo;
-    }
-    function getDefinicaoCampo(tipo, campoId) {
-      const cat = getCatalogo();
-      return (cat[tipo] || []).find(x => x.id === campoId) || null;
-    }
-    function labelDoCampo(tipo, campoId) {
-      const def = getDefinicaoCampo(tipo, campoId);
-      return def ? def.label : campoId;
-    }
-    function labelDoFiltro(tipo, campoId, valor) {
-      const def = getDefinicaoCampo(tipo, campoId);
-      if (def && def.tipoCampo === "escola") return nomeEscola(valor);
-      return valor;
-    }
-    function normalizar(str) {
-      return (str ?? "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-
-    function calcularSelo(registro, tipo) {
-      const temConfirmacao = !!registro.confirmadoEm;
-      const temEdicao = !!registro.atualizadoEm;
-      if (!temConfirmacao && !temEdicao) return { texto: "Nunca", classe: "selo-nunca" };
-      const db = carregarDB();
-      const dataRef = registro.confirmadoEm || registro.atualizadoEm;
-      const dataRefObj = new Date(dataRef);
-
-      const camposComPrazo = db.campos.filter(c => c.tipo === tipo && c.validade === "prazo" && c.prazoMeses);
-      let piorSeloPrazo = "atual";
-      for (const campo of camposComPrazo) {
-        if (!registro[campo.id]) continue;
-        const prazoMs = campo.prazoMeses * 30 * 24 * 60 * 60 * 1000;
-        const idade = Date.now() - dataRefObj.getTime();
-        const percentual = idade / prazoMs;
-        if (percentual > 1) { piorSeloPrazo = "desatualizado"; break; }
-        else if (percentual > 0.8 && piorSeloPrazo !== "desatualizado") piorSeloPrazo = "atencao";
-      }
-      if (piorSeloPrazo === "desatualizado") return { texto: "Desatualizado", classe: "selo-desatualizado" };
-
-      const eventos = (db.eventos || []).filter(e => e.tipo === tipo).sort((a, b) => {
-        const da = a.dataInicio ? new Date(a.dataInicio) : new Date(0);
-        const db2 = b.dataInicio ? new Date(b.dataInicio) : new Date(0);
-        return db2 - da;
-      });
-      let seloEvento = "atual";
-      if (eventos.length > 0) {
-        if (!registro.ultimoEvento) {
-          const dataEvt = eventos[0].dataInicio ? new Date(eventos[0].dataInicio) : new Date(0);
-          if (dataRefObj < dataEvt) {
-            const depois = eventos.filter(e => {
-              const d = e.dataInicio ? new Date(e.dataInicio) : new Date(0);
-              return d > dataRefObj;
-            });
-            if (depois.length === 1) seloEvento = "atencao";
-            else if (depois.length >= 2) seloEvento = "desatualizado";
-          }
-        } else {
-          const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
-          if (pos === 1) seloEvento = "atencao";
-          else if (pos >= 2) seloEvento = "desatualizado";
-        }
-      }
-      if (seloEvento === "desatualizado") return { texto: "Desatualizado", classe: "selo-desatualizado" };
-      if (seloEvento === "atencao" || piorSeloPrazo === "atencao") return { texto: "Atenção", classe: "selo-atencao" };
-      return { texto: "Atual", classe: "selo-atual" };
-    }
-
-    function garantirMetadadosGrupo(grupoId) {
-      const db = carregarDB();
-      const tarefas = db.tarefas.filter(t => (t.grupoId || t.id) === grupoId);
-      if (tarefas.length === 0) return null;
-      const primeira = tarefas[0];
-      let mudou = false;
-      if (typeof primeira.downloads !== "number") { primeira.downloads = 0; mudou = true; }
-      if (!primeira.validacoes) { primeira.validacoes = []; mudou = true; }
-      tarefas.forEach(t => {
-        if (t.downloads !== primeira.downloads) { t.downloads = primeira.downloads; mudou = true; }
-        if (!t.validacoes) { t.validacoes = primeira.validacoes; mudou = true; }
-      });
-      if (mudou) salvarDB(db);
-      return primeira;
-    }
-    function registrarUsoGrupo(grupoId) {
-      const db = carregarDB();
-      const tarefas = db.tarefas.filter(t => (t.grupoId || t.id) === grupoId);
-      if (tarefas.length === 0) return;
-      const agora = new Date().toISOString();
-      const primeira = tarefas[0];
-      primeira.downloads = (primeira.downloads || 0) + 1;
-      primeira.ultimoAcessoEm = agora;
-      tarefas.forEach(t => { t.downloads = primeira.downloads; t.ultimoAcessoEm = agora; });
-      salvarDB(db);
-    }
-    function validarGrupo(grupoId, status) {
-      const db = carregarDB();
-      const tarefas = db.tarefas.filter(t => (t.grupoId || t.id) === grupoId);
-      if (tarefas.length === 0) return;
-      const setorAtual = document.getElementById("usuarioTopo").textContent.replace("Setor: ", "").trim() || "Secretaria";
-      const agora = new Date().toISOString();
-      tarefas.forEach(t => {
-        t.validacoes = (t.validacoes || []).filter(v => v.usuario !== setorAtual);
-        t.validacoes.push({ usuario: setorAtual, em: agora, status });
-      });
-      salvarDB(db);
-      carregarHistorico();
-      toast(`Relatório marcado como "${status}".`, "sucesso");
-    }
-    function statusGrupo(tarefa) {
-      const validacoes = tarefa.validacoes || [];
-      if (validacoes.length === 0) return { texto: "", classe: "" };
-      if (validacoes.some(v => v.status === "desatualizado")) return { texto: "Desatualizado", classe: "badge-desatualizado" };
-      if (validacoes.some(v => v.status === "validado")) return { texto: "Validado", classe: "badge-validado" };
-      return { texto: "", classe: "" };
-    }
-    function excluirGrupo(grupoId) {
-      if (!confirm("Excluir este relatório? Não tem como desfazer.")) return;
-      const db = carregarDB();
-      db.tarefas = db.tarefas.filter(t => (t.grupoId || t.id) !== grupoId);
-      salvarDB(db);
-      carregarHistorico();
-      toast("Relatório excluído.", "sucesso");
-    }
-
-    let db = carregarDB();
-    let camposSelecionados = new Map();
-    let escolasSelecionadas = [];
-    let resultadoVerificacao = null;
-    let relatorioAtual = null;
-    let tipoAtivo = "aluno";
-    let pesquisaHistorico = "";
-    const ROTULO_TIPO = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
-
-    const telas = {
-      dashboard: document.getElementById("tela-dashboard"),
-      builder: document.getElementById("tela-builder"),
-      resultado: document.getElementById("tela-resultado"),
-      historico: document.getElementById("tela-historico"),
-      relatorio: document.getElementById("tela-relatorio"),
-      evento: document.getElementById("tela-evento"),
-      sucessoEvento: document.getElementById("tela-sucesso-evento"),
-      sucesso: document.getElementById("tela-sucesso")
-    };
-    function mostrarTela(nome) {
-      Object.values(telas).forEach(t => t.classList.add("hidden"));
-      telas[nome].classList.remove("hidden");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function carregarEscolasNoSelect() {
-      db = carregarDB();
-      const select = document.getElementById("escolasDestino");
-      const aviso = document.getElementById("avisoSemEscolas");
-      select.innerHTML = "";
-      if (db.escolas.length === 0) {
-        aviso.innerHTML = `<div class="aviso aviso-vermelho">Nenhuma escola cadastrada. Vá em <strong>admin.html</strong> e cadastre escolas primeiro.</div>`;
-        return;
-      }
-      aviso.innerHTML = "";
-      db.escolas.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.textContent = e.nome || e.id;
-        opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
-
-    document.querySelectorAll(".tipo-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".tipo-tab").forEach(t => t.classList.remove("ativa"));
-        tab.classList.add("ativa");
-        tipoAtivo = tab.dataset.tipo;
-        montarCatalogo();
-      });
-    });
-
-    function montarCatalogo() {
-      const div = document.getElementById("catalogoCampos");
-      div.innerHTML = "";
-      const catalogo = getCatalogo();
-      const campos = catalogo[tipoAtivo] || [];
-      if (campos.length === 0) {
-        div.innerHTML = '<p class="vazio">Nenhum campo cadastrado nessa categoria.</p>';
-        return;
-      }
-      campos.forEach((campo) => {
-        const chave = `${tipoAtivo}.${campo.id}`;
-        const temOpcoes = campo.tipoCampo === "select" && campo.opcoes && campo.opcoes.length > 0;
-        const marcado = camposSelecionados.has(chave);
-        const info = camposSelecionados.get(chave);
-        const filtroAtual = info ? (info.filtro || "") : "";
-        const wrapper = document.createElement("div");
-        wrapper.className = "item-catalogo-wrapper";
-        const label = document.createElement("label");
-        label.className = "item-catalogo";
-        label.innerHTML = `
-          <input type="checkbox" value="${chave}" ${marcado ? "checked" : ""}>
-          <span>${campo.label}</span>
-        `;
-        wrapper.appendChild(label);
-        if (temOpcoes && marcado) {
-          const filtroDiv = document.createElement("div");
-          filtroDiv.className = "item-filtro";
-          let optionsHtml = `<option value="">Todos</option>`;
-          (campo.opcoes || []).forEach(o => {
-            const sel = (filtroAtual === o) ? "selected" : "";
-            optionsHtml += `<option value="${o}" ${sel}>${o}</option>`;
-          });
-          filtroDiv.innerHTML = `
-            <label>Filtrar por:</label>
-            <select data-filtro="${chave}">${optionsHtml}</select>
-          `;
-          wrapper.appendChild(filtroDiv);
-          filtroDiv.querySelector("select").addEventListener("change", (e) => {
-            const infoAtual = camposSelecionados.get(chave);
-            if (infoAtual) infoAtual.filtro = e.target.value;
-            atualizarSelecionados();
-          });
-        }
-        label.querySelector("input").addEventListener("change", (e) => {
-          if (e.target.checked) {
-            camposSelecionados.set(chave, { tipo: tipoAtivo, campo: campo.id, label: campo.label, filtro: "" });
-          } else {
-            camposSelecionados.delete(chave);
-          }
-          montarCatalogo();
-          atualizarSelecionados();
-        });
-        div.appendChild(wrapper);
-      });
-    }
-
-    function atualizarSelecionados() {
-      const ul = document.getElementById("camposSelecionados");
-      ul.innerHTML = "";
-      if (camposSelecionados.size === 0) {
-        ul.innerHTML = '<li class="vazio">Nenhum campo selecionado ainda.</li>';
-        return;
-      }
-      let posicao = 1;
-      camposSelecionados.forEach((info) => {
-        const li = document.createElement("li");
-        const filtroTexto = info.filtro ? ` <span class="filtro-badge">= ${labelDoFiltro(info.tipo, info.campo, info.filtro)}</span>` : "";
-        li.innerHTML = `
-          <span class="ordem">${posicao}</span>
-          <span class="texto">${info.label}${filtroTexto}</span>
-          <span class="origem">${ROTULO_TIPO[info.tipo]}</span>
-        `;
-        ul.appendChild(li);
-        posicao++;
-      });
-    }
-
-    document.getElementById("btnVerificar").addEventListener("click", () => {
-      db = carregarDB();
-      const titulo = document.getElementById("tituloSolicitacao").value.trim();
-      const descricao = document.getElementById("descricaoSolicitacao").value.trim();
-      const setor = document.getElementById("setorSolicitante").value;
-      const select = document.getElementById("escolasDestino");
-      escolasSelecionadas = Array.from(select.selectedOptions).map(o => o.value);
-
-      if (db.escolas.length === 0) { toast("Nenhuma escola cadastrada.", "aviso"); return; }
-      if (!titulo) { toast("Informe o título.", "aviso"); return; }
-      if (!setor) { toast("Selecione o setor solicitante.", "aviso"); return; }
-      if (camposSelecionados.size === 0) { toast("Selecione ao menos um campo.", "aviso"); return; }
-      if (escolasSelecionadas.length === 0) { toast("Selecione ao menos uma escola.", "aviso"); return; }
-
-      const camposPorTipo = { aluno: [], escola: [], servidor: [] };
-      const ordemCampos   = { aluno: [], escola: [], servidor: [] };
-      const filtros       = { aluno: {}, escola: {}, servidor: {} };
-
-      camposSelecionados.forEach((info) => {
-        camposPorTipo[info.tipo].push(info.campo);
-        ordemCampos[info.tipo].push(info.campo);
-        if (info.filtro) filtros[info.tipo][info.campo] = info.filtro;
-      });
-
-      function passaFiltros(registro, tipo) {
-        const f = filtros[tipo] || {};
-        for (const campo in f) { if (registro[campo] !== f[campo]) return false; }
-        return true;
-      }
-
-      const completos = [];
-      const pendentes = [];
-
-      if (camposPorTipo.aluno.length > 0) {
-        db.alunos.forEach((aluno) => {
-          if (!escolasSelecionadas.includes(aluno.escolaId)) return;
-          if (!passaFiltros(aluno, "aluno")) return;
-          const faltando = camposPorTipo.aluno.filter(c => !aluno[c]);
-          const registro = { tipo: "aluno", id: aluno.id, nome: aluno.nome, escolaId: aluno.escolaId };
-          if (faltando.length === 0) completos.push(registro);
-          else pendentes.push({ ...registro, camposFaltando: faltando });
-        });
-      }
-      if (camposPorTipo.escola.length > 0) {
-        db.escolas.forEach((escola) => {
-          if (!escolasSelecionadas.includes(escola.id)) return;
-          if (!passaFiltros(escola, "escola")) return;
-          const faltando = camposPorTipo.escola.filter(c => !escola[c]);
-          const registro = { tipo: "escola", id: escola.id, nome: escola.nome, escolaId: escola.id };
-          if (faltando.length === 0) completos.push(registro);
-          else pendentes.push({ ...registro, camposFaltando: faltando });
-        });
-      }
-      if (camposPorTipo.servidor.length > 0) {
-        db.servidores.forEach((servidor) => {
-          if (!escolasSelecionadas.includes(servidor.escolaId)) return;
-          if (!passaFiltros(servidor, "servidor")) return;
-          const faltando = camposPorTipo.servidor.filter(c => !servidor[c]);
-          const registro = { tipo: "servidor", id: servidor.id, nome: servidor.nome, escolaId: servidor.escolaId };
-          if (faltando.length === 0) completos.push(registro);
-          else pendentes.push({ ...registro, camposFaltando: faltando });
-        });
-      }
-
-      resultadoVerificacao = { titulo, descricao, setor, camposPorTipo, ordemCampos, filtros, completos, pendentes };
-      document.getElementById("qtdCompletos").textContent = completos.length;
-      document.getElementById("qtdPendentes").textContent = pendentes.length;
-      const escolasEnvolvidas = new Set([...completos.map(c => c.escolaId), ...pendentes.map(p => p.escolaId)]);
-      document.getElementById("qtdEscolas").textContent = escolasEnvolvidas.size;
-      const tipos = Object.entries(camposPorTipo).filter(([_, v]) => v.length > 0).length;
-      document.getElementById("qtdTipos").textContent = tipos;
-      mostrarTela("resultado");
-    });
-
-    document.getElementById("btnGerarTarefas").addEventListener("click", () => {
-      db = carregarDB();
-      const { titulo, descricao, setor, camposPorTipo, ordemCampos, filtros, pendentes, completos } = resultadoVerificacao;
-      if (pendentes.length === 0 && completos.length === 0) { toast("Nenhum registro para enviar.", "aviso"); return; }
-      const todos = [
-        ...completos.map(r => ({ tipo: r.tipo, id: r.id, nome: r.nome, escolaId: r.escolaId, status: "concluida", camposFaltando: [] })),
-        ...pendentes.map(r => ({ tipo: r.tipo, id: r.id, nome: r.nome, escolaId: r.escolaId, status: "pendente", camposFaltando: r.camposFaltando }))
-      ];
-      const porEscola = {};
-      todos.forEach((r) => { if (!porEscola[r.escolaId]) porEscola[r.escolaId] = []; porEscola[r.escolaId].push(r); });
-      const grupoId = "g_" + Date.now();
-      Object.entries(porEscola).forEach(([escolaId, registros]) => {
-        const todosConcluidos = registros.every(r => r.status === "concluida");
-        const tarefa = {
-          id: "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-          grupoId, escolaId, titulo, descricao,
-          setorSolicitante: setor, camposPorTipo, ordemCampos, filtros,
-          status: todosConcluidos ? "concluida" : "pendente",
-          criadoEm: new Date().toISOString(),
-          downloads: 0, validacoes: [],
-          registros
-        };
-        db.tarefas.push(tarefa);
-      });
-      salvarDB(db);
-      toast("Solicitações enviadas para as escolas.", "sucesso");
-      mostrarTela("sucesso");
-    });
-
-    document.getElementById("btnRelatorioParcial").addEventListener("click", () => {
-      const { titulo, descricao, camposPorTipo, ordemCampos, filtros, completos, pendentes } = resultadoVerificacao;
-      const dbAtual = carregarDB();
-      const todos = [
-        ...completos.map(r => ({ ...r, status: "concluida" })),
-        ...pendentes.map(r => ({ ...r, status: "pendente" }))
-      ];
-      relatorioAtual = {
-        titulo, descricao,
-        setor: resultadoVerificacao.setor, escolas: "—",
-        criadoEm: new Date().toISOString(),
-        subtitulo: `${todos.length} registro(s) • ${completos.length} completo(s) e ${pendentes.length} pendente(s)`,
-        camposPorTipo, ordemCampos, filtros,
-        registros: todos.map(r => {
-          const colecao = r.tipo === "aluno" ? dbAtual.alunos : r.tipo === "escola" ? dbAtual.escolas : dbAtual.servidores;
-          const obj = colecao.find(x => x.id === r.id) || {};
-          return { tipo: r.tipo, dados: obj, escola: nomeEscola(r.escolaId) };
-        })
-      };
-      renderizarRelatorio();
-      mostrarTela("relatorio");
-    });
-
-    function carregarHistorico() {
-      db = carregarDB();
-      const lista = document.getElementById("listaHistorico");
-      lista.innerHTML = "";
-      if (db.tarefas.length === 0) {
-        lista.innerHTML = "<p class='vazio'>Nenhuma solicitação ainda.</p>";
-        atualizarContadorHistorico(0, 0);
-        return;
-      }
-      const grupos = {};
-      db.tarefas.forEach(t => {
-        const gid = t.grupoId || t.id;
-        if (!grupos[gid]) {
-          grupos[gid] = {
-            grupoId: gid, titulo: t.titulo, descricao: t.descricao,
-            setor: t.setorSolicitante, criadoEm: t.criadoEm,
-            eventoId: t.eventoId || null, tarefas: []
-          };
-        }
-        grupos[gid].tarefas.push(t);
-      });
-      let listaGrupos = Object.values(grupos);
-
-      if (pesquisaHistorico) {
-        const termo = normalizar(pesquisaHistorico);
-        listaGrupos = listaGrupos.filter(g => {
-          if (normalizar(g.titulo).includes(termo)) return true;
-          if (normalizar(g.descricao).includes(termo)) return true;
-          if (normalizar(g.setor).includes(termo)) return true;
-          if (g.eventoId && normalizar(g.eventoId).includes(termo)) return true;
-          const nomesEscolas = g.tarefas.map(t => nomeEscola(t.escolaId)).join(" ");
-          if (normalizar(nomesEscolas).includes(termo)) return true;
-          const dataStr = new Date(g.criadoEm).toLocaleDateString("pt-BR");
-          if (normalizar(dataStr).includes(termo)) return true;
-          return false;
-        });
-      }
-
-      listaGrupos.forEach(g => {
-        const t = garantirMetadadosGrupo(g.grupoId);
-        if (t) {
-          g.downloads = t.downloads || 0;
-          g.ultimoAcessoEm = t.ultimoAcessoEm;
-          g.validacoes = t.validacoes || [];
-        }
-      });
-
-      const ordenacao = document.getElementById("ordenacaoHistorico").value || "recentes";
-      listaGrupos.sort((a, b) => {
-        if (ordenacao === "recentes") return new Date(b.criadoEm) - new Date(a.criadoEm);
-        if (ordenacao === "antigos")  return new Date(a.criadoEm) - new Date(b.criadoEm);
-        if (ordenacao === "usados")   return (b.downloads || 0) - (a.downloads || 0);
-        if (ordenacao === "validados") {
-          const aV = (a.validacoes || []).some(v => v.status === "validado") ? 1 : 0;
-          const bV = (b.validacoes || []).some(v => v.status === "validado") ? 1 : 0;
-          return bV - aV;
-        }
-        if (ordenacao === "desatualizados") {
-          const aD = (a.validacoes || []).some(v => v.status === "desatualizado") ? 1 : 0;
-          const bD = (b.validacoes || []).some(v => v.status === "desatualizado") ? 1 : 0;
-          return bD - aD;
-        }
-        return 0;
-      });
-
-      const totalGeral = listaGrupos.length;
-      atualizarContadorHistorico(listaGrupos.length, totalGeral);
-
-      if (listaGrupos.length === 0) {
-        lista.innerHTML = pesquisaHistorico
-          ? `<p class="vazio">Nenhum relatório encontrado para "${pesquisaHistorico}".</p>`
-          : "<p class='vazio'>Nenhuma solicitação ainda.</p>";
-        return;
-      }
-
-      listaGrupos.forEach((g) => {
-        const card = document.createElement("div");
-        card.className = "card-tarefa" + (g.eventoId ? " evento" : "");
-        const totalTarefas = g.tarefas.length;
-        const comPendencia = g.tarefas.filter(t => (t.registros || []).some(r => r.status !== "concluida")).length;
-        const concluidas = totalTarefas - comPendencia;
-        const percentual = totalTarefas > 0 ? Math.round((concluidas / totalTarefas) * 100) : 0;
-        const totalRegistros = g.tarefas.reduce((soma, t) => soma + (t.registros || []).length, 0);
-        const nomesEscolas = g.tarefas.map(t => nomeEscola(t.escolaId));
-        const tipos = Object.entries(g.tarefas[0].camposPorTipo || {})
-          .filter(([_, v]) => v.length > 0)
-          .map(([tipo, campos]) => `${ROTULO_TIPO[tipo]} (${campos.length})`)
-          .join(", ") || "—";
-        let statusGeral = "pendente";
-        if (comPendencia === 0) statusGeral = "concluida";
-        else if (concluidas > 0) statusGeral = "em_andamento";
-        const descricaoHtml = g.descricao ? `<p><strong>Descrição:</strong> ${g.descricao}</p>` : "";
-        const dataStr = new Date(g.criadoEm).toLocaleString("pt-BR");
-        const eventoBadge = g.eventoId ? `<p><strong>Evento:</strong> ${g.eventoId}</p>` : "";
-        const downloads = g.downloads || 0;
-        const ultimoAcesso = g.ultimoAcessoEm ? new Date(g.ultimoAcessoEm).toLocaleDateString("pt-BR") : null;
-        const validacoes = g.validacoes || [];
-        const stGrupo = statusGrupo({ validacoes });
-        let badgesTopo = "";
-        if (stGrupo.texto) badgesTopo += `<span class="${stGrupo.classe}">${stGrupo.texto}</span>`;
-        if (downloads > 0) badgesTopo += `<span class="badge-uso">${downloads}× usado</span>`;
-        let validacoesHtml = "";
-        if (validacoes.length > 0) {
-          const linhas = validacoes.map(v => {
-            const data = new Date(v.em).toLocaleString("pt-BR");
-            const texto = v.status === "validado" ? "validou" : "marcou como desatualizado";
-            return `<div class="linha"><strong>${v.usuario}</strong> ${texto} em ${data}</div>`;
-          }).join("");
-          validacoesHtml = `<div class="lista-validacoes">${linhas}</div>`;
-        }
-        let usoHtml = "";
-        if (downloads > 0 || ultimoAcesso) {
-          usoHtml = `<div class="meta-linha">`;
-          if (downloads > 0) usoHtml += `<span class="badge-uso">Baixado ${downloads} vez${downloads !== 1 ? "es" : ""}</span>`;
-          if (ultimoAcesso) usoHtml += `<span>Último acesso: ${ultimoAcesso}</span>`;
-          usoHtml += `</div>`;
-        }
-        card.innerHTML = `
-          <h3>${g.titulo}</h3>
-          <div class="meta-linha">${badgesTopo}</div>
-          ${descricaoHtml}
-          ${eventoBadge}
-          <p><strong>Setor:</strong> ${g.setor}</p>
-          <p><strong>Tipos:</strong> ${tipos}</p>
-          <p><strong>Escolas (${totalTarefas}):</strong> ${nomesEscolas.join(", ")}</p>
-          <p><strong>Total de registros:</strong> ${totalRegistros}</p>
-          <p><strong>Criado em:</strong> ${dataStr}</p>
-          <p><strong>Progresso:</strong> <span class="status-${statusGeral}">${concluidas}/${totalTarefas} escola(s) concluída(s)</span></p>
-          <div class="progresso"><div class="barra" style="width: ${percentual}%"></div></div>
-          ${validacoesHtml}
-          ${usoHtml}
-          <div class="acoes">
-            <button class="btn-sucesso btn-consolidado" data-grupo="${g.grupoId}">Ver relatório</button>
-            <button class="btn-secundario btn-validar" data-grupo="${g.grupoId}">Validar</button>
-            <button class="btn-secundario btn-desatualizar" data-grupo="${g.grupoId}">Marcar desatualizado</button>
-            <button class="btn-perigo btn-excluir-grupo" data-grupo="${g.grupoId}">Excluir</button>
-          </div>
-        `;
-        lista.appendChild(card);
-      });
-
-      lista.querySelectorAll(".btn-consolidado").forEach((btn) => {
-        btn.addEventListener("click", () => { registrarUsoGrupo(btn.dataset.grupo); gerarRelatorioConsolidado(btn.dataset.grupo); });
-      });
-      lista.querySelectorAll(".btn-validar").forEach((btn) => {
-        btn.addEventListener("click", () => validarGrupo(btn.dataset.grupo, "validado"));
-      });
-      lista.querySelectorAll(".btn-desatualizar").forEach((btn) => {
-        btn.addEventListener("click", () => validarGrupo(btn.dataset.grupo, "desatualizado"));
-      });
-      lista.querySelectorAll(".btn-excluir-grupo").forEach((btn) => {
-        btn.addEventListener("click", () => excluirGrupo(btn.dataset.grupo));
-      });
-    }
-    function atualizarContadorHistorico(filtrados, total) {
-      const el = document.getElementById("contadorHistorico");
-      el.textContent = pesquisaHistorico ? `${filtrados} de ${total}` : `${total} relatório(s)`;
-    }
-
-    function gerarRelatorioConsolidado(grupoId) {
-      db = carregarDB();
-      const tarefas = db.tarefas.filter(t => (t.grupoId || t.id) === grupoId);
-      if (tarefas.length === 0) { toast("Grupo não encontrado.", "erro"); return; }
-      const registros = [];
-      tarefas.forEach(tarefa => {
-        (tarefa.registros || []).forEach(r => {
-          const colecao = r.tipo === "aluno" ? db.alunos : r.tipo === "escola" ? db.escolas : db.servidores;
-          const obj = colecao.find(x => x.id === r.id) || {};
-          registros.push({ tipo: r.tipo, dados: obj, escola: nomeEscola(tarefa.escolaId) });
-        });
-      });
-      const primeira = tarefas[0];
-      const nomesEscolas = tarefas.map(t => nomeEscola(t.escolaId)).join(", ");
-      relatorioAtual = {
-        grupoId,
-        titulo: primeira.titulo,
-        descricao: primeira.descricao || "",
-        setor: primeira.setorSolicitante,
-        escolas: nomesEscolas,
-        criadoEm: primeira.criadoEm,
-        subtitulo: `${registros.length} registro(s) • ${tarefas.length} escola(s)`,
-        camposPorTipo: primeira.camposPorTipo || {},
-        ordemCampos: primeira.ordemCampos || {},
-        filtros: primeira.filtros || null,
-        registros
-      };
-      renderizarRelatorio();
-      mostrarTela("relatorio");
-    }
-
-    function renderizarCabecalho() {
-      const { titulo, descricao, setor, escolas, criadoEm, subtitulo, camposPorTipo, ordemCampos, filtros, registros } = relatorioAtual;
-      document.getElementById("tituloRelatorio").textContent = titulo;
-      const data = criadoEm ? new Date(criadoEm).toLocaleString("pt-BR") : "—";
-      const meta = [];
-      if (setor) meta.push(`<strong>Setor:</strong> ${setor}`);
-      if (escolas) meta.push(`<strong>Escola(s):</strong> ${escolas}`);
-      meta.push(`<strong>Gerado em:</strong> ${data}`);
-      meta.push(`<strong>Total:</strong> ${registros.length} registro(s)`);
-      if (subtitulo) meta.push(subtitulo);
-      document.getElementById("metaRelatorio").innerHTML = meta.join(" • ");
-      const divDesc = document.getElementById("descricaoRelatorio");
-      if (descricao && descricao.trim()) {
-        divDesc.textContent = descricao;
-        divDesc.classList.remove("vazia");
-      } else {
-        divDesc.textContent = "Sem descrição.";
-        divDesc.classList.add("vazia");
-      }
-      const divCampos = document.getElementById("camposRelatorio");
-      let htmlCampos = `<strong>Campos solicitados:</strong><ul>`;
-      let algum = false;
-      ["aluno", "escola", "servidor"].forEach((tipo) => {
-        const campos = (ordemCampos && ordemCampos[tipo] && ordemCampos[tipo].length > 0) ? ordemCampos[tipo] : (camposPorTipo[tipo] || []);
-        if (campos.length === 0) return;
-        algum = true;
-        campos.forEach((c) => {
-          let extra = "";
-          if (filtros && filtros[tipo] && filtros[tipo][c]) extra = ` <span class="filtro-badge">= ${labelDoFiltro(tipo, c, filtros[tipo][c])}</span>`;
-          htmlCampos += `<li>${labelDoCampo(tipo, c)}${extra} <span style="color:#a1a1aa;font-size:12px;">(${ROTULO_TIPO[tipo]})</span></li>`;
-        });
-      });
-      htmlCampos += `</ul>`;
-      divCampos.innerHTML = algum ? htmlCampos : "";
-      const qualidade = { atual: 0, atencao: 0, desatualizado: 0, nunca: 0 };
-      registros.forEach(r => {
-        const s = calcularSelo(r.dados, r.tipo).texto;
-        if (s === "Atual") qualidade.atual++;
-        else if (s === "Atenção") qualidade.atencao++;
-        else if (s === "Desatualizado") qualidade.desatualizado++;
-        else qualidade.nunca++;
-      });
-      const divQual = document.getElementById("qualidadeRelatorio");
-      if (registros.length > 0) {
-        divQual.innerHTML = `
-          <div class="qualidade">
-            <div class="item atual"><strong>${qualidade.atual}</strong>Atual</div>
-            <div class="item atencao"><strong>${qualidade.atencao}</strong>Atenção</div>
-            <div class="item desatualizado"><strong>${qualidade.desatualizado}</strong>Desatualizado</div>
-            <div class="item nunca"><strong>${qualidade.nunca}</strong>Nunca</div>
-          </div>
-        `;
-      } else divQual.innerHTML = "";
-    }
-
-    function renderizarRelatorio() {
-      renderizarCabecalho();
-      const { camposPorTipo, ordemCampos, registros } = relatorioAtual;
-      const aviso = document.getElementById("avisoRelatorio");
-      if (registros.length === 0) aviso.innerHTML = `<div class="aviso">Nenhum registro encontrado para este relatório.</div>`;
-      else aviso.innerHTML = "";
-      const container = document.getElementById("conteudoRelatorio");
-      if (registros.length === 0) { container.innerHTML = ""; return; }
-      const porTipo = { aluno: [], escola: [], servidor: [] };
-      registros.forEach(r => { if (porTipo[r.tipo]) porTipo[r.tipo].push(r); });
-      let html = "";
-      ["aluno", "escola", "servidor"].forEach((tipo) => {
-        const lista = porTipo[tipo];
-        if (lista.length === 0) return;
-        const campos = (ordemCampos && ordemCampos[tipo] && ordemCampos[tipo].length > 0) ? ordemCampos[tipo] : (camposPorTipo[tipo] || []);
-        const mostraSelo = (tipo === "aluno" || tipo === "servidor");
-
-        // Remove "nome" da lista de campos extras para não duplicar
-        const camposExtras = campos.filter(c => c !== "nome");
-
-        html += `
-          <div class="grupo-relatorio">
-            <h3>${ROTULO_TIPO[tipo]}s <span class="contador">(${lista.length} registro${lista.length > 1 ? "s" : ""})</span></h3>
-            <div class="tabela-wrap">
-              <table>
-                <thead><tr>
-                  ${mostraSelo ? `<th class="col-selo">Selo</th>` : ""}
-                  <th>Nome</th>
-                  ${tipo === "escola" ? "" : "<th>Escola</th>"}
-                  ${camposExtras.map(c => `<th>${labelDoCampo(tipo, c)}</th>`).join("")}
-                </tr></thead>
-                <tbody>
-        `;
-        lista.forEach(r => {
-          const selo = mostraSelo ? calcularSelo(r.dados, tipo) : null;
-          html += `<tr>`;
-          if (mostraSelo) html += `<td class="col-selo"><span class="selo ${selo.classe}">${selo.texto}</span></td>`;
-          html += `<td>${r.dados.nome || "—"}</td>`;
-          if (tipo !== "escola") html += `<td><span class="escola-tag">${r.escola || "—"}</span></td>`;
-          camposExtras.forEach(c => {
-            let valor = r.dados[c];
-            const def = getDefinicaoCampo(tipo, c);
-            if (def && def.tipoCampo === "escola" && valor) valor = nomeEscola(valor);
-            html += `<td>${valor ?? "—"}</td>`;
-          });
-          html += `</tr>`;
-        });
-        html += `</tbody></table></div></div>`;
-      });
-      container.innerHTML = html;
-    }
-
-    document.getElementById("btnExportarCSV").addEventListener("click", () => {
-      if (!relatorioAtual || relatorioAtual.registros.length === 0) { toast("Nada para exportar.", "aviso"); return; }
-      if (relatorioAtual.grupoId) registrarUsoGrupo(relatorioAtual.grupoId);
-      const { camposPorTipo, ordemCampos, registros, titulo, descricao, setor, escolas, filtros } = relatorioAtual;
-      const porTipo = { aluno: [], escola: [], servidor: [] };
-      registros.forEach(r => { if (porTipo[r.tipo]) porTipo[r.tipo].push(r); });
-      const linhas = [];
-      linhas.push(`"${titulo.replace(/"/g, '""')}"`);
-      if (descricao) linhas.push(`"${descricao.replace(/"/g, '""')}"`);
-      if (setor) linhas.push(`"Setor: ${setor.replace(/"/g, '""')}"`);
-      if (escolas) linhas.push(`"Escola(s): ${escolas.replace(/"/g, '""')}"`);
-      if (filtros) {
-        ["aluno", "escola", "servidor"].forEach(tipo => {
-          const f = filtros[tipo] || {};
-          for (const campo in f) linhas.push(`"Filtro: ${labelDoCampo(tipo, campo)} = ${labelDoFiltro(tipo, campo, f[campo])}"`);
-        });
-      }
-      linhas.push("");
-      ["aluno", "escola", "servidor"].forEach((tipo) => {
-        const lista = porTipo[tipo];
-        if (lista.length === 0) return;
-        const campos = (ordemCampos && ordemCampos[tipo] && ordemCampos[tipo].length > 0) ? ordemCampos[tipo] : (camposPorTipo[tipo] || []);
-        const camposExtras = campos.filter(c => c !== "nome");
-        if (camposExtras.length === 0) return;
-        linhas.push(`"=== ${ROTULO_TIPO[tipo].toUpperCase()}S ==="`);
-        const header = ["Nome"];
-        if (tipo !== "escola") header.push("Escola");
-        header.push(...camposExtras.map(c => labelDoCampo(tipo, c)));
-        linhas.push(header.join(";"));
-        lista.forEach(r => {
-          const linha = [`"${(r.dados.nome || "").toString().replace(/"/g, '""')}"`];
-          if (tipo !== "escola") linha.push(`"${(r.escola || "").toString().replace(/"/g, '""')}"`);
-          camposExtras.forEach(c => {
-            let v = r.dados[c] ?? "";
-            const def = getDefinicaoCampo(tipo, c);
-            if (def && def.tipoCampo === "escola" && v) v = nomeEscola(v);
-            linha.push(`"${v.toString().replace(/"/g, '""')}"`);
-          });
-          linhas.push(linha.join(";"));
-        });
-        linhas.push("");
-      });
-      const csv = "\uFEFF" + linhas.join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${titulo.replace(/\s+/g, "_")}.csv`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast("CSV exportado.", "sucesso");
-    });
-
-    document.getElementById("btnImprimir").addEventListener("click", () => window.print());
-
-    function contarConfirmacoes(ev, escolasEscolhidas) {
-      const dbAtual = carregarDB();
-      const colecao = ev.tipo === "aluno" ? dbAtual.alunos : dbAtual.servidores;
-      let total = 0, confirmados = 0, pendentes = 0;
-      colecao.forEach(r => {
-        if (!escolasEscolhidas.includes(r.escolaId)) return;
-        total++;
-        if (r.ultimoEvento === ev.id && r.confirmadoEm) confirmados++;
-        else pendentes++;
-      });
-      return { total, confirmados, pendentes };
-    }
-
-    function carregarEventosDisponiveis() {
-      db = carregarDB();
-      const select = document.getElementById("selectEvento");
-      const aviso = document.getElementById("avisoSemEventos");
-      const escolasSelect = document.getElementById("escolasEvento");
-      select.innerHTML = "";
-      escolasSelect.innerHTML = "";
-      const eventosAtivos = (db.eventos || []).filter(e => e.ativo);
-      const eventosComPendencia = eventosAtivos.filter(ev => {
-        const colecao = ev.tipo === "aluno" ? db.alunos : db.servidores;
-        return colecao.some(r => r.ultimoEvento !== ev.id || !r.confirmadoEm);
-      });
-      if (eventosComPendencia.length === 0) {
-        aviso.innerHTML = `<div class="aviso aviso-roxo">Nenhum evento com pendências. Para disparar um evento novo, crie ou reative um no <strong>admin.html</strong>.</div>`;
-        document.getElementById("previaCamposEvento").innerHTML = "";
-        document.getElementById("statusEvento").innerHTML = "";
-        return;
-      }
-      aviso.innerHTML = "";
-      eventosComPendencia.forEach(ev => {
-        const opt = document.createElement("option");
-        opt.value = ev.id;
-        opt.textContent = `${ev.label} (${ROTULO_TIPO[ev.tipo] || ev.tipo})`;
-        select.appendChild(opt);
-      });
-      db.escolas.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.textContent = e.nome || e.id;
-        opt.selected = true;
-        escolasSelect.appendChild(opt);
-      });
-      atualizarPreviaEvento();
-    }
-
-    function atualizarPreviaEvento() {
-      db = carregarDB();
-      const evId = document.getElementById("selectEvento").value;
-      const ev = (db.eventos || []).find(e => e.id === evId);
-      const info = document.getElementById("infoEvento");
-      const previa = document.getElementById("previaCamposEvento");
-      const statusDiv = document.getElementById("statusEvento");
-      if (!ev) { info.textContent = ""; previa.innerHTML = ""; statusDiv.innerHTML = ""; return; }
-      info.textContent = `Período: ${ev.dataInicio || "—"} a ${ev.dataFim || "—"}`;
-      const camposEvento = (db.campos || []).filter(c => c.tipo === ev.tipo && c.validade === "evento");
-      if (camposEvento.length === 0) {
-        previa.innerHTML = `<p class="vazio">Nenhum campo com validade "evento" cadastrado para ${ROTULO_TIPO[ev.tipo]}.</p>`;
-      } else {
-        let html = `<ul style="margin:0;padding-left:18px;">`;
-        camposEvento.forEach(c => { html += `<li>${c.label}</li>`; });
-        html += `</ul>`;
-        previa.innerHTML = html;
-      }
-      const escolasSelect = document.getElementById("escolasEvento");
-      const escolasEscolhidas = Array.from(escolasSelect.selectedOptions).map(o => o.value);
-      const stat = contarConfirmacoes(ev, escolasEscolhidas);
-      if (stat.total === 0) { statusDiv.innerHTML = `<div class="aviso aviso-vermelho" style="margin-top:12px;">Nenhum registro para este evento nas escolas selecionadas.</div>`; return; }
-      if (stat.confirmados === 0) {
-        statusDiv.innerHTML = `<div class="aviso aviso-verde" style="margin-top:12px;"><strong>Primeiro disparo deste evento.</strong><div class="stat-evento"><div class="item total"><strong>${stat.total}</strong>Total</div><div class="item confirmados"><strong>0</strong>Confirmados</div><div class="item pendentes"><strong>${stat.pendentes}</strong>Pendentes</div></div></div>`;
-      } else if (stat.pendentes === 0) {
-        statusDiv.innerHTML = `<div class="aviso" style="margin-top:12px;"><strong>Todos os registros já confirmaram este evento.</strong> Se disparar de novo, será uma reconfirmação.<div class="stat-evento"><div class="item total"><strong>${stat.total}</strong>Total</div><div class="item confirmados"><strong>${stat.confirmados}</strong>Confirmados</div><div class="item pendentes"><strong>0</strong>Pendentes</div></div></div>`;
-      } else {
-        statusDiv.innerHTML = `<div class="aviso" style="margin-top:12px;"><strong>Este evento já foi disparado antes.</strong><div class="stat-evento"><div class="item total"><strong>${stat.total}</strong>Total</div><div class="item confirmados"><strong>${stat.confirmados}</strong>Confirmados</div><div class="item pendentes"><strong>${stat.pendentes}</strong>Pendentes</div></div></div>`;
-      }
-    }
-    document.getElementById("selectEvento").addEventListener("change", atualizarPreviaEvento);
-    document.getElementById("escolasEvento").addEventListener("change", atualizarPreviaEvento);
-
-    document.getElementById("btnConfirmarEvento").addEventListener("click", () => {
-      db = carregarDB();
-      const evId = document.getElementById("selectEvento").value;
-      const ev = (db.eventos || []).find(e => e.id === evId);
-      if (!ev) { toast("Selecione um evento.", "aviso"); return; }
-      const escolasSelect = document.getElementById("escolasEvento");
-      const escolasEscolhidas = Array.from(escolasSelect.selectedOptions).map(o => o.value);
-      if (escolasEscolhidas.length === 0) { toast("Selecione ao menos uma escola.", "aviso"); return; }
-      const camposEvento = (db.campos || []).filter(c => c.tipo === ev.tipo && c.validade === "evento").map(c => c.id);
-      if (camposEvento.length === 0) { toast("Nenhum campo com validade 'evento' para esse tipo.", "aviso"); return; }
-      const stat = contarConfirmacoes(ev, escolasEscolhidas);
-      if (stat.total === 0) { toast("Nenhum registro nas escolas selecionadas.", "aviso"); return; }
-      let reenviarParaTodos = false;
-      if (stat.confirmados > 0) {
-        if (stat.pendentes === 0) {
-          const resposta = confirm(`Todos os ${stat.total} registros já confirmaram. Reenviar como reconfirmação?`);
-          if (!resposta) return;
-          reenviarParaTodos = true;
-        } else {
-          const resposta = confirm(`Este evento já foi disparado antes.\n\nTotal: ${stat.total}\nConfirmados: ${stat.confirmados}\nPendentes: ${stat.pendentes}\n\nOK = Enviar só para os pendentes\nCancelar = Reenviar para todos`);
-          reenviarParaTodos = !resposta;
-        }
-      }
-      const registros = [];
-      const colecao = ev.tipo === "aluno" ? db.alunos : db.servidores;
-      colecao.forEach((r) => {
-        if (!escolasEscolhidas.includes(r.escolaId)) return;
-        if (!reenviarParaTodos && r.ultimoEvento === ev.id && r.confirmadoEm) return;
-        registros.push({ tipo: ev.tipo, id: r.id, nome: r.nome, escolaId: r.escolaId, status: "pendente", camposFaltando: [...camposEvento] });
-      });
-      if (registros.length === 0) { toast("Nenhum registro para enviar.", "aviso"); return; }
-      const porEscola = {};
-      registros.forEach(r => { if (!porEscola[r.escolaId]) porEscola[r.escolaId] = []; porEscola[r.escolaId].push(r); });
-      const camposPorTipo = { aluno: [], escola: [], servidor: [] };
-      const ordemCampos   = { aluno: [], escola: [], servidor: [] };
-      camposPorTipo[ev.tipo] = [...camposEvento];
-      ordemCampos[ev.tipo]   = [...camposEvento];
-      const grupoId = "g_evt_" + Date.now();
-      Object.entries(porEscola).forEach(([escolaId, regs]) => {
-        const tarefa = {
-          id: "t_evt_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-          grupoId, eventoId: ev.id, escolaId,
-          titulo: ev.label,
-          descricao: `Confirmação de dados para o evento: ${ev.label}`,
-          setorSolicitante: "Secretaria",
-          camposPorTipo, ordemCampos,
-          status: "pendente",
-          criadoEm: new Date().toISOString(),
-          downloads: 0, validacoes: [],
-          registros: regs
-        };
-        db.tarefas.push(tarefa);
-      });
-      salvarDB(db);
-      toast("Evento disparado.", "sucesso");
-      mostrarTela("sucessoEvento");
-    });
-
-    document.getElementById("pesquisaHistorico").addEventListener("input", (e) => {
-      pesquisaHistorico = e.target.value.trim();
-      carregarHistorico();
-    });
-    document.getElementById("btnLimparPesquisaHistorico").addEventListener("click", () => {
-      pesquisaHistorico = "";
-      document.getElementById("pesquisaHistorico").value = "";
-      carregarHistorico();
-    });
-    document.getElementById("ordenacaoHistorico").addEventListener("change", () => carregarHistorico());
-
-    document.getElementById("btnNovaSolicitacao").addEventListener("click", () => {
-      camposSelecionados.clear();
-      atualizarSelecionados();
-      document.getElementById("tituloSolicitacao").value = "";
-      document.getElementById("descricaoSolicitacao").value = "";
-      document.getElementById("setorSolicitante").value = "";
-      document.getElementById("usuarioTopo").textContent = "Setor: —";
-      tipoAtivo = "aluno";
-      document.querySelectorAll(".tipo-tab").forEach(t => t.classList.toggle("ativa", t.dataset.tipo === "aluno"));
-      montarCatalogo();
-      carregarEscolasNoSelect();
-      mostrarTela("builder");
-    });
-    document.getElementById("btnDispararEvento").addEventListener("click", () => {
-      carregarEventosDisponiveis();
-      mostrarTela("evento");
-    });
-    document.getElementById("btnVoltarDashboard").addEventListener("click", () => mostrarTela("dashboard"));
-    document.getElementById("btnVoltarBuilder").addEventListener("click", () => mostrarTela("builder"));
-    document.getElementById("btnVoltarDashboard2").addEventListener("click", () => mostrarTela("dashboard"));
-    document.getElementById("btnVoltarDashboard3").addEventListener("click", () => mostrarTela("dashboard"));
-    document.getElementById("btnVoltarDashboardEvento").addEventListener("click", () => mostrarTela("dashboard"));
-    document.getElementById("btnVoltarDashboardEvento2").addEventListener("click", () => mostrarTela("dashboard"));
-    document.getElementById("btnVoltarHistorico").addEventListener("click", () => { carregarHistorico(); mostrarTela("historico"); });
-    document.getElementById("btnVerHistorico").addEventListener("click", () => {
-      pesquisaHistorico = "";
-      document.getElementById("pesquisaHistorico").value = "";
-      carregarHistorico();
-      mostrarTela("historico");
-    });
-    document.getElementById("setorSolicitante").addEventListener("change", (e) => {
-      document.getElementById("usuarioTopo").textContent = "Setor: " + (e.target.value || "—");
-    });
-
-    montarCatalogo();
-    carregarEscolasNoSelect();
-  </script>
 </body>
 </html>
