@@ -1835,8 +1835,8 @@
       fecharModal();
 
       if (tipo === "escola")  { renderizarEscolas(); renderizarAlunos(); renderizarServidores(); }
-      if (tipo === "aluno")   { renderizarAlunos(); }
-      if (tipo === "servidor"){ renderizarServidores(); }
+      if (tipo === "aluno")   { renderizarAlunos(); renderizarEscolas(); }
+      if (tipo === "servidor"){ renderizarServidores(); renderizarEscolas(); }
       renderizarResumo();
       toast(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} atualizado.`, "sucesso");
     });
@@ -1851,24 +1851,53 @@
         div.innerHTML = '<p class="vazio">Nenhuma escola cadastrada ainda.</p>';
         return;
       }
+
+      // Contadores agregados por escola
+      const totalAlunosPorEscola = {};
+      db.alunos.forEach(a => {
+        if (a.escolaId) totalAlunosPorEscola[a.escolaId] = (totalAlunosPorEscola[a.escolaId] || 0) + 1;
+      });
+      const totalServidoresPorEscola = {};
+      db.servidores.forEach(s => {
+        if (s.escolaId) totalServidoresPorEscola[s.escolaId] = (totalServidoresPorEscola[s.escolaId] || 0) + 1;
+      });
+
+      // Nome é coluna fixa; demais campos do catálogo entram como colunas extras
       const camposEscola = camposDoTipo("escola");
-      const colunas = camposEscola.slice(0, 5);
+      const colunas = camposEscola.filter(c => c.id !== "nome").slice(0, 4);
+
       let html = `<div class="tabela-wrap"><table><thead><tr>`;
+      html += `<th>Nome</th>`;
       colunas.forEach(c => { html += `<th>${c.label}</th>`; });
+      html += `<th>Total de alunos</th>`;
+      html += `<th>Total de servidores</th>`;
       html += `<th>Ações</th></tr></thead><tbody>`;
+
       db.escolas.forEach(e => {
         html += `<tr>`;
+        // Nome da escola (coluna fixa)
+        html += `<td><strong>${e.nome || e.id}</strong></td>`;
+
+        // Demais colunas do catálogo
         colunas.forEach(c => {
           let valor = e[c.id] || "—";
           if (c.tipoCampo === "escola" && e[c.id]) valor = nomeEscolaPorId(e[c.id]);
           html += `<td>${valor}</td>`;
         });
+
+        // Totais agregados
+        const qtdAlunos = totalAlunosPorEscola[e.id] || 0;
+        const qtdServidores = totalServidoresPorEscola[e.id] || 0;
+        html += `<td><strong>${qtdAlunos}</strong></td>`;
+        html += `<td><strong>${qtdServidores}</strong></td>`;
+
         html += `<td><div class="acoes-tabela">
           <button class="btn-editar btn-edit-escola" data-id="${e.id}">Editar</button>
           <button class="btn-perigo btn-rm-escola" data-id="${e.id}">Remover</button>
         </div></td>`;
         html += `</tr>`;
       });
+
       html += `</tbody></table></div>`;
       div.innerHTML = html;
 
@@ -1958,6 +1987,7 @@
           db.alunos = db.alunos.filter(a => a.id !== btn.dataset.id);
           salvarDB(db);
           renderizarAlunos();
+          renderizarEscolas();   // mantém os totais da aba Escolas sincronizados
           renderizarResumo();
           toast("Aluno removido.", "sucesso");
         });
@@ -1979,6 +2009,7 @@
       salvarDB(db);
       limparFormulario("formAluno");
       renderizarAlunos();
+      renderizarEscolas();   // mantém os totais da aba Escolas sincronizados
       renderizarResumo();
       toast(`Aluno "${aluno.nome}" cadastrado.`, "sucesso");
     });
@@ -2031,6 +2062,7 @@
           db.servidores = db.servidores.filter(s => s.id !== btn.dataset.id);
           salvarDB(db);
           renderizarServidores();
+          renderizarEscolas();   // mantém os totais da aba Escolas sincronizados
           renderizarResumo();
           toast("Servidor removido.", "sucesso");
         });
@@ -2052,6 +2084,7 @@
       salvarDB(db);
       limparFormulario("formServidor");
       renderizarServidores();
+      renderizarEscolas();   // mantém os totais da aba Escolas sincronizados
       renderizarResumo();
       toast(`Servidor "${servidor.nome}" cadastrado.`, "sucesso");
     });
@@ -2452,9 +2485,9 @@
           toast(`Importação: ${adicionados} adicionado(s), ${atualizados} atualizado(s), ${pulados} pulado(s).`, "sucesso", "Importação");
           e.target.value = "";
 
-          if (tipo === "aluno")    renderizarAlunos();
+          if (tipo === "aluno")    { renderizarAlunos(); renderizarEscolas(); }
           if (tipo === "escola")   { renderizarEscolas(); renderizarAlunos(); renderizarServidores(); }
-          if (tipo === "servidor") renderizarServidores();
+          if (tipo === "servidor") { renderizarServidores(); renderizarEscolas(); }
           renderizarResumo();
         } catch (err) {
           toast("Erro ao importar CSV: " + err.message, "erro");
