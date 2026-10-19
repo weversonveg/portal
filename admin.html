@@ -993,10 +993,6 @@
         <h3>Cadastrar campo no catálogo</h3>
         <div class="form-linha">
           <div class="campo">
-            <label>ID (sem espaços)</label>
-            <input type="text" id="campoId" placeholder="nomeMae">
-          </div>
-          <div class="campo">
             <label>Nome exibido</label>
             <input type="text" id="campoLabel" placeholder="Nome da mãe">
           </div>
@@ -1046,6 +1042,9 @@
           </div>
         </div>
         <button id="btnAddCampo" class="btn-primario">Adicionar campo</button>
+        <small style="display:block;margin-top:8px;color:#71717a;font-size:12px;">
+          O ID do campo será gerado automaticamente a partir do nome exibido.
+        </small>
       </div>
 
       <div class="bloco">
@@ -1309,6 +1308,24 @@
                     : tipo === "escola" ? db.escolas
                     : db.servidores;
       while (colecao.find(x => x.id === id)) {
+        id = `${slug}_${contador}`;
+        contador++;
+      }
+      return id;
+    }
+
+    // Gera ID único para um campo do catálogo (único por categoria/tipo)
+    function gerarIdUnicoCampo(label, tipo, db) {
+      let slug = gerarSlug(label);
+      if (!slug) slug = "campo";
+
+      // IDs reservados (usados como metadados dos registros)
+      const reservados = ["id", "criadoEm", "atualizadoEm", "atualizadoPor", "ultimoEvento", "confirmadoEm"];
+      if (reservados.includes(slug)) slug = slug + "_campo";
+
+      let id = slug;
+      let contador = 2;
+      while (db.campos.find(c => c.id === id && c.tipo === tipo)) {
         id = `${slug}_${contador}`;
         contador++;
       }
@@ -2154,7 +2171,6 @@
     }
 
     document.getElementById("btnAddCampo").addEventListener("click", () => {
-      const id = document.getElementById("campoId").value.trim();
       const label = document.getElementById("campoLabel").value.trim();
       const tipo = document.getElementById("campoTipo").value;
       const tipoCampo = document.getElementById("campoTipoCampo").value;
@@ -2162,19 +2178,13 @@
       const obrigatorio = document.getElementById("campoObrigatorio").value === "sim";
       const validade = document.getElementById("campoValidade").value;
 
-      if (!id) { toast("Informe o ID.", "aviso"); return; }
       if (!label) { toast("Informe o nome exibido.", "aviso"); return; }
       if (!tipo) { toast("Selecione a categoria.", "aviso"); return; }
-      if (!/^[a-zA-Z0-9_]+$/.test(id)) { toast("O ID só pode ter letras, números e underline.", "aviso"); return; }
-
-      const reservados = ["id", "criadoEm", "atualizadoEm", "atualizadoPor", "ultimoEvento", "confirmadoEm"];
-      if (reservados.includes(id)) { toast(`O ID "${id}" é reservado.`, "aviso"); return; }
 
       const db = carregarDB();
-      if (db.campos.find(c => c.id === id && c.tipo === tipo)) {
-        toast("Já existe um campo com esse ID nessa categoria.", "aviso");
-        return;
-      }
+
+      // ID gerado automaticamente a partir do nome exibido
+      const id = gerarIdUnicoCampo(label, tipo, db);
 
       const campo = { id, label, tipo, tipoCampo, obrigatorio, validade };
 
@@ -2195,7 +2205,6 @@
       db.campos.push(campo);
       salvarDB(db);
 
-      document.getElementById("campoId").value = "";
       document.getElementById("campoLabel").value = "";
       document.getElementById("campoTipo").value = "";
       document.getElementById("campoTipoCampo").value = "text";
@@ -2212,7 +2221,7 @@
       montarFormulario("escola", "formEscola");
       montarFormulario("aluno", "formAluno");
       montarFormulario("servidor", "formServidor");
-      toast(`Campo "${label}" adicionado.`, "sucesso");
+      toast(`Campo "${label}" adicionado (ID: ${id}).`, "sucesso");
     });
 
     document.getElementById("campoTipoCampo").addEventListener("change", (e) => {
