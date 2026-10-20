@@ -243,6 +243,67 @@
       return { texto: "Atual", cor: "#166534", bg: "#dcfce7" };
     }
 
+    // ==========================================
+    // NOVO: SINCRONIZAÇÃO DE TAREFAS
+    // ==========================================
+    function sincronizarTarefasPendentes(tipoRegistro, idRegistro) {
+      const dbAtual = carregarDB();
+      const agora = new Date().toISOString();
+      let tarefasAtualizadas = false;
+
+      dbAtual.tarefas.forEach(tarefa => {
+        if (tarefa.escolaId !== ESCOLA_ATUAL) return;
+
+        tarefa.registros.forEach(reg => {
+          // Se a tarefa é para este registro específico e não está concluída
+          if (reg.tipo === tipoRegistro && reg.id === idRegistro && reg.status !== "concluida") {
+            
+            // Busca os dados atualizados no banco
+            const colecao = tipoRegistro === "aluno" ? dbAtual.alunos : tipoRegistro === "escola" ? dbAtual.escolas : dbAtual.servidores;
+            const objAtualizado = colecao.find(x => x.id === idRegistro);
+
+            if (objAtualizado) {
+              // Remove da lista de faltantes os campos que já foram preenchidos
+              const faltandoAtual = (reg.camposFaltando || []).filter(campo => {
+                if (ehCalculado(tipoRegistro, campo)) return false;
+                // Se o campo ainda está vazio no banco, continua faltando
+                return !objAtualizado[campo] || objAtualizado[campo].toString().trim() === "";
+              });
+
+              // Atualiza a lista de faltantes
+              reg.camposFaltando = faltandoAtual;
+
+              // Se não falta mais nada, conclui o registro
+              if (faltandoAtual.length === 0) {
+                reg.status = "concluida";
+                tarefasAtualizadas = true;
+              }
+            }
+          }
+        });
+
+        // Verifica se a tarefa inteira já pode ser concluída
+        const aindaPendentes = tarefa.registros.some(r => r.status !== "concluida");
+        if (!aindaPendentes && tarefa.status !== "concluida") {
+          tarefa.status = "concluida";
+          tarefa.atualizadoEm = agora;
+          tarefasAtualizadas = true;
+          
+          // Se for evento, verifica encerramento
+          if (tarefa.eventoId) verificarEncerramentoEvento(tarefa.eventoId);
+        } else if (aindaPendentes && tarefa.status === "pendente") {
+          tarefa.status = "em_andamento";
+          tarefa.atualizadoEm = agora;
+          tarefasAtualizadas = true;
+        }
+      });
+
+      if (tarefasAtualizadas) {
+        salvarDB(dbAtual);
+        console.log("Tarefas sincronizadas com sucesso.");
+      }
+    }
+
     const ROTULO_TIPO = { aluno: "Aluno", escola: "Escola", servidor: "Servidor" };
 
     const telas = {
@@ -304,7 +365,7 @@
     });
 
     // ==========================================
-    // FLUXO DE TAREFAS (MANTIDO)
+    // FLUXO DE TAREFAS
     // ==========================================
     function carregarTarefas() {
       db = carregarDB();
@@ -480,7 +541,7 @@
     }
 
     // ==========================================
-    // FLUXO DE MEUS DADOS (EDIÇÃO E CRIAÇÃO)
+    // FLUXO DE MEUS DADOS
     // ==========================================
     document.querySelectorAll(".aba[data-dados]").forEach(tab => {
       tab.addEventListener("click", () => {
@@ -498,7 +559,6 @@
       div.innerHTML = "";
       if (!ESCOLA_ATUAL) return;
 
-      // Mostra o botão "+ Novo" apenas nas abas de alunos e servidores
       if (abaDadosAtiva === "escola") {
         btnNovo.style.display = "none";
         const escola = db.escolas.find(e => e.id === ESCOLA_ATUAL);
@@ -515,7 +575,6 @@
         div.innerHTML = html;
 
       } else {
-        // Configura o botão "+ Novo" dinamicamente
         btnNovo.style.display = "inline-block";
         btnNovo.textContent = abaDadosAtiva === "alunos" ? "+ Novo Aluno" : "+ Novo Servidor";
         btnNovo.onclick = () => abrirEdicaoRegistro(abaDadosAtiva === "alunos" ? "aluno" : "servidor", null);
@@ -546,7 +605,6 @@
         div.innerHTML = html;
       }
 
-      // Bind botões de editar e remover
       div.querySelectorAll(".btn-editar").forEach(btn => {
         btn.addEventListener("click", () => {
           const tipo = btn.dataset.tipo || "escola";
@@ -587,10 +645,9 @@
 
       const campos = db.campos.filter(c => c.tipo === tipo);
       campos.forEach(campo => {
-        if (campo.calculado) return; // Não edita calculados
+        if (campo.calculado) return;
         
         let valor = obj[campo.id] || "";
-        // Se for novo, já preenche o ID da escola atual (se houver o campo)
         if (ehNovo && campo.id === "escolaId") valor = ESCOLA_ATUAL;
 
         const div = document.createElement("div");
@@ -617,7 +674,6 @@
         dadosForm[campo] = input.value.trim();
       });
 
-      // Validação de campos obrigatórios
       const campos = db.campos.filter(c => c.tipo === tipoEdicaoAtual);
       for (const c of campos) {
         if (c.calculado) continue;
@@ -633,7 +689,6 @@
         colecao.push(obj);
       }
 
-      // Se for aluno ou servidor, garante que o escolaId seja o da escola atual
       if (tipoEdicaoAtual !== "escola" && !dadosForm.escolaId) {
         dadosForm.escolaId = ESCOLA_ATUAL;
       }
@@ -648,11 +703,14 @@
       obj.confirmadoEm = agora; 
 
       salvarDB(db);
+      
+      // Sincroniza se havia alguma tarefa pendente para este registro
+      sincronizarTarefasPendentes(tipoEdicaoAtual, obj.id);
+
       carregarMeusDados();
       alert(ehNovo ? "Registro adicionado com sucesso!" : "Dados atualizados com sucesso!");
     });
 
-    // BOTÃO CONFIRMAR TUDO NA ABA "MEUS DADOS"
     document.getElementById("btnConfirmarTudoDados").addEventListener("click", () => {
       if (!confirm("Isso vai carimbar a data de hoje para todos os alunos e servidores desta escola, indicando que os dados estão corretos. Continuar?")) return;
       db = carregarDB();
@@ -682,11 +740,16 @@
       if (esc) { esc.confirmadoEm = agora; esc.atualizadoEm = agora; }
 
       salvarDB(db);
+      
+      // Sincroniza todas as tarefas pendentes da escola após o "Confirmar Tudo"
+      db.alunos.forEach(a => { if (a.escolaId === ESCOLA_ATUAL) sincronizarTarefasPendentes("aluno", a.id); });
+      db.servidores.forEach(s => { if (s.escolaId === ESCOLA_ATUAL) sincronizarTarefasPendentes("servidor", s.id); });
+      sincronizarTarefasPendentes("escola", ESCOLA_ATUAL);
+
       carregarMeusDados();
-      alert("Todos os dados foram confirmados e os selos atualizados!");
+      alert("Todos os dados foram confirmados e as tarefas pendentes foram atualizadas!");
     });
 
-    // VOLTAR DE EDIÇÃO
     document.getElementById("btnVoltarMeusDados").addEventListener("click", () => {
       mostrarTela("meusDados");
     });
@@ -696,7 +759,6 @@
       else { carregarTarefas(); mostrarTela("tarefas"); }
     });
 
-    // INICIAR
     montarSeletorEscola();
     carregarTarefas();
   </script>
