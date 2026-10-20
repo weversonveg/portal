@@ -753,6 +753,9 @@
         container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado.</p>';
         return;
       }
+      // [TOTAIS] Remove campos calculados do formulário de cadastro
+      campos = campos.filter(c => !c.calculado);
+      
       const prioridade = { nome: 1, escolaId: 2 };
       campos = [...campos].sort((a, b) => {
         const pa = prioridade[a.id] || 99;
@@ -760,17 +763,12 @@
         if (pa !== pb) return pa - pb;
         return 0;
       });
-      const db = carregarDB();
       campos.forEach(campo => {
         const div = document.createElement("div");
         div.className = "campo";
-        const badgeCalc = campo.calculado ? ` <span class="badge-validade badge-calculado">Calculado</span>` : "";
-        // Para campos calculados no form de cadastro, mostramos 0 (será sempre calculado na renderização)
-        let valorInicial = "";
-        if (campo.calculado) valorInicial = 0;
         div.innerHTML = `
-          <label>${campo.label}${campo.obrigatorio ? " *" : ""} ${getBadgeValidade(campo.validade, campo.prazoMeses)}${badgeCalc}</label>
-          ${renderizarInput(campo, prefixo, valorInicial)}
+          <label>${campo.label}${campo.obrigatorio ? " *" : ""} ${getBadgeValidade(campo.validade, campo.prazoMeses)}</label>
+          ${renderizarInput(campo, prefixo)}
         `;
         container.appendChild(div);
       });
@@ -781,8 +779,7 @@
       const dados = {};
       container.querySelectorAll("[data-campo]").forEach(el => {
         const campoId = el.dataset.campo;
-        // [TOTAIS] Ignora inputs disabled (calculados)
-        if (el.disabled) return;
+        if (el.disabled) return; // [TOTAIS]
         const valor = el.value.trim();
         if (valor !== "") dados[campoId] = valor;
       });
@@ -869,7 +866,6 @@
           const div = document.createElement("div");
           div.className = "campo";
           const badgeCalc = campo.calculado ? ` <span class="badge-validade badge-calculado">Calculado</span>` : "";
-          // [TOTAIS] Para campos calculados, usa valor calculado
           let valorCampo = obj[campo.id] || "";
           if (campo.calculado) {
             valorCampo = calcularValorCampo(obj, campo, db) ?? 0;
@@ -895,7 +891,6 @@
 
       const container = document.getElementById("modalForm");
 
-      // [TOTAIS] Se for calculado, só permite editar o label
       if (campo.calculado) {
         container.innerHTML = `
           <div class="aviso aviso-roxo" style="margin-bottom:16px;">
@@ -1022,14 +1017,12 @@
         const label = document.getElementById("editCampoLabel").value.trim();
         if (!label) { toast("Informe o nome exibido.", "aviso"); return; }
 
-        // [TOTAIS] Se for calculado, só atualiza o label
         if (campo.calculado) {
           campo.label = label;
           salvarDB(db);
           fecharModal();
           renderizarCampos();
           renderizarEscolas();
-          montarFormulario("escola", "formEscola");
           toast("Campo atualizado.", "sucesso");
           return;
         }
@@ -1078,17 +1071,17 @@
       const campos = camposDoTipo(tipo);
       const dados = {};
       document.getElementById("modalForm").querySelectorAll("[data-campo]").forEach(el => {
-        if (el.disabled) return; // [TOTAIS] ignora calculados
+        if (el.disabled) return;
         dados[el.dataset.campo] = el.value.trim();
       });
 
       for (const c of campos) {
-        if (c.calculado) continue; // [TOTAIS]
+        if (c.calculado) continue;
         if (c.obrigatorio && !dados[c.id]) { toast(`O campo "${c.label}" é obrigatório.`, "aviso"); return; }
       }
 
       campos.forEach(c => {
-        if (c.calculado) return; // [TOTAIS] nunca salva valor calculado
+        if (c.calculado) return;
         if (dados[c.id] === undefined || dados[c.id] === "") {
           delete obj[c.id];
         } else {
@@ -1121,7 +1114,15 @@
         return;
       }
 
-      // [TOTAIS] Usa todos os campos de escola (incluindo calculados)
+      const totalAlunosPorEscola = {};
+      db.alunos.forEach(a => {
+        if (a.escolaId) totalAlunosPorEscola[a.escolaId] = (totalAlunosPorEscola[a.escolaId] || 0) + 1;
+      });
+      const totalServidoresPorEscola = {};
+      db.servidores.forEach(s => {
+        if (s.escolaId) totalServidoresPorEscola[s.escolaId] = (totalServidoresPorEscola[s.escolaId] || 0) + 1;
+      });
+
       const camposEscola = camposDoTipo("escola");
       const colunas = camposEscola.filter(c => c.id !== "nome");
 
@@ -1235,7 +1236,7 @@
           db.alunos = db.alunos.filter(a => a.id !== btn.dataset.id);
           salvarDB(db);
           renderizarAlunos();
-          renderizarEscolas();   // [TOTAIS] atualiza totais
+          renderizarEscolas();
           renderizarResumo();
           toast("Aluno removido.", "sucesso");
         });
@@ -1257,7 +1258,7 @@
       salvarDB(db);
       limparFormulario("formAluno");
       renderizarAlunos();
-      renderizarEscolas();   // [TOTAIS] atualiza totais
+      renderizarEscolas();
       renderizarResumo();
       toast(`Aluno "${aluno.nome}" cadastrado.`, "sucesso");
     });
@@ -1310,7 +1311,7 @@
           db.servidores = db.servidores.filter(s => s.id !== btn.dataset.id);
           salvarDB(db);
           renderizarServidores();
-          renderizarEscolas();   // [TOTAIS] atualiza totais
+          renderizarEscolas();
           renderizarResumo();
           toast("Servidor removido.", "sucesso");
         });
@@ -1332,7 +1333,7 @@
       salvarDB(db);
       limparFormulario("formServidor");
       renderizarServidores();
-      renderizarEscolas();   // [TOTAIS] atualiza totais
+      renderizarEscolas();
       renderizarResumo();
       toast(`Servidor "${servidor.nome}" cadastrado.`, "sucesso");
     });
@@ -1473,7 +1474,6 @@
         const campos = db.campos.filter(c => c.tipo === tipo);
         if (campos.length === 0) return;
         html += `<div style="margin-bottom:20px;"><h4>${rotuloTipo[tipo]}</h4>`;
-        // [TOTAIS] Separa calculados
         const calc = campos.filter(c => c.calculado);
         if (calc.length > 0) {
           html += `<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;">
@@ -1658,7 +1658,7 @@
             const obj = {};
             cabecalho.forEach((col, i) => {
               if (col === "") return;
-              if (idsCalculados.has(col)) return; // [TOTAIS] ignora colunas calculadas
+              if (idsCalculados.has(col)) return;
               const valor = (linha[i] || "").trim();
               if (valor !== "") obj[col] = valor;
             });
@@ -1736,7 +1736,6 @@
         const linha = colunas.map(col => {
           const campo = campos.find(c => c.id === col);
           let valor = obj[col] ?? "";
-          // [TOTAIS] Para campos calculados, exporta valor calculado
           if (campo && campo.calculado) {
             const v = calcularValorCampo(obj, campo, db);
             valor = v !== null ? v : 0;
