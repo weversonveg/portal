@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -601,7 +601,6 @@
         const existe = db.campos.find(c => c.id === cp.id && c.tipo === cp.tipo);
         if (!existe) { db.campos.push({ ...cp }); mudou = true; }
         else if (cp.calculado && !existe.calculado) {
-          // [TOTAIS] Garante marcação de calculado em campos existentes
           existe.calculado = true;
           existe.calculo = cp.calculo;
           mudou = true;
@@ -618,33 +617,54 @@
     }
 
     // ============================================================
-    // CÁLCULO DE SELO
+    // CÁLCULO DE SELO COM DIAGNÓSTICO
     // ============================================================
     function calcularSelo(registro, tipo) {
       const temConfirmacao = !!registro.confirmadoEm;
       const temEdicao = !!registro.atualizadoEm;
-      if (!temConfirmacao && !temEdicao) return { texto: "Nunca", classe: "selo-nunca" };
+      
+      if (!temConfirmacao && !temEdicao) {
+        return { texto: "Nunca", classe: "selo-nunca", motivo: "Nunca foi preenchido ou confirmado." };
+      }
+      
       const db = carregarDB();
       const dataRef = registro.confirmadoEm || registro.atualizadoEm;
       const dataRefObj = new Date(dataRef);
+      let motivo = [];
 
+      // 1. VERIFICA CAMPOS COM PRAZO
       const camposComPrazo = db.campos.filter(c => c.tipo === tipo && c.validade === "prazo" && c.prazoMeses && !c.calculado);
       let piorSeloPrazo = "atual";
+      
       for (const campo of camposComPrazo) {
-        if (!registro[campo.id]) continue;
+        if (!registro[campo.id]) continue; // Campo vazio não conta para atraso
+        
         const prazoMs = campo.prazoMeses * 30 * 24 * 60 * 60 * 1000;
         const idade = Date.now() - dataRefObj.getTime();
         const percentual = idade / prazoMs;
-        if (percentual > 1) { piorSeloPrazo = "desatualizado"; break; }
-        else if (percentual > 0.8 && piorSeloPrazo !== "desatualizado") piorSeloPrazo = "atencao";
+        
+        if (percentual > 1) {
+          piorSeloPrazo = "desatualizado";
+          motivo.push(`Campo "${campo.label}" venceu (prazo de ${campo.prazoMeses} meses).`);
+          break;
+        } else if (percentual > 0.8 && piorSeloPrazo !== "desatualizado") {
+          piorSeloPrazo = "atencao";
+          const diasRestantes = Math.ceil((prazoMs - idade) / (1000 * 60 * 60 * 24));
+          motivo.push(`Campo "${campo.label}" vence em ${diasRestantes} dias.`);
+        }
       }
-      if (piorSeloPrazo === "desatualizado") return { texto: "Desatualizado", classe: "selo-desatualizado" };
 
+      if (piorSeloPrazo === "desatualizado") {
+        return { texto: "Desatualizado", classe: "selo-desatualizado", motivo: motivo.join(" ") };
+      }
+
+      // 2. VERIFICA EVENTOS
       const eventos = (db.eventos || []).filter(e => e.tipo === tipo).sort((a, b) => {
         const da = a.dataInicio ? new Date(a.dataInicio) : new Date(0);
         const db2 = b.dataInicio ? new Date(b.dataInicio) : new Date(0);
         return db2 - da;
       });
+      
       let seloEvento = "atual";
       if (eventos.length > 0) {
         if (!registro.ultimoEvento) {
@@ -654,18 +674,41 @@
               const d = e.dataInicio ? new Date(e.dataInicio) : new Date(0);
               return d > dataRefObj;
             });
-            if (depois.length === 1) seloEvento = "atencao";
-            else if (depois.length >= 2) seloEvento = "desatualizado";
+            if (depois.length === 1) {
+              seloEvento = "atencao";
+              motivo.push(`Não participou do evento recente: "${depois[0].label}".`);
+            } else if (depois.length >= 2) {
+              seloEvento = "desatualizado";
+              motivo.push(`Está atrasado em ${depois.length} eventos.`);
+            }
           }
         } else {
           const pos = eventos.findIndex(e => e.id === registro.ultimoEvento);
-          if (pos === 1) seloEvento = "atencao";
-          else if (pos >= 2) seloEvento = "desatualizado";
+          if (pos === 1) {
+            seloEvento = "atencao";
+            motivo.push(`Participou do evento "${eventos[1].label}", mas falta confirmar o mais recente: "${eventos[0].label}".`);
+          } else if (pos >= 2) {
+            seloEvento = "desatualizado";
+            motivo.push(`Está atrasado em ${pos} eventos.`);
+          }
         }
       }
-      if (seloEvento === "desatualizado") return { texto: "Desatualizado", classe: "selo-desatualizado" };
-      if (seloEvento === "atencao" || piorSeloPrazo === "atencao") return { texto: "Atenção", classe: "selo-atencao" };
-      return { texto: "Atual", classe: "selo-atual" };
+
+      if (seloEvento === "desatualizado") {
+        return { texto: "Desatualizado", classe: "selo-desatualizado", motivo: motivo.join(" ") };
+      }
+      if (seloEvento === "atencao" || piorSeloPrazo === "atencao") {
+        return { texto: "Atenção", classe: "selo-atencao", motivo: motivo.join(" ") };
+      }
+
+      return { texto: "Atual", classe: "selo-atual", motivo: "Tudo certo!" };
+    }
+
+    // Exibe um alerta com o motivo ao clicar no selo
+    function mostrarDiagnostico(event, registro, tipo) {
+      const selo = calcularSelo(registro, tipo);
+      if (selo.texto === "Atual" || selo.texto === "Nunca") return;
+      alert(`Diagnóstico do status "${selo.texto}":\n\n${selo.motivo}`);
     }
 
     function marcarComoAtual(registroId, tipo) {
@@ -717,7 +760,6 @@
       const tipo = campo.tipoCampo || "text";
       const val = (valor ?? "").toString().replace(/"/g, "&quot;");
 
-      // [TOTAIS] Campos calculados: input disabled (não editável)
       if (campo.calculado) {
         return `<input type="number" id="${id}" data-campo="${campo.id}" value="${val}" disabled>`;
       }
@@ -753,7 +795,6 @@
         container.innerHTML = '<p class="vazio" style="grid-column:1/-1;">Nenhum campo cadastrado.</p>';
         return;
       }
-      // [TOTAIS] Remove campos calculados do formulário de cadastro
       campos = campos.filter(c => !c.calculado);
       
       const prioridade = { nome: 1, escolaId: 2 };
@@ -779,7 +820,7 @@
       const dados = {};
       container.querySelectorAll("[data-campo]").forEach(el => {
         const campoId = el.dataset.campo;
-        if (el.disabled) return; // [TOTAIS]
+        if (el.disabled) return;
         const valor = el.value.trim();
         if (valor !== "") dados[campoId] = valor;
       });
@@ -1207,7 +1248,8 @@
       db.alunos.forEach(a => {
         const selo = calcularSelo(a, "aluno");
         html += `<tr>`;
-        html += `<td><span class="selo ${selo.classe}">${selo.texto}</span></td>`;
+        // Ao clicar no selo, mostra o diagnóstico se não for "Atual" ou "Nunca"
+        html += `<td><span class="selo ${selo.classe}" style="cursor:${selo.texto !== 'Atual' && selo.texto !== 'Nunca' ? 'pointer' : 'default'};" onclick="mostrarDiagnostico(event, ${JSON.stringify(a).replace(/"/g, '&quot;')}, 'aluno')">${selo.texto}</span></td>`;
         colunas.forEach(c => {
           let valor = a[c.id] || "—";
           if (c.tipoCampo === "escola" && a[c.id]) valor = nomeEscolaPorId(a[c.id]);
@@ -1282,7 +1324,8 @@
       db.servidores.forEach(s => {
         const selo = calcularSelo(s, "servidor");
         html += `<tr>`;
-        html += `<td><span class="selo ${selo.classe}">${selo.texto}</span></td>`;
+        // Ao clicar no selo, mostra o diagnóstico se não for "Atual" ou "Nunca"
+        html += `<td><span class="selo ${selo.classe}" style="cursor:${selo.texto !== 'Atual' && selo.texto !== 'Nunca' ? 'pointer' : 'default'};" onclick="mostrarDiagnostico(event, ${JSON.stringify(s).replace(/"/g, '&quot;')}, 'servidor')">${selo.texto}</span></td>`;
         colunas.forEach(c => {
           let valor = s[c.id] || "—";
           if (c.tipoCampo === "escola" && s[c.id]) valor = nomeEscolaPorId(s[c.id]);
