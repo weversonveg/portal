@@ -264,7 +264,7 @@ tr:hover td{background:var(--surface-2)}
                 </nav>
 
                 <div class="sidebar-info">
-                    <strong>Versão 1.0.0</strong>
+                    <strong>Versão 1.2.0</strong>
                     Sistema de gestão de vale transporte
                 </div>
             </div>
@@ -731,6 +731,7 @@ import {
 let dadosCalculados = [];
 let mesBloqueadoParaCalculo = false;
 let tarifasEmpresas = {};
+let empresasCacheCompleto = {};
 
 document.addEventListener("DOMContentLoaded", async function() {
     await carregarTarifas();
@@ -773,14 +774,58 @@ async function carregarTarifas() {
     try {
         const snapshot = await getDocs(collection(db, 'empresas'));
         tarifasEmpresas = {};
+        empresasCacheCompleto = {};
+        
         snapshot.forEach(d => {
             const data = d.data();
             tarifasEmpresas[data.nome] = Number(data.valorTarifa) || 0;
+            empresasCacheCompleto[data.nome] = data;
         });
+        
+        console.log('✅ Tarifas carregadas:', tarifasEmpresas);
+        console.log('📊 Histórico carregado de', Object.keys(empresasCacheCompleto).length, 'empresa(s)');
     } catch (e) {
         console.error('Erro ao carregar tarifas:', e);
         tarifasEmpresas = {};
+        empresasCacheCompleto = {};
     }
+}
+
+// =========================================================
+// 👇 BUSCAR TARIFA VIGENTE NO MÊS DO CÁLCULO (usando histórico)
+// =========================================================
+function buscarTarifaVigente(nomeEmpresa, mesAno) {
+    if (!nomeEmpresa) return null;
+    
+    const empresa = empresasCacheCompleto[nomeEmpresa];
+    if (!empresa) return null;
+    
+    // Se não tem histórico, retornar tarifa atual
+    if (!empresa.historicoTarifas || !Array.isArray(empresa.historicoTarifas) || empresa.historicoTarifas.length === 0) {
+        return empresa.valorTarifa || 0;
+    }
+    
+    // Calcular primeiro e último dia do mês do cálculo
+    const [anoStr, mesStr] = mesAno.split('-');
+    const ano = parseInt(anoStr);
+    const mes = parseInt(mesStr);
+    
+    const primeiroDiaMes = `${anoStr}-${mesStr}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const ultimoDiaMes = `${anoStr}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
+    
+    // Buscar no histórico o período que cobre o mês
+    for (const periodo of empresa.historicoTarifas) {
+        const inicioOK = periodo.dataInicio <= ultimoDiaMes;
+        const fimOK = !periodo.dataFim || periodo.dataFim >= primeiroDiaMes;
+        
+        if (inicioOK && fimOK) {
+            return Number(periodo.valor) || 0;
+        }
+    }
+    
+    // Se não encontrou, usar a tarifa atual (fallback)
+    return empresa.valorTarifa || 0;
 }
 
 function formatarData(dataStr) {
@@ -1056,7 +1101,6 @@ window.carregarDados = async function() {
                     ? Number(data.passesDiariosLancados)
                     : null;
 
-                // 👇 NOVO: Capturar snapshot da tarifa
                 const tarifaLancada = (data.tarifaLancada !== undefined && data.tarifaLancada !== null)
                     ? Number(data.tarifaLancada)
                     : null;
@@ -1140,7 +1184,6 @@ window.carregarDados = async function() {
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
 
-                    // 👇 Passes por dia: priorizar snapshot, fallback para cadastro atual
                     let passesPorDia;
                     let tipoPasses;
                     if (passesLancadosSnapshot !== null) {
@@ -1156,16 +1199,30 @@ window.carregarDados = async function() {
 
                     const nomeEmpresa = escolaObj.empresa || '';
                     
-                    // 👇 NOVO: Tarifa: priorizar snapshot, fallback para tarifa atual
+                    // 👇 NOVO: Tarifa com 3 níveis de priorização
                     let valorUnitario;
                     let tipoTarifa;
+
                     if (tarifaLancadaSnapshot !== null) {
+                        // 1. Snapshot do lançamento (mais confiável)
                         valorUnitario = tarifaLancadaSnapshot;
                         tipoTarifa = 'Histórico';
                         snapshotTarifasUsados++;
                     } else {
-                        valorUnitario = tarifasEmpresas[nomeEmpresa] || 0;
-                        tipoTarifa = 'Atual';
+                        // 2. Buscar tarifa vigente no mês usando histórico
+                        const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
+                        const tarifaAtual = tarifasEmpresas[nomeEmpresa] || 0;
+                        
+                        if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
+                            // Histórico diferente da atual → usar do período
+                            valorUnitario = tarifaHistorico;
+                            tipoTarifa = 'Histórico';
+                            snapshotTarifasUsados++;
+                        } else {
+                            // Usar tarifa atual
+                            valorUnitario = tarifaAtual;
+                            tipoTarifa = 'Atual';
+                        }
                     }
                     
                     const valorTotalServidor = totalPassesServidor * valorUnitario;
@@ -1278,7 +1335,6 @@ function renderizarTabela(dados) {
             afastamentosHtml = `<span class="valor-dias-normal">0</span>`;
         }
 
-        // 👇 Fonte de Passes
         let fontePassesHtml = '';
         if (item.tipoPasses === 'Histórico') {
             fontePassesHtml = `
@@ -1296,11 +1352,13 @@ function renderizarTabela(dados) {
             `;
         }
 
-        // 👇 NOVO: Fonte de Tarifa
         let fonteTarifaHtml = '';
         if (item.tipoTarifa === 'Histórico') {
+            const tooltipInfo = item.tarifaLancadaSnapshot !== null 
+                ? `Tarifa congelada do lançamento (${formatarMoeda(item.tarifaLancadaSnapshot)})`
+                : `Tarifa vigente no mês (histórico da empresa)`;
             fonteTarifaHtml = `
-                <span class="badge-fonte badge-fonte-historico" title="Tarifa congelada do lançamento anterior (${formatarMoeda(item.tarifaLancadaSnapshot)})">
+                <span class="badge-fonte badge-fonte-historico" title="${tooltipInfo}">
                     <span class="material-symbols-outlined">history</span>
                     Histórico
                 </span>
