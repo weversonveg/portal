@@ -29,9 +29,6 @@
 </script>
 
 <style>
-/* ============================================================
-   LAYOUT — TOKENS (padrão servidores.html)
-   ============================================================ */
 :root,
 :root[data-theme="light"] {
     --brand: #1f3a5f;
@@ -2149,6 +2146,80 @@ async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
     }
 }
 
+// =========================================================
+// 👇 NOVA FUNÇÃO: OBTER SNAPSHOT DA TARIFA DA EMPRESA
+// =========================================================
+async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
+    try {
+        const servidorDoc = await getDoc(doc(db, "servidores", servidorId));
+        if (!servidorDoc.exists()) return null;
+
+        const servidor = servidorDoc.data();
+
+        const getNomeEscola = function(escolaVal) {
+            if (!escolaVal) return "";
+            if (typeof escolaVal === "string") return escolaVal.trim();
+            return String(escolaVal.nomeEscola || escolaVal.escola || escolaVal.nome || "").trim();
+        };
+
+        const getEmpresa = function(escolaVal) {
+            if (!escolaVal) return "";
+            if (typeof escolaVal === "string") return "";
+            return String(escolaVal.empresa || "").trim();
+        };
+
+        let nomeEmpresa = "";
+
+        // Procurar em matricula1
+        if (servidor.matricula1) {
+            const num = String(servidor.matricula1.numeroMatricula || "").trim();
+            if (num === numeroMatricula) {
+                const e1 = getNomeEscola(servidor.matricula1.escola1);
+                const e2 = getNomeEscola(servidor.matricula1.escola2);
+
+                if (normalizarTexto(e1) === normalizarTexto(escola)) {
+                    nomeEmpresa = getEmpresa(servidor.matricula1.escola1);
+                } else if (normalizarTexto(e2) === normalizarTexto(escola)) {
+                    nomeEmpresa = getEmpresa(servidor.matricula1.escola2);
+                }
+            }
+        }
+
+        // Procurar em matricula2
+        if (!nomeEmpresa && servidor.matricula2) {
+            const num = String(servidor.matricula2.numeroMatricula || "").trim();
+            if (num === numeroMatricula) {
+                const e1 = getNomeEscola(servidor.matricula2.escola1);
+                const e2 = getNomeEscola(servidor.matricula2.escola2);
+
+                if (normalizarTexto(e1) === normalizarTexto(escola)) {
+                    nomeEmpresa = getEmpresa(servidor.matricula2.escola1);
+                } else if (normalizarTexto(e2) === normalizarTexto(escola)) {
+                    nomeEmpresa = getEmpresa(servidor.matricula2.escola2);
+                }
+            }
+        }
+
+        if (!nomeEmpresa) return null;
+
+        // Buscar tarifa da empresa
+        const empresasSnap = await getDocs(collection(db, "empresas"));
+        let tarifa = null;
+        
+        empresasSnap.forEach(docSnap => {
+            const empresa = docSnap.data();
+            if (empresa.nome && normalizarTexto(empresa.nome) === normalizarTexto(nomeEmpresa)) {
+                tarifa = Number(empresa.valorTarifa) || 0;
+            }
+        });
+
+        return tarifa;
+    } catch (e) {
+        console.warn("⚠️ Não foi possível obter snapshot de tarifa:", e);
+        return null;
+    }
+}
+
 async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElement) {
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && normalizarTexto(escola) !== normalizarTexto(escolaUsuario)) {
         mostrarToast("Acesso negado para esta escola.", "erro");
@@ -2176,6 +2247,9 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
     // 👇 NOVO: Buscar snapshot de passes diários no momento do lançamento
     const passesDiariosLancados = await obterSnapshotPasses(servidorId, numeroMatricula, escola);
 
+    // 👇 NOVO: Buscar snapshot da tarifa da empresa no momento do lançamento
+    const tarifaLancada = await obterSnapshotTarifa(servidorId, numeroMatricula, escola);
+
     inputElement.classList.add("salvando");
     inputElement.classList.remove("modificado");
     const badge = document.getElementById(`badge_${inputElement.id}`);
@@ -2197,9 +2271,12 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
                 dataAtualizacao: new Date().toISOString()
             };
 
-            // 👇 NOVO: Salvar snapshot de passes diários
+            // 👇 NOVO: Salvar snapshots de passes diários e tarifa
             if (passesDiariosLancados !== null) {
                 dadosLancamento.passesDiariosLancados = passesDiariosLancados;
+            }
+            if (tarifaLancada !== null) {
+                dadosLancamento.tarifaLancada = tarifaLancada;
             }
 
             await setDoc(lancRef, dadosLancamento, { merge: true });
