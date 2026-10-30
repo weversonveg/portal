@@ -791,21 +791,16 @@ async function carregarTarifas() {
     }
 }
 
-// =========================================================
-// 👇 BUSCAR TARIFA VIGENTE NO MÊS DO CÁLCULO (usando histórico)
-// =========================================================
 function buscarTarifaVigente(nomeEmpresa, mesAno) {
     if (!nomeEmpresa) return null;
     
     const empresa = empresasCacheCompleto[nomeEmpresa];
     if (!empresa) return null;
     
-    // Se não tem histórico, retornar tarifa atual
     if (!empresa.historicoTarifas || !Array.isArray(empresa.historicoTarifas) || empresa.historicoTarifas.length === 0) {
         return empresa.valorTarifa || 0;
     }
     
-    // Calcular primeiro e último dia do mês do cálculo
     const [anoStr, mesStr] = mesAno.split('-');
     const ano = parseInt(anoStr);
     const mes = parseInt(mesStr);
@@ -814,7 +809,6 @@ function buscarTarifaVigente(nomeEmpresa, mesAno) {
     const ultimoDia = new Date(ano, mes, 0).getDate();
     const ultimoDiaMes = `${anoStr}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
     
-    // Buscar no histórico o período que cobre o mês
     for (const periodo of empresa.historicoTarifas) {
         const inicioOK = periodo.dataInicio <= ultimoDiaMes;
         const fimOK = !periodo.dataFim || periodo.dataFim >= primeiroDiaMes;
@@ -824,7 +818,11 @@ function buscarTarifaVigente(nomeEmpresa, mesAno) {
         }
     }
     
-    // Se não encontrou, usar a tarifa atual (fallback)
+    const primeiroPeriodo = empresa.historicoTarifas[0];
+    if (primeiroPeriodo && ultimoDiaMes < primeiroPeriodo.dataInicio) {
+        return Number(primeiroPeriodo.valor) || 0;
+    }
+    
     return empresa.valorTarifa || 0;
 }
 
@@ -1173,7 +1171,6 @@ window.carregarDados = async function() {
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
 
-                    // Passes por dia: snapshot do lançamento OU cadastro atual
                     let passesPorDia;
                     let tipoPasses;
                     if (passesLancadosSnapshot !== null) {
@@ -1189,8 +1186,6 @@ window.carregarDados = async function() {
 
                     const nomeEmpresa = escolaObj.empresa || '';
                     
-                    // 👇 CORREÇÃO: Tarifa SEMPRE buscada no histórico da empresa
-                    // A tarifa é da EMPRESA — todos os servidores devem ter o mesmo valor no mesmo mês
                     let valorUnitario;
                     let tipoTarifa;
 
@@ -1198,12 +1193,10 @@ window.carregarDados = async function() {
                     const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
 
                     if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
-                        // Tarifa do mês é diferente da atual → usar a do período
                         valorUnitario = tarifaHistorico;
                         tipoTarifa = 'Histórico';
                         historicoTarifasUsado++;
                     } else {
-                        // Usar tarifa atual
                         valorUnitario = tarifaAtual;
                         tipoTarifa = 'Atual';
                     }
