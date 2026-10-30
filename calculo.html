@@ -264,7 +264,7 @@ tr:hover td{background:var(--surface-2)}
                 </nav>
 
                 <div class="sidebar-info">
-                    <strong>Versão 1.2.0</strong>
+                    <strong>Versão 1.3.0</strong>
                     Sistema de gestão de vale transporte
                 </div>
             </div>
@@ -1101,26 +1101,18 @@ window.carregarDados = async function() {
                     ? Number(data.passesDiariosLancados)
                     : null;
 
-                const tarifaLancada = (data.tarifaLancada !== undefined && data.tarifaLancada !== null)
-                    ? Number(data.tarifaLancada)
-                    : null;
-
                 lancamentosMap[chave] = {
                     diasAfast: diasAfast,
-                    passesLancados: passesLancados,
-                    tarifaLancada: tarifaLancada
+                    passesLancados: passesLancados
                 };
 
                 const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
                 if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = { diasAfast: 0, passesLancados: null, tarifaLancada: null };
+                    lancamentosPorCpfEscola[chaveCpfEscola] = { diasAfast: 0, passesLancados: null };
                 }
                 lancamentosPorCpfEscola[chaveCpfEscola].diasAfast += diasAfast;
                 if (passesLancados !== null && lancamentosPorCpfEscola[chaveCpfEscola].passesLancados === null) {
                     lancamentosPorCpfEscola[chaveCpfEscola].passesLancados = passesLancados;
-                }
-                if (tarifaLancada !== null && lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada === null) {
-                    lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada = tarifaLancada;
                 }
             }
         });
@@ -1141,7 +1133,7 @@ window.carregarDados = async function() {
         let totalAfastados = 0;
         let totalValor = 0;
         let snapshotPassesUsados = 0;
-        let snapshotTarifasUsados = 0;
+        let historicoTarifasUsado = 0;
 
         servidoresSnap.forEach(servidorDoc => {
             const servidor = servidorDoc.data();
@@ -1166,24 +1158,22 @@ window.carregarDados = async function() {
 
                     let diasAfastamento = 0;
                     let passesLancadosSnapshot = null;
-                    let tarifaLancadaSnapshot = null;
 
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         const info = lancamentosMap[chave];
                         diasAfastamento = info.diasAfast;
                         passesLancadosSnapshot = info.passesLancados;
-                        tarifaLancadaSnapshot = info.tarifaLancada;
                     } else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
                         const info = lancamentosPorCpfEscola[chaveCpfEscola];
                         diasAfastamento = info.diasAfast;
                         passesLancadosSnapshot = info.passesLancados;
-                        tarifaLancadaSnapshot = info.tarifaLancada;
                     }
 
                     const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
 
+                    // Passes por dia: snapshot do lançamento OU cadastro atual
                     let passesPorDia;
                     let tipoPasses;
                     if (passesLancadosSnapshot !== null) {
@@ -1199,30 +1189,23 @@ window.carregarDados = async function() {
 
                     const nomeEmpresa = escolaObj.empresa || '';
                     
-                    // 👇 NOVO: Tarifa com 3 níveis de priorização
+                    // 👇 CORREÇÃO: Tarifa SEMPRE buscada no histórico da empresa
+                    // A tarifa é da EMPRESA — todos os servidores devem ter o mesmo valor no mesmo mês
                     let valorUnitario;
                     let tipoTarifa;
 
-                    if (tarifaLancadaSnapshot !== null) {
-                        // 1. Snapshot do lançamento (mais confiável)
-                        valorUnitario = tarifaLancadaSnapshot;
+                    const tarifaAtual = tarifasEmpresas[nomeEmpresa] || 0;
+                    const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
+
+                    if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
+                        // Tarifa do mês é diferente da atual → usar a do período
+                        valorUnitario = tarifaHistorico;
                         tipoTarifa = 'Histórico';
-                        snapshotTarifasUsados++;
+                        historicoTarifasUsado++;
                     } else {
-                        // 2. Buscar tarifa vigente no mês usando histórico
-                        const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
-                        const tarifaAtual = tarifasEmpresas[nomeEmpresa] || 0;
-                        
-                        if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
-                            // Histórico diferente da atual → usar do período
-                            valorUnitario = tarifaHistorico;
-                            tipoTarifa = 'Histórico';
-                            snapshotTarifasUsados++;
-                        } else {
-                            // Usar tarifa atual
-                            valorUnitario = tarifaAtual;
-                            tipoTarifa = 'Atual';
-                        }
+                        // Usar tarifa atual
+                        valorUnitario = tarifaAtual;
+                        tipoTarifa = 'Atual';
                     }
                     
                     const valorTotalServidor = totalPassesServidor * valorUnitario;
@@ -1243,7 +1226,6 @@ window.carregarDados = async function() {
                         tipoPasses: tipoPasses,
                         totalPasses: totalPassesServidor,
                         valorUnitario: valorUnitario,
-                        tarifaLancadaSnapshot: tarifaLancadaSnapshot,
                         tipoTarifa: tipoTarifa,
                         valorTotal: valorTotalServidor
                     });
@@ -1262,7 +1244,8 @@ window.carregarDados = async function() {
         });
 
         console.log(`📸 Snapshots de passes usados: ${snapshotPassesUsados}`);
-        console.log(`📸 Snapshots de tarifas usados: ${snapshotTarifasUsados}`);
+        console.log(`📊 Histórico de tarifas usado: ${historicoTarifasUsado} servidor(es)`);
+        console.log(`💰 Total de servidores processados: ${dadosCalculados.length}`);
 
         dadosCalculados.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
 
@@ -1354,11 +1337,8 @@ function renderizarTabela(dados) {
 
         let fonteTarifaHtml = '';
         if (item.tipoTarifa === 'Histórico') {
-            const tooltipInfo = item.tarifaLancadaSnapshot !== null 
-                ? `Tarifa congelada do lançamento (${formatarMoeda(item.tarifaLancadaSnapshot)})`
-                : `Tarifa vigente no mês (histórico da empresa)`;
             fonteTarifaHtml = `
-                <span class="badge-fonte badge-fonte-historico" title="${tooltipInfo}">
+                <span class="badge-fonte badge-fonte-historico" title="Tarifa vigente no mês calculado (histórico da empresa)">
                     <span class="material-symbols-outlined">history</span>
                     Histórico
                 </span>
@@ -1471,7 +1451,7 @@ window.exportarODS = async function() {
     const totalValor = dadosCalculados.reduce((sum, item) => sum + item.valorTotal, 0);
     const totalAfastados = dadosCalculados.filter(item => item.afastamentos > 0).length;
     const totalSnapshotsPasses = dadosCalculados.filter(item => item.tipoPasses === 'Histórico').length;
-    const totalSnapshotsTarifas = dadosCalculados.filter(item => item.tipoTarifa === 'Histórico').length;
+    const totalHistoricoTarifas = dadosCalculados.filter(item => item.tipoTarifa === 'Histórico').length;
 
     function escapeXml(text) {
         if (text === null || text === undefined) return "";
@@ -1533,7 +1513,7 @@ window.exportarODS = async function() {
         ["Valor Total (R$)", totalValor.toFixed(2)],
         ["Servidores com Afastamento", totalAfastados],
         ["Snapshots de Passes Usados", totalSnapshotsPasses],
-        ["Snapshots de Tarifas Usados", totalSnapshotsTarifas],
+        ["Tarifas do Histórico Usadas", totalHistoricoTarifas],
         ["Data da Exportação", new Date().toLocaleString("pt-BR")]
     ];
 
