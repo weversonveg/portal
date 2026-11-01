@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,lock,lock_open_right,search,save,event,edit,progress_activity,lightbulb">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,lock,lock_open_right,search,save,event,edit,progress_activity,lightbulb,restaurant,timer">
 
 <script>
 (function () {
@@ -58,6 +58,13 @@
     --info: #1a4d8f;
     --info-bg: #f0f5fb;
     --info-bd: #c3d5e9;
+
+    /* Cores específicas para o campo "Dias com menos de 4h" (Vale-Refeição) */
+    --refeicao: #c2410c;
+    --refeicao-hover: #9a3412;
+    --refeicao-bg: #fff7ed;
+    --refeicao-bd: #fed7aa;
+    --refeicao-text: #7c2d12;
 
     --background: #eef0f3;
     --surface: #ffffff;
@@ -125,6 +132,12 @@
     --info: #a3b8dd;
     --info-bg: #141b28;
     --info-bd: #33405a;
+
+    --refeicao: #fb923c;
+    --refeicao-hover: #fdba74;
+    --refeicao-bg: #2a1608;
+    --refeicao-bd: #7c2d12;
+    --refeicao-text: #fed7aa;
 
     --background: #0f1114;
     --surface: #171a1e;
@@ -679,7 +692,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .summary-container {
     display: none;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px; margin-bottom: 20px;
 }
 .summary-container.ativo { display: grid; }
@@ -688,14 +701,24 @@ button { font: inherit; color: inherit; cursor: pointer; }
     border-radius: 8px; box-shadow: var(--shadow-sm);
     padding: 18px 20px;
 }
+.summary-box.refeicao-box {
+    border-color: var(--refeicao-bd);
+    background: linear-gradient(180deg, var(--refeicao-bg) 0%, var(--surface) 100%);
+}
 .summary-box label {
     font-size: 12px; font-weight: 600;
     color: var(--text-secondary); text-transform: uppercase;
     letter-spacing: .3px;
 }
+.summary-box.refeicao-box label {
+    color: var(--refeicao-text);
+}
 .summary-box p {
     font-size: 20px; font-weight: 700;
     color: var(--brand); margin-top: 6px;
+}
+.summary-box.refeicao-box p {
+    color: var(--refeicao);
 }
 
 .table-card {
@@ -720,6 +743,25 @@ th {
     text-transform: uppercase;
     position: sticky; top: 0; z-index: 5;
     letter-spacing: .4px;
+}
+th.th-refeicao {
+    background: var(--refeicao-bg);
+    color: var(--refeicao-text);
+    border-bottom: 2px solid var(--refeicao);
+}
+th .th-sub {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+    font-style: italic;
+}
+th.th-refeicao .th-sub {
+    color: var(--refeicao-text);
+    opacity: 0.85;
 }
 td {
     padding: 14px 18px; font-size: 13px;
@@ -752,6 +794,36 @@ tr:hover td { background: var(--surface-2); }
     color: #0d47a1;
 }
 .input-afastamento.salvo {
+    border-color: var(--ok);
+    background-color: var(--ok-bg);
+    color: var(--ok);
+}
+
+/* Campo "Dias com menos de 4h" (Vale-Refeição) */
+.input-refeicao {
+    width: 90px; height: 38px; padding: 0 10px;
+    border: 1px solid var(--refeicao-bd); border-radius: 4px;
+    text-align: center; font-weight: 600;
+    transition: all .15s;
+    background: var(--refeicao-bg); color: var(--refeicao-text);
+}
+.input-refeicao:disabled {
+    background-color: var(--surface-3);
+    color: var(--text-muted); cursor: not-allowed;
+    border-color: var(--border-strong);
+}
+.input-refeicao.modificado {
+    border-color: var(--refeicao);
+    background-color: #fff0d6;
+    box-shadow: 0 0 0 2px rgba(194,65,12,.2);
+    color: var(--refeicao-text);
+}
+.input-refeicao.salvando {
+    border-color: #1565c0;
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+.input-refeicao.salvo {
     border-color: var(--ok);
     background-color: var(--ok-bg);
     color: var(--ok);
@@ -818,13 +890,41 @@ tr:hover td { background: var(--surface-2); }
     border: 1px solid var(--info-bd); color: var(--info);
     padding: 12px 16px; border-radius: 6px;
     margin-bottom: 16px; font-size: 13px;
-    align-items: center; gap: 10px;
+    align-items: flex-start; gap: 10px;
+    line-height: 1.55;
 }
 .usage-tip.ativo { display: flex; }
 .usage-tip .material-symbols-outlined {
-    font-size: 20px; flex-shrink: 0;
+    font-size: 20px; flex-shrink: 0; margin-top: 1px;
 }
 .usage-tip strong { font-weight: 700; }
+.usage-tip .legenda-campos {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    margin-top: 10px;
+    font-size: 12.5px;
+}
+.legenda-campos .campo-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+.legenda-campos .campo-tag.transporte {
+    background: var(--ok-bg);
+    color: var(--ok);
+    border: 1px solid var(--ok-bd);
+}
+.legenda-campos .campo-tag.refeicao {
+    background: var(--refeicao-bg);
+    color: var(--refeicao-text);
+    border: 1px solid var(--refeicao-bd);
+}
 
 .toast-container {
     position: fixed; top: 20px; right: 20px; z-index: 9999;
@@ -848,10 +948,12 @@ tr:hover td { background: var(--surface-2); }
 .toast.sucesso { border-left-color: var(--ok); }
 .toast.erro { border-left-color: var(--danger); }
 .toast.info { border-left-color: var(--info); }
+.toast.refeicao { border-left-color: var(--refeicao); }
 .toast .material-symbols-outlined { font-size: 18px; }
 .toast.sucesso .material-symbols-outlined { color: var(--ok); }
 .toast.erro .material-symbols-outlined { color: var(--danger); }
 .toast.info .material-symbols-outlined { color: var(--info); }
+.toast.refeicao .material-symbols-outlined { color: var(--refeicao); }
 
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
@@ -942,7 +1044,7 @@ tr:hover td { background: var(--surface-2); }
     }
     table { font-size: 10px !important; white-space: normal !important; }
     th, td { padding: 6px 8px !important; }
-    .input-afastamento { border: none !important; background: transparent !important; }
+    .input-afastamento, .input-refeicao { border: none !important; background: transparent !important; }
 }
 </style>
 </head>
@@ -999,6 +1101,12 @@ tr:hover td { background: var(--surface-2); }
                                 <span>Unidades escolares</span>
                             </a>
                         </li>
+                        <li class="menu-item">
+                            <a href="configuracoes.html">
+                                <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+                                <span>Configurações do Sistema</span>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
 
@@ -1051,7 +1159,7 @@ tr:hover td { background: var(--surface-2); }
                 </nav>
 
                 <div class="sidebar-info">
-                    <strong>Versão 1.0.0</strong>
+                    <strong>Versão 1.1.0</strong>
                     Sistema de gestão de vale transporte
                 </div>
             </div>
@@ -1186,8 +1294,13 @@ tr:hover td { background: var(--surface-2); }
 
             <section id="summaryContainer" class="summary-container">
                 <div class="summary-box">
-                    <label>Vínculos com Ausência no Mês</label>
+                    <label>Vínculos com Ausência Total</label>
                     <p id="sumComAfastamento">0 vínculos</p>
+                </div>
+
+                <div class="summary-box refeicao-box">
+                    <label>Vínculos com Dias &lt; 4h</label>
+                    <p id="sumComParcial">0 vínculos</p>
                 </div>
 
                 <div class="summary-box">
@@ -1217,6 +1330,13 @@ tr:hover td { background: var(--surface-2); }
                 <div>
                     <strong>Como lançar afastamentos rapidamente:</strong>
                     Digite o número de dias no campo e pressione <strong>Tab</strong> ou clique fora. O sistema salva automaticamente e você continua para o próximo servidor — sem precisar rolar a tela!
+                    <div class="legenda-campos">
+                        <span class="campo-tag transporte">🚌 Dias de Ausência</span>
+                        <span>Dia inteiro fora (atestado integral, falta, licença). <strong>Desconta transporte + refeição.</strong></span>
+                        
+                        <span class="campo-tag refeicao">🍽️ Dias &lt; 4h</span>
+                        <span>Servidor foi trabalhar mas ficou menos de 4h. <strong>Desconta APENAS refeição.</strong> Transporte mantém.</span>
+                    </div>
                 </div>
             </div>
 
@@ -1228,7 +1348,8 @@ tr:hover td { background: var(--surface-2); }
                                 <th>Servidor</th>
                                 <th>CPF</th>
                                 <th>Vínculo / Matrícula / Cargo / Lotação</th>
-                                <th>Dias de Ausência</th>
+                                <th>Dias de Ausência<span class="th-sub">Desconta transporte + refeição</span></th>
+                                <th class="th-refeicao">Dias com menos de 4h<span class="th-sub">🍽️ Desconta só refeição</span></th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
@@ -1674,6 +1795,7 @@ function mostrarToast(texto, tipo = "sucesso") {
     let icone = "check_circle";
     if (tipo === "erro") icone = "error_outline";
     if (tipo === "info") icone = "info";
+    if (tipo === "refeicao") icone = "restaurant";
 
     toast.innerHTML = `<span class="material-symbols-outlined">${icone}</span><span>${texto}</span>`;
     container.appendChild(toast);
@@ -1923,6 +2045,7 @@ window.carregarDadosDaEscola = async function() {
 
         let linhasTabela = "";
         let vinculosComFalta = 0;
+        let vinculosComParcial = 0;
         let totalVinculosEscola = 0;
         const escolaFiltroNormalizada = normalizarTexto(escolaSelecionada);
 
@@ -1969,7 +2092,11 @@ window.carregarDadosDaEscola = async function() {
                     }
                 }
 
-                const diasSalvosManual = lancSnap.exists() ? (Number(lancSnap.data().diasAfastamento) || 0) : 0;
+                const lancData = lancSnap.exists() ? lancSnap.data() : {};
+                const diasSalvosManual = Number(lancData.diasAfastamento) || 0;
+                // 👇 NOVO: dias com menos de 4h (parcial)
+                const diasParciaisSem4h = Number(lancData.diasParciaisSem4h) || 0;
+                
                 const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
                 const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
                 const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
@@ -1979,19 +2106,29 @@ window.carregarDadosDaEscola = async function() {
                 if (diasTotalExibido > 0) {
                     vinculosComFalta++;
                 }
-
-                let badgeHtml = "";
-                if (diasSalvosManual > 0) {
-                    badgeHtml = `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Salvo</span>`;
-                } else if (diasFeriasAuto > 0) {
-                    badgeHtml = `<span class="badge-salvo" style="background:#fff3e0;color:#e65100;border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size:14px;">event</span> Férias/Folga Auto</span>`;
+                if (diasParciaisSem4h > 0) {
+                    vinculosComParcial++;
                 }
 
-                const inputId = `afastamento_${servidorId}_${numeroMatricula}`;
+                let badgeAusenciaHtml = "";
+                if (diasSalvosManual > 0) {
+                    badgeAusenciaHtml = `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Salvo</span>`;
+                } else if (diasFeriasAuto > 0) {
+                    badgeAusenciaHtml = `<span class="badge-salvo" style="background:#fff3e0;color:#e65100;border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size:14px;">event</span> Férias/Folga Auto</span>`;
+                }
+
+                // 👇 NOVO: badge para dias parciais
+                let badgeParcialHtml = "";
+                if (diasParciaisSem4h > 0) {
+                    badgeParcialHtml = `<span class="badge-salvo" style="background:var(--refeicao-bg);color:var(--refeicao-text);border-color:var(--refeicao-bd);"><span class="material-symbols-outlined" style="font-size:14px;">restaurant</span> Salvo</span>`;
+                }
+
+                const inputIdAusencia = `afastamento_${servidorId}_${numeroMatricula}`;
+                const inputIdParcial = `parcial_${servidorId}_${numeroMatricula}`;
 
                 const acaoHtml = mesBloqueadoAtual
                     ? `<span class="badge-bloqueado-tabela"><span class="material-symbols-outlined" style="font-size:14px;">lock</span> Bloqueado</span>`
-                    : `<button type="button" class="btn-salvar-linha" onclick="salvarAfastamento('${mesAno}', '${escolaSelecionada.replace(/'/g, "\\'")}', '${String(s.cpf || "").replace(/'/g, "\\'")}', '${servidorId.replace(/'/g, "\\'")}', '${numeroMatricula.replace(/'/g, "\\'")}')">
+                    : `<button type="button" class="btn-salvar-linha" onclick="salvarAmbos('${mesAno}', '${escolaSelecionada.replace(/'/g, "\\'")}', '${String(s.cpf || "").replace(/'/g, "\\'")}', '${servidorId.replace(/'/g, "\\'")}', '${numeroMatricula.replace(/'/g, "\\'")}')">
                         <span class="material-symbols-outlined" style="font-size:16px;">save</span> Salvar
                        </button>`;
 
@@ -2003,7 +2140,7 @@ window.carregarDadosDaEscola = async function() {
                         <td>
                             <input
                                 type="number"
-                                id="${inputId}"
+                                id="${inputIdAusencia}"
                                 class="input-afastamento"
                                 value="${diasTotalExibido}"
                                 min="0"
@@ -2013,11 +2150,34 @@ window.carregarDadosDaEscola = async function() {
                                 data-servidor-id="${servidorId}"
                                 data-matricula="${numeroMatricula}"
                                 data-cpf="${String(s.cpf || "").replace(/'/g, "\\'")}"
+                                data-tipo="ausencia"
+                                title="Dias de ausência total: desconta transporte + refeição"
                                 ${mesBloqueadoAtual ? "disabled" : ""}
                                 oninput="marcarComoModificado(this)"
                                 onblur="autoSalvarAoBlur(this)"
                             >
-                            <span class="badge-status" id="badge_${inputId}">${badgeHtml}</span>
+                            <span class="badge-status" id="badge_${inputIdAusencia}">${badgeAusenciaHtml}</span>
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                id="${inputIdParcial}"
+                                class="input-refeicao"
+                                value="${diasParciaisSem4h}"
+                                min="0"
+                                max="31"
+                                inputmode="numeric"
+                                data-valor-original="${diasParciaisSem4h}"
+                                data-servidor-id="${servidorId}"
+                                data-matricula="${numeroMatricula}"
+                                data-cpf="${String(s.cpf || "").replace(/'/g, "\\'")}"
+                                data-tipo="parcial"
+                                title="Dias em que o servidor trabalhou menos de 4h: desconta APENAS refeição"
+                                ${mesBloqueadoAtual ? "disabled" : ""}
+                                oninput="marcarComoModificado(this)"
+                                onblur="autoSalvarAoBlur(this)"
+                            >
+                            <span class="badge-status" id="badge_${inputIdParcial}">${badgeParcialHtml}</span>
                         </td>
                         <td>${acaoHtml}</td>
                     </tr>
@@ -2029,6 +2189,7 @@ window.carregarDadosDaEscola = async function() {
         }
 
         document.getElementById("sumComAfastamento").textContent = vinculosComFalta + " vínculos";
+        document.getElementById("sumComParcial").textContent = vinculosComParcial + " vínculos";
         document.getElementById("sumTotalVinculos").textContent = totalVinculosEscola + " vínculos";
 
         document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
@@ -2084,12 +2245,9 @@ window.autoSalvarAoBlur = async function(input) {
     const mesAno = document.getElementById("mesReferencia").value;
     const escola = document.getElementById("filtroEscola").value;
 
-    await salvarAfastamentoSilencioso(mesAno, escola, cpf, servidorId, numeroMatricula, input);
+    await salvarAmbosSilencioso(mesAno, escola, cpf, servidorId, numeroMatricula, null);
 };
 
-// =========================================================
-// 👇 FUNÇÃO AUXILIAR PARA OBTER SNAPSHOT DE PASSES DIÁRIOS
-// =========================================================
 async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
     try {
         const servidorDoc = await getDoc(doc(db, "servidores", servidorId));
@@ -2103,7 +2261,6 @@ async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
             return String(escolaVal.nomeEscola || escolaVal.escola || escolaVal.nome || "").trim();
         };
 
-        // Procurar em matricula1
         if (servidor.matricula1) {
             const num = String(servidor.matricula1.numeroMatricula || "").trim();
             if (num === numeroMatricula) {
@@ -2111,17 +2268,14 @@ async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
                 const e2 = getNomeEscola(servidor.matricula1.escola2);
 
                 if (normalizarTexto(e1) === normalizarTexto(escola) && servidor.matricula1.escola1) {
-                    const passes = Number(servidor.matricula1.escola1.qtdPassagensDiarias) || 0;
-                    return passes;
+                    return Number(servidor.matricula1.escola1.qtdPassagensDiarias) || 0;
                 }
                 if (normalizarTexto(e2) === normalizarTexto(escola) && servidor.matricula1.escola2) {
-                    const passes = Number(servidor.matricula1.escola2.qtdPassagensDiarias) || 0;
-                    return passes;
+                    return Number(servidor.matricula1.escola2.qtdPassagensDiarias) || 0;
                 }
             }
         }
 
-        // Procurar em matricula2
         if (servidor.matricula2) {
             const num = String(servidor.matricula2.numeroMatricula || "").trim();
             if (num === numeroMatricula) {
@@ -2129,12 +2283,10 @@ async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
                 const e2 = getNomeEscola(servidor.matricula2.escola2);
 
                 if (normalizarTexto(e1) === normalizarTexto(escola) && servidor.matricula2.escola1) {
-                    const passes = Number(servidor.matricula2.escola1.qtdPassagensDiarias) || 0;
-                    return passes;
+                    return Number(servidor.matricula2.escola1.qtdPassagensDiarias) || 0;
                 }
                 if (normalizarTexto(e2) === normalizarTexto(escola) && servidor.matricula2.escola2) {
-                    const passes = Number(servidor.matricula2.escola2.qtdPassagensDiarias) || 0;
-                    return passes;
+                    return Number(servidor.matricula2.escola2.qtdPassagensDiarias) || 0;
                 }
             }
         }
@@ -2146,9 +2298,6 @@ async function obterSnapshotPasses(servidorId, numeroMatricula, escola) {
     }
 }
 
-// =========================================================
-// 👇 NOVA FUNÇÃO: OBTER SNAPSHOT DA TARIFA DA EMPRESA
-// =========================================================
 async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
     try {
         const servidorDoc = await getDoc(doc(db, "servidores", servidorId));
@@ -2170,7 +2319,6 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
 
         let nomeEmpresa = "";
 
-        // Procurar em matricula1
         if (servidor.matricula1) {
             const num = String(servidor.matricula1.numeroMatricula || "").trim();
             if (num === numeroMatricula) {
@@ -2185,7 +2333,6 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
             }
         }
 
-        // Procurar em matricula2
         if (!nomeEmpresa && servidor.matricula2) {
             const num = String(servidor.matricula2.numeroMatricula || "").trim();
             if (num === numeroMatricula) {
@@ -2202,7 +2349,6 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
 
         if (!nomeEmpresa) return null;
 
-        // Buscar tarifa da empresa
         const empresasSnap = await getDocs(collection(db, "empresas"));
         let tarifa = null;
         
@@ -2220,7 +2366,10 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
     }
 }
 
-async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElement) {
+// =========================================================
+// 👇 SALVAR AMBOS OS CAMPOS (ausência + parcial) JUNTOS
+// =========================================================
+async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElementTrigger) {
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && normalizarTexto(escola) !== normalizarTexto(escolaUsuario)) {
         mostrarToast("Acesso negado para esta escola.", "erro");
         return;
@@ -2239,27 +2388,41 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
         console.error("Erro ao verificar bloqueio:", e);
     }
 
-    const diasAfastamento = Number(inputElement.value) || 0;
+    // Pegar ambos os campos da linha
+    const inputAusencia = document.getElementById(`afastamento_${servidorId}_${numeroMatricula}`);
+    const inputParcial = document.getElementById(`parcial_${servidorId}_${numeroMatricula}`);
+
+    const diasAfastamento = inputAusencia ? (Number(inputAusencia.value) || 0) : 0;
+    const diasParciaisSem4h = inputParcial ? (Number(inputParcial.value) || 0) : 0;
+
     const cpfLimpo = String(cpfServidor).replace(/\D/g, "");
     const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
     const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
 
-    // 👇 NOVO: Buscar snapshot de passes diários no momento do lançamento
+    // Snapshot de passes e tarifa (mantidos como antes)
     const passesDiariosLancados = await obterSnapshotPasses(servidorId, numeroMatricula, escola);
-
-    // 👇 NOVO: Buscar snapshot da tarifa da empresa no momento do lançamento
     const tarifaLancada = await obterSnapshotTarifa(servidorId, numeroMatricula, escola);
 
-    inputElement.classList.add("salvando");
-    inputElement.classList.remove("modificado");
-    const badge = document.getElementById(`badge_${inputElement.id}`);
-    if (badge) {
-        badge.innerHTML = `<span class="badge-modificado" style="background:#e3f2fd;color:#1565c0;border-color:#bbdefb;"><span class="material-symbols-outlined" style="font-size:14px;">progress_activity</span> Salvando...</span>`;
-    }
+    // Indicador visual de salvando em ambos os inputs
+    [inputAusencia, inputParcial].forEach(inp => {
+        if (!inp) return;
+        inp.classList.add("salvando");
+        inp.classList.remove("modificado");
+        const badge = document.getElementById(`badge_${inp.id}`);
+        if (badge) {
+            badge.innerHTML = `<span class="badge-modificado" style="background:#e3f2fd;color:#1565c0;border-color:#bbdefb;"><span class="material-symbols-outlined" style="font-size:14px;">progress_activity</span> Salvando...</span>`;
+        }
+    });
 
     try {
-        if (diasAfastamento <= 0) {
-            await deleteDoc(lancRef);
+        const naoTemNada = diasAfastamento <= 0 && diasParciaisSem4h <= 0;
+
+        if (naoTemNada) {
+            // Se não tem nem ausência nem parcial, deleta o documento
+            const docExiste = await getDoc(lancRef);
+            if (docExiste.exists()) {
+                await deleteDoc(lancRef);
+            }
         } else {
             const dadosLancamento = {
                 mesReferencia: mesAno,
@@ -2268,10 +2431,10 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
                 cpf: cpfServidor,
                 numeroMatricula: numeroMatricula,
                 diasAfastamento: diasAfastamento,
+                diasParciaisSem4h: diasParciaisSem4h,  // 👇 NOVO CAMPO
                 dataAtualizacao: new Date().toISOString()
             };
 
-            // 👇 NOVO: Salvar snapshots de passes diários e tarifa
             if (passesDiariosLancados !== null) {
                 dadosLancamento.passesDiariosLancados = passesDiariosLancados;
             }
@@ -2282,28 +2445,62 @@ async function salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidor
             await setDoc(lancRef, dadosLancamento, { merge: true });
         }
 
-        inputElement.dataset.valorOriginal = diasAfastamento;
-        inputElement.classList.remove("salvando");
-        inputElement.classList.add("salvo");
-
-        if (badge) {
-            badge.innerHTML = `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Salvo!</span>`;
+        // Atualiza data-valor-original de ambos
+        if (inputAusencia) {
+            inputAusencia.dataset.valorOriginal = diasAfastamento;
+            inputAusencia.classList.remove("salvando");
+            inputAusencia.classList.add("salvo");
+            const badgeA = document.getElementById(`badge_${inputAusencia.id}`);
+            if (badgeA) {
+                if (diasAfastamento > 0) {
+                    badgeA.innerHTML = `<span class="badge-salvo"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Salvo!</span>`;
+                } else {
+                    badgeA.innerHTML = "";
+                }
+            }
+        }
+        if (inputParcial) {
+            inputParcial.dataset.valorOriginal = diasParciaisSem4h;
+            inputParcial.classList.remove("salvando");
+            inputParcial.classList.add("salvo");
+            const badgeP = document.getElementById(`badge_${inputParcial.id}`);
+            if (badgeP) {
+                if (diasParciaisSem4h > 0) {
+                    badgeP.innerHTML = `<span class="badge-salvo" style="background:var(--refeicao-bg);color:var(--refeicao-text);border-color:var(--refeicao-bd);"><span class="material-symbols-outlined" style="font-size:14px;">restaurant</span> Salvo!</span>`;
+                } else {
+                    badgeP.innerHTML = "";
+                }
+            }
         }
 
         incrementarContador();
-        mostrarToast(`Afastamento salvo: ${diasAfastamento} dias`, "sucesso");
+
+        // Toast mais informativo
+        const partes = [];
+        if (diasAfastamento > 0) partes.push(`${diasAfastamento} dia(s) de ausência`);
+        if (diasParciaisSem4h > 0) partes.push(`${diasParciaisSem4h} dia(s) < 4h`);
+        if (partes.length > 0) {
+            mostrarToast(`Salvo: ${partes.join(" + ")}`, diasParciaisSem4h > 0 ? "refeicao" : "sucesso");
+        } else {
+            mostrarToast("Lançamento removido (tudo zerado)", "info");
+        }
 
         setTimeout(() => {
-            inputElement.classList.remove("salvo");
+            if (inputAusencia) inputAusencia.classList.remove("salvo");
+            if (inputParcial) inputParcial.classList.remove("salvo");
         }, 3000);
 
     } catch (erro) {
         console.error("Erro ao salvar:", erro);
-        inputElement.classList.remove("salvando");
-        inputElement.classList.add("modificado");
-        if (badge) {
-            badge.innerHTML = `<span class="badge-modificado" style="background:#fff0f0;color:#c62828;border-color:#efc5c5;"><span class="material-symbols-outlined" style="font-size:14px;">error</span> Erro</span>`;
-        }
+        [inputAusencia, inputParcial].forEach(inp => {
+            if (!inp) return;
+            inp.classList.remove("salvando");
+            inp.classList.add("modificado");
+            const badge = document.getElementById(`badge_${inp.id}`);
+            if (badge) {
+                badge.innerHTML = `<span class="badge-modificado" style="background:#fff0f0;color:#c62828;border-color:#efc5c5;"><span class="material-symbols-outlined" style="font-size:14px;">error</span> Erro</span>`;
+            }
+        });
         mostrarToast("Erro ao salvar. Tente novamente.", "erro");
     }
 }
@@ -2358,15 +2555,12 @@ window.salvarDiasUteisEscola = async function() {
     }
 };
 
-window.salvarAfastamento = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
-    const inputDias = document.getElementById(`afastamento_${servidorId}_${numeroMatricula}`);
-    if (!inputDias) {
-        mostrarToast("Não foi possível localizar o campo.", "erro");
-        return;
-    }
-
-    await salvarAfastamentoSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputDias);
+window.salvarAmbos = async function(mesAno, escola, cpfServidor, servidorId, numeroMatricula) {
+    await salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, null);
 };
+
+// Mantido para compatibilidade com chamadas antigas (se houver)
+window.salvarAfastamento = window.salvarAmbos;
 
 function mostrarMensagem(texto, tipo) {
     const msg = document.getElementById("mensagem");
