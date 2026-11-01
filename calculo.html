@@ -230,7 +230,7 @@ tr:hover td{background:var(--surface-2)}
                     <div class="menu-section-title">Configuração</div>
                     <ul class="menu">
                         <li class="menu-item"><a href="configuracao.html"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Dias úteis e meses</span></a></li>
-                        <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">domain</span><span>Unidades escolares</span></a></li>
+                        <li class="menu-item"><a href="configuracoes.html"><span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Configurações do Sistema</span></a></li>
                         <li class="menu-item"><a href="empresas.html"><span class="material-symbols-outlined" aria-hidden="true">paid</span><span>Empresas e Tarifas</span></a></li>
                     </ul>
                 </nav>
@@ -239,7 +239,7 @@ tr:hover td{background:var(--surface-2)}
                     <div class="menu-section-title">Operação</div>
                     <ul class="menu">
                         <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Lançamentos da unidade</span></a></li>
-                        <li class="menu-item"><a href="lancamento.html"><span class="material-symbols-outlined" aria-hidden="true">event_note</span><span>Férias, folgas e licenças</span></a></li>
+                        <li class="menu-item"><a href="lancamentos.html"><span class="material-symbols-outlined" aria-hidden="true">event_note</span><span>Férias, folgas e licenças</span></a></li>
                         <li class="menu-item ativo"><a href="calculo.html" aria-current="page"><span class="material-symbols-outlined" aria-hidden="true">calculate</span><span>Cálculo e vales</span><span class="menu-badge">Mensal</span></a></li>
                     </ul>
                 </nav>
@@ -264,7 +264,7 @@ tr:hover td{background:var(--surface-2)}
                 </nav>
 
                 <div class="sidebar-info">
-                    <strong>Versão 1.3.0</strong>
+                    <strong>Versão 2.0.0</strong>
                     Sistema de gestão de vale transporte
                 </div>
             </div>
@@ -341,11 +341,6 @@ tr:hover td{background:var(--surface-2)}
                     <label for="filtroEscola">Filtrar por Escola</label>
                     <select id="filtroEscola">
                         <option value="">Todas as escolas</option>
-                        <option value="CEAE">CEAE</option>
-                        <option value="CETEPE">CETEPE</option>
-                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                     </select>
                 </div>
 
@@ -735,7 +730,41 @@ let empresasCacheCompleto = {};
 
 document.addEventListener("DOMContentLoaded", async function() {
     await carregarTarifas();
+    await carregarFiltroEscolas();
 });
+
+// =========================================================
+// CARREGAR ESCOLAS PARA O FILTRO (dinâmico)
+// =========================================================
+async function carregarFiltroEscolas() {
+    try {
+        const snapshot = await getDocs(collection(db, 'unidades'));
+        const select = document.getElementById('filtroEscola');
+        if (!select) return;
+        
+        const escolas = [];
+        snapshot.forEach(d => {
+            const data = d.data();
+            const nome = data.nome || data.nomeEscola || '';
+            if (nome) escolas.push(nome);
+        });
+        
+        escolas.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        
+        // Manter a opção "Todas as escolas" e adicionar as dinâmicas
+        const valorAtual = select.value;
+        select.innerHTML = '<option value="">Todas as escolas</option>';
+        escolas.forEach(nome => {
+            const opt = document.createElement('option');
+            opt.value = nome;
+            opt.textContent = nome;
+            select.appendChild(opt);
+        });
+        if (valorAtual) select.value = valorAtual;
+    } catch (e) {
+        console.error('Erro ao carregar filtro de escolas:', e);
+    }
+}
 
 function normalizarCPF(cpf) {
     if (!cpf) return '';
@@ -783,7 +812,6 @@ async function carregarTarifas() {
         });
         
         console.log('✅ Tarifas carregadas:', tarifasEmpresas);
-        console.log('📊 Histórico carregado de', Object.keys(empresasCacheCompleto).length, 'empresa(s)');
     } catch (e) {
         console.error('Erro ao carregar tarifas:', e);
         tarifasEmpresas = {};
@@ -791,6 +819,9 @@ async function carregarTarifas() {
     }
 }
 
+// =========================================================
+// 👇 BUSCAR TARIFA VIGENTE NO MÊS (histórico da empresa)
+// =========================================================
 function buscarTarifaVigente(nomeEmpresa, mesAno) {
     if (!nomeEmpresa) return null;
     
@@ -824,6 +855,41 @@ function buscarTarifaVigente(nomeEmpresa, mesAno) {
     }
     
     return empresa.valorTarifa || 0;
+}
+
+// =========================================================
+// 👇 BUSCAR PASSES/DIA VIGENTE NO MÊS (histórico do servidor)
+// =========================================================
+function buscarPassesVigente(escolaObj, mesAno) {
+    if (!escolaObj) return null;
+    
+    if (!escolaObj.historicoPasses || !Array.isArray(escolaObj.historicoPasses) || escolaObj.historicoPasses.length === 0) {
+        return Number(escolaObj.qtdPassagensDiarias) || 0;
+    }
+    
+    const [anoStr, mesStr] = mesAno.split('-');
+    const ano = parseInt(anoStr);
+    const mes = parseInt(mesStr);
+    
+    const primeiroDiaMes = `${anoStr}-${mesStr}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const ultimoDiaMes = `${anoStr}-${mesStr}-${String(ultimoDia).padStart(2, '0')}`;
+    
+    for (const periodo of escolaObj.historicoPasses) {
+        const inicioOK = periodo.dataInicio <= ultimoDiaMes;
+        const fimOK = !periodo.dataFim || periodo.dataFim >= primeiroDiaMes;
+        
+        if (inicioOK && fimOK) {
+            return Number(periodo.valor) || 0;
+        }
+    }
+    
+    const primeiroPeriodo = escolaObj.historicoPasses[0];
+    if (primeiroPeriodo && ultimoDiaMes < primeiroPeriodo.dataInicio) {
+        return Number(primeiroPeriodo.valor) || 0;
+    }
+    
+    return Number(escolaObj.qtdPassagensDiarias) || 0;
 }
 
 function formatarData(dataStr) {
@@ -1099,18 +1165,26 @@ window.carregarDados = async function() {
                     ? Number(data.passesDiariosLancados)
                     : null;
 
+                const tarifaLancada = (data.tarifaLancada !== undefined && data.tarifaLancada !== null)
+                    ? Number(data.tarifaLancada)
+                    : null;
+
                 lancamentosMap[chave] = {
                     diasAfast: diasAfast,
-                    passesLancados: passesLancados
+                    passesLancados: passesLancados,
+                    tarifaLancada: tarifaLancada
                 };
 
                 const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
                 if (!lancamentosPorCpfEscola[chaveCpfEscola]) {
-                    lancamentosPorCpfEscola[chaveCpfEscola] = { diasAfast: 0, passesLancados: null };
+                    lancamentosPorCpfEscola[chaveCpfEscola] = { diasAfast: 0, passesLancados: null, tarifaLancada: null };
                 }
                 lancamentosPorCpfEscola[chaveCpfEscola].diasAfast += diasAfast;
                 if (passesLancados !== null && lancamentosPorCpfEscola[chaveCpfEscola].passesLancados === null) {
                     lancamentosPorCpfEscola[chaveCpfEscola].passesLancados = passesLancados;
+                }
+                if (tarifaLancada !== null && lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada === null) {
+                    lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada = tarifaLancada;
                 }
             }
         });
@@ -1130,7 +1204,7 @@ window.carregarDados = async function() {
         let totalPasses = 0;
         let totalAfastados = 0;
         let totalValor = 0;
-        let snapshotPassesUsados = 0;
+        let historicoPassesUsados = 0;
         let historicoTarifasUsado = 0;
 
         servidoresSnap.forEach(servidorDoc => {
@@ -1156,49 +1230,70 @@ window.carregarDados = async function() {
 
                     let diasAfastamento = 0;
                     let passesLancadosSnapshot = null;
+                    let tarifaLancadaSnapshot = null;
 
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         const info = lancamentosMap[chave];
                         diasAfastamento = info.diasAfast;
                         passesLancadosSnapshot = info.passesLancados;
+                        tarifaLancadaSnapshot = info.tarifaLancada;
                     } else if (lancamentosPorCpfEscola.hasOwnProperty(chaveCpfEscola)) {
                         const info = lancamentosPorCpfEscola[chaveCpfEscola];
                         diasAfastamento = info.diasAfast;
                         passesLancadosSnapshot = info.passesLancados;
+                        tarifaLancadaSnapshot = info.tarifaLancada;
                     }
 
                     const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
                     const diasUteisAjustado = diasUteisEscola !== diasUteisPadrao;
                     const diasEfetivos = Math.max(0, diasUteisEscola - diasAfastamento);
 
+                    // 👇 PASSES POR DIA: snapshot do lançamento → histórico do servidor → cadastro atual
                     let passesPorDia;
                     let tipoPasses;
+
                     if (passesLancadosSnapshot !== null) {
                         passesPorDia = passesLancadosSnapshot;
                         tipoPasses = 'Histórico';
-                        snapshotPassesUsados++;
+                        historicoPassesUsados++;
                     } else {
-                        passesPorDia = Number(escolaObj.qtdPassagensDiarias) || 0;
-                        tipoPasses = 'Atual';
+                        const passesHistorico = buscarPassesVigente(escolaObj, mesAno);
+                        const passesAtual = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        
+                        if (passesHistorico !== passesAtual) {
+                            passesPorDia = passesHistorico;
+                            tipoPasses = 'Histórico';
+                            historicoPassesUsados++;
+                        } else {
+                            passesPorDia = passesAtual;
+                            tipoPasses = 'Atual';
+                        }
                     }
 
                     const totalPassesServidor = diasEfetivos * passesPorDia;
 
                     const nomeEmpresa = escolaObj.empresa || '';
                     
+                    // 👇 TARIFA: snapshot do lançamento → histórico da empresa → tarifa atual
                     let valorUnitario;
                     let tipoTarifa;
 
-                    const tarifaAtual = tarifasEmpresas[nomeEmpresa] || 0;
-                    const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
-
-                    if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
-                        valorUnitario = tarifaHistorico;
+                    if (tarifaLancadaSnapshot !== null) {
+                        valorUnitario = tarifaLancadaSnapshot;
                         tipoTarifa = 'Histórico';
                         historicoTarifasUsado++;
                     } else {
-                        valorUnitario = tarifaAtual;
-                        tipoTarifa = 'Atual';
+                        const tarifaHistorico = buscarTarifaVigente(nomeEmpresa, mesAno);
+                        const tarifaAtual = tarifasEmpresas[nomeEmpresa] || 0;
+                        
+                        if (tarifaHistorico !== null && tarifaHistorico !== tarifaAtual) {
+                            valorUnitario = tarifaHistorico;
+                            tipoTarifa = 'Histórico';
+                            historicoTarifasUsado++;
+                        } else {
+                            valorUnitario = tarifaAtual;
+                            tipoTarifa = 'Atual';
+                        }
                     }
                     
                     const valorTotalServidor = totalPassesServidor * valorUnitario;
@@ -1219,6 +1314,7 @@ window.carregarDados = async function() {
                         tipoPasses: tipoPasses,
                         totalPasses: totalPassesServidor,
                         valorUnitario: valorUnitario,
+                        tarifaLancadaSnapshot: tarifaLancadaSnapshot,
                         tipoTarifa: tipoTarifa,
                         valorTotal: valorTotalServidor
                     });
@@ -1236,7 +1332,7 @@ window.carregarDados = async function() {
             processarMatricula(servidor.matricula2);
         });
 
-        console.log(`📸 Snapshots de passes usados: ${snapshotPassesUsados}`);
+        console.log(`📸 Histórico de passes usado: ${historicoPassesUsados} servidor(es)`);
         console.log(`📊 Histórico de tarifas usado: ${historicoTarifasUsado} servidor(es)`);
         console.log(`💰 Total de servidores processados: ${dadosCalculados.length}`);
 
@@ -1313,15 +1409,18 @@ function renderizarTabela(dados) {
 
         let fontePassesHtml = '';
         if (item.tipoPasses === 'Histórico') {
+            const tooltipPasses = item.passesPorDiaSnapshot !== null 
+                ? `Passes congelados do lançamento (${item.passesPorDiaSnapshot}/dia)`
+                : `Passes do período anterior (${item.passesPorDia}/dia)`;
             fontePassesHtml = `
-                <span class="badge-fonte badge-fonte-historico" title="Passes diários congelados do lançamento anterior (${item.passesPorDiaSnapshot} passes/dia)">
+                <span class="badge-fonte badge-fonte-historico" title="${tooltipPasses}">
                     <span class="material-symbols-outlined">history</span>
                     Histórico
                 </span>
             `;
         } else {
             fontePassesHtml = `
-                <span class="badge-fonte badge-fonte-atual" title="Valor atual do cadastro do servidor (${item.passesPorDia} passes/dia)">
+                <span class="badge-fonte badge-fonte-atual" title="Valor atual do cadastro (${item.passesPorDia}/dia)">
                     <span class="material-symbols-outlined">inventory_2</span>
                     Atual
                 </span>
@@ -1330,8 +1429,11 @@ function renderizarTabela(dados) {
 
         let fonteTarifaHtml = '';
         if (item.tipoTarifa === 'Histórico') {
+            const tooltipTarifa = item.tarifaLancadaSnapshot !== null 
+                ? `Tarifa congelada do lançamento (${formatarMoeda(item.tarifaLancadaSnapshot)})`
+                : `Tarifa vigente no mês (${formatarMoeda(item.valorUnitario)})`;
             fonteTarifaHtml = `
-                <span class="badge-fonte badge-fonte-historico" title="Tarifa vigente no mês calculado (histórico da empresa)">
+                <span class="badge-fonte badge-fonte-historico" title="${tooltipTarifa}">
                     <span class="material-symbols-outlined">history</span>
                     Histórico
                 </span>
@@ -1443,7 +1545,7 @@ window.exportarODS = async function() {
     const totalPasses = dadosCalculados.reduce((sum, item) => sum + item.totalPasses, 0);
     const totalValor = dadosCalculados.reduce((sum, item) => sum + item.valorTotal, 0);
     const totalAfastados = dadosCalculados.filter(item => item.afastamentos > 0).length;
-    const totalSnapshotsPasses = dadosCalculados.filter(item => item.tipoPasses === 'Histórico').length;
+    const totalHistoricoPasses = dadosCalculados.filter(item => item.tipoPasses === 'Histórico').length;
     const totalHistoricoTarifas = dadosCalculados.filter(item => item.tipoTarifa === 'Histórico').length;
 
     function escapeXml(text) {
@@ -1505,8 +1607,8 @@ window.exportarODS = async function() {
         ["Total de Passes", totalPasses],
         ["Valor Total (R$)", totalValor.toFixed(2)],
         ["Servidores com Afastamento", totalAfastados],
-        ["Snapshots de Passes Usados", totalSnapshotsPasses],
-        ["Tarifas do Histórico Usadas", totalHistoricoTarifas],
+        ["Passes com Histórico Usados", totalHistoricoPasses],
+        ["Tarifas com Histórico Usadas", totalHistoricoTarifas],
         ["Data da Exportação", new Date().toLocaleString("pt-BR")]
     ];
 
