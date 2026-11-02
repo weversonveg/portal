@@ -294,7 +294,7 @@
     </main>
 
 
-    <!-- MODAL -->
+    <!-- MODAL DE INFORMAÇÃO -->
     <div
         id="modal"
         class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 px-4">
@@ -328,6 +328,177 @@
     </div>
 
 
+    <!-- ========================================================= -->
+    <!-- MODAL DE EDIÇÃO DE USUÁRIO (NOVO) -->
+    <!-- ========================================================= -->
+    <div
+        id="modalEdicao"
+        class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 px-4">
+
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">
+                    Editar usuário
+                </h3>
+
+                <button
+                    onclick="fecharModalEdicao()"
+                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                    aria-label="Fechar">
+                    ×
+                </button>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-5">
+                Altere os dados do usuário. Deixe a senha em branco para manter a atual.
+            </p>
+
+            <form id="formEdicao" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                <!-- ID oculto -->
+                <input type="hidden" id="edicaoUid">
+
+                <!-- NOME -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nome
+                    </label>
+
+                    <input
+                        type="text"
+                        id="edicaoNome"
+                        required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+
+                <!-- E-MAIL (somente leitura - não é seguro trocar o e-mail) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        E-mail
+                    </label>
+
+                    <input
+                        type="text"
+                        id="edicaoEmail"
+                        readonly
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-600 cursor-not-allowed">
+
+                    <p class="text-xs text-gray-400 mt-1">
+                        O e-mail não pode ser alterado.
+                    </p>
+                </div>
+
+                <!-- SENHA (opcional na edição) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nova senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="edicaoSenha"
+                        minlength="6"
+                        autocomplete="new-password"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Deixe em branco para manter">
+                </div>
+
+                <!-- PERFIL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Perfil
+                    </label>
+
+                    <select
+                        id="edicaoPerfil"
+                        required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+
+                        <option value="">
+                            Selecione o perfil
+                        </option>
+
+                        <option value="escola">
+                            Escola
+                        </option>
+
+                        <option value="admin">
+                            Administrador
+                        </option>
+
+                    </select>
+                </div>
+
+                <!-- ESCOLA (edição) -->
+                <div id="campoEdicaoEscola" class="md:col-span-2 hidden">
+
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Escola
+                    </label>
+
+                    <select
+                        id="edicaoEscola"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+
+                        <option value="">
+                            Selecione a escola
+                        </option>
+
+                        <option value="CEAE">
+                            CEAE
+                        </option>
+
+                        <option value="CETEPE">
+                            CETEPE
+                        </option>
+
+                        <option value="E M SÃO JOSÉ">
+                            E M SÃO JOSÉ
+                        </option>
+
+                        <option value="E M SÃO GERALDO">
+                            E M SÃO GERALDO
+                        </option>
+
+                        <option value="CMEI ANÁLIA NOGUEIRA">
+                            CMEI ANÁLIA NOGUEIRA
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- BOTÕES -->
+                <div class="md:col-span-2 flex flex-col sm:flex-row justify-end gap-3 pt-2">
+
+                    <button
+                        type="button"
+                        onclick="fecharModalEdicao()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg transition">
+
+                        Cancelar
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="btnSalvarEdicao"
+                        class="bg-purple-700 hover:bg-purple-800 text-white font-semibold px-6 py-3 rounded-lg transition">
+
+                        Salvar alterações
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
     <script type="module">
 
         // =========================================================
@@ -346,6 +517,7 @@
             doc,
             getDoc,
             setDoc,
+            updateDoc,
             deleteDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -354,7 +526,9 @@
             onAuthStateChanged,
             createUserWithEmailAndPassword,
             signOut,
-            getAuth
+            getAuth,
+            signInWithEmailAndPassword,
+            updatePassword
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
@@ -371,19 +545,6 @@
         const DOMINIO_EMAIL =
             "@educacao.divinopolis.mg.gov.br";
 
-
-        /*
-         * IMPORTANTE:
-         * Esta é a mesma configuração do firebase.js principal.
-         *
-         * A API KEY abaixo foi corrigida:
-         *
-         * ...JsOrV...
-         *
-         * e não:
-         *
-         * ...JsORV...
-         */
 
         const firebaseConfig = {
 
@@ -428,8 +589,25 @@
             document.getElementById("btnCadastrar");
 
 
+        // NOVO: elementos do modal de edição
+        const formEdicao =
+            document.getElementById("formEdicao");
+
+        const edicaoPerfil =
+            document.getElementById("edicaoPerfil");
+
+        const campoEdicaoEscola =
+            document.getElementById("campoEdicaoEscola");
+
+        const edicaoEscola =
+            document.getElementById("edicaoEscola");
+
+        const btnSalvarEdicao =
+            document.getElementById("btnSalvarEdicao");
+
+
         // =========================================================
-        // MOSTRAR / OCULTAR ESCOLA
+        // MOSTRAR / OCULTAR ESCOLA (cadastro)
         // =========================================================
 
         perfil.addEventListener("change", () => {
@@ -447,6 +625,31 @@
                 escola.required = false;
 
                 escola.value = "";
+
+            }
+
+        });
+
+
+        // =========================================================
+        // MOSTRAR / OCULTAR ESCOLA (edição) - NOVO
+        // =========================================================
+
+        edicaoPerfil.addEventListener("change", () => {
+
+            if (edicaoPerfil.value === "escola") {
+
+                campoEdicaoEscola.classList.remove("hidden");
+
+                edicaoEscola.required = true;
+
+            } else {
+
+                campoEdicaoEscola.classList.add("hidden");
+
+                edicaoEscola.required = false;
+
+                edicaoEscola.value = "";
 
             }
 
@@ -495,7 +698,7 @@
 
 
         // =========================================================
-        // MODAL
+        // MODAL (informação)
         // =========================================================
 
         function mostrarModal(titulo, mensagem) {
@@ -529,6 +732,381 @@
             modal.classList.remove("flex");
 
         };
+
+
+        // =========================================================
+        // MODAL DE EDIÇÃO - NOVO
+        // =========================================================
+
+        window.abrirModalEdicao = async function (uid) {
+
+            try {
+
+                const referencia =
+                    doc(db, "usuarios", uid);
+
+                const resultado =
+                    await getDoc(referencia);
+
+
+                if (!resultado.exists()) {
+
+                    mostrarModal(
+                        "Usuário não encontrado",
+                        "O cadastro deste usuário não foi localizado."
+                    );
+
+                    return;
+
+                }
+
+
+                const dados = resultado.data();
+
+
+                // preencher campos
+                document.getElementById("edicaoUid").value = uid;
+                document.getElementById("edicaoNome").value = dados.nome || "";
+                document.getElementById("edicaoEmail").value = dados.email || "";
+                document.getElementById("edicaoSenha").value = "";
+                edicaoPerfil.value = dados.perfil || "";
+
+
+                // ajustar visibilidade da escola
+                if (dados.perfil === "escola") {
+
+                    campoEdicaoEscola.classList.remove("hidden");
+
+                    edicaoEscola.required = true;
+
+                    edicaoEscola.value = dados.escola || "";
+
+                } else {
+
+                    campoEdicaoEscola.classList.add("hidden");
+
+                    edicaoEscola.required = false;
+
+                    edicaoEscola.value = "";
+
+                }
+
+
+                // abrir modal
+                const modal =
+                    document.getElementById("modalEdicao");
+
+
+                modal.classList.remove("hidden");
+
+                modal.classList.add("flex");
+
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro ao abrir modal de edição:",
+                    erro
+                );
+
+
+                mostrarModal(
+                    "Erro ao abrir edição",
+                    erro?.message || "Não foi possível carregar os dados."
+                );
+
+            }
+
+        };
+
+
+        window.fecharModalEdicao = function () {
+
+            const modal =
+                document.getElementById("modalEdicao");
+
+
+            modal.classList.add("hidden");
+
+            modal.classList.remove("flex");
+
+
+            formEdicao.reset();
+
+            campoEdicaoEscola.classList.add("hidden");
+
+        };
+
+
+        // =========================================================
+        // SALVAR EDIÇÃO - NOVO
+        // =========================================================
+
+        formEdicao.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+
+            const uid =
+                document.getElementById("edicaoUid").value;
+
+
+            const nome =
+                document.getElementById("edicaoNome").value.trim();
+
+
+            const novaSenha =
+                document.getElementById("edicaoSenha").value;
+
+
+            const perfilSelecionado =
+                edicaoPerfil.value;
+
+
+            const escolaSelecionada =
+                edicaoEscola.value;
+
+
+            if (!uid || !nome || !perfilSelecionado) {
+
+                mostrarMensagem(
+                    "Preencha todos os campos obrigatórios.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            if (novaSenha && novaSenha.length < 6) {
+
+                mostrarMensagem(
+                    "A nova senha deve possuir pelo menos 6 caracteres.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            if (perfilSelecionado === "escola" && !escolaSelecionada) {
+
+                mostrarMensagem(
+                    "Selecione a escola do usuário.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            btnSalvarEdicao.disabled = true;
+
+            btnSalvarEdicao.textContent = "Salvando...";
+
+
+            let appSecundario = null;
+
+            let authSecundario = null;
+
+
+            try {
+
+                // -------------------------------------------------
+                // Se a senha foi alterada, precisamos atualizar no Authentication
+                // usando um app secundário autenticado como este usuário.
+                // -------------------------------------------------
+
+                if (novaSenha) {
+
+                    const emailAtual =
+                        document.getElementById("edicaoEmail").value;
+
+
+                    // Como não sabemos a senha atual do usuário, precisamos
+                    // usar um método alternativo: gerar um password reset link
+                    // ou usar o Admin SDK.
+                    //
+                    // SOLUÇÃO PRÁTICA: excluir o usuário do Authentication e
+                    // recriar com a nova senha (mantém o UID via Firestore).
+                    //
+                    // Mas excluir o usuário do Auth perde o UID.
+                    //
+                    // Melhor abordagem: o administrador deve informar a senha
+                    // atual OU usar o e-mail de recuperação.
+                    //
+                    // Para simplificar: vamos APENAS atualizar a senha se
+                    // estivermos no modo "redefinir por link" (enviar e-mail).
+                    //
+                    // Por ora, apenas salvamos no Firestore e avisamos que
+                    // a alteração de senha exige redefinição manual.
+
+
+                    mostrarMensagem(
+                        "Os dados foram salvos, mas a alteração de senha deve ser feita pelo usuário via 'Esqueci minha senha'.",
+                        "sucesso"
+                    );
+
+                }
+
+
+                // -------------------------------------------------
+                // Atualizar Firestore
+                // -------------------------------------------------
+
+                const dadosAtualizados = {
+
+                    nome: nome,
+
+                    perfil: perfilSelecionado,
+
+                    escola:
+                        perfilSelecionado === "escola"
+                            ? escolaSelecionada
+                            : "",
+
+                    dataAtualizacao:
+                        new Date().toISOString(),
+
+                    atualizadoPor:
+                        usuarioAtual.uid
+
+                };
+
+
+                console.log(
+                    "Atualizando usuarios/" + uid
+                );
+
+
+                await updateDoc(
+                    doc(db, "usuarios", uid),
+                    dadosAtualizados
+                );
+
+
+                console.log(
+                    "Documento atualizado com sucesso."
+                );
+
+
+                // Limpar app secundário se foi criado
+                if (authSecundario) {
+
+                    try {
+
+                        await signOut(authSecundario);
+
+                    } catch (e) {
+
+                        console.warn(e);
+
+                    }
+
+                }
+
+
+                if (appSecundario) {
+
+                    try {
+
+                        await deleteApp(appSecundario);
+
+                    } catch (e) {
+
+                        console.warn(e);
+
+                    }
+
+                }
+
+
+                fecharModalEdicao();
+
+
+                mostrarModal(
+                    "Usuário atualizado",
+                    "Os dados do usuário foram salvos com sucesso."
+                );
+
+
+                await carregarUsuarios();
+
+
+            } catch (erro) {
+
+                console.error(
+                    "ERRO AO SALVAR EDIÇÃO:",
+                    erro
+                );
+
+
+                let mensagemErro =
+                    "Não foi possível salvar as alterações.";
+
+
+                if (erro?.message) {
+
+                    mensagemErro = erro.message;
+
+                }
+
+
+                mostrarMensagem(
+                    mensagemErro,
+                    "erro"
+                );
+
+
+                mostrarModal(
+                    "Erro ao salvar",
+                    mensagemErro
+                );
+
+
+                // Limpar app secundário em caso de erro
+                if (authSecundario) {
+
+                    try {
+
+                        await signOut(authSecundario);
+
+                    } catch (e) {
+
+                        console.warn(e);
+
+                    }
+
+                }
+
+
+                if (appSecundario) {
+
+                    try {
+
+                        await deleteApp(appSecundario);
+
+                    } catch (e) {
+
+                        console.warn(e);
+
+                    }
+
+                }
+
+
+            } finally {
+
+                btnSalvarEdicao.disabled = false;
+
+                btnSalvarEdicao.textContent = "Salvar alterações";
+
+            }
+
+        });
 
 
         // =========================================================
@@ -1236,23 +1814,46 @@
 
                         <td class="px-6 py-4 text-center">
 
-                            <button
-                                class="text-red-600 hover:text-red-800 font-medium text-sm">
+                            <div class="flex justify-center gap-3">
 
-                                Excluir
+                                <button
+                                    class="btn-editar text-blue-600 hover:text-blue-800 font-medium text-sm">
 
-                            </button>
+                                    Editar
+
+                                </button>
+
+                                <button
+                                    class="btn-excluir text-red-600 hover:text-red-800 font-medium text-sm">
+
+                                    Excluir
+
+                                </button>
+
+                            </div>
 
                         </td>
 
                     `;
 
 
-                    const botao =
-                        tr.querySelector("button");
+                    const botaoEditar =
+                        tr.querySelector(".btn-editar");
 
 
-                    botao.addEventListener(
+                    botaoEditar.addEventListener(
+                        "click",
+                        () => abrirModalEdicao(
+                            documento.id
+                        )
+                    );
+
+
+                    const botaoExcluir =
+                        tr.querySelector(".btn-excluir");
+
+
+                    botaoExcluir.addEventListener(
                         "click",
                         () => excluirUsuario(
                             documento.id,
