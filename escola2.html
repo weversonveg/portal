@@ -1233,12 +1233,7 @@ tr:hover td { background: var(--surface-2); }
                 <div class="filter-group">
                     <label for="filtroEscola">Selecione a Escola</label>
                     <select id="filtroEscola">
-                        <option value="">Selecione a unidade</option>
-                        <option value="CEAE">CEAE</option>
-                        <option value="CETEPE">CETEPE</option>
-                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
-                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
-                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
+                        <option value="">Carregando escolas...</option>
                     </select>
                 </div>
 
@@ -1580,7 +1575,6 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 
 let usuarioLogado = null;
 let perfilUsuario = "";
-// 👇 AGORA É ARRAY DE ESCOLAS
 let escolasUsuario = [];
 let autenticacaoPronta = false;
 
@@ -1595,6 +1589,37 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("mesReferencia").value = `${ano}-${mes}`;
 });
 
+// =========================================================
+// CARREGAR UNIDADES ESCOLARES DA COLEÇÃO "unidades"
+// =========================================================
+async function carregarUnidadesEscolares() {
+    const selectEscola = document.getElementById("filtroEscola");
+    try {
+        const snapshot = await getDocs(collection(db, "unidades"));
+        const listaUnidades = [];
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const nome = data.nome || data.nomeEscola || docSnap.id;
+            listaUnidades.push(nome);
+        });
+        listaUnidades.sort((a, b) => a.localeCompare(b));
+        popularSelectFiltro(selectEscola, listaUnidades);
+    } catch (erro) {
+        console.error("Erro ao carregar unidades escolares:", erro);
+        selectEscola.innerHTML = '<option value="">Erro ao carregar escolas</option>';
+    }
+}
+
+function popularSelectFiltro(selectElement, lista) {
+    selectElement.innerHTML = '<option value="">Selecione a unidade</option>';
+    lista.forEach(nome => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        opt.textContent = nome;
+        selectElement.appendChild(opt);
+    });
+}
+
 function normalizarTexto(valor) {
     if (valor === null || valor === undefined) return "";
     return String(valor)
@@ -1605,7 +1630,6 @@ function normalizarTexto(valor) {
         .toUpperCase();
 }
 
-// 👇 NOVA FUNÇÃO: verifica se o usuário tem acesso a uma escola
 function usuarioTemAcessoEscola(escola) {
     if (!escola) return false;
     if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") return true;
@@ -1831,7 +1855,7 @@ function zerarContador() {
 }
 
 // =========================================================
-// onAuthStateChanged COM SUPORTE A MÚLTIPLAS ESCOLAS
+// AUTENTICAÇÃO + CARREGAMENTO DAS UNIDADES
 // =========================================================
 onAuthStateChanged(auth, async function(user) {
     const selectEscola = document.getElementById("filtroEscola");
@@ -1839,6 +1863,9 @@ onAuthStateChanged(auth, async function(user) {
     const textoEscolaUsuario = document.getElementById("textoEscolaUsuario");
 
     autenticacaoPronta = false;
+
+    // Carrega as unidades do Firestore antes de prosseguir
+    await carregarUnidadesEscolares();
 
     if (!user) {
         usuarioLogado = null;
@@ -1872,7 +1899,7 @@ onAuthStateChanged(auth, async function(user) {
         const dadosUsuario = usuarioSnap.data();
         perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
 
-        // 👇 NORMALIZAR ESCOLAS: aceita tanto array quanto string antiga (retrocompatível)
+        // Aceita tanto array (novo formato) quanto string (formato antigo)
         let escolasBrutas = dadosUsuario.escola;
         if (Array.isArray(escolasBrutas)) {
             escolasUsuario = escolasBrutas
@@ -1886,7 +1913,6 @@ onAuthStateChanged(auth, async function(user) {
 
         // Usuário ADMIN: acesso total
         if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
-            // Mostrar todas as opções
             Array.from(selectEscola.options).forEach(opcao => {
                 opcao.style.display = "";
             });
@@ -1907,11 +1933,11 @@ onAuthStateChanged(auth, async function(user) {
             return;
         }
 
-        // 👇 FILTRAR O SELECT: mostrar apenas escolas vinculadas ao usuário
+        // Filtrar select: mostrar apenas escolas vinculadas ao usuário
         const opcoesEncontradas = [];
 
         Array.from(selectEscola.options).forEach(function(opcao) {
-            if (opcao.value === "") return; // ignora "Selecione a unidade"
+            if (opcao.value === "") return;
             const valorNorm = normalizarTexto(opcao.value);
             const textoNorm = normalizarTexto(opcao.textContent);
 
@@ -1922,29 +1948,26 @@ onAuthStateChanged(auth, async function(user) {
 
             if (pertence) {
                 opcoesEncontradas.push(opcao);
-                opcao.style.display = ""; // mostra
+                opcao.style.display = "";
             } else {
-                opcao.style.display = "none"; // oculta
+                opcao.style.display = "none";
             }
         });
 
         if (opcoesEncontradas.length === 0) {
             selectEscola.value = "";
             selectEscola.disabled = true;
-            textoEscolaUsuario.textContent =
-                `Nenhuma das escolas vinculadas ao seu usuário está disponível nesta tela.`;
+            textoEscolaUsuario.textContent = `Nenhuma das escolas vinculadas ao seu usuário está disponível nesta tela.`;
             infoUsuarioEscola.classList.add("ativo");
             mostrarMensagem("Suas escolas vinculadas não estão disponíveis na lista desta tela.", "erro");
             return;
         }
 
-        // Se só tem UMA escola vinculada: travar nessa
         if (opcoesEncontradas.length === 1) {
             selectEscola.value = opcoesEncontradas[0].value;
             selectEscola.disabled = true;
             textoEscolaUsuario.textContent = `Escola vinculada: ${opcoesEncontradas[0].textContent.trim()}`;
         } else {
-            // Várias escolas: permitir escolher entre elas
             selectEscola.value = opcoesEncontradas[0].value;
             selectEscola.disabled = false;
             textoEscolaUsuario.textContent =
@@ -1996,7 +2019,6 @@ window.carregarDadosDaEscola = async function() {
 
     zerarContador();
 
-    // 👇 VALIDAÇÃO USANDO usuarioTemAcessoEscola
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR") {
         if (!usuarioTemAcessoEscola(escolaSelecionada)) {
             mostrarMensagem("Acesso negado: a escola selecionada não corresponde a nenhuma escola vinculada ao seu usuário.", "erro");
@@ -2400,7 +2422,7 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
 
         const empresasSnap = await getDocs(collection(db, "empresas"));
         let tarifa = null;
-
+        
         empresasSnap.forEach(docSnap => {
             const empresa = docSnap.data();
             if (empresa.nome && normalizarTexto(empresa.nome) === normalizarTexto(nomeEmpresa)) {
@@ -2416,7 +2438,6 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
 }
 
 async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElementTrigger) {
-    // 👇 VALIDAÇÃO COM usuarioTemAcessoEscola
     if (!usuarioTemAcessoEscola(escola)) {
         mostrarToast("Acesso negado para esta escola.", "erro");
         return;
@@ -2563,7 +2584,6 @@ window.salvarDiasUteisEscola = async function() {
 
     if (!mesAno || !escola) return;
 
-    // 👇 VALIDAÇÃO COM usuarioTemAcessoEscola
     if (!usuarioTemAcessoEscola(escola)) {
         mostrarMensagem("Acesso negado para esta escola.", "erro");
         return;
