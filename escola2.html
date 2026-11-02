@@ -59,7 +59,6 @@
     --info-bg: #f0f5fb;
     --info-bd: #c3d5e9;
 
-    /* Cores específicas para o campo "Dias com menos de 4h" (Vale-Refeição) */
     --refeicao: #c2410c;
     --refeicao-hover: #9a3412;
     --refeicao-bg: #fff7ed;
@@ -799,7 +798,6 @@ tr:hover td { background: var(--surface-2); }
     color: var(--ok);
 }
 
-/* Campo "Dias com menos de 4h" (Vale-Refeição) */
 .input-refeicao {
     width: 90px; height: 38px; padding: 0 10px;
     border: 1px solid var(--refeicao-bd); border-radius: 4px;
@@ -1582,7 +1580,8 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 
 let usuarioLogado = null;
 let perfilUsuario = "";
-let escolaUsuario = "";
+// 👇 AGORA É ARRAY DE ESCOLAS
+let escolasUsuario = [];
 let autenticacaoPronta = false;
 
 let alteracoesSalvasNaSessao = 0;
@@ -1604,6 +1603,14 @@ function normalizarTexto(valor) {
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/\s+/g, " ")
         .toUpperCase();
+}
+
+// 👇 NOVA FUNÇÃO: verifica se o usuário tem acesso a uma escola
+function usuarioTemAcessoEscola(escola) {
+    if (!escola) return false;
+    if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") return true;
+    const escolaNorm = normalizarTexto(escola);
+    return escolasUsuario.some(e => normalizarTexto(e) === escolaNorm);
 }
 
 function formatarData(dataStr) {
@@ -1823,6 +1830,9 @@ function zerarContador() {
     counter.classList.add("zero");
 }
 
+// =========================================================
+// onAuthStateChanged COM SUPORTE A MÚLTIPLAS ESCOLAS
+// =========================================================
 onAuthStateChanged(auth, async function(user) {
     const selectEscola = document.getElementById("filtroEscola");
     const infoUsuarioEscola = document.getElementById("infoUsuarioEscola");
@@ -1833,7 +1843,7 @@ onAuthStateChanged(auth, async function(user) {
     if (!user) {
         usuarioLogado = null;
         perfilUsuario = "";
-        escolaUsuario = "";
+        escolasUsuario = [];
         selectEscola.value = "";
         selectEscola.disabled = true;
         textoEscolaUsuario.textContent = "Usuário não autenticado.";
@@ -1850,7 +1860,7 @@ onAuthStateChanged(auth, async function(user) {
 
         if (!usuarioSnap.exists()) {
             perfilUsuario = "";
-            escolaUsuario = "";
+            escolasUsuario = [];
             selectEscola.value = "";
             selectEscola.disabled = true;
             textoEscolaUsuario.textContent = "Usuário não possui cadastro no sistema.";
@@ -1861,46 +1871,86 @@ onAuthStateChanged(auth, async function(user) {
 
         const dadosUsuario = usuarioSnap.data();
         perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
-        escolaUsuario = String(dadosUsuario.escola || "").trim();
 
+        // 👇 NORMALIZAR ESCOLAS: aceita tanto array quanto string antiga (retrocompatível)
+        let escolasBrutas = dadosUsuario.escola;
+        if (Array.isArray(escolasBrutas)) {
+            escolasUsuario = escolasBrutas
+                .map(e => String(e || "").trim())
+                .filter(Boolean);
+        } else if (escolasBrutas && String(escolasBrutas).trim() !== "") {
+            escolasUsuario = [String(escolasBrutas).trim()];
+        } else {
+            escolasUsuario = [];
+        }
+
+        // Usuário ADMIN: acesso total
         if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
+            // Mostrar todas as opções
+            Array.from(selectEscola.options).forEach(opcao => {
+                opcao.style.display = "";
+            });
             selectEscola.disabled = false;
-            textoEscolaUsuario.textContent = "Usuário administrador — acesso às escolas.";
+            textoEscolaUsuario.textContent = "Usuário administrador — acesso a todas as escolas.";
             infoUsuarioEscola.classList.add("ativo");
             autenticacaoPronta = true;
             return;
         }
 
-        if (!escolaUsuario) {
+        // Usuário ESCOLA sem vínculo
+        if (escolasUsuario.length === 0) {
             selectEscola.value = "";
             selectEscola.disabled = true;
             textoEscolaUsuario.textContent = "Nenhuma escola vinculada ao seu usuário.";
             infoUsuarioEscola.classList.add("ativo");
-            mostrarMensagem("Seu usuário não possui uma escola cadastrada. Entre em contato com o administrador.", "erro");
+            mostrarMensagem("Seu usuário não possui escola cadastrada. Entre em contato com o administrador.", "erro");
             return;
         }
 
-        const escolaNormalizada = normalizarTexto(escolaUsuario);
-        let opcaoEncontrada = null;
+        // 👇 FILTRAR O SELECT: mostrar apenas escolas vinculadas ao usuário
+        const opcoesEncontradas = [];
 
         Array.from(selectEscola.options).forEach(function(opcao) {
-            if (normalizarTexto(opcao.value) === escolaNormalizada || normalizarTexto(opcao.textContent) === escolaNormalizada) {
-                opcaoEncontrada = opcao;
+            if (opcao.value === "") return; // ignora "Selecione a unidade"
+            const valorNorm = normalizarTexto(opcao.value);
+            const textoNorm = normalizarTexto(opcao.textContent);
+
+            const pertence = escolasUsuario.some(e => {
+                const eNorm = normalizarTexto(e);
+                return eNorm === valorNorm || eNorm === textoNorm;
+            });
+
+            if (pertence) {
+                opcoesEncontradas.push(opcao);
+                opcao.style.display = ""; // mostra
+            } else {
+                opcao.style.display = "none"; // oculta
             }
         });
 
-        if (!opcaoEncontrada) {
+        if (opcoesEncontradas.length === 0) {
             selectEscola.value = "";
             selectEscola.disabled = true;
-            textoEscolaUsuario.textContent = `Escola "${escolaUsuario}" não está disponível nesta tela.`;
+            textoEscolaUsuario.textContent =
+                `Nenhuma das escolas vinculadas ao seu usuário está disponível nesta tela.`;
             infoUsuarioEscola.classList.add("ativo");
-            mostrarMensagem(`A escola "${escolaUsuario}" está cadastrada no usuário, mas não está disponível na lista desta tela.`, "erro");
+            mostrarMensagem("Suas escolas vinculadas não estão disponíveis na lista desta tela.", "erro");
             return;
         }
 
-        selectEscola.value = opcaoEncontrada.value;
-        selectEscola.disabled = true;
-        textoEscolaUsuario.textContent = `Escola vinculada: ${opcaoEncontrada.textContent.trim()}`;
+        // Se só tem UMA escola vinculada: travar nessa
+        if (opcoesEncontradas.length === 1) {
+            selectEscola.value = opcoesEncontradas[0].value;
+            selectEscola.disabled = true;
+            textoEscolaUsuario.textContent = `Escola vinculada: ${opcoesEncontradas[0].textContent.trim()}`;
+        } else {
+            // Várias escolas: permitir escolher entre elas
+            selectEscola.value = opcoesEncontradas[0].value;
+            selectEscola.disabled = false;
+            textoEscolaUsuario.textContent =
+                `Você tem acesso a ${opcoesEncontradas.length} escolas. Selecione qual deseja acessar.`;
+        }
+
         infoUsuarioEscola.classList.add("ativo");
         autenticacaoPronta = true;
 
@@ -1909,9 +1959,9 @@ onAuthStateChanged(auth, async function(user) {
     } catch (erro) {
         console.error("Erro ao identificar usuário:", erro);
         selectEscola.disabled = true;
-        textoEscolaUsuario.textContent = "Erro ao verificar a escola do usuário.";
+        textoEscolaUsuario.textContent = "Erro ao verificar as escolas do usuário.";
         infoUsuarioEscola.classList.add("ativo");
-        mostrarMensagem("Não foi possível verificar a escola vinculada ao usuário.", "erro");
+        mostrarMensagem("Não foi possível verificar as escolas vinculadas ao usuário.", "erro");
     }
 });
 
@@ -1946,9 +1996,10 @@ window.carregarDadosDaEscola = async function() {
 
     zerarContador();
 
+    // 👇 VALIDAÇÃO USANDO usuarioTemAcessoEscola
     if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR") {
-        if (!escolaUsuario || normalizarTexto(escolaSelecionada) !== normalizarTexto(escolaUsuario)) {
-            mostrarMensagem("Acesso negado: a escola selecionada não corresponde à escola vinculada ao seu usuário.", "erro");
+        if (!usuarioTemAcessoEscola(escolaSelecionada)) {
+            mostrarMensagem("Acesso negado: a escola selecionada não corresponde a nenhuma escola vinculada ao seu usuário.", "erro");
             return;
         }
     }
@@ -2094,9 +2145,8 @@ window.carregarDadosDaEscola = async function() {
 
                 const lancData = lancSnap.exists() ? lancSnap.data() : {};
                 const diasSalvosManual = Number(lancData.diasAfastamento) || 0;
-                // 👇 NOVO: dias com menos de 4h (parcial)
                 const diasParciaisSem4h = Number(lancData.diasParciaisSem4h) || 0;
-                
+
                 const chaveBuscaFerias = `${cpfLimpo}_${numeroMatricula}`;
                 const diasFeriasAuto = feriasMap[chaveBuscaFerias] || 0;
                 const diasTotalExibido = diasSalvosManual + diasFeriasAuto;
@@ -2117,7 +2167,6 @@ window.carregarDadosDaEscola = async function() {
                     badgeAusenciaHtml = `<span class="badge-salvo" style="background:#fff3e0;color:#e65100;border-color:#ffe0b2;"><span class="material-symbols-outlined" style="font-size:14px;">event</span> Férias/Folga Auto</span>`;
                 }
 
-                // 👇 NOVO: badge para dias parciais
                 let badgeParcialHtml = "";
                 if (diasParciaisSem4h > 0) {
                     badgeParcialHtml = `<span class="badge-salvo" style="background:var(--refeicao-bg);color:var(--refeicao-text);border-color:var(--refeicao-bd);"><span class="material-symbols-outlined" style="font-size:14px;">restaurant</span> Salvo</span>`;
@@ -2351,7 +2400,7 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
 
         const empresasSnap = await getDocs(collection(db, "empresas"));
         let tarifa = null;
-        
+
         empresasSnap.forEach(docSnap => {
             const empresa = docSnap.data();
             if (empresa.nome && normalizarTexto(empresa.nome) === normalizarTexto(nomeEmpresa)) {
@@ -2366,11 +2415,9 @@ async function obterSnapshotTarifa(servidorId, numeroMatricula, escola) {
     }
 }
 
-// =========================================================
-// 👇 SALVAR AMBOS OS CAMPOS (ausência + parcial) JUNTOS
-// =========================================================
 async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, inputElementTrigger) {
-    if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && normalizarTexto(escola) !== normalizarTexto(escolaUsuario)) {
+    // 👇 VALIDAÇÃO COM usuarioTemAcessoEscola
+    if (!usuarioTemAcessoEscola(escola)) {
         mostrarToast("Acesso negado para esta escola.", "erro");
         return;
     }
@@ -2388,7 +2435,6 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
         console.error("Erro ao verificar bloqueio:", e);
     }
 
-    // Pegar ambos os campos da linha
     const inputAusencia = document.getElementById(`afastamento_${servidorId}_${numeroMatricula}`);
     const inputParcial = document.getElementById(`parcial_${servidorId}_${numeroMatricula}`);
 
@@ -2399,11 +2445,9 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
     const lancamentoId = `${mesAno}_${escola}_${cpfLimpo}_${numeroMatricula}`;
     const lancRef = doc(db, "lancamentos_mensais", lancamentoId);
 
-    // Snapshot de passes e tarifa (mantidos como antes)
     const passesDiariosLancados = await obterSnapshotPasses(servidorId, numeroMatricula, escola);
     const tarifaLancada = await obterSnapshotTarifa(servidorId, numeroMatricula, escola);
 
-    // Indicador visual de salvando em ambos os inputs
     [inputAusencia, inputParcial].forEach(inp => {
         if (!inp) return;
         inp.classList.add("salvando");
@@ -2418,7 +2462,6 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
         const naoTemNada = diasAfastamento <= 0 && diasParciaisSem4h <= 0;
 
         if (naoTemNada) {
-            // Se não tem nem ausência nem parcial, deleta o documento
             const docExiste = await getDoc(lancRef);
             if (docExiste.exists()) {
                 await deleteDoc(lancRef);
@@ -2431,7 +2474,7 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
                 cpf: cpfServidor,
                 numeroMatricula: numeroMatricula,
                 diasAfastamento: diasAfastamento,
-                diasParciaisSem4h: diasParciaisSem4h,  // 👇 NOVO CAMPO
+                diasParciaisSem4h: diasParciaisSem4h,
                 dataAtualizacao: new Date().toISOString()
             };
 
@@ -2445,7 +2488,6 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
             await setDoc(lancRef, dadosLancamento, { merge: true });
         }
 
-        // Atualiza data-valor-original de ambos
         if (inputAusencia) {
             inputAusencia.dataset.valorOriginal = diasAfastamento;
             inputAusencia.classList.remove("salvando");
@@ -2475,7 +2517,6 @@ async function salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, nu
 
         incrementarContador();
 
-        // Toast mais informativo
         const partes = [];
         if (diasAfastamento > 0) partes.push(`${diasAfastamento} dia(s) de ausência`);
         if (diasParciaisSem4h > 0) partes.push(`${diasParciaisSem4h} dia(s) < 4h`);
@@ -2522,7 +2563,8 @@ window.salvarDiasUteisEscola = async function() {
 
     if (!mesAno || !escola) return;
 
-    if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && normalizarTexto(escola) !== normalizarTexto(escolaUsuario)) {
+    // 👇 VALIDAÇÃO COM usuarioTemAcessoEscola
+    if (!usuarioTemAcessoEscola(escola)) {
         mostrarMensagem("Acesso negado para esta escola.", "erro");
         return;
     }
@@ -2559,7 +2601,6 @@ window.salvarAmbos = async function(mesAno, escola, cpfServidor, servidorId, num
     await salvarAmbosSilencioso(mesAno, escola, cpfServidor, servidorId, numeroMatricula, null);
 };
 
-// Mantido para compatibilidade com chamadas antigas (se houver)
 window.salvarAfastamento = window.salvarAmbos;
 
 function mostrarMensagem(texto, tipo) {
