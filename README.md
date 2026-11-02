@@ -1,4 +1,5 @@
 Versão atual 
+criado Card vale refeição na página configurações. o vale-refeição é salvo na coleção configurações gerais. Atualizada a página de cálculos para calcular também o vale-refeição. atualizada a página usuários para edição dos cadastros e opção de vincular mais de uma escola. a página lançamento da escola também foi atualizada para aceitar vínculos de  mais de uma escola.
 
 Versão 1.9
 Criado histórico de vales e valores de tarifas, as mudanças não alteram valores de  meses anteriores. Página configurações com cards para configurar empresas e tarifas, cargos e unidades.Foram criados as coleções unidades, cargos e empresas de onde os selects vão buscar os dados.
