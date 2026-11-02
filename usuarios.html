@@ -163,20 +163,18 @@
                 </div>
 
 
-                <!-- ESCOLA -->
+                <!-- ESCOLAS (MÚLTIPLA ESCOLHA) -->
                 <div id="campoEscola" class="md:col-span-2 hidden">
 
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Escola
+                        Escolas vinculadas
                     </label>
 
                     <select
                         id="escola"
+                        multiple
+                        size="5"
                         class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-
-                        <option value="">
-                            Selecione a escola
-                        </option>
 
                         <option value="CEAE">
                             CEAE
@@ -199,6 +197,12 @@
                         </option>
 
                     </select>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Segure <kbd class="bg-gray-200 px-1.5 py-0.5 rounded text-xs">Ctrl</kbd>
+                        (ou <kbd class="bg-gray-200 px-1.5 py-0.5 rounded text-xs">Command</kbd> no Mac)
+                        para selecionar várias escolas.
+                    </p>
 
                 </div>
 
@@ -259,7 +263,7 @@
                             </th>
 
                             <th class="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase">
-                                Escola
+                                Escolas
                             </th>
 
                             <th class="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase">
@@ -328,9 +332,7 @@
     </div>
 
 
-    <!-- ========================================================= -->
-    <!-- MODAL DE EDIÇÃO DE USUÁRIO (NOVO) -->
-    <!-- ========================================================= -->
+    <!-- MODAL DE EDIÇÃO -->
     <div
         id="modalEdicao"
         class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 px-4">
@@ -356,7 +358,6 @@
 
             <form id="formEdicao" class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                <!-- ID oculto -->
                 <input type="hidden" id="edicaoUid">
 
                 <!-- NOME -->
@@ -372,7 +373,7 @@
                         class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
 
-                <!-- E-MAIL (somente leitura - não é seguro trocar o e-mail) -->
+                <!-- E-MAIL -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         E-mail
@@ -389,7 +390,7 @@
                     </p>
                 </div>
 
-                <!-- SENHA (opcional na edição) -->
+                <!-- SENHA -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Nova senha
@@ -430,20 +431,18 @@
                     </select>
                 </div>
 
-                <!-- ESCOLA (edição) -->
+                <!-- ESCOLAS (MÚLTIPLA ESCOLHA) -->
                 <div id="campoEdicaoEscola" class="md:col-span-2 hidden">
 
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Escola
+                        Escolas vinculadas
                     </label>
 
                     <select
                         id="edicaoEscola"
+                        multiple
+                        size="5"
                         class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-
-                        <option value="">
-                            Selecione a escola
-                        </option>
 
                         <option value="CEAE">
                             CEAE
@@ -466,6 +465,12 @@
                         </option>
 
                     </select>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Segure <kbd class="bg-gray-200 px-1.5 py-0.5 rounded text-xs">Ctrl</kbd>
+                        (ou <kbd class="bg-gray-200 px-1.5 py-0.5 rounded text-xs">Command</kbd> no Mac)
+                        para selecionar várias escolas.
+                    </p>
 
                 </div>
 
@@ -526,9 +531,7 @@
             onAuthStateChanged,
             createUserWithEmailAndPassword,
             signOut,
-            getAuth,
-            signInWithEmailAndPassword,
-            updatePassword
+            getAuth
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
@@ -588,8 +591,6 @@
         const btnCadastrar =
             document.getElementById("btnCadastrar");
 
-
-        // NOVO: elementos do modal de edição
         const formEdicao =
             document.getElementById("formEdicao");
 
@@ -604,6 +605,58 @@
 
         const btnSalvarEdicao =
             document.getElementById("btnSalvarEdicao");
+
+
+        // =========================================================
+        // HELPERS - LER ESCOLAS SELECIONADAS (MÚLTIPLAS)
+        // =========================================================
+
+        function obterEscolasSelecionadas(selectElement) {
+
+            return Array.from(selectElement.selectedOptions)
+                .map(option => option.value);
+
+        }
+
+
+        function definirEscolasSelecionadas(selectElement, lista) {
+
+            // limpa seleções anteriores
+            Array.from(selectElement.options).forEach(opt => {
+                opt.selected = false;
+            });
+
+
+            if (!Array.isArray(lista)) return;
+
+
+            Array.from(selectElement.options).forEach(opt => {
+
+                if (lista.includes(opt.value)) {
+
+                    opt.selected = true;
+
+                }
+
+            });
+
+        }
+
+
+        // =========================================================
+        // NORMALIZAR DADOS (para lidar com registros antigos como string)
+        // =========================================================
+
+        function normalizarEscolas(dados) {
+
+            if (!dados.escola) return [];
+
+            if (Array.isArray(dados.escola)) return dados.escola;
+
+            // registro antigo: string única → converter em array
+            return [dados.escola];
+
+        }
 
 
         // =========================================================
@@ -624,7 +677,8 @@
 
                 escola.required = false;
 
-                escola.value = "";
+                // limpa seleções
+                Array.from(escola.options).forEach(opt => opt.selected = false);
 
             }
 
@@ -632,7 +686,7 @@
 
 
         // =========================================================
-        // MOSTRAR / OCULTAR ESCOLA (edição) - NOVO
+        // MOSTRAR / OCULTAR ESCOLA (edição)
         // =========================================================
 
         edicaoPerfil.addEventListener("change", () => {
@@ -649,7 +703,7 @@
 
                 edicaoEscola.required = false;
 
-                edicaoEscola.value = "";
+                Array.from(edicaoEscola.options).forEach(opt => opt.selected = false);
 
             }
 
@@ -703,19 +757,11 @@
 
         function mostrarModal(titulo, mensagem) {
 
-            document.getElementById("modalTitulo").textContent =
-                titulo;
+            document.getElementById("modalTitulo").textContent = titulo;
+            document.getElementById("modalMensagem").textContent = mensagem;
 
-            document.getElementById("modalMensagem").textContent =
-                mensagem;
-
-
-            const modal =
-                document.getElementById("modal");
-
-
+            const modal = document.getElementById("modal");
             modal.classList.remove("hidden");
-
             modal.classList.add("flex");
 
         }
@@ -723,30 +769,23 @@
 
         window.fecharModal = function () {
 
-            const modal =
-                document.getElementById("modal");
-
-
+            const modal = document.getElementById("modal");
             modal.classList.add("hidden");
-
             modal.classList.remove("flex");
 
         };
 
 
         // =========================================================
-        // MODAL DE EDIÇÃO - NOVO
+        // MODAL DE EDIÇÃO
         // =========================================================
 
         window.abrirModalEdicao = async function (uid) {
 
             try {
 
-                const referencia =
-                    doc(db, "usuarios", uid);
-
-                const resultado =
-                    await getDoc(referencia);
+                const referencia = doc(db, "usuarios", uid);
+                const resultado = await getDoc(referencia);
 
 
                 if (!resultado.exists()) {
@@ -764,7 +803,6 @@
                 const dados = resultado.data();
 
 
-                // preencher campos
                 document.getElementById("edicaoUid").value = uid;
                 document.getElementById("edicaoNome").value = dados.nome || "";
                 document.getElementById("edicaoEmail").value = dados.email || "";
@@ -772,43 +810,35 @@
                 edicaoPerfil.value = dados.perfil || "";
 
 
-                // ajustar visibilidade da escola
+                // Ajustar visibilidade da escola
                 if (dados.perfil === "escola") {
 
                     campoEdicaoEscola.classList.remove("hidden");
-
                     edicaoEscola.required = true;
 
-                    edicaoEscola.value = dados.escola || "";
+                    // marcar as escolas já vinculadas (array ou string antiga)
+                    const escolasVinculadas = normalizarEscolas(dados);
+
+                    definirEscolasSelecionadas(edicaoEscola, escolasVinculadas);
 
                 } else {
 
                     campoEdicaoEscola.classList.add("hidden");
-
                     edicaoEscola.required = false;
 
-                    edicaoEscola.value = "";
+                    Array.from(edicaoEscola.options).forEach(opt => opt.selected = false);
 
                 }
 
 
-                // abrir modal
-                const modal =
-                    document.getElementById("modalEdicao");
-
-
+                const modal = document.getElementById("modalEdicao");
                 modal.classList.remove("hidden");
-
                 modal.classList.add("flex");
 
 
             } catch (erro) {
 
-                console.error(
-                    "Erro ao abrir modal de edição:",
-                    erro
-                );
-
+                console.error("Erro ao abrir modal de edição:", erro);
 
                 mostrarModal(
                     "Erro ao abrir edição",
@@ -822,24 +852,18 @@
 
         window.fecharModalEdicao = function () {
 
-            const modal =
-                document.getElementById("modalEdicao");
-
-
+            const modal = document.getElementById("modalEdicao");
             modal.classList.add("hidden");
-
             modal.classList.remove("flex");
 
-
             formEdicao.reset();
-
             campoEdicaoEscola.classList.add("hidden");
 
         };
 
 
         // =========================================================
-        // SALVAR EDIÇÃO - NOVO
+        // SALVAR EDIÇÃO
         // =========================================================
 
         formEdicao.addEventListener("submit", async (event) => {
@@ -847,24 +871,11 @@
             event.preventDefault();
 
 
-            const uid =
-                document.getElementById("edicaoUid").value;
-
-
-            const nome =
-                document.getElementById("edicaoNome").value.trim();
-
-
-            const novaSenha =
-                document.getElementById("edicaoSenha").value;
-
-
-            const perfilSelecionado =
-                edicaoPerfil.value;
-
-
-            const escolaSelecionada =
-                edicaoEscola.value;
+            const uid = document.getElementById("edicaoUid").value;
+            const nome = document.getElementById("edicaoNome").value.trim();
+            const novaSenha = document.getElementById("edicaoSenha").value;
+            const perfilSelecionado = edicaoPerfil.value;
+            const escolasSelecionadas = obterEscolasSelecionadas(edicaoEscola);
 
 
             if (!uid || !nome || !perfilSelecionado) {
@@ -891,10 +902,10 @@
             }
 
 
-            if (perfilSelecionado === "escola" && !escolaSelecionada) {
+            if (perfilSelecionado === "escola" && escolasSelecionadas.length === 0) {
 
                 mostrarMensagem(
-                    "Selecione a escola do usuário.",
+                    "Selecione pelo menos uma escola.",
                     "erro"
                 );
 
@@ -904,58 +915,10 @@
 
 
             btnSalvarEdicao.disabled = true;
-
             btnSalvarEdicao.textContent = "Salvando...";
 
 
-            let appSecundario = null;
-
-            let authSecundario = null;
-
-
             try {
-
-                // -------------------------------------------------
-                // Se a senha foi alterada, precisamos atualizar no Authentication
-                // usando um app secundário autenticado como este usuário.
-                // -------------------------------------------------
-
-                if (novaSenha) {
-
-                    const emailAtual =
-                        document.getElementById("edicaoEmail").value;
-
-
-                    // Como não sabemos a senha atual do usuário, precisamos
-                    // usar um método alternativo: gerar um password reset link
-                    // ou usar o Admin SDK.
-                    //
-                    // SOLUÇÃO PRÁTICA: excluir o usuário do Authentication e
-                    // recriar com a nova senha (mantém o UID via Firestore).
-                    //
-                    // Mas excluir o usuário do Auth perde o UID.
-                    //
-                    // Melhor abordagem: o administrador deve informar a senha
-                    // atual OU usar o e-mail de recuperação.
-                    //
-                    // Para simplificar: vamos APENAS atualizar a senha se
-                    // estivermos no modo "redefinir por link" (enviar e-mail).
-                    //
-                    // Por ora, apenas salvamos no Firestore e avisamos que
-                    // a alteração de senha exige redefinição manual.
-
-
-                    mostrarMensagem(
-                        "Os dados foram salvos, mas a alteração de senha deve ser feita pelo usuário via 'Esqueci minha senha'.",
-                        "sucesso"
-                    );
-
-                }
-
-
-                // -------------------------------------------------
-                // Atualizar Firestore
-                // -------------------------------------------------
 
                 const dadosAtualizados = {
 
@@ -963,65 +926,21 @@
 
                     perfil: perfilSelecionado,
 
-                    escola:
-                        perfilSelecionado === "escola"
-                            ? escolaSelecionada
-                            : "",
+                    escola: perfilSelecionado === "escola"
+                        ? escolasSelecionadas
+                        : [],
 
-                    dataAtualizacao:
-                        new Date().toISOString(),
+                    dataAtualizacao: new Date().toISOString(),
 
-                    atualizadoPor:
-                        usuarioAtual.uid
+                    atualizadoPor: usuarioAtual.uid
 
                 };
-
-
-                console.log(
-                    "Atualizando usuarios/" + uid
-                );
 
 
                 await updateDoc(
                     doc(db, "usuarios", uid),
                     dadosAtualizados
                 );
-
-
-                console.log(
-                    "Documento atualizado com sucesso."
-                );
-
-
-                // Limpar app secundário se foi criado
-                if (authSecundario) {
-
-                    try {
-
-                        await signOut(authSecundario);
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
-                }
-
-
-                if (appSecundario) {
-
-                    try {
-
-                        await deleteApp(appSecundario);
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
-                }
 
 
                 fecharModalEdicao();
@@ -1038,70 +957,16 @@
 
             } catch (erro) {
 
-                console.error(
-                    "ERRO AO SALVAR EDIÇÃO:",
-                    erro
-                );
-
-
-                let mensagemErro =
-                    "Não foi possível salvar as alterações.";
-
-
-                if (erro?.message) {
-
-                    mensagemErro = erro.message;
-
-                }
-
+                console.error("ERRO AO SALVAR EDIÇÃO:", erro);
 
                 mostrarMensagem(
-                    mensagemErro,
+                    erro?.message || "Não foi possível salvar as alterações.",
                     "erro"
                 );
-
-
-                mostrarModal(
-                    "Erro ao salvar",
-                    mensagemErro
-                );
-
-
-                // Limpar app secundário em caso de erro
-                if (authSecundario) {
-
-                    try {
-
-                        await signOut(authSecundario);
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
-                }
-
-
-                if (appSecundario) {
-
-                    try {
-
-                        await deleteApp(appSecundario);
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
-                }
-
 
             } finally {
 
                 btnSalvarEdicao.disabled = false;
-
                 btnSalvarEdicao.textContent = "Salvar alterações";
 
             }
@@ -1115,20 +980,9 @@
 
         onAuthStateChanged(auth, async (user) => {
 
-            console.log(
-                "Usuário autenticado:",
-                user
-            );
-
-
             if (!user) {
 
-                console.warn(
-                    "Nenhum usuário autenticado. Redirecionando para login."
-                );
-
                 window.location.href = "index.html";
-
                 return;
 
             }
@@ -1139,58 +993,27 @@
 
             try {
 
-                console.log(
-                    "Verificando cadastro do administrador..."
-                );
-
-
-                const referencia =
-                    doc(
-                        db,
-                        "usuarios",
-                        user.uid
-                    );
-
-
-                const resultado =
-                    await getDoc(referencia);
+                const referencia = doc(db, "usuarios", user.uid);
+                const resultado = await getDoc(referencia);
 
 
                 if (!resultado.exists()) {
-
-                    console.error(
-                        "Documento do usuário não existe em usuarios/"
-                        + user.uid
-                    );
-
 
                     mostrarModal(
                         "Acesso negado",
                         "Seu usuário não possui um cadastro na coleção usuarios."
                     );
 
-
                     setTimeout(() => {
-
-                        window.location.href =
-                            "inicial.html";
-
+                        window.location.href = "inicial.html";
                     }, 2500);
-
 
                     return;
 
                 }
 
 
-                const dados =
-                    resultado.data();
-
-
-                console.log(
-                    "Dados do usuário:",
-                    dados
-                );
+                const dados = resultado.data();
 
 
                 if (dados.perfil !== "admin") {
@@ -1200,35 +1023,19 @@
                         "Somente usuários administradores podem acessar esta página."
                     );
 
-
                     setTimeout(() => {
-
-                        window.location.href =
-                            "inicial.html";
-
+                        window.location.href = "inicial.html";
                     }, 2500);
-
 
                     return;
 
                 }
 
 
-                console.log(
-                    "Administrador confirmado."
-                );
-
-
                 await carregarUsuarios();
 
 
             } catch (erro) {
-
-                console.error(
-                    "Erro ao verificar administrador:",
-                    erro
-                );
-
 
                 tabelaUsuarios.innerHTML = `
 
@@ -1277,41 +1084,14 @@
             }
 
 
-            const nome =
-                document
-                    .getElementById("nome")
-                    .value
-                    .trim();
+            const nome = document.getElementById("nome").value.trim();
+            const usuario = document.getElementById("usuario").value.trim().toLowerCase();
+            const senha = document.getElementById("senha").value;
+            const perfilSelecionado = perfil.value;
+            const escolasSelecionadas = obterEscolasSelecionadas(escola);
 
 
-            const usuario =
-                document
-                    .getElementById("usuario")
-                    .value
-                    .trim()
-                    .toLowerCase();
-
-
-            const senha =
-                document
-                    .getElementById("senha")
-                    .value;
-
-
-            const perfilSelecionado =
-                perfil.value;
-
-
-            const escolaSelecionada =
-                escola.value;
-
-
-            if (
-                !nome ||
-                !usuario ||
-                !senha ||
-                !perfilSelecionado
-            ) {
+            if (!nome || !usuario || !senha || !perfilSelecionado) {
 
                 mostrarMensagem(
                     "Preencha todos os campos obrigatórios.",
@@ -1335,13 +1115,10 @@
             }
 
 
-            if (
-                perfilSelecionado === "escola" &&
-                !escolaSelecionada
-            ) {
+            if (perfilSelecionado === "escola" && escolasSelecionadas.length === 0) {
 
                 mostrarMensagem(
-                    "Selecione a escola do usuário.",
+                    "Selecione pelo menos uma escola.",
                     "erro"
                 );
 
@@ -1350,196 +1127,74 @@
             }
 
 
-            const email =
-                usuario + DOMINIO_EMAIL;
+            const email = usuario + DOMINIO_EMAIL;
 
 
             btnCadastrar.disabled = true;
-
-            btnCadastrar.textContent =
-                "Cadastrando...";
+            btnCadastrar.textContent = "Cadastrando...";
 
 
             let appSecundario = null;
-
             let authSecundario = null;
 
 
             try {
 
-                // =================================================
-                // APP SECUNDÁRIO
-                // =================================================
+                const nomeApp = "cadastroUsuario_" + Date.now();
 
-                console.log(
-                    "Criando aplicativo Firebase secundário..."
-                );
-
-
-                const nomeApp =
-                    "cadastroUsuario_" +
-                    Date.now();
-
-
-                appSecundario =
-                    initializeApp(
-                        firebaseConfig,
-                        nomeApp
-                    );
-
-
-                authSecundario =
-                    getAuth(appSecundario);
-
-
-                console.log(
-                    "Projeto Firebase secundário:",
-                    appSecundario.options.projectId
-                );
-
-
-                console.log(
-                    "API Key secundária:",
-                    appSecundario.options.apiKey
-                );
-
-
-                // =================================================
-                // AUTHENTICATION
-                // =================================================
-
-                console.log(
-                    "Criando usuário no Authentication..."
-                );
+                appSecundario = initializeApp(firebaseConfig, nomeApp);
+                authSecundario = getAuth(appSecundario);
 
 
                 const usuarioCredential =
-                    await createUserWithEmailAndPassword(
-                        authSecundario,
-                        email,
-                        senha
-                    );
+                    await createUserWithEmailAndPassword(authSecundario, email, senha);
 
 
-                const uid =
-                    usuarioCredential.user.uid;
+                const uid = usuarioCredential.user.uid;
 
 
-                console.log(
-                    "Usuário criado no Authentication:",
-                    uid
-                );
-
-
-                // =================================================
-                // FIRESTORE
-                // =================================================
-
+                // SALVAR ARRAY DE ESCOLAS NO FIRESTORE
                 const dadosUsuario = {
 
                     nome: nome,
 
                     email: email,
 
-                    escola:
-                        perfilSelecionado === "escola"
-                            ? escolaSelecionada
-                            : "",
+                    escola: perfilSelecionado === "escola"
+                        ? escolasSelecionadas
+                        : [],
 
-                    perfil:
-                        perfilSelecionado,
+                    perfil: perfilSelecionado,
 
                     ativo: true,
 
-                    dataCadastro:
-                        new Date().toISOString(),
+                    dataCadastro: new Date().toISOString(),
 
-                    cadastradoPor:
-                        usuarioAtual.uid
+                    cadastradoPor: usuarioAtual.uid
 
                 };
 
 
-                console.log(
-                    "Gravando usuarios/" + uid
-                );
+                await setDoc(doc(db, "usuarios", uid), dadosUsuario);
 
 
-                await setDoc(
-                    doc(
-                        db,
-                        "usuarios",
-                        uid
-                    ),
-                    dadosUsuario
-                );
-
-
-                console.log(
-                    "Documento usuarios criado com sucesso."
-                );
-
-
-                // =================================================
-                // ENCERRAR APP SECUNDÁRIO
-                // =================================================
-
-                try {
-
-                    await signOut(
-                        authSecundario
-                    );
-
-                } catch (erroSignOut) {
-
-                    console.warn(
-                        "Erro ao encerrar sessão secundária:",
-                        erroSignOut
-                    );
-
-                }
-
-
-                try {
-
-                    await deleteApp(
-                        appSecundario
-                    );
-
-                } catch (erroDeleteApp) {
-
-                    console.warn(
-                        "Erro ao excluir app secundário:",
-                        erroDeleteApp
-                    );
-
-                }
+                try { await signOut(authSecundario); } catch (e) { console.warn(e); }
+                try { await deleteApp(appSecundario); } catch (e) { console.warn(e); }
 
 
                 appSecundario = null;
-
                 authSecundario = null;
 
 
-                // =================================================
-                // LIMPAR FORMULÁRIO
-                // =================================================
-
                 formUsuario.reset();
-
-
-                campoEscola.classList.add(
-                    "hidden"
-                );
-
-
+                campoEscola.classList.add("hidden");
                 escola.required = false;
 
+                // limpa seleções
+                Array.from(escola.options).forEach(opt => opt.selected = false);
 
-                mostrarMensagem(
-                    "Usuário cadastrado com sucesso."
-                );
 
+                mostrarMensagem("Usuário cadastrado com sucesso.");
 
                 mostrarModal(
                     "Usuário cadastrado",
@@ -1547,147 +1202,48 @@
                 );
 
 
-                // =================================================
-                // ATUALIZAR LISTA
-                // =================================================
-
                 await carregarUsuarios();
 
 
             } catch (erro) {
 
-                console.error(
-                    "ERRO COMPLETO AO CADASTRAR:",
-                    erro
-                );
+                console.error("ERRO COMPLETO AO CADASTRAR:", erro);
 
 
-                console.error(
-                    "Código do erro:",
-                    erro?.code
-                );
+                let mensagemErro = "Não foi possível cadastrar o usuário.";
 
 
-                console.error(
-                    "Mensagem do erro:",
-                    erro?.message
-                );
-
-
-                let mensagemErro =
-                    "Não foi possível cadastrar o usuário.";
-
-
-                if (
-                    erro?.code ===
-                    "auth/email-already-in-use"
-                ) {
-
-                    mensagemErro =
-                        "Este usuário já existe no Firebase Authentication.";
-
-                } else if (
-                    erro?.code ===
-                    "auth/invalid-email"
-                ) {
-
-                    mensagemErro =
-                        "O endereço de e-mail informado é inválido.";
-
-                } else if (
-                    erro?.code ===
-                    "auth/weak-password"
-                ) {
-
-                    mensagemErro =
-                        "A senha informada é muito fraca.";
-
-                } else if (
-                    erro?.code ===
-                    "auth/api-key-not-valid"
-                ) {
-
-                    mensagemErro =
-                        "A chave da API do Firebase foi rejeitada.";
-
-                } else if (
-                    erro?.code ===
-                    "permission-denied"
-                ) {
-
-                    mensagemErro =
-                        "O Firebase bloqueou o acesso ao Firestore.";
-
-                } else if (
-                    erro?.message
-                ) {
-
-                    mensagemErro =
-                        erro.message;
-
+                if (erro?.code === "auth/email-already-in-use") {
+                    mensagemErro = "Este usuário já existe no Firebase Authentication.";
+                } else if (erro?.code === "auth/invalid-email") {
+                    mensagemErro = "O endereço de e-mail informado é inválido.";
+                } else if (erro?.code === "auth/weak-password") {
+                    mensagemErro = "A senha informada é muito fraca.";
+                } else if (erro?.code === "auth/api-key-not-valid") {
+                    mensagemErro = "A chave da API do Firebase foi rejeitada.";
+                } else if (erro?.code === "permission-denied") {
+                    mensagemErro = "O Firebase bloqueou o acesso ao Firestore.";
+                } else if (erro?.message) {
+                    mensagemErro = erro.message;
                 }
 
 
-                mostrarMensagem(
-                    mensagemErro,
-                    "erro"
-                );
+                mostrarMensagem(mensagemErro, "erro");
+                mostrarModal("Erro ao cadastrar usuário", mensagemErro);
 
-
-                mostrarModal(
-                    "Erro ao cadastrar usuário",
-                    mensagemErro
-                );
-
-
-                // =================================================
-                // LIMPAR APP SECUNDÁRIO
-                // =================================================
 
                 if (authSecundario) {
-
-                    try {
-
-                        await signOut(
-                            authSecundario
-                        );
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
+                    try { await signOut(authSecundario); } catch (e) { console.warn(e); }
                 }
-
 
                 if (appSecundario) {
-
-                    try {
-
-                        await deleteApp(
-                            appSecundario
-                        );
-
-                    } catch (e) {
-
-                        console.warn(e);
-
-                    }
-
+                    try { await deleteApp(appSecundario); } catch (e) { console.warn(e); }
                 }
-
-
-                appSecundario = null;
-
-                authSecundario = null;
 
             } finally {
 
                 btnCadastrar.disabled = false;
-
-                btnCadastrar.textContent =
-                    "Cadastrar usuário";
+                btnCadastrar.textContent = "Cadastrar usuário";
 
             }
 
@@ -1700,22 +1256,12 @@
 
         async function carregarUsuarios() {
 
-            console.log(
-                "Iniciando carregamento da coleção usuarios..."
-            );
-
-
             tabelaUsuarios.innerHTML = `
 
                 <tr>
-
-                    <td colspan="5"
-                        class="px-6 py-10 text-center text-gray-500">
-
+                    <td colspan="5" class="px-6 py-10 text-center text-gray-500">
                         Carregando usuários...
-
                     </td>
-
                 </tr>
 
             `;
@@ -1723,29 +1269,8 @@
 
             try {
 
-                console.log(
-                    "Executando getDocs em usuarios..."
-                );
-
-
-                const referencia =
-                    collection(
-                        db,
-                        "usuarios"
-                    );
-
-
-                const resultado =
-                    await getDocs(
-                        referencia
-                    );
-
-
-                console.log(
-                    "Consulta concluída.",
-                    "Quantidade:",
-                    resultado.size
-                );
+                const referencia = collection(db, "usuarios");
+                const resultado = await getDocs(referencia);
 
 
                 if (resultado.empty) {
@@ -1753,18 +1278,12 @@
                     tabelaUsuarios.innerHTML = `
 
                         <tr>
-
-                            <td colspan="5"
-                                class="px-6 py-10 text-center text-gray-500">
-
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
                                 Nenhum usuário cadastrado.
-
                             </td>
-
                         </tr>
 
                     `;
-
 
                     return;
 
@@ -1776,22 +1295,24 @@
 
                 resultado.forEach((documento) => {
 
-                    const dados =
-                        documento.data();
+                    const dados = documento.data();
+                    const tr = document.createElement("tr");
 
-
-                    const tr =
-                        document.createElement("tr");
-
-
-                    tr.className =
-                        "border-t border-gray-100 hover:bg-gray-50";
+                    tr.className = "border-t border-gray-100 hover:bg-gray-50";
 
 
                     const perfilTexto =
-                        dados.perfil === "admin"
-                            ? "Administrador"
-                            : "Escola";
+                        dados.perfil === "admin" ? "Administrador" : "Escola";
+
+
+                    // exibir escolas como badges
+                    const escolasArray = normalizarEscolas(dados);
+
+                    const escolasHTML = escolasArray.length > 0
+                        ? escolasArray
+                            .map(e => `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded mr-1 mb-1">${escaparHTML(e)}</span>`)
+                            .join("")
+                        : '<span class="text-gray-400 text-sm">—</span>';
 
 
                     tr.innerHTML = `
@@ -1808,8 +1329,8 @@
                             ${perfilTexto}
                         </td>
 
-                        <td class="px-6 py-4 text-sm text-gray-600">
-                            ${escaparHTML(dados.escola || "—")}
+                        <td class="px-6 py-4 text-sm">
+                            ${escolasHTML}
                         </td>
 
                         <td class="px-6 py-4 text-center">
@@ -1837,75 +1358,31 @@
                     `;
 
 
-                    const botaoEditar =
-                        tr.querySelector(".btn-editar");
+                    const botaoEditar = tr.querySelector(".btn-editar");
+                    botaoEditar.addEventListener("click", () => abrirModalEdicao(documento.id));
 
 
-                    botaoEditar.addEventListener(
-                        "click",
-                        () => abrirModalEdicao(
-                            documento.id
-                        )
-                    );
+                    const botaoExcluir = tr.querySelector(".btn-excluir");
+                    botaoExcluir.addEventListener("click", () => excluirUsuario(documento.id, dados.nome || "Usuário"));
 
 
-                    const botaoExcluir =
-                        tr.querySelector(".btn-excluir");
-
-
-                    botaoExcluir.addEventListener(
-                        "click",
-                        () => excluirUsuario(
-                            documento.id,
-                            dados.nome || "Usuário"
-                        )
-                    );
-
-
-                    tabelaUsuarios.appendChild(
-                        tr
-                    );
+                    tabelaUsuarios.appendChild(tr);
 
                 });
 
 
             } catch (erro) {
 
-                console.error(
-                    "ERRO AO CARREGAR USUÁRIOS:",
-                    erro
-                );
-
-
-                console.error(
-                    "Código:",
-                    erro?.code
-                );
-
-
-                console.error(
-                    "Mensagem:",
-                    erro?.message
-                );
-
-
                 tabelaUsuarios.innerHTML = `
 
                     <tr>
-
-                        <td colspan="5"
-                            class="px-6 py-10 text-center text-red-600">
-
+                        <td colspan="5" class="px-6 py-10 text-center text-red-600">
                             Não foi possível carregar os usuários.
-
                             <br>
-
                             <span class="text-xs text-gray-500">
                                 ${escaparHTML(erro?.message || "Erro desconhecido")}
                             </span>
-
                         </td>
-
                     </tr>
 
                 `;
@@ -1921,45 +1398,17 @@
 
         async function excluirUsuario(uid, nome) {
 
-            const confirmar =
-                confirm(
-                    `Deseja realmente excluir o cadastro de "${nome}"?`
-                );
-
-
-            if (!confirmar) {
-
-                return;
-
-            }
+            if (!confirm(`Deseja realmente excluir o cadastro de "${nome}"?`)) return;
 
 
             try {
 
-                await deleteDoc(
-                    doc(
-                        db,
-                        "usuarios",
-                        uid
-                    )
-                );
+                await deleteDoc(doc(db, "usuarios", uid));
 
-
-                mostrarMensagem(
-                    "Cadastro removido da coleção usuarios."
-                );
-
-
+                mostrarMensagem("Cadastro removido da coleção usuarios.");
                 await carregarUsuarios();
 
-
             } catch (erro) {
-
-                console.error(
-                    "Erro ao excluir usuário:",
-                    erro
-                );
-
 
                 mostrarMensagem(
                     "Não foi possível excluir o usuário.",
@@ -1978,31 +1427,11 @@
         function escaparHTML(valor) {
 
             return String(valor)
-
-                .replace(
-                    /&/g,
-                    "&amp;"
-                )
-
-                .replace(
-                    /</g,
-                    "&lt;"
-                )
-
-                .replace(
-                    />/g,
-                    "&gt;"
-                )
-
-                .replace(
-                    /"/g,
-                    "&quot;"
-                )
-
-                .replace(
-                    /'/g,
-                    "&#039;"
-                );
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
 
         }
 
