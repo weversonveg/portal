@@ -247,7 +247,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .mensagem-erro.ativo { display:flex; }
 .hidden { display:none !important; }
 
-/* ===== AVISO INFORMATIVO ===== */
 .aviso-info {
     display: flex;
     align-items: flex-start;
@@ -275,7 +274,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
     margin-bottom: 4px;
 }
 
-/* ===== TABELA RESUMO FINAL ===== */
 .tabela-resumo-wrap {
     overflow-x: auto;
     margin-top: 8px;
@@ -962,8 +960,7 @@ onAuthStateChanged(auth, async function(user) {
             const perfil = (snap.data().perfil||"").toUpperCase();
             if (["ADMIN","ADMINISTRADOR","SEMED","RH","GESTOR","MASTER","DIRETOR"].includes(perfil)) {
                 acessoAutorizado=true; formBusca.style.display='block'; ocultarErro();
-                
-                // Auto-busca segura por URL (sem setInterval)
+
                 if (termoPendenteDeBusca) {
                     setTimeout(() => {
                         buscarServidor();
@@ -983,11 +980,10 @@ onAuthStateChanged(auth, async function(user) {
 });
 
 document.getElementById('termoBusca').addEventListener('input', function(e){
-    let v=e.target.value.replace(/\D/g,''); if(v.length>11)v=v.slice(0,11);
-    if(v.length>9)v=v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
-    else if(v.length>6)v=v.replace(/^(\d{3})(\d{3})(\d{1,3})$/,'$1.$2.$3');
-    else if(v.length>3)v=v.replace(/^(\d{3})(\d{1,3})$/,'$1.$2');
-    e.target.value=v;
+    let v = e.target.value.replace(/\D/g,'');
+    if (v.length > 20) v = v.slice(0,20);
+    if (v.length === 11) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    e.target.value = v;
 });
 document.getElementById('termoBusca').addEventListener('keypress', e=>{ if(e.key==='Enter'){e.preventDefault();buscarServidor();} });
 document.getElementById('btnBuscar').addEventListener('click', buscarServidor);
@@ -1187,12 +1183,16 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     matricula:vinculo.matricula,
                     unidade: vinculo.unidade || 'Não informada',
                     diasDireito: diasDireito,
-                    tipo:'Férias',tipoKey:'ferias',
+                    tipo:'Férias',
+                    tipoKey:'ferias',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime(),
-                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)});
+                    status,
+                    gozo:gozo||'—',
+                    ordem:p.inicio.getTime(),
+                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
+                });
             });
         }
 
@@ -1222,12 +1222,16 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     servidor:nomeServidorAtual,
                     matricula:vinculo.matricula,
                     unidade: vinculo.unidade || 'Não informada',
-                    tipo:'Folga Aniv.',tipoKey:'folga',
+                    tipo:'Folga Aniv.',
+                    tipoKey:'folga',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                    status,gozo:gozo||'—',ordem:p.inicio.getTime(),
-                    extemporaneo: false});
+                    status,
+                    gozo:gozo||'—',
+                    ordem:p.inicio.getTime(),
+                    extemporaneo: false
+                });
             });
         }
     });
@@ -1257,11 +1261,11 @@ function renderizarResumoExecutivo(){
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
     let html = '';
-    
+
     mats.forEach(mat => {
         const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
         const unidade = linhasMat[0]?.unidade || 'Unidade não informada';
-        
+
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
@@ -1318,14 +1322,20 @@ function popularFiltroMatricula(){
 }
 
 function aplicarFiltros(){
-    const fm=document.getElementById('filtroMatricula').value;
-    const ft=document.getElementById('filtroTipo').value;
-    const fs=document.getElementById('filtroStatus').value;
-    let linhas=linhasUnificadas;
-    if(fm)linhas=linhas.filter(l=>l.matricula===fm);
-    if(ft)linhas=linhas.filter(l=>l.tipoKey===ft);
-    if(fs)linhas=linhas.filter(l=>l.status===fs);
-    renderizarTabelaUnica(linhas);
+    const fm = document.getElementById('filtroMatricula')?.value || '';
+    const ft = document.getElementById('filtroTipo')?.value || '';
+    const fs = document.getElementById('filtroStatus')?.value || '';
+
+    const linhasFiltradas = linhasUnificadas.filter(l => {
+        const okMatricula = !fm || String(l.matricula) === String(fm);
+        const okTipo = !ft || l.tipoKey === ft;
+        const okStatus = !fs || l.status === fs;
+        return okMatricula && okTipo && okStatus;
+    });
+
+    renderizarTabelaUnica(linhasFiltradas);
+    renderizarGrafico(linhasFiltradas);
+    renderizarTabelaResumo(linhasFiltradas);
 }
 
 document.getElementById('filtroMatricula').addEventListener('change', aplicarFiltros);
@@ -1334,7 +1344,7 @@ document.getElementById('filtroStatus').addEventListener('change', aplicarFiltro
 
 function renderizarTabelaUnica(linhas){
     const tbody=document.getElementById('tabelaUnica');
-    if(linhas.length===0){
+    if(!linhas || linhas.length===0){
         tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
         return;
     }
@@ -1366,17 +1376,17 @@ function obterClasseSegmento(status) {
     return mapa[status] || 'seg-pendente';
 }
 
-function renderizarGrafico() {
+function renderizarGrafico(linhas = linhasUnificadas) {
     const container = document.getElementById('graficoPeriodos');
     if (!container) return;
 
-    if (linhasUnificadas.length === 0) {
-        container.innerHTML = '<div class="grafico-vazio">Nenhum período para exibir.</div>';
+    if (!linhas || linhas.length === 0) {
+        container.innerHTML = '<div class="grafico-vazio">Nenhum período para exibir com os critérios atuais.</div>';
         return;
     }
 
     const periodosMap = new Map();
-    linhasUnificadas.forEach(l => {
+    linhas.forEach(l => {
         if (!periodosMap.has(l.periodo)) {
             periodosMap.set(l.periodo, []);
         }
@@ -1527,17 +1537,30 @@ function renderizarGrafico() {
     container.innerHTML = html;
 }
 
-function renderizarTabelaResumo() {
+function renderizarTabelaResumo(linhas = linhasUnificadas) {
     const tbody = document.getElementById('tabelaResumoCorpo');
     const aviso = document.getElementById('avisoResumoVazio');
-    const tabela = tbody.closest('table');
+    const tabela = tbody ? tbody.closest('table') : null;
 
     if (!tbody || !aviso || !tabela) return;
 
-    if (linhasUnificadas.length === 0) {
+    if (!linhas || linhas.length === 0) {
         tbody.innerHTML = '';
         tabela.classList.add('hidden');
         aviso.classList.remove('hidden');
+
+        const fm = document.getElementById('filtroMatricula')?.value || '';
+        const ft = document.getElementById('filtroTipo')?.value || '';
+        const fs = document.getElementById('filtroStatus')?.value || '';
+        const temFiltro = Boolean(fm || ft || fs);
+
+        aviso.innerHTML = `
+            <span class="material-symbols-outlined">info</span>
+            <div>
+                <strong>${temFiltro ? 'Nenhum registro para o filtro selecionado' : 'Sem dados para o resumo'}</strong>
+                ${temFiltro ? 'Nenhum período corresponde aos filtros aplicados.' : 'Nenhum período aquisitivo foi localizado para este servidor.'}
+            </div>
+        `;
         return;
     }
 
@@ -1545,7 +1568,7 @@ function renderizarTabelaResumo() {
     aviso.classList.add('hidden');
 
     const periodosMap = new Map();
-    linhasUnificadas.forEach(l => {
+    linhas.forEach(l => {
         if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
         periodosMap.get(l.periodo).push(l);
     });
@@ -1556,10 +1579,9 @@ function renderizarTabelaResumo() {
         return aNum - bNum;
     });
 
-    // Identifica todos os vínculos únicos
-    const vinculosUnicos = [...new Map(linhasUnificadas.map(item => [item.matricula, item])).values()];
-    
-    const infoVinculos = vinculosUnicos.map(v => 
+    const vinculosUnicos = [...new Map(linhas.map(item => [String(item.matricula), item])).values()];
+
+    const infoVinculos = vinculosUnicos.map(v =>
         `<strong>${v.matricula}</strong> <span style="color:var(--text-muted); font-weight:400;">(${v.unidade || 'Sem unidade'})</span>`
     ).join(' &nbsp;|&nbsp; ');
 
@@ -1571,7 +1593,9 @@ function renderizarTabelaResumo() {
     </tr>`;
 
     let thead = tabela.querySelector('thead');
-    thead.innerHTML = `<tr><th colspan="${periodosOrdenados.length}" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>`;
+    if (thead) {
+        thead.innerHTML = `<tr><th colspan="${periodosOrdenados.length}" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>`;
+    }
 
     let linhaAnos = '<tr>';
     periodosOrdenados.forEach(per => {
@@ -1614,7 +1638,7 @@ function renderizarTabelaResumo() {
             }
 
             if (!gruposFerias.has(chave)) gruposFerias.set(chave, []);
-            gruposFerias.get(chave).push({ texto: textoTrecho, status: f.status, unidade: f.unidade });
+            gruposFerias.get(chave).push({ texto: textoTrecho, status: f.status });
         });
 
         gruposFerias.forEach(lista => {
@@ -1680,80 +1704,138 @@ function renderizarTabelaResumo() {
     if (titulo) titulo.setAttribute('colspan', String(periodosOrdenados.length));
 }
 
-/**
- * ============================================================
- * BUSCA REFSATORADA - OTIMIZADA PARA PERFORMANCE
- * ============================================================
- * Estratégia:
- * - Usa apenas queries com WHERE (sem getDocs sem filtro)
- * - Detecta se o termo é CPF ou matrícula pela estrutura
- * - Executa queries específicas e paralelas
- * - Não faz fallback que baixe toda a coleção
- * ============================================================
- */
+function normalizarTextoUnidade(valor) {
+    if (!valor) return '';
+    if (typeof valor === 'string') return valor.trim();
+    if (typeof valor === 'number') return String(valor);
+    if (typeof valor === 'object') {
+        return valor.nome || valor.nomeUnidade || valor.unidade || valor.escola || '';
+    }
+    return '';
+}
+
+function obterUnidade(documento, vinculoObj) {
+    const fontes = [];
+
+    if (vinculoObj) {
+        fontes.push(
+            vinculoObj.unidade,
+            vinculoObj.unidadeEscolar,
+            vinculoObj.unidade_escolar,
+            vinculoObj.escola,
+            vinculoObj.nomeUnidade,
+            vinculoObj.lotacao,
+            vinculoObj.lotação
+        );
+    }
+
+    if (documento) {
+        fontes.push(
+            documento.unidade,
+            documento.unidadeEscolar,
+            documento.unidade_escolar,
+            documento.escola,
+            documento.nomeUnidade,
+            documento.lotacao,
+            documento.lotação
+        );
+    }
+
+    for (const f of fontes) {
+        const txt = normalizarTextoUnidade(f);
+        if (txt) return txt;
+    }
+
+    return '';
+}
+
 async function buscarServidor(){
-    if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
-    const termo=document.getElementById('termoBusca').value.trim();
-    if(!termo){mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');return;}
+    if(!acessoAutorizado){ mostrarErro("Acesso negado."); return; }
+
+    const termo = document.getElementById('termoBusca').value.trim();
+    if(!termo){
+        mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');
+        return;
+    }
 
     mostrarLoading('Buscando servidor...');
 
-    const termoLimpo=termo.replace(/\D/g,'');
-    const colRef=collection(db,'servidores');
-    const encontrados=new Map();
-    
+    const termoLimpo = termo.replace(/\D/g,'');
+    const colRef = collection(db,'servidores');
+    const encontrados = new Map();
+    const estrategias = [];
+    const vistas = new Set();
+
+    const addDoc = (id) => {
+        if (!id) return;
+        estrategias.push(getDoc(doc(db,'servidores', id)).catch(() => null));
+    };
+
+    const addQuery = (campo, valor) => {
+        if (valor === undefined || valor === null || valor === '') return;
+        const chave = `${campo}::${typeof valor}::${String(valor)}`;
+        if (vistas.has(chave)) return;
+        vistas.add(chave);
+        estrategias.push(getDocs(query(colRef, where(campo,'==',valor))).catch(() => null));
+    };
+
+    addDoc(termo);
+    if (termoLimpo && termoLimpo !== termo) addDoc(termoLimpo);
+
+    if (termoLimpo) {
+        ['cpf','CPF'].forEach(campo => {
+            addQuery(campo, termoLimpo);
+            if (termo !== termoLimpo) addQuery(campo, termo);
+        });
+
+        const valoresMatricula = new Set();
+        valoresMatricula.add(termoLimpo);
+
+        const semZeros = termoLimpo.replace(/^0+/, '');
+        if (semZeros) valoresMatricula.add(semZeros);
+
+        if (/^\d+$/.test(termoLimpo)) {
+            const num = Number(termoLimpo);
+            if (Number.isSafeInteger(num)) valoresMatricula.add(num);
+
+            if (semZeros) {
+                const numSemZeros = Number(semZeros);
+                if (Number.isSafeInteger(numSemZeros)) valoresMatricula.add(numSemZeros);
+            }
+        }
+
+        const camposMatricula = [
+            'matricula',
+            'Matricula',
+            'matricula_servidor',
+            'matricula1.numeroMatricula',
+            'matricula2.numeroMatricula'
+        ];
+
+        camposMatricula.forEach(campo => {
+            valoresMatricula.forEach(valor => addQuery(campo, valor));
+        });
+    }
+
     try {
-        // Estratégias de busca em paralelo (todas com WHERE - sem varredura completa)
-        const estrategias = [];
-        
-        // 1. Busca direta por ID do documento
-        estrategias.push(getDoc(doc(db,'servidores',termo)).catch(() => null));
-        if (termo !== termoLimpo) {
-            estrategias.push(getDoc(doc(db,'servidores',termoLimpo)).catch(() => null));
-        }
-        
-        // 2. Detecta se é CPF (11 dígitos) ou matrícula
-        const ehCpf = termoLimpo.length === 11;
-        
-        if (ehCpf) {
-            // Busca por CPF em múltiplos formatos possíveis
-            estrategias.push(
-                getDocs(query(colRef, where('cpf','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('cpf','==',termo))).catch(() => null),
-                getDocs(query(colRef, where('CPF','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('CPF','==',termo))).catch(() => null)
-            );
-        } else {
-            // Busca por matrícula em múltiplos campos possíveis
-            estrategias.push(
-                getDocs(query(colRef, where('matricula','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('Matricula','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('matricula_servidor','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('matricula1.numeroMatricula','==',termoLimpo))).catch(() => null),
-                getDocs(query(colRef, where('matricula2.numeroMatricula','==',termoLimpo))).catch(() => null)
-            );
-        }
-        
-        // 3. Executa todas em paralelo
         const resultados = await Promise.all(estrategias);
-        
-        // Processa resultados
+
         resultados.forEach(res => {
             if (!res) return;
-            if (res.exists && res.exists()) {
-                encontrados.set(res.id, res);
-            } else if (res.forEach) {
+            if (typeof res.exists === 'function') {
+                if (res.exists()) encontrados.set(res.id, res);
+            } else if (typeof res.forEach === 'function') {
                 res.forEach(d => encontrados.set(d.id, d));
             }
         });
-        
+
         if(encontrados.size===0){
             ocultarLoading();
             mostrarAlerta('Servidor não localizado no sistema. Verifique o CPF ou matrícula informados.','erro','Não encontrado');
             document.getElementById('resultadoContainer').classList.add('hidden');
             return;
         }
-        
+
         await processarServidores(Array.from(encontrados.values()));
         ultimoTermoBuscado = termo;
     } catch(e){
@@ -1773,29 +1855,28 @@ async function processarServidores(docs){
     const cpfFmt=(d0.cpf||d0.CPF||'').toString();
     const nascimento=d0.data_nascimento||d0.dataNascimento;
 
-    // ============================================================
-    // EXTRAÇÃO DE VÍNCULOS (com Unidade Escolar)
-    // Suporta: matricula1, matricula2, campos soltos
-    // ============================================================
     const vinculosMap = new Map();
     const servidorIds = docs.map(d => d.id);
-    
+
     const processarVinculo = (numMat, dataAdm, diasFerias, nomeUnidade) => {
         if (!numMat) return;
-        const ms = numMat.toString().trim();
-        
+        const ms = String(numMat).trim();
+        if (!ms) return;
+
+        const unidade = nomeUnidade ? String(nomeUnidade).trim() : '';
+
         if (!vinculosMap.has(ms)) {
             vinculosMap.set(ms, {
                 matricula: ms,
                 dataAdmissao: dataAdm || '',
                 diasFerias: diasFerias ? Number(diasFerias) : null,
-                unidade: nomeUnidade || 'Não informada'
+                unidade: unidade || 'Não informada'
             });
         } else {
             const existente = vinculosMap.get(ms);
             if (!existente.dataAdmissao && dataAdm) existente.dataAdmissao = dataAdm;
             if (!existente.diasFerias && diasFerias) existente.diasFerias = Number(diasFerias);
-            if (existente.unidade === 'Não informada' && nomeUnidade) existente.unidade = nomeUnidade;
+            if ((!existente.unidade || existente.unidade === 'Não informada') && unidade) existente.unidade = unidade;
         }
     };
 
@@ -1807,7 +1888,7 @@ async function processarServidores(docs){
                 dt.matricula1.numeroMatricula,
                 dt.matricula1.dataAdmissao || dt.matricula1.data_admissao,
                 dt.matricula1.diasFerias,
-                dt.matricula1.unidade || dt.matricula1.unidadeEscolar || dt.unidade || dt.unidadeEscolar
+                obterUnidade(dt, dt.matricula1)
             );
         }
 
@@ -1816,7 +1897,7 @@ async function processarServidores(docs){
                 dt.matricula2.numeroMatricula,
                 dt.matricula2.dataAdmissao || dt.matricula2.data_admissao,
                 dt.matricula2.diasFerias,
-                dt.matricula2.unidade || dt.matricula2.unidadeEscolar || dt.unidade || dt.unidadeEscolar
+                obterUnidade(dt, dt.matricula2)
             );
         }
 
@@ -1826,7 +1907,7 @@ async function processarServidores(docs){
                 matriculaSolta,
                 dt.data_admissao || dt.dataAdmissao,
                 dt.diasFerias,
-                dt.unidade || dt.unidadeEscolar
+                obterUnidade(dt, null)
             );
         }
     });
@@ -1836,41 +1917,59 @@ async function processarServidores(docs){
         vinculos.push({ matricula: 'Não informada', dataAdmissao: '', diasFerias: null, unidade: 'Não informada' });
     }
 
-    // ============================================================
-    // BUSCA DE REGISTROS DE FÉRIAS/FOLGAS (otimizada)
-    // ============================================================
     let registros=[];
     const ids=new Set();
+    const queriesRegistros=[];
+    const vistasReg=new Set();
+
+    const addQueryReg = (campo, valor) => {
+        if (valor === undefined || valor === null || valor === '') return;
+        const chave = `${campo}::${typeof valor}::${String(valor)}`;
+        if (vistasReg.has(chave)) return;
+        vistasReg.add(chave);
+        queriesRegistros.push(
+            getDocs(query(collection(db,'registro_ferias_folgas'), where(campo,'==',valor))).catch(() => null)
+        );
+    };
+
     try{
-        const queriesRegistros = [];
-        
         if (cpfLimpo) {
-            queriesRegistros.push(
-                getDocs(query(collection(db,'registro_ferias_folgas'), where('cpf','==',cpfLimpo))).catch(() => null)
-            );
+            addQueryReg('cpf', cpfLimpo);
+            addQueryReg('CPF', cpfLimpo);
         }
+
         if (cpfFmt && cpfFmt !== cpfLimpo) {
-            queriesRegistros.push(
-                getDocs(query(collection(db,'registro_ferias_folgas'), where('cpf','==',cpfFmt))).catch(() => null)
-            );
+            addQueryReg('cpf', cpfFmt);
+            addQueryReg('CPF', cpfFmt);
         }
-        
-        for (const sid of servidorIds) {
-            queriesRegistros.push(
-                getDocs(query(collection(db,'registro_ferias_folgas'), where('servidorId','==',sid))).catch(() => null)
-            );
-        }
-        
-        // Busca também por matrícula se não houver CPF
+
+        servidorIds.forEach(id => addQueryReg('servidorId', id));
+
         vinculos.forEach(v => {
-            queriesRegistros.push(
-                getDocs(query(collection(db,'registro_ferias_folgas'), where('matricula','==',v.matricula))).catch(() => null)
-            );
+            if (!v.matricula || v.matricula === 'Não informada') return;
+
+            addQueryReg('matricula', v.matricula);
+            addQueryReg('Matricula', v.matricula);
+            addQueryReg('servidor_matricula', v.matricula);
+
+            const semZeros = String(v.matricula).replace(/^0+/, '');
+            if (semZeros && semZeros !== v.matricula) {
+                addQueryReg('matricula', semZeros);
+                addQueryReg('Matricula', semZeros);
+                addQueryReg('servidor_matricula', semZeros);
+            }
+
+            const num = Number(v.matricula);
+            if (Number.isSafeInteger(num)) {
+                addQueryReg('matricula', num);
+                addQueryReg('Matricula', num);
+                addQueryReg('servidor_matricula', num);
+            }
         });
-        
-        const resultados = await Promise.all(queriesRegistros);
-        resultados.forEach(res => {
-            if (res && res.forEach) {
+
+        const resultadosReg = await Promise.all(queriesRegistros);
+        resultadosReg.forEach(res => {
+            if (res && typeof res.forEach === 'function') {
                 res.forEach(x => {
                     if (!ids.has(x.id)) {
                         registros.push({id:x.id, ...x.data()});
@@ -1879,8 +1978,10 @@ async function processarServidores(docs){
                 });
             }
         });
-        
-    } catch(e){console.error('[Registros] Erro:', e);}
+
+    } catch(e){
+        console.error('[Registros] Erro:', e);
+    }
 
     document.getElementById('nomeServidor').textContent=nome;
     document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
@@ -1892,7 +1993,9 @@ async function processarServidores(docs){
         return `${v.matricula} (Adm ${adm} • ${dias})`;
     }).join('  ·  ');
 
-    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const hoje=new Date();
+    hoje.setHours(0,0,0,0);
+
     linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
 
     renderizarResumoExecutivo();
@@ -1911,10 +2014,10 @@ async function processarServidores(docs){
 
     if (!semPeriodos) {
         renderizarTabelaUnica(linhasUnificadas);
-        renderizarGrafico();
+        renderizarGrafico(linhasUnificadas);
     }
 
-    renderizarTabelaResumo();
+    renderizarTabelaResumo(linhasUnificadas);
 
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
@@ -1925,16 +2028,15 @@ function mostrarErro(t){
     el.classList.add('ativo');
     document.getElementById('resultadoContainer').classList.add('hidden');
 }
-function ocultarErro(){document.getElementById('mensagemErro').classList.remove('ativo');}
+function ocultarErro(){
+    document.getElementById('mensagemErro').classList.remove('ativo');
+}
 
 window.buscarServidor = buscarServidor;
 
-/* ============================================================
-   AUTO-BUSCA POR PARÂMETRO DE URL (sem setInterval)
-   Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidor=<id>
-   ============================================================ */
 (function autoBuscarPorUrl() {
     const params = new URLSearchParams(window.location.search);
+
     let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
     termo = termo.trim();
     if (!termo) return;
@@ -1951,7 +2053,7 @@ window.buscarServidor = buscarServidor;
     } else {
         input.value = termo;
     }
-    
+
     termoPendenteDeBusca = input.value;
 
     try {
@@ -1961,6 +2063,13 @@ window.buscarServidor = buscarServidor;
         url.searchParams.delete('servidor');
         window.history.replaceState({}, '', url.toString());
     } catch (e) {}
+
+    if (acessoAutorizado) {
+        setTimeout(() => {
+            buscarServidor();
+            termoPendenteDeBusca = null;
+        }, 300);
+    }
 })();
 </script>
 
