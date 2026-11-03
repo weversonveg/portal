@@ -1233,7 +1233,12 @@ tr:hover td { background: var(--surface-2); }
                 <div class="filter-group">
                     <label for="filtroEscola">Selecione a Escola</label>
                     <select id="filtroEscola">
-                        <option value="">Carregando escolas...</option>
+                        <option value="">Selecione a unidade</option>
+                        <option value="CEAE">CEAE</option>
+                        <option value="CETEPE">CETEPE</option>
+                        <option value="E M SÃO JOSÉ">E M SÃO JOSÉ</option>
+                        <option value="E M SÃO GERALDO">E M SÃO GERALDO</option>
+                        <option value="CMEI ANÁLIA NOGUEIRA">CMEI ANÁLIA NOGUEIRA</option>
                     </select>
                 </div>
 
@@ -1591,26 +1596,41 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // =========================================================
 // CARREGAR UNIDADES ESCOLARES DA COLEÇÃO "unidades"
+// Mantém o layout original se houver erro (fallback estático)
 // =========================================================
 async function carregarUnidadesEscolares() {
     const selectEscola = document.getElementById("filtroEscola");
     try {
         const snapshot = await getDocs(collection(db, "unidades"));
+
+        if (snapshot.empty) {
+            console.log("Coleção unidades vazia. Mantendo opções estáticas.");
+            return;
+        }
+
         const listaUnidades = [];
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const nome = data.nome || data.nomeEscola || docSnap.id;
-            listaUnidades.push(nome);
+            if (nome) listaUnidades.push(nome);
         });
+
+        if (listaUnidades.length === 0) {
+            console.log("Nenhuma unidade válida encontrada. Mantendo opções estáticas.");
+            return;
+        }
+
         listaUnidades.sort((a, b) => a.localeCompare(b));
         popularSelectFiltro(selectEscola, listaUnidades);
+
     } catch (erro) {
-        console.error("Erro ao carregar unidades escolares:", erro);
-        selectEscola.innerHTML = '<option value="">Erro ao carregar escolas</option>';
+        console.warn("Erro ao carregar unidades escolares. Mantendo opções estáticas:", erro);
     }
 }
 
 function popularSelectFiltro(selectElement, lista) {
+    const valorAtual = selectElement.value;
+
     selectElement.innerHTML = '<option value="">Selecione a unidade</option>';
     lista.forEach(nome => {
         const opt = document.createElement('option');
@@ -1618,6 +1638,11 @@ function popularSelectFiltro(selectElement, lista) {
         opt.textContent = nome;
         selectElement.appendChild(opt);
     });
+
+    if (valorAtual) {
+        const existe = Array.from(selectElement.options).some(o => o.value === valorAtual);
+        if (existe) selectElement.value = valorAtual;
+    }
 }
 
 function normalizarTexto(valor) {
