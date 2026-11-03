@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,table_view,beach_access,cake,event_upcoming,event_available,cancel,hourglass_top,error_outline,hourglass_bottom,grid_on">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,table_view,beach_access,cake,event_upcoming,event_available,cancel,hourglass_top,error_outline,hourglass_bottom,grid_on,search,sync,apartment">
 
 <script>
 (function () {
@@ -429,6 +429,23 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .grafico-linha { flex-direction: column; align-items: flex-start; gap: 4px; }
     .grafico-trilha { width: 100%; }
 }
+
+.unidade-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.unidade-tag .material-symbols-outlined { font-size: 12px; color: var(--brand); }
 </style>
 </head>
 
@@ -537,7 +554,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
             <div class="page-header-page">
                 <div>
                     <h1>Linha do Tempo do Servidor</h1>
-                    <p>Visão consolidada de férias e folgas por período aquisitivo.</p>
+                    <p>Visão consolidada de férias e folgas por período aquisitivo, com detalhamento por matrícula e unidade.</p>
                 </div>
             </div>
 
@@ -610,6 +627,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <tr>
                                     <th>Servidor</th>
                                     <th>Matrícula</th>
+                                    <th>Unidade</th>
                                     <th>Tipo</th>
                                     <th>Período</th>
                                     <th>Ciclo Aquisitivo</th>
@@ -878,6 +896,7 @@ let linhasUnificadas = [];
 let nomeServidorAtual = '';
 let ultimoTermoBuscado = '';
 let servidorAtualRef = null;
+let termoPendenteDeBusca = null;
 
 const DIAS_PADRAO = 30;
 
@@ -943,6 +962,14 @@ onAuthStateChanged(auth, async function(user) {
             const perfil = (snap.data().perfil||"").toUpperCase();
             if (["ADMIN","ADMINISTRADOR","SEMED","RH","GESTOR","MASTER","DIRETOR"].includes(perfil)) {
                 acessoAutorizado=true; formBusca.style.display='block'; ocultarErro();
+                
+                // Auto-busca segura por URL (sem setInterval)
+                if (termoPendenteDeBusca) {
+                    setTimeout(() => {
+                        buscarServidor();
+                        termoPendenteDeBusca = null;
+                    }, 300);
+                }
             } else {
                 acessoAutorizado=false;
                 mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
@@ -1155,7 +1182,12 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     else status='disponivel';
                 }
 
-                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Férias',tipoKey:'ferias',
+                linhas.push({
+                    servidor:nomeServidorAtual,
+                    matricula:vinculo.matricula,
+                    unidade: vinculo.unidade || 'Não informada',
+                    diasDireito: diasDireito,
+                    tipo:'Férias',tipoKey:'ferias',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
@@ -1186,7 +1218,11 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                     status = p.status;
                 }
 
-                linhas.push({servidor:nomeServidorAtual,matricula:vinculo.matricula,tipo:'Folga Aniv.',tipoKey:'folga',
+                linhas.push({
+                    servidor:nomeServidorAtual,
+                    matricula:vinculo.matricula,
+                    unidade: vinculo.unidade || 'Não informada',
+                    tipo:'Folga Aniv.',tipoKey:'folga',
                     periodo:p.anoReferencia,
                     ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                     prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
@@ -1221,8 +1257,11 @@ function renderizarResumoExecutivo(){
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
     let html = '';
+    
     mats.forEach(mat => {
         const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
+        const unidade = linhasMat[0]?.unidade || 'Unidade não informada';
+        
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
         const g = linhasMat.filter(l => l.tipoKey === 'folga');
         const c = (a, s) => a.filter(l => l.status === s).length;
@@ -1232,9 +1271,12 @@ function renderizarResumoExecutivo(){
 
         html += `
             <div class="resumo-matricula">
-                <div class="resumo-matricula-header">
-                    <span class="resumo-matricula-badge">Matrícula ${mat}</span>
-                    <span class="resumo-matricula-nome">${nomeServidorAtual}</span>
+                <div class="resumo-matricula-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span class="resumo-matricula-badge">Matrícula ${mat}</span>
+                        <span class="unidade-tag"><span class="material-symbols-outlined">apartment</span>${unidade}</span>
+                    </div>
+                    <span class="resumo-matricula-nome" style="font-size:13px; font-weight:600; color:var(--text); margin-top:2px;">${nomeServidorAtual}</span>
                 </div>
                 <div class="resumo-cards-row">
                     <div class="resumo-bloco">
@@ -1293,13 +1335,14 @@ document.getElementById('filtroStatus').addEventListener('change', aplicarFiltro
 function renderizarTabelaUnica(linhas){
     const tbody=document.getElementById('tabelaUnica');
     if(linhas.length===0){
-        tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
+        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
         return;
     }
     tbody.innerHTML=linhas.map(l=>`
         <tr>
             <td><strong>${l.servidor}</strong></td>
             <td>${l.matricula}</td>
+            <td style="font-size:11px; color:var(--text-secondary);">${l.unidade || '—'}</td>
             <td>${badgeTipo(l.tipoKey)}</td>
             <td>${l.periodo}</td>
             <td>${l.ciclo}</td>
@@ -1513,6 +1556,20 @@ function renderizarTabelaResumo() {
         return aNum - bNum;
     });
 
+    // Identifica todos os vínculos únicos
+    const vinculosUnicos = [...new Map(linhasUnificadas.map(item => [item.matricula, item])).values()];
+    
+    const infoVinculos = vinculosUnicos.map(v => 
+        `<strong>${v.matricula}</strong> <span style="color:var(--text-muted); font-weight:400;">(${v.unidade || 'Sem unidade'})</span>`
+    ).join(' &nbsp;|&nbsp; ');
+
+    let linhaInfoVinculos = `<tr>
+        <td colspan="${periodosOrdenados.length}" style="text-align:left; padding:12px 14px; font-size:12px; color:var(--text-secondary); background:var(--surface); border-bottom:2px solid var(--border-strong);">
+            <span style="color:var(--brand); font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.5px;">Vínculos Ativos:</span><br>
+            <span style="margin-top:4px; display:block; line-height:1.6;">${infoVinculos}</span>
+        </td>
+    </tr>`;
+
     let thead = tabela.querySelector('thead');
     thead.innerHTML = `<tr><th colspan="${periodosOrdenados.length}" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>`;
 
@@ -1557,7 +1614,7 @@ function renderizarTabelaResumo() {
             }
 
             if (!gruposFerias.has(chave)) gruposFerias.set(chave, []);
-            gruposFerias.get(chave).push({ texto: textoTrecho, status: f.status });
+            gruposFerias.get(chave).push({ texto: textoTrecho, status: f.status, unidade: f.unidade });
         });
 
         gruposFerias.forEach(lista => {
@@ -1617,12 +1674,23 @@ function renderizarTabelaResumo() {
     });
     linhaConteudo += '</tr>';
 
-    tbody.innerHTML = linhaAnos + linhaConteudo;
+    tbody.innerHTML = linhaInfoVinculos + linhaAnos + linhaConteudo;
 
     const titulo = document.getElementById('tabelaResumoTitulo');
     if (titulo) titulo.setAttribute('colspan', String(periodosOrdenados.length));
 }
 
+/**
+ * ============================================================
+ * BUSCA REFSATORADA - OTIMIZADA PARA PERFORMANCE
+ * ============================================================
+ * Estratégia:
+ * - Usa apenas queries com WHERE (sem getDocs sem filtro)
+ * - Detecta se o termo é CPF ou matrícula pela estrutura
+ * - Executa queries específicas e paralelas
+ * - Não faz fallback que baixe toda a coleção
+ * ============================================================
+ */
 async function buscarServidor(){
     if(!acessoAutorizado){mostrarErro("Acesso negado.");return;}
     const termo=document.getElementById('termoBusca').value.trim();
@@ -1633,34 +1701,65 @@ async function buscarServidor(){
     const termoLimpo=termo.replace(/\D/g,'');
     const colRef=collection(db,'servidores');
     const encontrados=new Map();
-    try{
-        const s1=await getDoc(doc(db,'servidores',termo)); if(s1.exists())encontrados.set(s1.id,s1);
-        const s2=await getDoc(doc(db,'servidores',termoLimpo)); if(s2.exists())encontrados.set(s2.id,s2);
-        const qs=[where('cpf','==',termo),where('cpf','==',termoLimpo),where('CPF','==',termo),where('CPF','==',termoLimpo),
-                  where('matricula','==',termo),where('matricula','==',termoLimpo),where('matricula_servidor','==',termo)];
-        for(const q of qs){try{const sn=await getDocs(query(colRef,q));sn.forEach(d=>encontrados.set(d.id,d));}catch(e){}}
-        if(encontrados.size===0&&/^\d+$/.test(termoLimpo)){
-            const all=await getDocs(colRef);
-            all.forEach(d=>{
-                const dt=d.data();
-                const m1=(dt.matricula1&&dt.matricula1.numeroMatricula)?String(dt.matricula1.numeroMatricula).replace(/^0+/,''):'';
-                const m2=(dt.matricula2&&dt.matricula2.numeroMatricula)?String(dt.matricula2.numeroMatricula).replace(/^0+/,''):'';
-                const bus=termoLimpo.replace(/^0+/,'');
-                if(m1===bus||m2===bus)encontrados.set(d.id,d);
-            });
+    
+    try {
+        // Estratégias de busca em paralelo (todas com WHERE - sem varredura completa)
+        const estrategias = [];
+        
+        // 1. Busca direta por ID do documento
+        estrategias.push(getDoc(doc(db,'servidores',termo)).catch(() => null));
+        if (termo !== termoLimpo) {
+            estrategias.push(getDoc(doc(db,'servidores',termoLimpo)).catch(() => null));
         }
+        
+        // 2. Detecta se é CPF (11 dígitos) ou matrícula
+        const ehCpf = termoLimpo.length === 11;
+        
+        if (ehCpf) {
+            // Busca por CPF em múltiplos formatos possíveis
+            estrategias.push(
+                getDocs(query(colRef, where('cpf','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('cpf','==',termo))).catch(() => null),
+                getDocs(query(colRef, where('CPF','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('CPF','==',termo))).catch(() => null)
+            );
+        } else {
+            // Busca por matrícula em múltiplos campos possíveis
+            estrategias.push(
+                getDocs(query(colRef, where('matricula','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('Matricula','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula_servidor','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula1.numeroMatricula','==',termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula2.numeroMatricula','==',termoLimpo))).catch(() => null)
+            );
+        }
+        
+        // 3. Executa todas em paralelo
+        const resultados = await Promise.all(estrategias);
+        
+        // Processa resultados
+        resultados.forEach(res => {
+            if (!res) return;
+            if (res.exists && res.exists()) {
+                encontrados.set(res.id, res);
+            } else if (res.forEach) {
+                res.forEach(d => encontrados.set(d.id, d));
+            }
+        });
+        
         if(encontrados.size===0){
             ocultarLoading();
-            mostrarAlerta('CPF não localizado no sistema.','erro','Servidor não encontrado');
+            mostrarAlerta('Servidor não localizado no sistema. Verifique o CPF ou matrícula informados.','erro','Não encontrado');
             document.getElementById('resultadoContainer').classList.add('hidden');
             return;
         }
+        
         await processarServidores(Array.from(encontrados.values()));
         ultimoTermoBuscado = termo;
-    }catch(e){
-        console.error(e);
-        mostrarErro("Erro ao consultar o banco.");
-    }finally{
+    } catch(e){
+        console.error('[Buscar] Erro:', e);
+        mostrarErro("Erro ao consultar o banco. Verifique sua conexão e tente novamente.");
+    } finally {
         ocultarLoading();
     }
 }
@@ -1674,63 +1773,114 @@ async function processarServidores(docs){
     const cpfFmt=(d0.cpf||d0.CPF||'').toString();
     const nascimento=d0.data_nascimento||d0.dataNascimento;
 
-    const vinculosMap=new Map();
-    const servidorIds=docs.map(d=>d.id);
-    docs.forEach(d=>{
-        const dt=d.data();
-        const add=(mat,adm,diasFerias)=>{
-            if(!mat)return;
-            const ms=mat.toString().trim();
-            if(vinculosMap.has(ms))return;
-            vinculosMap.set(ms,{ matricula:ms, dataAdmissao:adm||'', diasFerias: diasFerias ? Number(diasFerias) : null });
-        };
-        add(
-            dt.matricula||dt.Matricula||dt.matricula_servidor||(dt.matricula1&&dt.matricula1.numeroMatricula),
-            dt.data_admissao||dt.dataAdmissao||(dt.matricula1&&dt.matricula1.dataAdmissao),
-            dt.diasFerias
-        );
-        if (dt.matricula1 && dt.matricula1.numeroMatricula) {
-            const ms = dt.matricula1.numeroMatricula.toString().trim();
-            if (vinculosMap.has(ms)) {
-                vinculosMap.get(ms).diasFerias = dt.matricula1.diasFerias ? Number(dt.matricula1.diasFerias) : vinculosMap.get(ms).diasFerias;
-            }
+    // ============================================================
+    // EXTRAÇÃO DE VÍNCULOS (com Unidade Escolar)
+    // Suporta: matricula1, matricula2, campos soltos
+    // ============================================================
+    const vinculosMap = new Map();
+    const servidorIds = docs.map(d => d.id);
+    
+    const processarVinculo = (numMat, dataAdm, diasFerias, nomeUnidade) => {
+        if (!numMat) return;
+        const ms = numMat.toString().trim();
+        
+        if (!vinculosMap.has(ms)) {
+            vinculosMap.set(ms, {
+                matricula: ms,
+                dataAdmissao: dataAdm || '',
+                diasFerias: diasFerias ? Number(diasFerias) : null,
+                unidade: nomeUnidade || 'Não informada'
+            });
+        } else {
+            const existente = vinculosMap.get(ms);
+            if (!existente.dataAdmissao && dataAdm) existente.dataAdmissao = dataAdm;
+            if (!existente.diasFerias && diasFerias) existente.diasFerias = Number(diasFerias);
+            if (existente.unidade === 'Não informada' && nomeUnidade) existente.unidade = nomeUnidade;
         }
+    };
+
+    docs.forEach(d => {
+        const dt = d.data();
+
+        if (dt.matricula1 && dt.matricula1.numeroMatricula) {
+            processarVinculo(
+                dt.matricula1.numeroMatricula,
+                dt.matricula1.dataAdmissao || dt.matricula1.data_admissao,
+                dt.matricula1.diasFerias,
+                dt.matricula1.unidade || dt.matricula1.unidadeEscolar || dt.unidade || dt.unidadeEscolar
+            );
+        }
+
         if (dt.matricula2 && dt.matricula2.numeroMatricula) {
-            const ms = dt.matricula2.numeroMatricula.toString().trim();
-            if (!vinculosMap.has(ms)) {
-                vinculosMap.set(ms, {
-                    matricula: ms,
-                    dataAdmissao: (dt.matricula2.dataAdmissao || dt.matricula2.data_admissao || ''),
-                    diasFerias: dt.matricula2.diasFerias ? Number(dt.matricula2.diasFerias) : null
-                });
-            }
+            processarVinculo(
+                dt.matricula2.numeroMatricula,
+                dt.matricula2.dataAdmissao || dt.matricula2.data_admissao,
+                dt.matricula2.diasFerias,
+                dt.matricula2.unidade || dt.matricula2.unidadeEscolar || dt.unidade || dt.unidadeEscolar
+            );
+        }
+
+        const matriculaSolta = dt.matricula || dt.Matricula || dt.matricula_servidor;
+        if (matriculaSolta) {
+            processarVinculo(
+                matriculaSolta,
+                dt.data_admissao || dt.dataAdmissao,
+                dt.diasFerias,
+                dt.unidade || dt.unidadeEscolar
+            );
         }
     });
-    const vinculos=Array.from(vinculosMap.values());
-    if(vinculos.length===0)vinculos.push({matricula:'Não informada',dataAdmissao:'',diasFerias:null});
 
-    let registros=[];const ids=new Set();
+    const vinculos = Array.from(vinculosMap.values());
+    if (vinculos.length === 0) {
+        vinculos.push({ matricula: 'Não informada', dataAdmissao: '', diasFerias: null, unidade: 'Não informada' });
+    }
+
+    // ============================================================
+    // BUSCA DE REGISTROS DE FÉRIAS/FOLGAS (otimizada)
+    // ============================================================
+    let registros=[];
+    const ids=new Set();
     try{
-        if(cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfLimpo)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
-        if(cpfFmt&&cpfFmt!==cpfLimpo){const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('cpf','==',cpfFmt)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}
-        for(const sid of servidorIds){try{const sn=await getDocs(query(collection(db,'registro_ferias_folgas'),where('servidorId','==',sid)));
-            sn.forEach(x=>{if(!ids.has(x.id)){registros.push({id:x.id,...x.data()});ids.add(x.id);}});}catch(e){}}
-        if(registros.length===0){
-            const all=await getDocs(collection(db,'registro_ferias_folgas'));
-            all.forEach(x=>{
-                const dt=x.data();
-                const rc=(dt.cpf||dt.CPF||'').toString().replace(/\D/g,'');
-                const rm=(dt.matricula||'').toString().trim().replace(/^0+/,'');
-                if(rc===cpfLimpo){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
-                for(const v of vinculos){
-                    const cm=v.matricula.toString().trim().replace(/^0+/,'');
-                    if(rm&&(rm===cm||rm===v.matricula.toString().trim())){if(!ids.has(x.id)){registros.push({id:x.id,...dt});ids.add(x.id);}return;}
-                }
-            });
+        const queriesRegistros = [];
+        
+        if (cpfLimpo) {
+            queriesRegistros.push(
+                getDocs(query(collection(db,'registro_ferias_folgas'), where('cpf','==',cpfLimpo))).catch(() => null)
+            );
         }
-    }catch(e){console.error(e);}
+        if (cpfFmt && cpfFmt !== cpfLimpo) {
+            queriesRegistros.push(
+                getDocs(query(collection(db,'registro_ferias_folgas'), where('cpf','==',cpfFmt))).catch(() => null)
+            );
+        }
+        
+        for (const sid of servidorIds) {
+            queriesRegistros.push(
+                getDocs(query(collection(db,'registro_ferias_folgas'), where('servidorId','==',sid))).catch(() => null)
+            );
+        }
+        
+        // Busca também por matrícula se não houver CPF
+        vinculos.forEach(v => {
+            queriesRegistros.push(
+                getDocs(query(collection(db,'registro_ferias_folgas'), where('matricula','==',v.matricula))).catch(() => null)
+            );
+        });
+        
+        const resultados = await Promise.all(queriesRegistros);
+        resultados.forEach(res => {
+            if (res && res.forEach) {
+                res.forEach(x => {
+                    if (!ids.has(x.id)) {
+                        registros.push({id:x.id, ...x.data()});
+                        ids.add(x.id);
+                    }
+                });
+            }
+        });
+        
+    } catch(e){console.error('[Registros] Erro:', e);}
 
     document.getElementById('nomeServidor').textContent=nome;
     document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
@@ -1739,7 +1889,7 @@ async function processarServidores(docs){
     document.getElementById('matriculasServidor').textContent = vinculos.map(v => {
         const adm = formatarData(v.dataAdmissao) || '—';
         const dias = v.diasFerias ? `${v.diasFerias} dias/período` : '30 dias/período';
-        return `${v.matricula} (Admissão ${adm} • ${dias})`;
+        return `${v.matricula} (Adm ${adm} • ${dias})`;
     }).join('  ·  ');
 
     const hoje=new Date();hoje.setHours(0,0,0,0);
@@ -1780,12 +1930,11 @@ function ocultarErro(){document.getElementById('mensagemErro').classList.remove(
 window.buscarServidor = buscarServidor;
 
 /* ============================================================
-   AUTO-BUSCA POR PARÂMETRO DE URL
+   AUTO-BUSCA POR PARÂMETRO DE URL (sem setInterval)
    Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidor=<id>
    ============================================================ */
 (function autoBuscarPorUrl() {
     const params = new URLSearchParams(window.location.search);
-
     let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
     termo = termo.trim();
     if (!termo) return;
@@ -1802,29 +1951,16 @@ window.buscarServidor = buscarServidor;
     } else {
         input.value = termo;
     }
+    
+    termoPendenteDeBusca = input.value;
 
-    let tentativas = 0;
-    const MAX_TENTATIVAS = 40;
-
-    const tentar = setInterval(() => {
-        tentativas++;
-
-        if (acessoAutorizado) {
-            clearInterval(tentar);
-            setTimeout(() => {
-                buscarServidor();
-                try {
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete('cpf');
-                    url.searchParams.delete('matricula');
-                    url.searchParams.delete('servidor');
-                    window.history.replaceState({}, '', url.toString());
-                } catch (e) {}
-            }, 200);
-        } else if (tentativas >= MAX_TENTATIVAS) {
-            clearInterval(tentar);
-        }
-    }, 200);
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('cpf');
+        url.searchParams.delete('matricula');
+        url.searchParams.delete('servidor');
+        window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
 })();
 </script>
 
