@@ -1838,11 +1838,16 @@ function badgeTipo(k) {
 
 function renderizarResumoExecutivo() {
     const container = document.getElementById('resumoExecutivo');
+    // Pega todas as matrículas únicas que existem na lista de linhas geradas
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
     let html = '';
 
+    // Faz um loop para CADA matrícula
     mats.forEach(mat => {
+        // Filtra apenas os dados (férias e folgas) da matrícula atual do loop
         const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
+        
+        // Pega a unidade da primeira linha (todas as linhas dessa matrícula têm a mesma unidade)
         const unidade = linhasMat[0]?.unidade || 'Unidade não informada';
 
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
@@ -1852,6 +1857,7 @@ function renderizarResumoExecutivo() {
         const feriasAdquiridas = f.length;
         const folgaAdquiridas = g.length;
 
+        // Monta o HTML do card para ESTA matrícula
         html += `
             <div class="resumo-matricula">
                 <div class="resumo-matricula-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
@@ -1898,6 +1904,7 @@ function renderizarResumoExecutivo() {
         `;
     });
 
+    // Injeta os cards no container
     container.innerHTML = html;
 }
 
@@ -2502,7 +2509,6 @@ async function buscarServidor() {
 }
 
 async function processarServidores(docs) {
-    // Pega os dados básicos do primeiro documento retornado
     const d0 = docs[0].data();
     const nome = d0.nome || d0.Nome || 'Não informado';
 
@@ -2516,7 +2522,6 @@ async function processarServidores(docs) {
     const vinculosMap = new Map();
     const servidorIds = docs.map(d => d.id);
 
-    // Função auxiliar para adicionar as matrículas que JÁ ESTÃO no documento
     const addVinculo = (numMat, dataAdm, dias, unidade) => {
         if (!numMat) return;
         const ms = numMat.toString().trim();
@@ -2530,11 +2535,9 @@ async function processarServidores(docs) {
         }
     };
 
-    // Varre os documentos que JÁ FORAM BAIXADOS na busca (zero leituras extras)
     docs.forEach(d => {
         const dt = d.data();
         
-        // 1. Matrícula 1 (formato novo)
         if (dt.matricula1 && dt.matricula1.numeroMatricula) {
             addVinculo(
                 dt.matricula1.numeroMatricula,
@@ -2544,7 +2547,6 @@ async function processarServidores(docs) {
             );
         }
 
-        // 2. Matrícula 2 (formato novo)
         if (dt.matricula2 && dt.matricula2.numeroMatricula) {
             addVinculo(
                 dt.matricula2.numeroMatricula,
@@ -2554,7 +2556,6 @@ async function processarServidores(docs) {
             );
         }
 
-        // 3. Fallback para formato antigo (matrícula solta)
         const matSolta = dt.matricula || dt.Matricula || dt.matricula_servidor;
         if (matSolta) {
             addVinculo(
@@ -2568,19 +2569,16 @@ async function processarServidores(docs) {
 
     const vinculos = Array.from(vinculosMap.values());
 
-    // Se não achou nada, cria um vazio para não quebrar a tela
     if (vinculos.length === 0) {
         vinculos.push({ matricula: 'N/A', dataAdmissao: '', diasFerias: null, unidade: 'Não informada' });
     }
 
-    // Tenta resolver o nome da unidade (usando cache local e as coleções, se necessário)
     try {
         await resolverUnidadesDosVinculos(docs, vinculos);
     } catch (e) {
         console.error('[UNIDADE] Erro:', e);
     }
 
-    // Busca os registros de férias (apenas com queries filtradas)
     let registros = [];
     const ids = new Set();
 
@@ -2594,12 +2592,10 @@ async function processarServidores(docs) {
             queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt))).catch(() => null));
         }
         
-        // Busca registros por servidorId
         for (const sid of servidorIds) {
             queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid))).catch(() => null));
         }
 
-        // Busca registros por cada matrícula
         vinculos.forEach(v => {
             queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('matricula', '==', v.matricula))).catch(() => null));
         });
@@ -2621,7 +2617,6 @@ async function processarServidores(docs) {
         console.error('[Registros] Erro:', e);
     }
 
-    // Atualiza a UI do topo
     document.getElementById('nomeServidor').textContent = nome;
     document.getElementById('cpfServidor').textContent = cpfLimpo
         ? cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
@@ -2638,10 +2633,8 @@ async function processarServidores(docs) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    // Gera as linhas para os cards, tabela e gráfico
     linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
 
-    // Renderiza tudo na tela
     renderizarResumoExecutivo();
     renderizarAlertaFeriasVencidasPreventivo();
     renderizarAlertaFeriasVencidas();
