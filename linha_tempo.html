@@ -274,6 +274,94 @@ button { font:inherit; color:inherit; cursor:pointer; }
     margin-bottom: 4px;
 }
 
+/* ===== CARDS DE ALERTA DE FÉRIAS ===== */
+.alerta-ferias {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-bd);
+    border-left: 4px solid var(--danger);
+    border-radius: 6px;
+    color: var(--text);
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    animation: alertaPulsa 2s ease-in-out infinite;
+}
+.alerta-ferias.hidden { display: none !important; }
+
+@keyframes alertaPulsa {
+    0%, 100% { box-shadow: var(--shadow-sm); }
+    50%      { box-shadow: 0 0 0 4px var(--danger-bg), 0 0 0 6px var(--danger-bd); }
+}
+
+.alerta-ferias-icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--danger);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.alerta-ferias-icone .material-symbols-outlined { font-size: 24px; }
+
+.alerta-ferias-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.5;
+}
+.alerta-ferias-texto strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--danger);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+.alerta-ferias-texto span {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.alerta-ferias-texto span strong {
+    display: inline;
+    font-size: 13px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Preventivo (laranja) */
+.alerta-ferias-preventivo {
+    background: var(--warn-bg);
+    border-color: var(--warn-bd);
+    border-left-color: var(--warn);
+    animation: alertaPulsaPreventivo 2.4s ease-in-out infinite;
+}
+.alerta-ferias-preventivo .alerta-ferias-icone {
+    background: var(--warn);
+}
+.alerta-ferias-preventivo .alerta-ferias-texto strong {
+    color: var(--warn);
+}
+@keyframes alertaPulsaPreventivo {
+    0%, 100% { box-shadow: var(--shadow-sm); }
+    50%      { box-shadow: 0 0 0 4px var(--warn-bg), 0 0 0 6px var(--warn-bd); }
+}
+
+@media (max-width: 640px) {
+    .alerta-ferias { padding: 14px 16px; }
+    .alerta-ferias-icone { width: 34px; height: 34px; }
+    .alerta-ferias-icone .material-symbols-outlined { font-size: 20px; }
+    .alerta-ferias-texto strong { font-size: 13px; }
+    .alerta-ferias-texto span { font-size: 12px; }
+}
+
 .tabela-resumo-wrap {
     overflow-x: auto;
     margin-top: 8px;
@@ -427,6 +515,8 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .tabela-resumo thead th,
     .tabela-resumo tbody th,
     .tabela-resumo tbody td { border-color: #000 !important; }
+    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
+    .alerta-ferias-preventivo { border: 2px solid #a60 !important; }
 }
 
 .grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
@@ -597,6 +687,28 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
                 </section>
 
+                <!-- ALERTA PREVENTIVO -->
+                <div id="alertaFeriasVencidasPreventivo" class="alerta-ferias alerta-ferias-preventivo hidden" role="alert" aria-live="polite">
+                    <div class="alerta-ferias-icone" aria-hidden="true">
+                        <span class="material-symbols-outlined">schedule</span>
+                    </div>
+                    <div class="alerta-ferias-texto">
+                        <strong id="alertaFeriasPreventivoTitulo">Atenção: férias vencidas</strong>
+                        <span id="alertaFeriasPreventivoDetalhe">—</span>
+                    </div>
+                </div>
+
+                <!-- ALERTA CRÍTICO -->
+                <div id="alertaFeriasVencidas" class="alerta-ferias hidden" role="alert" aria-live="polite">
+                    <div class="alerta-ferias-icone" aria-hidden="true">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <div class="alerta-ferias-texto">
+                        <strong id="alertaFeriasTitulo">Crítico: férias vencidas</strong>
+                        <span id="alertaFeriasDetalhe">—</span>
+                    </div>
+                </div>
+
                 <div id="resumoExecutivo" class="resumo-executivo"></div>
 
                 <section class="form-card" id="cardTabela">
@@ -625,6 +737,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
                                 <option value="parcial">Parcial</option>
                                 <option value="disponivel">Disponível</option>
                                 <option value="programado">Programado</option>
+                                <option value="vencido_preventivo">Vencido (preventivo)</option>
                                 <option value="vencido">Vencido</option>
                                 <option value="perdido">Perdido</option>
                             </select>
@@ -911,107 +1024,41 @@ let termoPendenteDeBusca = null;
 const DIAS_PADRAO = 30;
 
 const CHAVES_UNIDADE_EXPLICITAS = [
-    'unidade',
-    'unidadeEscolar',
-    'unidade_escolar',
-    'unidadeEscola',
-    'unidade_escola',
-    'nomeUnidade',
-    'nome_unidade',
-    'nomeUnidadeEscolar',
-    'nome_unidade_escolar',
-    'nomeUnidadeEscola',
-    'nome_unidade_escola',
-    'escola',
-    'nomeEscola',
-    'nome_escola',
-    'escolaNome',
-    'escola_nome',
-    'estabelecimento',
-    'nomeEstabelecimento',
-    'estabelecimentoEnsino',
-    'estabelecimento_ensino',
-    'instituicao',
-    'instituicaoEnsino',
-    'instituicao_ensino',
-    'instituição',
-    'instituicao_nome',
-    'colegio',
-    'colégio',
-    'nomeColegio',
-    'nome_colegio',
-    'lotacao',
-    'lotação',
-    'nomeLotacao',
-    'nome_lotacao',
-    'lotacaoUnidade',
-    'lotacao_unidade',
-    'localTrabalho',
-    'local_trabalho',
-    'localidade',
-    'setor',
-    'departamento',
-    'orgao',
-    'órgao',
-    'posto',
-    'postoTrabalho',
-    'posto_trabalho'
+    'unidade', 'unidadeEscolar', 'unidade_escolar', 'unidadeEscola', 'unidade_escola',
+    'nomeUnidade', 'nome_unidade', 'nomeUnidadeEscolar', 'nome_unidade_escolar',
+    'nomeUnidadeEscola', 'nome_unidade_escola', 'escola', 'nomeEscola', 'nome_escola',
+    'escolaNome', 'escola_nome', 'estabelecimento', 'nomeEstabelecimento',
+    'estabelecimentoEnsino', 'estabelecimento_ensino', 'instituicao', 'instituicaoEnsino',
+    'instituicao_ensino', 'instituição', 'instituicao_nome', 'colegio', 'colégio',
+    'nomeColegio', 'nome_colegio', 'lotacao', 'lotação', 'nomeLotacao', 'nome_lotacao',
+    'lotacaoUnidade', 'lotacao_unidade', 'localTrabalho', 'local_trabalho', 'localidade',
+    'setor', 'departamento', 'orgao', 'órgão', 'posto', 'postoTrabalho', 'posto_trabalho'
 ];
 
-const REGEX_CHAVE_UNIDADE = /(unidade|escola|school|lotacao|lotação|local_trabalho|localtrabalho|estabelecimento|instituicao|instituição|colegio|colégio|setor|departamento|orgao|órgao|posto)/i;
+const REGEX_CHAVE_UNIDADE = /(unidade|escola|school|lotacao|lotação|local_trabalho|localtrabalho|estabelecimento|instituicao|instituição|colegio|colégio|setor|departamento|orgao|órgão|posto)/i;
 
-const COLECOES_UNIDADE = [
-    'unidades',
-    'escolas',
-    'unidades_escolares',
-    'unidadesEscolares'
-];
+const COLECOES_UNIDADE = ['unidades', 'escolas', 'unidades_escolares', 'unidadesEscolares'];
 
 const CAMPOS_BUSCA_UNIDADE = [
-    'codigo',
-    'codigoUnidade',
-    'codigoEscola',
-    'id',
-    'idUnidade',
-    'idEscola',
-    'cod',
-    'codUnidade',
-    'codEscola'
+    'codigo', 'codigoUnidade', 'codigoEscola', 'id', 'idUnidade', 'idEscola',
+    'cod', 'codUnidade', 'codEscola'
 ];
 
 function escaparHtml(texto) {
     return String(texto ?? '').replace(/[&<>"']/g, c => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 }
 
 function ehReferenciaFirestore(valor) {
-    return Boolean(
-        valor &&
-        typeof valor === 'object' &&
-        typeof valor.id === 'string' &&
-        typeof valor.path === 'string'
-    );
+    return Boolean(valor && typeof valor === 'object' && typeof valor.id === 'string' && typeof valor.path === 'string');
 }
 
 function normalizarTextoUnidade(valor) {
     if (valor === null || valor === undefined) return '';
-
-    if (typeof valor === 'string') {
-        return valor.trim();
-    }
-
-    if (typeof valor === 'number') {
-        return String(valor);
-    }
-
-    if (typeof valor === 'boolean') {
-        return '';
-    }
+    if (typeof valor === 'string') return valor.trim();
+    if (typeof valor === 'number') return String(valor);
+    if (typeof valor === 'boolean') return '';
 
     if (Array.isArray(valor)) {
         for (const item of valor) {
@@ -1022,36 +1069,14 @@ function normalizarTextoUnidade(valor) {
     }
 
     if (typeof valor === 'object') {
-        if (ehReferenciaFirestore(valor)) {
-            return valor.id || String(valor.path).split('/').pop();
-        }
+        if (ehReferenciaFirestore(valor)) return valor.id || String(valor.path).split('/').pop();
 
         const camposNome = [
-            'nome',
-            'name',
-            'nomeUnidade',
-            'nome_unidade',
-            'nomeEscola',
-            'nome_escola',
-            'descricao',
-            'descrição',
-            'denominacao',
-            'denominação',
-            'titulo',
-            'título',
-            'razaoSocial',
-            'razão_social',
-            'nomeCompleto',
-            'nome_completo',
-            'sigla',
-            'unidade',
-            'unidadeEscolar',
-            'unidade_escolar',
-            'escola',
-            'nomeInstituicao',
-            'nome_instituicao',
-            'nomeEstabelecimento',
-            'nome_estabelecimento'
+            'nome', 'name', 'nomeUnidade', 'nome_unidade', 'nomeEscola', 'nome_escola',
+            'descricao', 'descrição', 'denominacao', 'denominação', 'titulo', 'título',
+            'razaoSocial', 'razão_social', 'nomeCompleto', 'nome_completo', 'sigla',
+            'unidade', 'unidadeEscolar', 'unidade_escolar', 'escola', 'nomeInstituicao',
+            'nome_instituicao', 'nomeEstabelecimento', 'nome_estabelecimento'
         ];
 
         for (const campo of camposNome) {
@@ -1109,12 +1134,10 @@ function obterUnidade(documento, vinculoObj) {
         const txt = buscarUnidadeEmObjeto(vinculoObj, 0);
         if (txt) return txt;
     }
-
     if (documento) {
         const txt = buscarUnidadeEmObjeto(documento, 0);
         if (txt) return txt;
     }
-
     return '';
 }
 
@@ -1144,9 +1167,7 @@ function coletarCandidatosUnidade(obj, profundidade = 0, lista = []) {
     }
 
     for (const [chave, valor] of Object.entries(obj)) {
-        if (REGEX_CHAVE_UNIDADE.test(chave)) {
-            adicionar(valor);
-        }
+        if (REGEX_CHAVE_UNIDADE.test(chave)) adicionar(valor);
     }
 
     if (profundidade < 2) {
@@ -1169,28 +1190,18 @@ function igualMatricula(a, b) {
 
 function obterFontesDeVinculo(documento, matricula) {
     const fontes = [];
-
-    if (documento.matricula1 && igualMatricula(documento.matricula1.numeroMatricula, matricula)) {
-        fontes.push(documento.matricula1);
-    }
-
-    if (documento.matricula2 && igualMatricula(documento.matricula2.numeroMatricula, matricula)) {
-        fontes.push(documento.matricula2);
-    }
+    if (documento.matricula1 && igualMatricula(documento.matricula1.numeroMatricula, matricula)) fontes.push(documento.matricula1);
+    if (documento.matricula2 && igualMatricula(documento.matricula2.numeroMatricula, matricula)) fontes.push(documento.matricula2);
 
     const matriculaSolta = documento.matricula || documento.Matricula || documento.matricula_servidor;
-    if (igualMatricula(matriculaSolta, matricula)) {
-        fontes.push(documento);
-    }
+    if (igualMatricula(matriculaSolta, matricula)) fontes.push(documento);
 
     if (fontes.length === 0) fontes.push(documento);
-
     return fontes;
 }
 
 async function tentarObterDocumentoPorIdEmColecoes(id) {
     if (!id) return '';
-
     for (const col of COLECOES_UNIDADE) {
         try {
             const snap = await getDoc(doc(db, col, String(id)));
@@ -1200,7 +1211,6 @@ async function tentarObterDocumentoPorIdEmColecoes(id) {
             }
         } catch (e) {}
     }
-
     return '';
 }
 
@@ -1224,7 +1234,6 @@ async function tentarObterDocumentoPorCodigo(codigo) {
             }
         }
     }
-
     return '';
 }
 
@@ -1242,7 +1251,6 @@ async function resolverCandidatoUnidade(candidato) {
     if (typeof candidato === 'string' || typeof candidato === 'number') {
         const txt = String(candidato).trim();
         if (!txt) return '';
-
         if (parecerNomeHumano(txt)) return txt;
 
         if (txt.includes('/')) {
@@ -1279,15 +1287,9 @@ async function resolverCandidatoUnidade(candidato) {
         if (txtObj && parecerNomeHumano(txtObj)) return txtObj;
 
         const possibleId =
-            candidato.id ||
-            candidato.codigo ||
-            candidato.cod ||
-            candidato.unidadeId ||
-            candidato.unidade_id ||
-            candidato.escolaId ||
-            candidato.escola_id ||
-            candidato.codigoUnidade ||
-            candidato.codigoEscola;
+            candidato.id || candidato.codigo || candidato.cod || candidato.unidadeId ||
+            candidato.unidade_id || candidato.escolaId || candidato.escola_id ||
+            candidato.codigoUnidade || candidato.codigoEscola;
 
         if (possibleId) {
             const resolved = await resolverCandidatoUnidade(possibleId);
@@ -1304,9 +1306,7 @@ async function resolverUnidadesDosVinculos(docs, vinculos) {
     for (const vinculo of vinculos) {
         const unidadeAtual = String(vinculo.unidade || '').trim();
 
-        if (unidadeAtual && parecerNomeHumano(unidadeAtual)) {
-            continue;
-        }
+        if (unidadeAtual && parecerNomeHumano(unidadeAtual)) continue;
 
         const candidatos = [];
         if (unidadeAtual) candidatos.push(unidadeAtual);
@@ -1314,29 +1314,18 @@ async function resolverUnidadesDosVinculos(docs, vinculos) {
         for (const d of docs) {
             const dt = d.data();
             const fontes = obterFontesDeVinculo(dt, vinculo.matricula);
-
-            for (const fonte of fontes) {
-                coletarCandidatosUnidade(fonte, 0, candidatos);
-            }
+            for (const fonte of fontes) coletarCandidatosUnidade(fonte, 0, candidatos);
         }
 
         const unicos = [];
         const vistos = new Set();
 
         for (const c of candidatos) {
-            let key;
-
-            if (c && typeof c === 'object') {
-                key = c.path || c.id || JSON.stringify(Object.keys(c));
-            } else {
-                key = String(c);
-            }
-
+            let key = (c && typeof c === 'object') ? (c.path || c.id || JSON.stringify(Object.keys(c))) : String(c);
             if (!vistos.has(key)) {
                 vistos.add(key);
                 unicos.push(c);
             }
-
             if (unicos.length >= 6) break;
         }
 
@@ -1345,21 +1334,13 @@ async function resolverUnidadesDosVinculos(docs, vinculos) {
         for (const c of unicos) {
             try {
                 const nome = await resolverCandidatoUnidade(c);
-
-                if (nome && parecerNomeHumano(nome)) {
-                    melhor = nome;
-                    break;
-                }
-
+                if (nome && parecerNomeHumano(nome)) { melhor = nome; break; }
                 if (nome && !melhor) melhor = nome;
             } catch (e) {}
         }
 
-        if (melhor) {
-            vinculo.unidade = melhor;
-        } else if (!vinculo.unidade || vinculo.unidade === 'Não informada') {
-            vinculo.unidade = unidadeAtual || 'Não informada';
-        }
+        if (melhor) vinculo.unidade = melhor;
+        else if (!vinculo.unidade || vinculo.unidade === 'Não informada') vinculo.unidade = unidadeAtual || 'Não informada';
     }
 }
 
@@ -1670,7 +1651,6 @@ function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new
 
 function filtrarRegistrosPorMatricula(registros, vinculo) {
     const m = vinculo.matricula.toString().trim().replace(/^0+/, '');
-
     return registros.filter(r => {
         const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
         return !rm || rm === m || rm === vinculo.matricula.toString().trim();
@@ -1684,7 +1664,6 @@ function associarRegistroAPeriodo(reg, periodo) {
     if (!anoRef) {
         const regIni = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
         const regFim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino || regIni);
-
         if (regIni && regFim) {
             return !(regFim < periodo.inicio || regIni > periodo.fim);
         }
@@ -1730,13 +1709,8 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
                     const intervalos = lancsOrdenados.map(l => {
                         const ini = formatarData(l.dataInicio || l.data_inicio || l.data);
                         const fimParte = formatarData(
-                            l.dataFim ||
-                            l.data_fim ||
-                            l.dataTermino ||
-                            l.data_termino ||
-                            l.dataInicio ||
-                            l.data_inicio ||
-                            l.data
+                            l.dataFim || l.data_fim || l.dataTermino || l.data_termino ||
+                            l.dataInicio || l.data_inicio || l.data
                         );
                         return `${ini} a ${fimParte}`;
                     });
@@ -1755,7 +1729,13 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
-                    status = p.dataLimiteGozo < hoje ? 'vencido' : 'disponivel';
+                    if (p.dataLimiteGozo < hoje) {
+                        status = 'vencido'; // Crítico
+                    } else if (p.fim < hoje) {
+                        status = 'vencido_preventivo'; // Preventivo
+                    } else {
+                        status = 'disponivel';
+                    }
                 }
 
                 linhas.push({
@@ -1840,6 +1820,7 @@ function badgeStatus(s) {
         disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
         pendente: ['badge-pendente', 'schedule', 'Pendente'],
         vencido: ['badge-vencido', 'error', 'Vencido'],
+        vencido_preventivo: ['badge-pendente', 'schedule', 'Vencido (preventivo)'],
         perdido: ['badge-perdido', 'cancel', 'Perdido']
     };
 
@@ -1896,7 +1877,8 @@ function renderizarResumoExecutivo() {
                             <span class="chip">Parciais <span class="num chip-num-azul">${c(f, 'parcial')}</span></span>
                             <span class="chip">Programadas <span class="num chip-num-roxo">${c(f, 'programado')}</span></span>
                             <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f, 'disponivel')}</span></span>
-                            <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f, 'vencido')}</span></span>
+                            <span class="chip">Vencidas <span class="num chip-num-amarelo">${c(f, 'vencido_preventivo')}</span></span>
+                            <span class="chip">Críticas <span class="num chip-num-vermelho">${c(f, 'vencido')}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
@@ -1917,6 +1899,98 @@ function renderizarResumoExecutivo() {
     });
 
     container.innerHTML = html;
+}
+
+/* ============================================================
+   ALERTA PREVENTIVO DE FÉRIAS VENCIDAS (2 ou mais)
+   ============================================================ */
+function renderizarAlertaFeriasVencidasPreventivo() {
+    const card = document.getElementById('alertaFeriasVencidasPreventivo');
+    const titulo = document.getElementById('alertaFeriasPreventivoTitulo');
+    const detalhe = document.getElementById('alertaFeriasPreventivoDetalhe');
+    if (!card || !titulo || !detalhe) return;
+
+    const preventivasPorMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey === 'ferias' && l.status === 'vencido_preventivo') {
+            if (!preventivasPorMatricula.has(l.matricula)) {
+                preventivasPorMatricula.set(l.matricula, []);
+            }
+            preventivasPorMatricula.get(l.matricula).push(l);
+        }
+    });
+
+    const matriculasAlerta = [];
+    preventivasPorMatricula.forEach((lista, mat) => {
+        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
+    });
+
+    if (matriculasAlerta.length === 0) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const totalMatriculas = matriculasAlerta.length;
+    const totalPreventivas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
+
+    titulo.textContent = totalMatriculas === 1
+        ? 'Atenção: 2 ou mais férias vencidas (ainda dá tempo)'
+        : `Atenção: ${totalMatriculas} matrículas com 2 ou mais férias vencidas (ainda dá tempo)`;
+
+    const partes = matriculasAlerta
+        .sort((a, b) => b.qtd - a.qtd)
+        .map(m => `<strong>${escaparHtml(m.mat)}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
+        .join(' · ');
+
+    detalhe.innerHTML = `${totalPreventivas} férias com ciclo fechado — ${partes}. Ainda estão dentro do prazo legal de gozo, mas o RH deve regularizar antes do prazo final.`;
+
+    card.classList.remove('hidden');
+}
+
+/* ============================================================
+   ALERTA CRÍTICO DE FÉRIAS VENCIDAS (2 ou mais)
+   ============================================================ */
+function renderizarAlertaFeriasVencidas() {
+    const card = document.getElementById('alertaFeriasVencidas');
+    const titulo = document.getElementById('alertaFeriasTitulo');
+    const detalhe = document.getElementById('alertaFeriasDetalhe');
+    if (!card || !titulo || !detalhe) return;
+
+    const vencidasPorMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey === 'ferias' && l.status === 'vencido') {
+            if (!vencidasPorMatricula.has(l.matricula)) {
+                vencidasPorMatricula.set(l.matricula, []);
+            }
+            vencidasPorMatricula.get(l.matricula).push(l);
+        }
+    });
+
+    const matriculasAlerta = [];
+    vencidasPorMatricula.forEach((lista, mat) => {
+        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
+    });
+
+    if (matriculasAlerta.length === 0) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const totalMatriculas = matriculasAlerta.length;
+    const totalVencidas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
+
+    titulo.textContent = totalMatriculas === 1
+        ? 'Crítico: 2 ou mais férias já ilegais'
+        : `Crítico: ${totalMatriculas} matrículas com 2 ou mais férias já ilegais`;
+
+    const partes = matriculasAlerta
+        .sort((a, b) => b.qtd - a.qtd)
+        .map(m => `<strong>${escaparHtml(m.mat)}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
+        .join(' · ');
+
+    detalhe.innerHTML = `${totalVencidas} férias já passaram do prazo legal de gozo — ${partes}. Ação imediata do RH é necessária para regularizar a situação.`;
+
+    card.classList.remove('hidden');
 }
 
 function popularFiltroMatricula() {
@@ -1981,6 +2055,7 @@ function obterClasseSegmento(status) {
         disponivel: 'seg-disponivel',
         pendente: 'seg-pendente',
         vencido: 'seg-vencido',
+        vencido_preventivo: 'seg-pendente',
         perdido: 'seg-perdido'
     };
 
@@ -1999,9 +2074,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
     const periodosMap = new Map();
 
     linhas.forEach(l => {
-        if (!periodosMap.has(l.periodo)) {
-            periodosMap.set(l.periodo, []);
-        }
+        if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
         periodosMap.get(l.periodo).push(l);
     });
 
@@ -2035,6 +2108,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
                 : statusFerias.includes('parcial') ? 'parcial'
                 : statusFerias.includes('programado') ? 'programado'
                 : statusFerias.includes('vencido') ? 'vencido'
+                : statusFerias.includes('vencido_preventivo') ? 'vencido_preventivo'
                 : statusFerias.includes('disponivel') ? 'disponivel'
                 : 'pendente';
 
@@ -2062,6 +2136,9 @@ function renderizarGrafico(linhas = linhasUnificadas) {
             } else if (statusPrincipal === 'disponivel') {
                 percentual = 60;
                 labelPercentual = 'Disponível';
+            } else if (statusPrincipal === 'vencido_preventivo') {
+                percentual = 40;
+                labelPercentual = 'Vencido (prev.)';
             } else if (statusPrincipal === 'vencido') {
                 percentual = 0;
                 labelPercentual = 'Vencido';
@@ -2144,7 +2221,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--ok);"></span> Gozado / Disponível</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--purple);"></span> Programado</span>
-                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Pendente</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Vencido (preventivo)</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido</span>
                 <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--gray-500);"></span> Perdido</span>
              </div>`;
@@ -2227,7 +2304,6 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
         const folgas = itens.filter(i => i.tipoKey === 'folga');
 
         const linhasTexto = [];
-
         const gruposFerias = new Map();
 
         ferias.forEach(f => {
@@ -2251,6 +2327,9 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
             } else if (f.status === 'vencido') {
                 textoTrecho = `Vencido em ${f.prazo || '—'}`;
                 chave = `${mat}::vencido`;
+            } else if (f.status === 'vencido_preventivo') {
+                textoTrecho = `Vencido (preventivo) — prazo ${f.prazo || '—'}`;
+                chave = `${mat}::vencido_preventivo`;
             } else {
                 textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
                 chave = `${mat}::outro`;
@@ -2276,7 +2355,7 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
                 });
             });
 
-        const prioridade = { gozado: 1, programado: 2, disponivel: 3, perdido: 4 };
+        const prioridade = { gozado: 1, programado: 2, disponivel: 3, vencido_preventivo: 4, perdido: 5 };
         const folgasUnicas = new Map();
 
         folgas.forEach(g => {
@@ -2317,7 +2396,6 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
                 const prioB = prioridade[b.status] || 99;
 
                 if (prioA !== prioB) return prioA - prioB;
-
                 return String(a.matricula).localeCompare(String(b.matricula), 'pt-BR', { numeric: true });
             })
             .forEach(item => {
@@ -2370,7 +2448,6 @@ async function buscarServidor() {
 
     try {
         const estrategias = [];
-
         estrategias.push(getDoc(doc(db, 'servidores', termo)).catch(() => null));
 
         if (termo !== termoLimpo) {
@@ -2400,7 +2477,6 @@ async function buscarServidor() {
 
         resultados.forEach(res => {
             if (!res) return;
-
             if (res.exists && res.exists()) {
                 encontrados.set(res.id, res);
             } else if (res.forEach) {
@@ -2453,7 +2529,6 @@ async function processarServidores(docs) {
             });
         } else {
             const existente = vinculosMap.get(ms);
-
             if (!existente.dataAdmissao && dataAdm) existente.dataAdmissao = dataAdm;
             if (!existente.diasFerias && diasFerias) existente.diasFerias = Number(diasFerias);
             if (existente.unidade === 'Não informada' && nomeUnidade) existente.unidade = nomeUnidade;
@@ -2462,10 +2537,6 @@ async function processarServidores(docs) {
 
     docs.forEach(d => {
         const dt = d.data();
-
-        console.log('[UNIDADE] Documento servidor:', d.id, dt);
-        console.log('[UNIDADE] Unidade matricula1 (bruta):', obterUnidade(dt, dt.matricula1));
-        console.log('[UNIDADE] Unidade matricula2 (bruta):', obterUnidade(dt, dt.matricula2));
 
         if (dt.matricula1 && dt.matricula1.numeroMatricula) {
             processarVinculo(
@@ -2512,8 +2583,6 @@ async function processarServidores(docs) {
     } catch (e) {
         console.error('[UNIDADE] Erro ao resolver unidades:', e);
     }
-
-    console.log('[UNIDADE] Vínculos após resolução:', JSON.parse(JSON.stringify(vinculos)));
 
     let registros = [];
     const ids = new Set();
@@ -2582,6 +2651,8 @@ async function processarServidores(docs) {
     linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
 
     renderizarResumoExecutivo();
+    renderizarAlertaFeriasVencidasPreventivo();
+    renderizarAlertaFeriasVencidas();
     popularFiltroMatricula();
 
     document.getElementById('filtroTipo').value = '';
