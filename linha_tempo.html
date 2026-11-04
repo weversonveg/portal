@@ -316,10 +316,11 @@ button { font:inherit; color:inherit; cursor:pointer; }
 }
 .tabela-resumo tbody td .linha-item {
     display: block;
-    white-space: nowrap;
+    white-space: normal;
+    margin-top: 4px;
 }
-.tabela-resumo tbody td .linha-item + .linha-item {
-    margin-top: 2px;
+.tabela-resumo tbody td .linha-item:first-child {
+    margin-top: 0;
 }
 .tabela-resumo tbody td .linha-item.destaque {
     color: var(--brand);
@@ -329,6 +330,34 @@ button { font:inherit; color:inherit; cursor:pointer; }
     color: var(--purple);
     font-weight: 600;
 }
+.resumo-matricula-prefixo {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0 4px;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+.unidade-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.unidade-tag .material-symbols-outlined { font-size: 12px; color: var(--brand); }
 
 .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.15); z-index:9998; align-items:center; justify-content:center; }
 .loading-overlay.ativo { display:flex; }
@@ -427,23 +456,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .grafico-linha { flex-direction: column; align-items: flex-start; gap: 4px; }
     .grafico-trilha { width: 100%; }
 }
-
-.unidade-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-secondary);
-    background: var(--surface-2);
-    padding: 2px 7px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-.unidade-tag .material-symbols-outlined { font-size: 12px; color: var(--brand); }
 </style>
 </head>
 
@@ -898,6 +910,459 @@ let termoPendenteDeBusca = null;
 
 const DIAS_PADRAO = 30;
 
+const CHAVES_UNIDADE_EXPLICITAS = [
+    'unidade',
+    'unidadeEscolar',
+    'unidade_escolar',
+    'unidadeEscola',
+    'unidade_escola',
+    'nomeUnidade',
+    'nome_unidade',
+    'nomeUnidadeEscolar',
+    'nome_unidade_escolar',
+    'nomeUnidadeEscola',
+    'nome_unidade_escola',
+    'escola',
+    'nomeEscola',
+    'nome_escola',
+    'escolaNome',
+    'escola_nome',
+    'estabelecimento',
+    'nomeEstabelecimento',
+    'estabelecimentoEnsino',
+    'estabelecimento_ensino',
+    'instituicao',
+    'instituicaoEnsino',
+    'instituicao_ensino',
+    'instituição',
+    'instituicao_nome',
+    'colegio',
+    'colégio',
+    'nomeColegio',
+    'nome_colegio',
+    'lotacao',
+    'lotação',
+    'nomeLotacao',
+    'nome_lotacao',
+    'lotacaoUnidade',
+    'lotacao_unidade',
+    'localTrabalho',
+    'local_trabalho',
+    'localidade',
+    'setor',
+    'departamento',
+    'orgao',
+    'órgao',
+    'posto',
+    'postoTrabalho',
+    'posto_trabalho'
+];
+
+const REGEX_CHAVE_UNIDADE = /(unidade|escola|school|lotacao|lotação|local_trabalho|localtrabalho|estabelecimento|instituicao|instituição|colegio|colégio|setor|departamento|orgao|órgao|posto)/i;
+
+const COLECOES_UNIDADE = [
+    'unidades',
+    'escolas',
+    'unidades_escolares',
+    'unidadesEscolares'
+];
+
+const CAMPOS_BUSCA_UNIDADE = [
+    'codigo',
+    'codigoUnidade',
+    'codigoEscola',
+    'id',
+    'idUnidade',
+    'idEscola',
+    'cod',
+    'codUnidade',
+    'codEscola'
+];
+
+function escaparHtml(texto) {
+    return String(texto ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[c]));
+}
+
+function ehReferenciaFirestore(valor) {
+    return Boolean(
+        valor &&
+        typeof valor === 'object' &&
+        typeof valor.id === 'string' &&
+        typeof valor.path === 'string'
+    );
+}
+
+function normalizarTextoUnidade(valor) {
+    if (valor === null || valor === undefined) return '';
+
+    if (typeof valor === 'string') {
+        return valor.trim();
+    }
+
+    if (typeof valor === 'number') {
+        return String(valor);
+    }
+
+    if (typeof valor === 'boolean') {
+        return '';
+    }
+
+    if (Array.isArray(valor)) {
+        for (const item of valor) {
+            const txt = normalizarTextoUnidade(item);
+            if (txt) return txt;
+        }
+        return '';
+    }
+
+    if (typeof valor === 'object') {
+        if (ehReferenciaFirestore(valor)) {
+            return valor.id || String(valor.path).split('/').pop();
+        }
+
+        const camposNome = [
+            'nome',
+            'name',
+            'nomeUnidade',
+            'nome_unidade',
+            'nomeEscola',
+            'nome_escola',
+            'descricao',
+            'descrição',
+            'denominacao',
+            'denominação',
+            'titulo',
+            'título',
+            'razaoSocial',
+            'razão_social',
+            'nomeCompleto',
+            'nome_completo',
+            'sigla',
+            'unidade',
+            'unidadeEscolar',
+            'unidade_escolar',
+            'escola',
+            'nomeInstituicao',
+            'nome_instituicao',
+            'nomeEstabelecimento',
+            'nome_estabelecimento'
+        ];
+
+        for (const campo of camposNome) {
+            if (valor[campo] !== undefined && valor[campo] !== null) {
+                const txt = normalizarTextoUnidade(valor[campo]);
+                if (txt) return txt;
+            }
+        }
+
+        if (valor.id) return String(valor.id);
+        if (valor.path) return String(valor.path).split('/').pop();
+        if (valor.codigo) return String(valor.codigo);
+        if (valor.cod) return String(valor.cod);
+    }
+
+    return '';
+}
+
+function buscarUnidadeEmObjeto(obj, profundidade = 0) {
+    if (!obj || typeof obj !== 'object' || profundidade > 4 || ehReferenciaFirestore(obj)) return '';
+
+    for (const chave of CHAVES_UNIDADE_EXPLICITAS) {
+        if (obj[chave] !== undefined && obj[chave] !== null) {
+            const txt = normalizarTextoUnidade(obj[chave]);
+            if (txt) return txt;
+        }
+    }
+
+    for (const [chave, valor] of Object.entries(obj)) {
+        if (REGEX_CHAVE_UNIDADE.test(chave)) {
+            const txt = normalizarTextoUnidade(valor);
+            if (txt) return txt;
+
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                const interno = buscarUnidadeEmObjeto(valor, profundidade + 1);
+                if (interno) return interno;
+            }
+        }
+    }
+
+    if (profundidade < 2) {
+        for (const valor of Object.values(obj)) {
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                const interno = buscarUnidadeEmObjeto(valor, profundidade + 1);
+                if (interno) return interno;
+            }
+        }
+    }
+
+    return '';
+}
+
+function obterUnidade(documento, vinculoObj) {
+    if (vinculoObj) {
+        const txt = buscarUnidadeEmObjeto(vinculoObj, 0);
+        if (txt) return txt;
+    }
+
+    if (documento) {
+        const txt = buscarUnidadeEmObjeto(documento, 0);
+        if (txt) return txt;
+    }
+
+    return '';
+}
+
+function parecerNomeHumano(txt) {
+    const t = String(txt || '').trim();
+    if (t.length < 3) return false;
+    if (/\d{5,}/.test(t)) return false;
+
+    if (/[A-Za-zÀ-ÿ]{3,}/.test(t)) {
+        if (/\s/.test(t)) return true;
+        if (/escola|col[eé]gio|creche|cmei|centro|institui|unidade|estadual|municipal/i.test(t)) return true;
+        if (t.length > 12) return true;
+    }
+
+    return false;
+}
+
+function coletarCandidatosUnidade(obj, profundidade = 0, lista = []) {
+    if (!obj || typeof obj !== 'object' || profundidade > 4 || ehReferenciaFirestore(obj)) return lista;
+
+    const adicionar = (valor) => {
+        if (valor !== undefined && valor !== null) lista.push(valor);
+    };
+
+    for (const chave of CHAVES_UNIDADE_EXPLICITAS) {
+        if (obj[chave] !== undefined) adicionar(obj[chave]);
+    }
+
+    for (const [chave, valor] of Object.entries(obj)) {
+        if (REGEX_CHAVE_UNIDADE.test(chave)) {
+            adicionar(valor);
+        }
+    }
+
+    if (profundidade < 2) {
+        for (const valor of Object.values(obj)) {
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                coletarCandidatosUnidade(valor, profundidade + 1, lista);
+            }
+        }
+    }
+
+    return lista;
+}
+
+function igualMatricula(a, b) {
+    const s1 = String(a || '').trim();
+    const s2 = String(b || '').trim();
+    if (!s1 || !s2) return false;
+    return s1 === s2 || s1.replace(/^0+/, '') === s2.replace(/^0+/, '');
+}
+
+function obterFontesDeVinculo(documento, matricula) {
+    const fontes = [];
+
+    if (documento.matricula1 && igualMatricula(documento.matricula1.numeroMatricula, matricula)) {
+        fontes.push(documento.matricula1);
+    }
+
+    if (documento.matricula2 && igualMatricula(documento.matricula2.numeroMatricula, matricula)) {
+        fontes.push(documento.matricula2);
+    }
+
+    const matriculaSolta = documento.matricula || documento.Matricula || documento.matricula_servidor;
+    if (igualMatricula(matriculaSolta, matricula)) {
+        fontes.push(documento);
+    }
+
+    if (fontes.length === 0) fontes.push(documento);
+
+    return fontes;
+}
+
+async function tentarObterDocumentoPorIdEmColecoes(id) {
+    if (!id) return '';
+
+    for (const col of COLECOES_UNIDADE) {
+        try {
+            const snap = await getDoc(doc(db, col, String(id)));
+            if (snap.exists()) {
+                const txt = normalizarTextoUnidade(snap.data());
+                if (txt) return txt;
+            }
+        } catch (e) {}
+    }
+
+    return '';
+}
+
+async function tentarObterDocumentoPorCodigo(codigo) {
+    const codigoStr = String(codigo || '').trim();
+    if (!codigoStr) return '';
+
+    const valores = [codigoStr];
+    if (/^\d+$/.test(codigoStr)) valores.push(Number(codigoStr));
+
+    for (const col of COLECOES_UNIDADE) {
+        for (const campo of CAMPOS_BUSCA_UNIDADE) {
+            for (const valor of valores) {
+                try {
+                    const snap = await getDocs(query(collection(db, col), where(campo, '==', valor)));
+                    if (!snap.empty) {
+                        const txt = normalizarTextoUnidade(snap.docs[0].data());
+                        if (txt) return txt;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    return '';
+}
+
+async function resolverCandidatoUnidade(candidato) {
+    if (candidato === null || candidato === undefined) return '';
+
+    if (Array.isArray(candidato)) {
+        for (const item of candidato) {
+            const nome = await resolverCandidatoUnidade(item);
+            if (nome) return nome;
+        }
+        return '';
+    }
+
+    if (typeof candidato === 'string' || typeof candidato === 'number') {
+        const txt = String(candidato).trim();
+        if (!txt) return '';
+
+        if (parecerNomeHumano(txt)) return txt;
+
+        if (txt.includes('/')) {
+            try {
+                const snap = await getDoc(doc(db, txt));
+                if (snap.exists()) {
+                    const nome = normalizarTextoUnidade(snap.data());
+                    if (nome) return nome;
+                }
+            } catch (e) {}
+        }
+
+        const porId = await tentarObterDocumentoPorIdEmColecoes(txt);
+        if (porId) return porId;
+
+        const porCodigo = await tentarObterDocumentoPorCodigo(txt);
+        if (porCodigo) return porCodigo;
+
+        return txt;
+    }
+
+    if (typeof candidato === 'object') {
+        if (ehReferenciaFirestore(candidato) || candidato.path) {
+            try {
+                const snap = await getDoc(doc(db, candidato.path));
+                if (snap.exists()) {
+                    const nome = normalizarTextoUnidade(snap.data());
+                    if (nome) return nome;
+                }
+            } catch (e) {}
+        }
+
+        const txtObj = normalizarTextoUnidade(candidato);
+        if (txtObj && parecerNomeHumano(txtObj)) return txtObj;
+
+        const possibleId =
+            candidato.id ||
+            candidato.codigo ||
+            candidato.cod ||
+            candidato.unidadeId ||
+            candidato.unidade_id ||
+            candidato.escolaId ||
+            candidato.escola_id ||
+            candidato.codigoUnidade ||
+            candidato.codigoEscola;
+
+        if (possibleId) {
+            const resolved = await resolverCandidatoUnidade(possibleId);
+            if (resolved) return resolved;
+        }
+
+        if (txtObj) return txtObj;
+    }
+
+    return '';
+}
+
+async function resolverUnidadesDosVinculos(docs, vinculos) {
+    for (const vinculo of vinculos) {
+        const unidadeAtual = String(vinculo.unidade || '').trim();
+
+        if (unidadeAtual && parecerNomeHumano(unidadeAtual)) {
+            continue;
+        }
+
+        const candidatos = [];
+        if (unidadeAtual) candidatos.push(unidadeAtual);
+
+        for (const d of docs) {
+            const dt = d.data();
+            const fontes = obterFontesDeVinculo(dt, vinculo.matricula);
+
+            for (const fonte of fontes) {
+                coletarCandidatosUnidade(fonte, 0, candidatos);
+            }
+        }
+
+        const unicos = [];
+        const vistos = new Set();
+
+        for (const c of candidatos) {
+            let key;
+
+            if (c && typeof c === 'object') {
+                key = c.path || c.id || JSON.stringify(Object.keys(c));
+            } else {
+                key = String(c);
+            }
+
+            if (!vistos.has(key)) {
+                vistos.add(key);
+                unicos.push(c);
+            }
+
+            if (unicos.length >= 6) break;
+        }
+
+        let melhor = '';
+
+        for (const c of unicos) {
+            try {
+                const nome = await resolverCandidatoUnidade(c);
+
+                if (nome && parecerNomeHumano(nome)) {
+                    melhor = nome;
+                    break;
+                }
+
+                if (nome && !melhor) melhor = nome;
+            } catch (e) {}
+        }
+
+        if (melhor) {
+            vinculo.unidade = melhor;
+        } else if (!vinculo.unidade || vinculo.unidade === 'Não informada') {
+            vinculo.unidade = unidadeAtual || 'Não informada';
+        }
+    }
+}
+
 function obterDiasPorPeriodo(servidor, vinculo) {
     if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
     if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
@@ -920,6 +1385,7 @@ function mostrarLoading(texto = 'Carregando...') {
     if (btn) btn.disabled = true;
     if (input) input.disabled = true;
 }
+
 function ocultarLoading() {
     document.getElementById('loadingOverlay').classList.remove('ativo');
     const btn = document.getElementById('btnBuscar');
@@ -931,35 +1397,50 @@ function ocultarLoading() {
 function mostrarAlerta(mensagem, tipo = 'info', titulo = 'Aviso') {
     const modal = document.getElementById('modalAlerta');
     const icon = document.getElementById('modalAlertaIcon');
-    const icones = { info:'info', erro:'error', aviso:'warning' };
-    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo]||'info'}</span>`;
+    const icones = { info: 'info', erro: 'error', aviso: 'warning' };
+    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo] || 'info'}</span>`;
     document.getElementById('modalAlertaTitulo').textContent = titulo;
     document.getElementById('modalAlertaMensagem').textContent = mensagem;
     modal.classList.add('ativo');
     requestAnimationFrame(() => document.getElementById('btnFecharModalAlerta').focus());
 }
+
 function fecharModalAlerta() {
     document.getElementById('modalAlerta').classList.remove('ativo');
 }
-document.getElementById('btnFecharModalAlerta').addEventListener('click', fecharModalAlerta);
-document.getElementById('modalAlerta').addEventListener('click', function(e){ if(e.target===this) fecharModalAlerta(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') fecharModalAlerta(); });
 
-onAuthStateChanged(auth, async function(user) {
+document.getElementById('btnFecharModalAlerta').addEventListener('click', fecharModalAlerta);
+document.getElementById('modalAlerta').addEventListener('click', function (e) {
+    if (e.target === this) fecharModalAlerta();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fecharModalAlerta();
+});
+
+onAuthStateChanged(auth, async function (user) {
     const formBusca = document.getElementById('formBuscaCard');
     const resultadoContainer = document.getElementById('resultadoContainer');
+
     if (!user) {
         mostrarErro("Sua sessão expirou. Faça login novamente.");
-        formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
-        acessoAutorizado=false; return;
+        formBusca.style.display = 'none';
+        resultadoContainer.classList.add('hidden');
+        acessoAutorizado = false;
+        return;
     }
+
     usuarioLogado = user;
+
     try {
-        const snap = await getDoc(doc(db,"usuarios",user.uid));
+        const snap = await getDoc(doc(db, "usuarios", user.uid));
+
         if (snap.exists()) {
-            const perfil = (snap.data().perfil||"").toUpperCase();
-            if (["ADMIN","ADMINISTRADOR","SEMED","RH","GESTOR","MASTER","DIRETOR"].includes(perfil)) {
-                acessoAutorizado=true; formBusca.style.display='block'; ocultarErro();
+            const perfil = (snap.data().perfil || "").toUpperCase();
+
+            if (["ADMIN", "ADMINISTRADOR", "SEMED", "RH", "GESTOR", "MASTER", "DIRETOR"].includes(perfil)) {
+                acessoAutorizado = true;
+                formBusca.style.display = 'block';
+                ocultarErro();
 
                 if (termoPendenteDeBusca) {
                     setTimeout(() => {
@@ -968,184 +1449,274 @@ onAuthStateChanged(auth, async function(user) {
                     }, 300);
                 }
             } else {
-                acessoAutorizado=false;
+                acessoAutorizado = false;
                 mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
-                formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
+                formBusca.style.display = 'none';
+                resultadoContainer.classList.add('hidden');
             }
         } else {
-            acessoAutorizado=false; mostrarErro("Usuário não encontrado no sistema.");
-            formBusca.style.display='none'; resultadoContainer.classList.add('hidden');
+            acessoAutorizado = false;
+            mostrarErro("Usuário não encontrado no sistema.");
+            formBusca.style.display = 'none';
+            resultadoContainer.classList.add('hidden');
         }
-    } catch(e){ acessoAutorizado=false; mostrarErro("Erro ao verificar permissões."); formBusca.style.display='none'; }
+    } catch (e) {
+        acessoAutorizado = false;
+        mostrarErro("Erro ao verificar permissões.");
+        formBusca.style.display = 'none';
+    }
 });
 
-document.getElementById('termoBusca').addEventListener('input', function(e){
-    let v = e.target.value.replace(/\D/g,'');
-    if (v.length > 20) v = v.slice(0,20);
-    if (v.length === 11) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+document.getElementById('termoBusca').addEventListener('input', function (e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+
+    if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+
     e.target.value = v;
 });
-document.getElementById('termoBusca').addEventListener('keypress', e=>{ if(e.key==='Enter'){e.preventDefault();buscarServidor();} });
+
+document.getElementById('termoBusca').addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        buscarServidor();
+    }
+});
+
 document.getElementById('btnBuscar').addEventListener('click', buscarServidor);
 
-function formatarData(s){
-    if(!s)return '';
-    if(typeof s==='object'&&s.toDate)s=s.toDate().toISOString().split('T')[0];
-    s=s.toString().trim();
-    if(s.includes('-')&&s.length>=10){const p=s.substring(0,10).split('-');return `${p[2]}/${p[1]}/${p[0]}`;}
+function formatarData(s) {
+    if (!s) return '';
+    if (typeof s === 'object' && s.toDate) s = s.toDate().toISOString().split('T')[0];
+    s = s.toString().trim();
+    if (s.includes('-') && s.length >= 10) {
+        const p = s.substring(0, 10).split('-');
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
     return s;
 }
-function parseDataParaDate(s){
-    if(!s)return null;
-    if(typeof s==='object'&&s.toDate)return s.toDate();
-    s=s.toString().trim();
-    if(s.includes('/')){const p=s.split('/');return new Date(+p[2],+p[1]-1,+p[0]);}
-    if(s.includes('-')){const p=s.substring(0,10).split('-');return p[0].length===4?new Date(+p[0],+p[1]-1,+p[2]):new Date(+p[2],+p[1]-1,+p[0]);}
+
+function parseDataParaDate(s) {
+    if (!s) return null;
+    if (typeof s === 'object' && s.toDate) return s.toDate();
+
+    s = s.toString().trim();
+
+    if (s.includes('/')) {
+        const p = s.split('/');
+        return new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+
+    if (s.includes('-')) {
+        const p = s.substring(0, 10).split('-');
+        return p[0].length === 4 ? new Date(+p[0], +p[1] - 1, +p[2]) : new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+
     return null;
 }
-function verificarSeJaGozado(reg, hoje){
-    const dt=parseDataParaDate(reg.dataInicio||reg.data_inicio||reg.data||reg.data_gozo);
-    if(!dt)return false;
-    return dt<=hoje;
+
+function verificarSeJaGozado(reg, hoje) {
+    const dt = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data || reg.data_gozo);
+    if (!dt) return false;
+    return dt <= hoje;
 }
 
 function verificarExtemporaneo(status, gozoStr, dataLimite) {
     if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
     if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
+
     const primeiraDataStr = gozoStr.split(' a ')[0].split(' + ')[0].trim();
     const dg = parseDataParaDate(primeiraDataStr);
+
     return dg ? dg > dataLimite : false;
 }
 
-function calcularDireitoFerias(dataAdmissao, ref=new Date(), diasDireito = DIAS_PADRAO){
-    const adm=parseDataParaDate(dataAdmissao); if(!adm)return null;
-    ref.setHours(0,0,0,0);
+function calcularDireitoFerias(dataAdmissao, ref = new Date(), diasDireito = DIAS_PADRAO) {
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!adm) return null;
+
+    ref.setHours(0, 0, 0, 0);
+
     const totalDireito = diasDireito || DIAS_PADRAO;
-    let completos=0, det=[], ini=new Date(adm);
+    let completos = 0;
+    let det = [];
+    let ini = new Date(adm);
 
-    while(completos<40){
-        const fim=new Date(ini);
-        fim.setFullYear(fim.getFullYear()+1);
-        fim.setDate(fim.getDate()-1);
+    while (completos < 40) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
 
-        if(fim > ref) break;
+        if (fim > ref) break;
 
         const prazoGozo = new Date(fim);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-        const p={
-            numero:completos+1,
-            inicio:new Date(ini),
-            fim:new Date(fim),
-            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            dataLimiteGozo:prazoGozo,
-            status:'pendente',
+        const p = {
+            numero: completos + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            dataLimiteGozo: prazoGozo,
+            status: 'pendente',
             totalDireito: totalDireito
         };
+
         completos++;
         det.push(p);
 
-        ini=new Date(fim);
-        ini.setDate(ini.getDate()+1);
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
     }
 
-    return {periodosCompletos:completos,diasDireito:completos*totalDireito,periodosDetalhados:det};
+    return {
+        periodosCompletos: completos,
+        diasDireito: completos * totalDireito,
+        periodosDetalhados: det
+    };
 }
 
-function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref=new Date()){
-    const nasc=parseDataParaDate(dataNascimento), adm=parseDataParaDate(dataAdmissao);
-    if(!nasc||!adm)return null;
-    ref.setHours(0,0,0,0);
-    const mes=nasc.getMonth(), dia=nasc.getDate();
-    let adquiridas=0, disponiveis=0, perdidas=0, proxima=null, det=[], ini=new Date(adm);
+function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+    const nasc = parseDataParaDate(dataNascimento);
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!nasc || !adm) return null;
 
-    for(let i=0;i<40;i++){
-        const fim=new Date(ini); fim.setFullYear(fim.getFullYear()+1); fim.setDate(fim.getDate()-1);
+    ref.setHours(0, 0, 0, 0);
 
-        let aniv=null;
-        for(let a=ini.getFullYear();a<=fim.getFullYear();a++){
-            const c=new Date(a,mes,dia);
-            if(c>=ini&&c<=fim){aniv=c;break;}
+    const mes = nasc.getMonth();
+    const dia = nasc.getDate();
+
+    let adquiridas = 0;
+    let disponiveis = 0;
+    let perdidas = 0;
+    let proxima = null;
+    let det = [];
+    let ini = new Date(adm);
+
+    for (let i = 0; i < 40; i++) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        let aniv = null;
+
+        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+            const c = new Date(a, mes, dia);
+            if (c >= ini && c <= fim) {
+                aniv = c;
+                break;
+            }
         }
-        if(!aniv){ ini=new Date(fim); ini.setDate(ini.getDate()+1); continue; }
+
+        if (!aniv) {
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+            continue;
+        }
 
         const dataDisponivel = new Date(aniv);
         const prazoGozo = new Date(aniv);
         prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
 
-        if(ref < dataDisponivel) break;
+        if (ref < dataDisponivel) break;
 
-        const p={
-            numero:i+1,
-            inicio:new Date(ini),
-            fim:new Date(fim),
-            anoReferencia:`${ini.getFullYear()}/${fim.getFullYear()}`,
-            aniversarioNoPeriodo:aniv,
-            dataDisponivel:dataDisponivel,
-            dataLimiteGozo:prazoGozo,
-            status:'pendente'
+        const p = {
+            numero: i + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            aniversarioNoPeriodo: aniv,
+            dataDisponivel: dataDisponivel,
+            dataLimiteGozo: prazoGozo,
+            status: 'pendente'
         };
 
         adquiridas++;
 
-        if(ref >= prazoGozo){
-            p.status='perdido';
+        if (ref >= prazoGozo) {
+            p.status = 'perdido';
             perdidas++;
         } else {
-            p.status='disponivel';
+            p.status = 'disponivel';
             disponiveis++;
         }
+
         det.push(p);
 
-        ini=new Date(fim); ini.setDate(ini.getDate()+1);
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
     }
 
-    const anoBase=ref.getFullYear();
-    for(let a=anoBase;a<=anoBase+2;a++){
-        const c=new Date(a,mes,dia);
-        if(c>ref){proxima=c;break;}
+    const anoBase = ref.getFullYear();
+
+    for (let a = anoBase; a <= anoBase + 2; a++) {
+        const c = new Date(a, mes, dia);
+        if (c > ref) {
+            proxima = c;
+            break;
+        }
     }
-    return {folgasAdquiridas:adquiridas,folgasDisponiveis:disponiveis,folgasPerdidas:perdidas,proximaAquisicao:proxima,periodosDetalhados:det};
+
+    return {
+        folgasAdquiridas: adquiridas,
+        folgasDisponiveis: disponiveis,
+        folgasPerdidas: perdidas,
+        proximaAquisicao: proxima,
+        periodosDetalhados: det
+    };
 }
 
-function filtrarRegistrosPorMatricula(registros, vinculo){
-    const m=vinculo.matricula.toString().trim().replace(/^0+/,'');
-    return registros.filter(r=>{
-        const rm=(r.matricula||r.Matricula||r.servidor_matricula||'').toString().trim().replace(/^0+/,'');
-        return !rm||rm===m||rm===vinculo.matricula.toString().trim();
+function filtrarRegistrosPorMatricula(registros, vinculo) {
+    const m = vinculo.matricula.toString().trim().replace(/^0+/, '');
+
+    return registros.filter(r => {
+        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+        return !rm || rm === m || rm === vinculo.matricula.toString().trim();
     });
 }
 
 function associarRegistroAPeriodo(reg, periodo) {
     const anoRef = (reg.ano_referencia || reg.ano || '');
     if (anoRef === periodo.anoReferencia) return true;
+
     if (!anoRef) {
         const regIni = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
         const regFim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino || regIni);
+
         if (regIni && regFim) {
             return !(regFim < periodo.inicio || regIni > periodo.fim);
         }
     }
+
     return false;
 }
 
-function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
-    const linhas=[];
+function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
+    const linhas = [];
 
-    vinculos.forEach(vinculo=>{
-        if(!vinculo.dataAdmissao)return;
-        const regsMat=filtrarRegistrosPorMatricula(registros,vinculo);
+    vinculos.forEach(vinculo => {
+        if (!vinculo.dataAdmissao) return;
 
+        const regsMat = filtrarRegistrosPorMatricula(registros, vinculo);
         const diasDireito = obterDiasPorPeriodo(servidorAtualRef, vinculo);
-        const dirF=calcularDireitoFerias(vinculo.dataAdmissao,hoje, diasDireito);
-        if(dirF){
-            const feriasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('ferias')||t.includes('férias');});
-            dirF.periodosDetalhados.forEach(p=>{
+
+        const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje, diasDireito);
+
+        if (dirF) {
+            const feriasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
+
+            dirF.periodosDetalhados.forEach(p => {
                 const lancs = feriasLanc.filter(r => associarRegistroAPeriodo(r, p));
                 const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
                 const totalDireito = p.totalDireito || diasDireito;
 
-                let status, gozo;
+                let status;
+                let gozo;
 
                 if (diasConsumidos >= totalDireito) {
                     const lancsOrdenados = [...lancs].sort((a, b) => {
@@ -1153,15 +1724,24 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
                         return (da || 0) - (db2 || 0);
                     });
+
                     const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
 
                     const intervalos = lancsOrdenados.map(l => {
                         const ini = formatarData(l.dataInicio || l.data_inicio || l.data);
-                        const fimParte = formatarData(l.dataFim || l.data_fim || l.dataTermino || l.data_termino || l.dataInicio || l.data_inicio || l.data);
+                        const fimParte = formatarData(
+                            l.dataFim ||
+                            l.data_fim ||
+                            l.dataTermino ||
+                            l.data_termino ||
+                            l.dataInicio ||
+                            l.data_inicio ||
+                            l.data
+                        );
                         return `${ini} a ${fimParte}`;
                     });
-                    gozo = intervalos.join(' + ');
 
+                    gozo = intervalos.join(' + ');
                     status = verificarSeJaGozado(ultimo, hoje) ? 'gozado' : 'programado';
                 } else if (diasConsumidos > 0) {
                     const lancsOrdenados = [...lancs].sort((a, b) => {
@@ -1169,95 +1749,113 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje){
                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
                         return (db2 || 0) - (da || 0);
                     });
+
                     const ultimoParcial = lancsOrdenados[0];
                     gozo = `${diasConsumidos}/${totalDireito} dias`;
                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                 } else {
                     gozo = '';
-                    if(p.dataLimiteGozo<hoje) status='vencido';
-                    else status='disponivel';
+                    status = p.dataLimiteGozo < hoje ? 'vencido' : 'disponivel';
                 }
 
                 linhas.push({
-                    servidor:nomeServidorAtual,
-                    matricula:vinculo.matricula,
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
                     unidade: vinculo.unidade || 'Não informada',
                     diasDireito: diasDireito,
-                    tipo:'Férias',
-                    tipoKey:'ferias',
-                    periodo:p.anoReferencia,
-                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
-                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    tipo: 'Férias',
+                    tipoKey: 'ferias',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                     status,
-                    gozo:gozo||'—',
-                    ordem:p.inicio.getTime(),
+                    gozo: gozo || '—',
+                    ordem: p.inicio.getTime(),
                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                 });
             });
         }
 
-        const dirG=dataNascimento?calcularDireitoFolgaAniversario(dataNascimento,vinculo.dataAdmissao,hoje):null;
-        if(dirG){
-            const folgasLanc=regsMat.filter(r=>{const t=(r.tipo||'').toLowerCase();return t.includes('aniversario')||t.includes('aniversário')||t.includes('folga');});
-            dirG.periodosDetalhados.forEach(p=>{
-                const lanc=folgasLanc.find(r=>{
-                    const anoRef=(r.ano_referencia||r.ano||'');
-                    if(anoRef) return anoRef===p.anoReferencia;
-                    const raw=r.data||r.data_gozo||r.dataInicio||r.data_inicio;
-                    return raw && parseDataParaDate(raw) && parseDataParaDate(raw)>=p.dataDisponivel && parseDataParaDate(raw)<p.dataLimiteGozo;
+        const dirG = dataNascimento
+            ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
+            : null;
+
+        if (dirG) {
+            const folgasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+
+            dirG.periodosDetalhados.forEach(p => {
+                const lanc = folgasLanc.find(r => {
+                    const anoRef = (r.ano_referencia || r.ano || '');
+                    if (anoRef) return anoRef === p.anoReferencia;
+
+                    const raw = r.data || r.data_gozo || r.dataInicio || r.data_inicio;
+                    return raw &&
+                        parseDataParaDate(raw) &&
+                        parseDataParaDate(raw) >= p.dataDisponivel &&
+                        parseDataParaDate(raw) < p.dataLimiteGozo;
                 });
 
-                let status, gozo='';
+                let status;
+                let gozo = '';
 
-                if(lanc){
-                    const raw=lanc.data||lanc.data_gozo||lanc.dataInicio||lanc.data_inicio;
-                    gozo=formatarData(raw);
-                    status=verificarSeJaGozado(lanc,hoje)?'gozado':'programado';
+                if (lanc) {
+                    const raw = lanc.data || lanc.data_gozo || lanc.dataInicio || lanc.data_inicio;
+                    gozo = formatarData(raw);
+                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
                 } else {
-                    gozo='—';
+                    gozo = '—';
                     status = p.status;
                 }
 
                 linhas.push({
-                    servidor:nomeServidorAtual,
-                    matricula:vinculo.matricula,
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
                     unidade: vinculo.unidade || 'Não informada',
-                    tipo:'Folga Aniv.',
-                    tipoKey:'folga',
-                    periodo:p.anoReferencia,
-                    ciclo:`${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
-                    prazo:formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    tipo: 'Folga Aniv.',
+                    tipoKey: 'folga',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
                     status,
-                    gozo:gozo||'—',
-                    ordem:p.inicio.getTime(),
+                    gozo: gozo || '—',
+                    ordem: p.inicio.getTime(),
                     extemporaneo: false
                 });
             });
         }
     });
 
-    linhas.sort((a,b)=>b.ordem-a.ordem);
+    linhas.sort((a, b) => b.ordem - a.ordem);
     return linhas;
 }
 
-function badgeStatus(s){
-    const m={
-        gozado:['badge-gozado','check_circle','Gozado'],
-        parcial:['badge-parcial','hourglass_bottom','Parcial'],
-        programado:['badge-programado','event_upcoming','Programado'],
-        disponivel:['badge-disponivel','event_available','Disponível'],
-        pendente:['badge-pendente','schedule','Pendente'],
-        vencido:['badge-vencido','error','Vencido'],
-        perdido:['badge-perdido','cancel','Perdido']
+function badgeStatus(s) {
+    const m = {
+        gozado: ['badge-gozado', 'check_circle', 'Gozado'],
+        parcial: ['badge-parcial', 'hourglass_bottom', 'Parcial'],
+        programado: ['badge-programado', 'event_upcoming', 'Programado'],
+        disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
+        pendente: ['badge-pendente', 'schedule', 'Pendente'],
+        vencido: ['badge-vencido', 'error', 'Vencido'],
+        perdido: ['badge-perdido', 'cancel', 'Perdido']
     };
-    const x=m[s]; if(!x)return '-';
+
+    const x = m[s];
+    if (!x) return '-';
+
     return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
 }
-function badgeTipo(k){
-    return k==='ferias'?'<span class="tipo-badge">Férias</span>':'<span class="tipo-badge">Folga Aniv.</span>';
+
+function badgeTipo(k) {
+    return k === 'ferias'
+        ? '<span class="tipo-badge">Férias</span>'
+        : '<span class="tipo-badge">Folga Aniv.</span>';
 }
 
-function renderizarResumoExecutivo(){
+function renderizarResumoExecutivo() {
     const container = document.getElementById('resumoExecutivo');
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
     let html = '';
@@ -1277,10 +1875,15 @@ function renderizarResumoExecutivo(){
             <div class="resumo-matricula">
                 <div class="resumo-matricula-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span class="resumo-matricula-badge">Matrícula ${mat}</span>
-                        <span class="unidade-tag"><span class="material-symbols-outlined">apartment</span>${unidade}</span>
+                        <span class="resumo-matricula-badge">Matrícula ${escaparHtml(mat)}</span>
+                        <span class="unidade-tag">
+                            <span class="material-symbols-outlined">apartment</span>
+                            ${escaparHtml(unidade)}
+                        </span>
                     </div>
-                    <span class="resumo-matricula-nome" style="font-size:13px; font-weight:600; color:var(--text); margin-top:2px;">${nomeServidorAtual}</span>
+                    <span class="resumo-matricula-nome" style="font-size:13px; font-weight:600; color:var(--text); margin-top:2px;">
+                        ${escaparHtml(nomeServidorAtual)}
+                    </span>
                 </div>
                 <div class="resumo-cards-row">
                     <div class="resumo-bloco">
@@ -1289,11 +1892,11 @@ function renderizarResumoExecutivo(){
                         </div>
                         <div class="resumo-chips">
                             <span class="chip">Adquiridas <span class="num chip-num-cinza">${feriasAdquiridas}</span></span>
-                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(f,'gozado')}</span></span>
-                            <span class="chip">Parciais <span class="num chip-num-azul">${c(f,'parcial')}</span></span>
-                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(f,'programado')}</span></span>
-                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f,'disponivel')}</span></span>
-                            <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f,'vencido')}</span></span>
+                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(f, 'gozado')}</span></span>
+                            <span class="chip">Parciais <span class="num chip-num-azul">${c(f, 'parcial')}</span></span>
+                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(f, 'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f, 'disponivel')}</span></span>
+                            <span class="chip">Vencidas <span class="num chip-num-vermelho">${c(f, 'vencido')}</span></span>
                         </div>
                     </div>
                     <div class="resumo-bloco">
@@ -1302,26 +1905,27 @@ function renderizarResumoExecutivo(){
                         </div>
                         <div class="resumo-chips">
                             <span class="chip">Adquiridas <span class="num chip-num-cinza">${folgaAdquiridas}</span></span>
-                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(g,'gozado')}</span></span>
-                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(g,'programado')}</span></span>
-                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g,'disponivel')}</span></span>
-                            <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g,'perdido')}</span></span>
+                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(g, 'gozado')}</span></span>
+                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(g, 'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g, 'disponivel')}</span></span>
+                            <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g, 'perdido')}</span></span>
                         </div>
                     </div>
                 </div>
             </div>
         `;
     });
+
     container.innerHTML = html;
 }
 
-function popularFiltroMatricula(){
-    const sel=document.getElementById('filtroMatricula');
-    const mats=[...new Set(linhasUnificadas.map(l=>l.matricula))];
-    sel.innerHTML='<option value="">Todas</option>'+mats.map(m=>`<option value="${m}">${m}</option>`).join('');
+function popularFiltroMatricula() {
+    const sel = document.getElementById('filtroMatricula');
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+    sel.innerHTML = '<option value="">Todas</option>' + mats.map(m => `<option value="${escaparHtml(m)}">${escaparHtml(m)}</option>`).join('');
 }
 
-function aplicarFiltros(){
+function aplicarFiltros() {
     const fm = document.getElementById('filtroMatricula')?.value || '';
     const ft = document.getElementById('filtroTipo')?.value || '';
     const fs = document.getElementById('filtroStatus')?.value || '';
@@ -1330,6 +1934,7 @@ function aplicarFiltros(){
         const okMatricula = !fm || String(l.matricula) === String(fm);
         const okTipo = !ft || l.tipoKey === ft;
         const okStatus = !fs || l.status === fs;
+
         return okMatricula && okTipo && okStatus;
     });
 
@@ -1342,23 +1947,28 @@ document.getElementById('filtroMatricula').addEventListener('change', aplicarFil
 document.getElementById('filtroTipo').addEventListener('change', aplicarFiltros);
 document.getElementById('filtroStatus').addEventListener('change', aplicarFiltros);
 
-function renderizarTabelaUnica(linhas){
-    const tbody=document.getElementById('tabelaUnica');
-    if(!linhas || linhas.length===0){
-        tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
+function renderizarTabelaUnica(linhas) {
+    const tbody = document.getElementById('tabelaUnica');
+
+    if (!linhas || linhas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
         return;
     }
-    tbody.innerHTML=linhas.map(l=>`
+
+    tbody.innerHTML = linhas.map(l => `
         <tr>
-            <td><strong>${l.servidor}</strong></td>
-            <td>${l.matricula}</td>
-            <td style="font-size:11px; color:var(--text-secondary);">${l.unidade || '—'}</td>
+            <td><strong>${escaparHtml(l.servidor)}</strong></td>
+            <td>${escaparHtml(l.matricula)}</td>
+            <td style="font-size:11px; color:var(--text-secondary);">${escaparHtml(l.unidade || '—')}</td>
             <td>${badgeTipo(l.tipoKey)}</td>
-            <td>${l.periodo}</td>
-            <td>${l.ciclo}</td>
-            <td>${l.prazo}</td>
-            <td>${badgeStatus(l.status)}${l.extemporaneo ? ' <span class="badge-status badge-extemporaneo"><span class="material-symbols-outlined">warning</span> Fora do prazo</span>' : ''}</td>
-            <td>${l.gozo}</td>
+            <td>${escaparHtml(l.periodo)}</td>
+            <td>${escaparHtml(l.ciclo)}</td>
+            <td>${escaparHtml(l.prazo)}</td>
+            <td>
+                ${badgeStatus(l.status)}
+                ${l.extemporaneo ? ' <span class="badge-status badge-extemporaneo"><span class="material-symbols-outlined">warning</span> Fora do prazo</span>' : ''}
+            </td>
+            <td>${escaparHtml(l.gozo)}</td>
         </tr>
     `).join('');
 }
@@ -1373,6 +1983,7 @@ function obterClasseSegmento(status) {
         vencido: 'seg-vencido',
         perdido: 'seg-perdido'
     };
+
     return mapa[status] || 'seg-pendente';
 }
 
@@ -1386,6 +1997,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
     }
 
     const periodosMap = new Map();
+
     linhas.forEach(l => {
         if (!periodosMap.has(l.periodo)) {
             periodosMap.set(l.periodo, []);
@@ -1411,13 +2023,14 @@ function renderizarGrafico(linhas = linhasUnificadas) {
         html += `<div class="grafico-periodo-bloco">`;
         html += `<div class="grafico-periodo-titulo">
                     <span class="material-symbols-outlined">calendar_month</span>
-                    Período ${periodo}
+                    Período ${escaparHtml(periodo)}
                     <span class="periodo-ref">— ciclo aquisitivo</span>
                  </div>`;
         html += `<div class="grafico-barras">`;
 
         if (ferias.length > 0) {
             const statusFerias = ferias.map(f => f.status);
+
             const statusPrincipal = statusFerias.includes('gozado') ? 'gozado'
                 : statusFerias.includes('parcial') ? 'parcial'
                 : statusFerias.includes('programado') ? 'programado'
@@ -1434,6 +2047,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
             } else if (statusPrincipal === 'parcial') {
                 const gozoTexto = ferias[0]?.gozo || '';
                 const match = gozoTexto.match(/(\d+)\/(\d+)/);
+
                 if (match) {
                     const diasConsumidos = parseInt(match[1], 10);
                     percentual = Math.round((diasConsumidos / totalDireito) * 100);
@@ -1462,7 +2076,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
                         </div>
                         <div class="grafico-trilha">
                             <div class="grafico-segmento ${obterClasseSegmento(statusPrincipal)}" style="width:${percentual}%;">
-                                ${percentual > 15 ? labelPercentual : ''}
+                                ${percentual > 15 ? escaparHtml(labelPercentual) : ''}
                             </div>
                         </div>
                     </div>`;
@@ -1480,6 +2094,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
         if (folgas.length > 0) {
             const folga = folgas[0];
             const statusFolga = folga.status;
+
             let percentualFolga = 0;
             let labelFolga = '';
 
@@ -1506,7 +2121,7 @@ function renderizarGrafico(linhas = linhasUnificadas) {
                         </div>
                         <div class="grafico-trilha">
                             <div class="grafico-segmento ${obterClasseSegmento(statusFolga)}" style="width:${percentualFolga}%;">
-                                ${percentualFolga > 20 ? labelFolga : ''}
+                                ${percentualFolga > 20 ? escaparHtml(labelFolga) : ''}
                             </div>
                         </div>
                     </div>`;
@@ -1568,6 +2183,7 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
     aviso.classList.add('hidden');
 
     const periodosMap = new Map();
+
     linhas.forEach(l => {
         if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
         periodosMap.get(l.periodo).push(l);
@@ -1582,10 +2198,10 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
     const vinculosUnicos = [...new Map(linhas.map(item => [String(item.matricula), item])).values()];
 
     const infoVinculos = vinculosUnicos.map(v =>
-        `<strong>${v.matricula}</strong> <span style="color:var(--text-muted); font-weight:400;">(${v.unidade || 'Sem unidade'})</span>`
+        `<strong>${escaparHtml(v.matricula)}</strong> <span style="color:var(--text-muted); font-weight:400;">(${escaparHtml(v.unidade || 'Sem unidade')})</span>`
     ).join(' &nbsp;|&nbsp; ');
 
-    let linhaInfoVinculos = `<tr>
+    const linhaInfoVinculos = `<tr>
         <td colspan="${periodosOrdenados.length}" style="text-align:left; padding:12px 14px; font-size:12px; color:var(--text-secondary); background:var(--surface); border-bottom:2px solid var(--border-strong);">
             <span style="color:var(--brand); font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.5px;">Vínculos Ativos:</span><br>
             <span style="margin-top:4px; display:block; line-height:1.6;">${infoVinculos}</span>
@@ -1599,11 +2215,12 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
 
     let linhaAnos = '<tr>';
     periodosOrdenados.forEach(per => {
-        linhaAnos += `<th scope="col">${per}</th>`;
+        linhaAnos += `<th scope="col">${escaparHtml(per)}</th>`;
     });
     linhaAnos += '</tr>';
 
     let linhaConteudo = '<tr>';
+
     periodosOrdenados.forEach(per => {
         const itens = periodosMap.get(per);
         const ferias = itens.filter(i => i.tipoKey === 'ferias');
@@ -1612,80 +2229,107 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
         const linhasTexto = [];
 
         const gruposFerias = new Map();
+
         ferias.forEach(f => {
-            let chave = 'sem-data';
+            const mat = String(f.matricula || '—');
+            let chave = `${mat}::sem-data`;
             let textoTrecho = '';
 
             if (f.status === 'gozado' || f.status === 'parcial') {
                 textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
                 const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
-                chave = m ? m[1] : 'sem-data';
+                chave = `${mat}::${m ? m[1] : 'sem-data'}`;
             } else if (f.status === 'programado') {
                 textoTrecho = f.gozo && f.gozo !== '—'
                     ? `Programado ${f.gozo}`
                     : 'Programado';
                 const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
-                chave = m ? m[1] : 'sem-data';
+                chave = `${mat}::${m ? m[1] : 'sem-data'}`;
             } else if (f.status === 'disponivel') {
                 textoTrecho = 'Disponível';
-                chave = 'disponivel';
+                chave = `${mat}::disponivel`;
             } else if (f.status === 'vencido') {
                 textoTrecho = `Vencido em ${f.prazo || '—'}`;
-                chave = 'vencido';
+                chave = `${mat}::vencido`;
             } else {
                 textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
-                chave = 'outro';
+                chave = `${mat}::outro`;
             }
 
-            if (!gruposFerias.has(chave)) gruposFerias.set(chave, []);
-            gruposFerias.get(chave).push({ texto: textoTrecho, status: f.status });
+            if (!gruposFerias.has(chave)) {
+                gruposFerias.set(chave, {
+                    texto: textoTrecho,
+                    status: f.status,
+                    matricula: mat,
+                    unidade: f.unidade || ''
+                });
+            }
         });
 
-        gruposFerias.forEach(lista => {
-            linhasTexto.push({ classe: 'destaque', html: lista[0].texto });
-        });
+        [...gruposFerias.values()]
+            .sort((a, b) => String(a.matricula).localeCompare(String(b.matricula), 'pt-BR', { numeric: true }))
+            .forEach(item => {
+                const title = `Matrícula ${item.matricula}${item.unidade ? ' — ' + item.unidade : ''}`;
+                linhasTexto.push({
+                    classe: 'destaque',
+                    html: `<span class="resumo-matricula-prefixo" title="${escaparHtml(title)}">Mat. ${escaparHtml(item.matricula)}</span> ${escaparHtml(item.texto)}`
+                });
+            });
 
         const prioridade = { gozado: 1, programado: 2, disponivel: 3, perdido: 4 };
         const folgasUnicas = new Map();
 
         folgas.forEach(g => {
+            const mat = String(g.matricula || '—');
             let chave;
             let textoFolga;
 
             if (g.status === 'gozado' && g.gozo && g.gozo !== '—') {
                 textoFolga = `Folga Aniversário ${g.gozo}`;
-                chave = `gozo:${g.gozo}`;
+                chave = `${mat}::gozo:${g.gozo}`;
             } else if (g.status === 'programado' && g.gozo && g.gozo !== '—') {
                 textoFolga = `Folga Aniversário ${g.gozo}`;
-                chave = `prog:${g.gozo}`;
+                chave = `${mat}::prog:${g.gozo}`;
             } else if (g.status === 'disponivel') {
                 textoFolga = `Folga Aniversário (disponível)`;
-                chave = `disp:${g.periodo}`;
+                chave = `${mat}::disp:${g.periodo}`;
             } else if (g.status === 'perdido') {
                 textoFolga = `Folga Aniversário (perdida)`;
-                chave = `perd:${g.periodo}`;
+                chave = `${mat}::perd:${g.periodo}`;
             } else {
                 textoFolga = `Folga Aniversário`;
-                chave = `outro:${g.periodo}`;
+                chave = `${mat}::outro:${g.periodo}`;
             }
 
             if (!folgasUnicas.has(chave)) {
-                folgasUnicas.set(chave, { texto: textoFolga, status: g.status });
-            } else {
-                const atual = folgasUnicas.get(chave);
-                if ((prioridade[g.status] || 99) < (prioridade[atual.status] || 99)) {
-                    folgasUnicas.set(chave, { texto: textoFolga, status: g.status });
-                }
+                folgasUnicas.set(chave, {
+                    texto: textoFolga,
+                    status: g.status,
+                    matricula: mat,
+                    unidade: g.unidade || ''
+                });
             }
         });
 
-        const folgasLista = [...folgasUnicas.values()];
-        if (folgasLista.length > 0) {
-            folgasLista.sort((a, b) => (prioridade[a.status] || 99) - (prioridade[b.status] || 99));
-            linhasTexto.push({ classe: 'folga', html: folgasLista[0].texto });
-        }
+        [...folgasUnicas.values()]
+            .sort((a, b) => {
+                const prioA = prioridade[a.status] || 99;
+                const prioB = prioridade[b.status] || 99;
+
+                if (prioA !== prioB) return prioA - prioB;
+
+                return String(a.matricula).localeCompare(String(b.matricula), 'pt-BR', { numeric: true });
+            })
+            .forEach(item => {
+                const title = `Matrícula ${item.matricula}${item.unidade ? ' — ' + item.unidade : ''}`;
+                linhasTexto.push({
+                    classe: 'folga',
+                    html: `<span class="resumo-matricula-prefixo" title="${escaparHtml(title)}">Mat. ${escaparHtml(item.matricula)}</span> ${escaparHtml(item.texto)}`
+                });
+            });
 
         let celula = '';
+
         if (linhasTexto.length === 0) {
             celula = '<span class="linha-item" style="color:var(--text-muted);">—</span>';
         } else {
@@ -1696,6 +2340,7 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
 
         linhaConteudo += `<td>${celula}</td>`;
     });
+
     linhaConteudo += '</tr>';
 
     tbody.innerHTML = linhaInfoVinculos + linhaAnos + linhaConteudo;
@@ -1704,141 +2349,75 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
     if (titulo) titulo.setAttribute('colspan', String(periodosOrdenados.length));
 }
 
-function normalizarTextoUnidade(valor) {
-    if (!valor) return '';
-    if (typeof valor === 'string') return valor.trim();
-    if (typeof valor === 'number') return String(valor);
-    if (typeof valor === 'object') {
-        return valor.nome || valor.nomeUnidade || valor.unidade || valor.escola || '';
+async function buscarServidor() {
+    if (!acessoAutorizado) {
+        mostrarErro("Acesso negado.");
+        return;
     }
-    return '';
-}
-
-function obterUnidade(documento, vinculoObj) {
-    const fontes = [];
-
-    if (vinculoObj) {
-        fontes.push(
-            vinculoObj.unidade,
-            vinculoObj.unidadeEscolar,
-            vinculoObj.unidade_escolar,
-            vinculoObj.escola,
-            vinculoObj.nomeUnidade,
-            vinculoObj.lotacao,
-            vinculoObj.lotação
-        );
-    }
-
-    if (documento) {
-        fontes.push(
-            documento.unidade,
-            documento.unidadeEscolar,
-            documento.unidade_escolar,
-            documento.escola,
-            documento.nomeUnidade,
-            documento.lotacao,
-            documento.lotação
-        );
-    }
-
-    for (const f of fontes) {
-        const txt = normalizarTextoUnidade(f);
-        if (txt) return txt;
-    }
-
-    return '';
-}
-
-async function buscarServidor(){
-    if(!acessoAutorizado){ mostrarErro("Acesso negado."); return; }
 
     const termo = document.getElementById('termoBusca').value.trim();
-    if(!termo){
-        mostrarAlerta('Por favor, digite um CPF ou Matrícula.','aviso','Campo obrigatório');
+
+    if (!termo) {
+        mostrarAlerta('Por favor, digite um CPF ou Matrícula.', 'aviso', 'Campo obrigatório');
         return;
     }
 
     mostrarLoading('Buscando servidor...');
 
-    const termoLimpo = termo.replace(/\D/g,'');
-    const colRef = collection(db,'servidores');
+    const termoLimpo = termo.replace(/\D/g, '');
+    const colRef = collection(db, 'servidores');
     const encontrados = new Map();
-    const estrategias = [];
-    const vistas = new Set();
-
-    const addDoc = (id) => {
-        if (!id) return;
-        estrategias.push(getDoc(doc(db,'servidores', id)).catch(() => null));
-    };
-
-    const addQuery = (campo, valor) => {
-        if (valor === undefined || valor === null || valor === '') return;
-        const chave = `${campo}::${typeof valor}::${String(valor)}`;
-        if (vistas.has(chave)) return;
-        vistas.add(chave);
-        estrategias.push(getDocs(query(colRef, where(campo,'==',valor))).catch(() => null));
-    };
-
-    addDoc(termo);
-    if (termoLimpo && termoLimpo !== termo) addDoc(termoLimpo);
-
-    if (termoLimpo) {
-        ['cpf','CPF'].forEach(campo => {
-            addQuery(campo, termoLimpo);
-            if (termo !== termoLimpo) addQuery(campo, termo);
-        });
-
-        const valoresMatricula = new Set();
-        valoresMatricula.add(termoLimpo);
-
-        const semZeros = termoLimpo.replace(/^0+/, '');
-        if (semZeros) valoresMatricula.add(semZeros);
-
-        if (/^\d+$/.test(termoLimpo)) {
-            const num = Number(termoLimpo);
-            if (Number.isSafeInteger(num)) valoresMatricula.add(num);
-
-            if (semZeros) {
-                const numSemZeros = Number(semZeros);
-                if (Number.isSafeInteger(numSemZeros)) valoresMatricula.add(numSemZeros);
-            }
-        }
-
-        const camposMatricula = [
-            'matricula',
-            'Matricula',
-            'matricula_servidor',
-            'matricula1.numeroMatricula',
-            'matricula2.numeroMatricula'
-        ];
-
-        camposMatricula.forEach(campo => {
-            valoresMatricula.forEach(valor => addQuery(campo, valor));
-        });
-    }
 
     try {
+        const estrategias = [];
+
+        estrategias.push(getDoc(doc(db, 'servidores', termo)).catch(() => null));
+
+        if (termo !== termoLimpo) {
+            estrategias.push(getDoc(doc(db, 'servidores', termoLimpo)).catch(() => null));
+        }
+
+        const ehCpf = termoLimpo.length === 11;
+
+        if (ehCpf) {
+            estrategias.push(
+                getDocs(query(colRef, where('cpf', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('cpf', '==', termo))).catch(() => null),
+                getDocs(query(colRef, where('CPF', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('CPF', '==', termo))).catch(() => null)
+            );
+        } else {
+            estrategias.push(
+                getDocs(query(colRef, where('matricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('Matricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula_servidor', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula1.numeroMatricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula2.numeroMatricula', '==', termoLimpo))).catch(() => null)
+            );
+        }
+
         const resultados = await Promise.all(estrategias);
 
         resultados.forEach(res => {
             if (!res) return;
-            if (typeof res.exists === 'function') {
-                if (res.exists()) encontrados.set(res.id, res);
-            } else if (typeof res.forEach === 'function') {
+
+            if (res.exists && res.exists()) {
+                encontrados.set(res.id, res);
+            } else if (res.forEach) {
                 res.forEach(d => encontrados.set(d.id, d));
             }
         });
 
-        if(encontrados.size===0){
+        if (encontrados.size === 0) {
             ocultarLoading();
-            mostrarAlerta('Servidor não localizado no sistema. Verifique o CPF ou matrícula informados.','erro','Não encontrado');
+            mostrarAlerta('Servidor não localizado no sistema. Verifique o CPF ou matrícula informados.', 'erro', 'Não encontrado');
             document.getElementById('resultadoContainer').classList.add('hidden');
             return;
         }
 
         await processarServidores(Array.from(encontrados.values()));
         ultimoTermoBuscado = termo;
-    } catch(e){
+    } catch (e) {
         console.error('[Buscar] Erro:', e);
         mostrarErro("Erro ao consultar o banco. Verifique sua conexão e tente novamente.");
     } finally {
@@ -1846,42 +2425,47 @@ async function buscarServidor(){
     }
 }
 
-async function processarServidores(docs){
-    const d0=docs[0].data();
-    const nome=d0.nome||d0.Nome||'Não informado';
+async function processarServidores(docs) {
+    const d0 = docs[0].data();
+    const nome = d0.nome || d0.Nome || 'Não informado';
+
     nomeServidorAtual = nome;
     servidorAtualRef = d0;
-    const cpfLimpo=(d0.cpf||d0.CPF||'').toString().replace(/\D/g,'');
-    const cpfFmt=(d0.cpf||d0.CPF||'').toString();
-    const nascimento=d0.data_nascimento||d0.dataNascimento;
+
+    const cpfLimpo = (d0.cpf || d0.CPF || '').toString().replace(/\D/g, '');
+    const cpfFmt = (d0.cpf || d0.CPF || '').toString();
+    const nascimento = d0.data_nascimento || d0.dataNascimento;
 
     const vinculosMap = new Map();
     const servidorIds = docs.map(d => d.id);
 
     const processarVinculo = (numMat, dataAdm, diasFerias, nomeUnidade) => {
         if (!numMat) return;
-        const ms = String(numMat).trim();
-        if (!ms) return;
 
-        const unidade = nomeUnidade ? String(nomeUnidade).trim() : '';
+        const ms = numMat.toString().trim();
 
         if (!vinculosMap.has(ms)) {
             vinculosMap.set(ms, {
                 matricula: ms,
                 dataAdmissao: dataAdm || '',
                 diasFerias: diasFerias ? Number(diasFerias) : null,
-                unidade: unidade || 'Não informada'
+                unidade: nomeUnidade || 'Não informada'
             });
         } else {
             const existente = vinculosMap.get(ms);
+
             if (!existente.dataAdmissao && dataAdm) existente.dataAdmissao = dataAdm;
             if (!existente.diasFerias && diasFerias) existente.diasFerias = Number(diasFerias);
-            if ((!existente.unidade || existente.unidade === 'Não informada') && unidade) existente.unidade = unidade;
+            if (existente.unidade === 'Não informada' && nomeUnidade) existente.unidade = nomeUnidade;
         }
     };
 
     docs.forEach(d => {
         const dt = d.data();
+
+        console.log('[UNIDADE] Documento servidor:', d.id, dt);
+        console.log('[UNIDADE] Unidade matricula1 (bruta):', obterUnidade(dt, dt.matricula1));
+        console.log('[UNIDADE] Unidade matricula2 (bruta):', obterUnidade(dt, dt.matricula2));
 
         if (dt.matricula1 && dt.matricula1.numeroMatricula) {
             processarVinculo(
@@ -1913,95 +2497,95 @@ async function processarServidores(docs){
     });
 
     const vinculos = Array.from(vinculosMap.values());
+
     if (vinculos.length === 0) {
-        vinculos.push({ matricula: 'Não informada', dataAdmissao: '', diasFerias: null, unidade: 'Não informada' });
+        vinculos.push({
+            matricula: 'Não informada',
+            dataAdmissao: '',
+            diasFerias: null,
+            unidade: 'Não informada'
+        });
     }
 
-    let registros=[];
-    const ids=new Set();
-    const queriesRegistros=[];
-    const vistasReg=new Set();
+    try {
+        await resolverUnidadesDosVinculos(docs, vinculos);
+    } catch (e) {
+        console.error('[UNIDADE] Erro ao resolver unidades:', e);
+    }
 
-    const addQueryReg = (campo, valor) => {
-        if (valor === undefined || valor === null || valor === '') return;
-        const chave = `${campo}::${typeof valor}::${String(valor)}`;
-        if (vistasReg.has(chave)) return;
-        vistasReg.add(chave);
-        queriesRegistros.push(
-            getDocs(query(collection(db,'registro_ferias_folgas'), where(campo,'==',valor))).catch(() => null)
-        );
-    };
+    console.log('[UNIDADE] Vínculos após resolução:', JSON.parse(JSON.stringify(vinculos)));
 
-    try{
+    let registros = [];
+    const ids = new Set();
+
+    try {
+        const queriesRegistros = [];
+
         if (cpfLimpo) {
-            addQueryReg('cpf', cpfLimpo);
-            addQueryReg('CPF', cpfLimpo);
+            queriesRegistros.push(
+                getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfLimpo))).catch(() => null)
+            );
         }
 
         if (cpfFmt && cpfFmt !== cpfLimpo) {
-            addQueryReg('cpf', cpfFmt);
-            addQueryReg('CPF', cpfFmt);
+            queriesRegistros.push(
+                getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt))).catch(() => null)
+            );
         }
 
-        servidorIds.forEach(id => addQueryReg('servidorId', id));
+        for (const sid of servidorIds) {
+            queriesRegistros.push(
+                getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid))).catch(() => null)
+            );
+        }
 
         vinculos.forEach(v => {
-            if (!v.matricula || v.matricula === 'Não informada') return;
-
-            addQueryReg('matricula', v.matricula);
-            addQueryReg('Matricula', v.matricula);
-            addQueryReg('servidor_matricula', v.matricula);
-
-            const semZeros = String(v.matricula).replace(/^0+/, '');
-            if (semZeros && semZeros !== v.matricula) {
-                addQueryReg('matricula', semZeros);
-                addQueryReg('Matricula', semZeros);
-                addQueryReg('servidor_matricula', semZeros);
-            }
-
-            const num = Number(v.matricula);
-            if (Number.isSafeInteger(num)) {
-                addQueryReg('matricula', num);
-                addQueryReg('Matricula', num);
-                addQueryReg('servidor_matricula', num);
-            }
+            queriesRegistros.push(
+                getDocs(query(collection(db, 'registro_ferias_folgas'), where('matricula', '==', v.matricula))).catch(() => null)
+            );
         });
 
-        const resultadosReg = await Promise.all(queriesRegistros);
-        resultadosReg.forEach(res => {
-            if (res && typeof res.forEach === 'function') {
+        const resultados = await Promise.all(queriesRegistros);
+
+        resultados.forEach(res => {
+            if (res && res.forEach) {
                 res.forEach(x => {
                     if (!ids.has(x.id)) {
-                        registros.push({id:x.id, ...x.data()});
+                        registros.push({ id: x.id, ...x.data() });
                         ids.add(x.id);
                     }
                 });
             }
         });
 
-    } catch(e){
+    } catch (e) {
         console.error('[Registros] Erro:', e);
     }
 
-    document.getElementById('nomeServidor').textContent=nome;
-    document.getElementById('cpfServidor').textContent=cpfLimpo?cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):'—';
-    document.getElementById('nascimentoServidor').textContent=formatarData(nascimento)||'—';
+    document.getElementById('nomeServidor').textContent = nome;
+    document.getElementById('cpfServidor').textContent = cpfLimpo
+        ? cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : '—';
+    document.getElementById('nascimentoServidor').textContent = formatarData(nascimento) || '—';
 
     document.getElementById('matriculasServidor').textContent = vinculos.map(v => {
         const adm = formatarData(v.dataAdmissao) || '—';
         const dias = v.diasFerias ? `${v.diasFerias} dias/período` : '30 dias/período';
-        return `${v.matricula} (Adm ${adm} • ${dias})`;
+        const unidade = v.unidade && v.unidade !== 'Não informada' ? ` • ${v.unidade}` : '';
+
+        return `${v.matricula} (Adm ${adm} • ${dias}${unidade})`;
     }).join('  ·  ');
 
-    const hoje=new Date();
-    hoje.setHours(0,0,0,0);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
-    linhasUnificadas=construirLinhasUnificadas(vinculos,nascimento,registros,hoje);
+    linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
 
     renderizarResumoExecutivo();
     popularFiltroMatricula();
-    document.getElementById('filtroTipo').value='';
-    document.getElementById('filtroStatus').value='';
+
+    document.getElementById('filtroTipo').value = '';
+    document.getElementById('filtroStatus').value = '';
 
     const semPeriodos = linhasUnificadas.length === 0;
 
@@ -2022,13 +2606,14 @@ async function processarServidores(docs){
     document.getElementById('resultadoContainer').classList.remove('hidden');
 }
 
-function mostrarErro(t){
-    const el=document.getElementById('mensagemErro');
-    document.getElementById('textoErro').textContent=t;
+function mostrarErro(t) {
+    const el = document.getElementById('mensagemErro');
+    document.getElementById('textoErro').textContent = t;
     el.classList.add('ativo');
     document.getElementById('resultadoContainer').classList.add('hidden');
 }
-function ocultarErro(){
+
+function ocultarErro() {
     document.getElementById('mensagemErro').classList.remove('ativo');
 }
 
@@ -2036,13 +2621,14 @@ window.buscarServidor = buscarServidor;
 
 (function autoBuscarPorUrl() {
     const params = new URLSearchParams(window.location.search);
-
     let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
     termo = termo.trim();
+
     if (!termo) return;
 
     const apenasDigitos = termo.replace(/\D/g, '');
     const input = document.getElementById('termoBusca');
+
     if (!input) return;
 
     if (apenasDigitos.length === 11) {
@@ -2063,13 +2649,6 @@ window.buscarServidor = buscarServidor;
         url.searchParams.delete('servidor');
         window.history.replaceState({}, '', url.toString());
     } catch (e) {}
-
-    if (acessoAutorizado) {
-        setTimeout(() => {
-            buscarServidor();
-            termoPendenteDeBusca = null;
-        }, 300);
-    }
 })();
 </script>
 
