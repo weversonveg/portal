@@ -90,9 +90,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 ::selection{background:var(--focus-border);color:#fff;}
 ::-moz-selection{background:var(--focus-border);color:#fff;}
 
-/* ============================================================
-   SELECT CUSTOMIZADO
-   ============================================================ */
 .cs-wrap{position:relative;width:100%;user-select:none;}
 .cs-trigger{width:100%;height:40px;padding:0 36px 0 12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:5px;font-size:13.5px;color:var(--text);display:flex;align-items:center;cursor:pointer;transition:border-color .15s ease, box-shadow .15s ease;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
 .cs-wrap:hover .cs-trigger{border-color:var(--gray-400);}
@@ -111,9 +108,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .cs-opcao.vazia{color:var(--text-muted);font-style:italic;cursor:default;}
 .cs-opcao.vazia:hover{background:transparent;}
 
-/* ============================================================
-   LAYOUT
-   ============================================================ */
 .layout{display:flex;width:100%;height:100vh;height:100dvh;overflow:hidden;}
 .sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .25s ease,min-width .25s ease,transform .25s ease;overflow:hidden;z-index:100;}
 .sidebar.fechado{width:0;min-width:0;border-right:none;}
@@ -295,16 +289,12 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 .search-table-wrapper input:focus{border-color:var(--focus-border);box-shadow:var(--focus-ring);}
 .search-table-wrapper .material-symbols-outlined{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--text-muted);}
 
-/* ============================================================
-   TABELA COM CABEÇALHO CONGELADO
-   ============================================================ */
 .table-scroll{width:100%;overflow-x:auto;overflow-y:auto;max-height:560px;-webkit-overflow-scrolling:touch;position:relative;}
 table{width:100%;border-collapse:collapse;text-align:left;min-width:780px;}
 th{background:var(--surface-2);padding:12px 16px;font-size:10.5px;font-weight:600;color:var(--text-secondary);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;position:sticky;top:0;z-index:5;box-shadow:0 1px 0 var(--border);}
 td{padding:12px 16px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface);}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover td{background:var(--surface-2);}
-
 .btn-excluir{background:transparent;border:none;padding:6px;width:32px;height:32px;min-width:32px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background-color .15s ease,transform .1s ease;color:#7F1D1D;}
 .btn-excluir:hover{background:rgba(127,29,29,.12);transform:scale(1.08);}
 .btn-excluir .material-symbols-outlined{font-size:22px;color:inherit;pointer-events:none;}
@@ -347,9 +337,6 @@ tbody tr:hover td{background:var(--surface-2);}
 .modal-btn-salvar:disabled{opacity:.6;cursor:not-allowed;}
 .modal-btn-salvar .material-symbols-outlined{font-size:16px;}
 
-/* ============================================================
-   FLATPICKR — CALENDÁRIO ROXO (MATERIAL PURPLE)
-   ============================================================ */
 .flatpickr-calendar{background:var(--surface)!important;border:1px solid var(--border)!important;box-shadow:var(--shadow-lg)!important;font-family:var(--font)!important;border-radius:8px!important;}
 .flatpickr-calendar::before,.flatpickr-calendar::after{display:none!important;}
 .flatpickr-calendar .flatpickr-months,.flatpickr-calendar .flatpickr-weekdays,.flatpickr-calendar .flatpickr-month{background:transparent!important;color:var(--text)!important;}
@@ -431,8 +418,7 @@ input.flatpickr-input{background:var(--surface)!important;}
 }
 </style>
 </head>
-
-    <body>
+<body>
 
 <div class="layout">
 
@@ -1207,16 +1193,7 @@ document.getElementById('csTipoAusencia').addEventListener('click', function (e)
 });
 document.getElementById('csVinculo').addEventListener('click', function (e) {
     var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () {
-        window.carregarPeriodosAbertos && window.carregarPeriodosAbertos();
-        // BÔNUS: foco automático no Tipo de Ausência
-        setTimeout(function () {
-            var triggerTipo = document.querySelector('#csTipoAusencia .cs-trigger');
-            if (triggerTipo && !triggerTipo.closest('.cs-wrap').classList.contains('aberto')) {
-                triggerTipo.focus();
-            }
-        }, 120);
-    }, 0);
+    if (op) setTimeout(function () { window.carregarPeriodosAbertos && window.carregarPeriodosAbertos(); }, 0);
 });
 document.getElementById('csPeriodo').addEventListener('click', function (e) {
     var op = e.target.closest('.cs-opcao');
@@ -1394,6 +1371,17 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         ).reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
     }
 
+    /* ============================================================
+       CÁLCULO DE PERÍODOS — REGRAS
+       -----------------------------------------------------------
+       FÉRIAS: só lista quando o CICLO AQUISITIVO JÁ FECHOU
+       (12 meses completos desde o início do ciclo).
+       Se o ciclo ainda está em formação → NÃO lista (nem como atual).
+
+       FOLGA ANIVERSÁRIO: só lista quando o ANIVERSÁRIO JÁ PASSOU
+       e ainda está dentro do prazo de 1 ano.
+       Se passou do prazo → PERDIDA → não lista.
+       ============================================================ */
     function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
         if (!dtAdm) return [];
@@ -1443,9 +1431,13 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                         }
                     }
                 } else {
-                    let status = 'disponivel';
-                    if (fim < hoje) status = prazoGozo < hoje ? 'vencido' : 'disponivel';
-                    if (!(tipo === 'FERIAS' && status === 'atual')) {
+                    // ✅ FÉRIAS: só lista se o ciclo JÁ FECHOU (fim <= hoje)
+                    if (fim > hoje) {
+                        // ciclo em formação → não lista
+                        // (o loop continua para o próximo ciclo, mas como o próximo
+                        //  também estará em formação, o for vai parar no break abaixo)
+                    } else {
+                        const status = prazoGozo < hoje ? 'vencido' : 'disponivel';
                         periodos.push({
                             anoReferencia: anoRef, inicio: new Date(ini), fim: new Date(fim),
                             dataLimite: prazoGozo, dataDisponivel: dataDisponivel,
@@ -1498,9 +1490,12 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         periodosAbertos = calcularPeriodosAbertos(dataAdmissao, matricula, tipo);
 
         if (periodosAbertos.length === 0) {
-            var msgVazia = (tipo === 'FOLGA_ANIVERSARIO')
-                ? 'Nenhuma folga aniversário disponível (períodos anteriores prescreveram)'
-                : 'Nenhum período adquirido ainda (ciclo aquisitivo em andamento)';
+            var msgVazia;
+            if (tipo === 'FOLGA_ANIVERSARIO') {
+                msgVazia = 'Nenhuma folga aniversário disponível (períodos anteriores prescreveram)';
+            } else {
+                msgVazia = 'Nenhum período aquisitivo completo (ciclo em andamento)';
+            }
             atualizarSelectCustom('csPeriodo', [], '', msgVazia);
             grupoPeriodo.style.display = "flex";
             btnSalvar.disabled = true;
@@ -1738,25 +1733,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             lblInicio.innerHTML = 'Data de Início <span>*</span>';
         }
         if (document.getElementById("selectVinculo").value) window.carregarPeriodosAbertos();
-
-        // BÔNUS: se o tipo tem período aquisitivo, foca no select de período após carregar
-        if (tipo === "FERIAS" || tipo === "FOLGA_ANIVERSARIO") {
-            setTimeout(function () {
-                const triggerPeriodo = document.querySelector('#csPeriodo .cs-trigger');
-                const selectVinculo = document.getElementById('selectVinculo');
-                if (triggerPeriodo && selectVinculo && selectVinculo.value) {
-                    const grupoVisivel = document.getElementById('grupoPeriodoAquisitivo').style.display !== 'none';
-                    if (grupoVisivel && !document.querySelector('#csPeriodo .cs-wrap')) {
-                        // noop
-                    }
-                    // Só foca se ainda não houver período selecionado
-                    const selectPeriodo = document.getElementById('selectPeriodo');
-                    if (selectPeriodo && !selectPeriodo.value) {
-                        triggerPeriodo.focus();
-                    }
-                }
-            }, 250);
-        }
     };
 
     window.calcularDataFim = function() {
@@ -2359,16 +2335,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
                                 if (alvo) {
                                     alvo.click();
-                                    setTimeout(function () {
-                                        if (typeof window.carregarPeriodosAbertos === 'function') {
-                                            window.carregarPeriodosAbertos();
-                                        }
-                                        // BÔNUS: foca no Tipo de Ausência
-                                        setTimeout(function () {
-                                            var triggerTipo = document.querySelector('#csTipoAusencia .cs-trigger');
-                                            if (triggerTipo) triggerTipo.focus();
-                                        }, 150);
-                                    }, 100);
                                 }
                             }
                         }
