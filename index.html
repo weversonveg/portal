@@ -201,6 +201,44 @@ body {
     box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
+/* CAMPO DE SENHA COM OLHINHO */
+.senha-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.senha-wrapper input {
+    padding-right: 48px;
+}
+
+.toggle-senha {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.toggle-senha:hover {
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.toggle-senha .material-symbols-outlined {
+    font-size: 22px;
+    user-select: none;
+}
+
 button.btn-submit {
     width: 100%;
     height: 52px;
@@ -521,7 +559,12 @@ a:hover {
 
                 <div class="input-group">
                     <label for="senha">Senha</label>
-                    <input type="password" id="senha" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+                    <div class="senha-wrapper">
+                        <input type="password" id="senha" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+                        <button type="button" class="toggle-senha" id="toggleSenha" aria-label="Mostrar senha" tabindex="-1">
+                            <span class="material-symbols-outlined" id="iconeOlho">visibility</span>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit" id="btnEntrar">
@@ -590,6 +633,21 @@ import {
 const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
 
 /* ==========================================================
+   MOSTRAR / OCULTAR SENHA (OLHINHO)
+   ========================================================== */
+const campoSenha = document.getElementById("senha");
+const botaoToggle = document.getElementById("toggleSenha");
+const iconeOlho = document.getElementById("iconeOlho");
+
+botaoToggle.addEventListener("click", function () {
+    const visivel = campoSenha.type === "text";
+    campoSenha.type = visivel ? "password" : "text";
+    iconeOlho.textContent = visivel ? "visibility" : "visibility_off";
+    botaoToggle.setAttribute("aria-label", visivel ? "Mostrar senha" : "Ocultar senha");
+    campoSenha.focus();
+});
+
+/* ==========================================================
    MODAL DE RECUPERAÇÃO DE SENHA
    ========================================================== */
 window.abrirAlerta = function(emailSugestao = "") {
@@ -650,7 +708,43 @@ document.getElementById("btnEnviarRecuperar").addEventListener("click", async fu
 /* ==========================================================
    LOGIN COM E-MAIL E SENHA
    ========================================================== */
-document.getElementById("formLogin").addEventListener("submit", async function(e) {
+document.getElementById("formLogin").addEventListener("<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Acesso - Recursos Humanos</title>
+
+<style>
+
+:root {
+    --primary: #5c1892;
+    --primary-hover: #430d6c;
+    --primary-soft: #f4ecfb;
+    --text-dark: #1e1b26;
+    --text-muted: #676375;
+    --bg-light: #faf8fc;
+    --border-color: #e4dfeb;
+    --error-color: #d32f2f;
+    --success-color: #2e7d32;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+submit", async function(e) {
     e.preventDefault();
 
     const usuario = document.getElementById("email").value.trim();
