@@ -527,6 +527,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
     font-size: 18px;
 }
 
+.filter-input-limpar .flatpickr-input {
+    display: block !important;
+    width: 100%;
+}
+.filter-input-limpar input[type="hidden"].flatpickr-input {
+    display: none !important;
+}
+
 .custom-dropdown { position: relative; width: 100%; }
 .dropdown-select-box {
     height: 42px; background: var(--surface);
@@ -1128,10 +1136,17 @@ tr:hover td { background: var(--surface-2); }
                                 <option value="anual">Anual (Ano Inteiro)</option>
                             </select>
                         </div>
+
                         <div class="filter-group" id="grupoMes">
                             <label for="mesReferencia">Mês de Referência <span>*</span></label>
-                            <input type="month" id="mesReferencia" lang="pt-BR">
+                            <div class="filter-input-limpar">
+                                <input type="text" id="mesReferencia" placeholder="Selecione o mês" autocomplete="off" readonly>
+                                <button type="button" id="btnLimparMesVales" class="btn-limpar-campo" title="Limpar mês" aria-label="Limpar mês">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
                         </div>
+
                         <div class="filter-group" id="grupoAno" style="display: none;">
                             <label for="anoReferencia">Ano de Referência <span>*</span></label>
                             <select id="anoReferencia">
@@ -1140,14 +1155,17 @@ tr:hover td { background: var(--surface-2); }
                                 <option value="2024">2024</option>
                             </select>
                         </div>
+
                         <div class="filter-group">
                             <label for="filtroCargo">Cargo / Função</label>
                             <input type="text" id="filtroCargo" placeholder="Ex: Professor...">
                         </div>
+
                         <div class="filter-group">
                             <label for="filtroEmpresa">Empresa / Concessionária</label>
                             <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
                         </div>
+
                         <div class="filter-checkbox-group">
                             <input type="checkbox" id="filtroApenasFalta">
                             <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
@@ -1178,7 +1196,6 @@ tr:hover td { background: var(--surface-2); }
                             </select>
                         </div>
 
-                        <!-- NOVO CAMPO DE MÊS - FLATPICKR -->
                         <div class="filter-group">
                             <label for="filtroMesFerias">Mês de Referência</label>
                             <div class="filter-input-limpar">
@@ -1193,6 +1210,7 @@ tr:hover td { background: var(--surface-2); }
                             <label for="filtroMatriculaFerias">Matrícula</label>
                             <input type="text" id="filtroMatriculaFerias" placeholder="Ex: 12345...">
                         </div>
+
                         <div class="filter-group">
                             <label for="filtroNomeServidor">Nome do Servidor</label>
                             <input type="text" id="filtroNomeServidor" placeholder="Ex: Maria...">
@@ -2064,10 +2082,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         let anoSelecionado = null;
 
         if (mesFeriasValor) {
-            const partesMes = mesFeriasValor.split("/");
-            if (partesMes.length === 2) {
-                mesSelecionado = parseInt(partesMes[0], 10);
-                anoSelecionado = parseInt(partesMes[1], 10);
+            if (mesFeriasValor.includes("-")) {
+                const partes = mesFeriasValor.split("-");
+                if (partes.length === 2) {
+                    anoSelecionado = parseInt(partes[0], 10);
+                    mesSelecionado = parseInt(partes[1], 10);
+                }
+            } else if (mesFeriasValor.includes("/")) {
+                const partes = mesFeriasValor.split("/");
+                if (partes.length === 2) {
+                    mesSelecionado = parseInt(partes[0], 10);
+                    anoSelecionado = parseInt(partes[1], 10);
+                }
             }
         }
 
@@ -2707,6 +2733,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         tipoRelatorioAtual = document.getElementById("tipoRelatorio").value;
         const filtrosVales = document.getElementById("filtrosVales");
         const filtrosFerias = document.getElementById("filtrosFerias");
+
         if (tipoRelatorioAtual === "vales") {
             filtrosVales.style.display = "contents";
             filtrosFerias.style.display = "none";
@@ -2714,10 +2741,15 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             filtrosVales.style.display = "none";
             filtrosFerias.style.display = "contents";
         }
+
+        setTimeout(function () {
+            if (window.inicializarCalendariosMes) window.inicializarCalendariosMes(true);
+        }, 80);
     }
 
     window.alternarTipoPeriodo = function() {
         const tipo = document.getElementById("tipoPeriodo").value;
+
         if (tipo === "mensal") {
             document.getElementById("grupoMes").style.display = "flex";
             document.getElementById("grupoAno").style.display = "none";
@@ -2725,6 +2757,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("grupoMes").style.display = "none";
             document.getElementById("grupoAno").style.display = "flex";
         }
+
+        setTimeout(function () {
+            if (window.inicializarCalendariosMes) window.inicializarCalendariosMes(true);
+        }, 80);
     }
 
     window.toggleDropdownEscolas = function() {
@@ -2759,7 +2795,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const hoje = new Date();
         const ano = hoje.getFullYear();
         const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-        document.getElementById("mesReferencia").value = `${ano}-${mes}`;
+        const valorMesAtual = `${ano}-${mes}`;
+
+        const mesReferenciaEl = document.getElementById("mesReferencia");
+
+        if (mesReferenciaEl) {
+            if (mesReferenciaEl._flatpickr) {
+                mesReferenciaEl._flatpickr.setDate(valorMesAtual, false, "Y-m");
+            } else {
+                mesReferenciaEl.value = valorMesAtual;
+            }
+        }
+
         document.getElementById("anoReferencia").value = ano;
         atualizarTextoDropdown();
 
@@ -2782,11 +2829,30 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
 <script>
 (function () {
-    function iniciarCalendarioMesFerias() {
-        const input = document.getElementById('filtroMesFerias');
-        const btnLimpar = document.getElementById('btnLimparMesFerias');
+    function valorMesAtual() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
 
+    function campoVisivel(input) {
+        if (!input) return false;
+        const wrapper = input.closest('.filter-input-limpar') || input;
+        return wrapper.offsetParent !== null;
+    }
+
+    function criarCalendarioMes(input, definirPadrao) {
         if (!input || typeof flatpickr === 'undefined') return;
+
+        const valorAtual = input.value || '';
+
+        if (input._flatpickr) {
+            input._flatpickr.destroy();
+            input.value = valorAtual;
+        }
+
+        if (definirPadrao && !input.value) {
+            input.value = valorMesAtual();
+        }
 
         const locale = (flatpickr.l10ns && flatpickr.l10ns.pt) ? 'pt' : 'default';
         const plugins = [];
@@ -2794,7 +2860,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (typeof monthSelectPlugin === 'function') {
             plugins.push(new monthSelectPlugin({
                 shorthand: true,
-                dateFormat: 'm/Y',
+                dateFormat: 'Y-m',
                 altInput: true,
                 altFormat: 'F Y',
                 theme: 'material_purple'
@@ -2804,30 +2870,72 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         flatpickr(input, {
             locale: locale,
             plugins: plugins,
-            dateFormat: 'm/Y',
+            dateFormat: 'Y-m',
             altInput: plugins.length === 0,
             altFormat: 'F Y',
             allowInput: false,
             clickOpens: true,
-            onChange: function (selectedDates, dateStr, instance) {
-                if (!dateStr && instance.altInput) {
-                    instance.altInput.value = '';
-                }
-            }
+            defaultDate: input.value || null
         });
+    }
 
-        if (btnLimpar) {
-            btnLimpar.addEventListener('click', function () {
-                const fp = input._flatpickr;
-                if (fp) fp.clear();
+    function inicializarCalendariosMes(forcar) {
+        const tipoRelatorio = document.getElementById('tipoRelatorio')
+            ? document.getElementById('tipoRelatorio').value
+            : 'vales';
+
+        const tipoPeriodo = document.getElementById('tipoPeriodo')
+            ? document.getElementById('tipoPeriodo').value
+            : 'mensal';
+
+        const mesVales = document.getElementById('mesReferencia');
+        const mesFerias = document.getElementById('filtroMesFerias');
+
+        const valesVisivel = tipoRelatorio === 'vales'
+            && tipoPeriodo === 'mensal'
+            && campoVisivel(mesVales);
+
+        const feriasVisivel = tipoRelatorio === 'ferias'
+            && campoVisivel(mesFerias);
+
+        if (mesVales && valesVisivel && (forcar || !mesVales.dataset.fpMesInit)) {
+            criarCalendarioMes(mesVales, true);
+            mesVales.dataset.fpMesInit = '1';
+        }
+
+        if (mesFerias && feriasVisivel && (forcar || !mesFerias.dataset.fpMesInit)) {
+            criarCalendarioMes(mesFerias, false);
+            mesFerias.dataset.fpMesInit = '1';
+        }
+    }
+
+    window.inicializarCalendariosMes = inicializarCalendariosMes;
+
+    function init() {
+        inicializarCalendariosMes(false);
+
+        const btnLimparVales = document.getElementById('btnLimparMesVales');
+        const btnLimparFerias = document.getElementById('btnLimparMesFerias');
+
+        if (btnLimparVales) {
+            btnLimparVales.addEventListener('click', function () {
+                const input = document.getElementById('mesReferencia');
+                if (input && input._flatpickr) input._flatpickr.clear();
+            });
+        }
+
+        if (btnLimparFerias) {
+            btnLimparFerias.addEventListener('click', function () {
+                const input = document.getElementById('filtroMesFerias');
+                if (input && input._flatpickr) input._flatpickr.clear();
             });
         }
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', iniciarCalendarioMesFerias);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        iniciarCalendarioMesFerias();
+        init();
     }
 })();
 </script>
