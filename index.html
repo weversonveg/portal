@@ -665,7 +665,8 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     signInWithEmailAndPassword,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
@@ -764,10 +765,29 @@ document.getElementById("btnLoginGoogle").addEventListener("click", async functi
     msgErro.textContent = "";
 
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
+
+    // O parâmetro hd apenas sugere o domínio na tela do Google.
+    // A validação abaixo é que efetivamente verifica o domínio retornado.
+    provider.setCustomParameters({
+        prompt: "select_account",
+        hd: "educacao.divinopolis.mg.gov.br"
+    });
 
     try {
-        await signInWithPopup(auth, provider);
+        const resultado = await signInWithPopup(auth, provider);
+        const usuario = resultado.user;
+        const emailGoogle = (usuario.email || "").trim().toLowerCase();
+        const dominioPermitido = "@educacao.divinopolis.mg.gov.br";
+
+        // Confere o domínio completo e exige e-mail verificado.
+        if (!emailGoogle.endsWith(dominioPermitido) || !usuario.emailVerified) {
+            await signOut(auth);
+            msgErro.textContent =
+                "Acesso negado. Utilize uma conta Google institucional " +
+                "(@educacao.divinopolis.mg.gov.br) com e-mail verificado.";
+            return;
+        }
+
         window.location.href = "inicial.html";
     } catch (error) {
         console.error("Erro no login Google:", error);
