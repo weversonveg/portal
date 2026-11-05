@@ -131,9 +131,6 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .filter-group input:hover,.filter-group select:hover{border-color:var(--gray-400)}
 .filter-group input:focus,.filter-group select:focus{border-color:var(--brand);box-shadow:var(--focus-ring)}
 .filter-group input.flatpickr-input{cursor:pointer;background:var(--surface)}
-/* ═══════════════════════════════════════════════════════════
-   BOTÃO CALCULAR (referência de tamanho)
-═══════════════════════════════════════════════════════════ */
 .btn-carregar{
     height: 40px;
     background: var(--brand-acao);
@@ -194,9 +191,6 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .card-title{font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
 .card-title .material-symbols-outlined{font-size:22px;color:var(--brand)}
 .card-actions{display:flex;gap:10px;flex-wrap:wrap}
-/* ═══════════════════════════════════════════════════════════
-   BOTÕES DE EXPORTAÇÃO (mesmo tamanho do "Calcular Todos")
-═══════════════════════════════════════════════════════════ */
 .btn-exportar{
     height: 40px;
     padding: 0 24px;
@@ -222,9 +216,6 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .btn-exportar:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-exportar.csv{background:#455a64}
 .btn-exportar.csv:hover{background:#37474f;box-shadow:0 3px 10px rgba(69,90,100,.25)}
-/* ═══════════════════════════════════════════════════════════
-   BARRA DE EXPORTAÇÃO GLOBAL (separada das tabelas)
-═══════════════════════════════════════════════════════════ */
 .export-actions-bar {
     display: flex;
     align-items: center;
@@ -288,6 +279,8 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .badge-parcial .material-symbols-outlined{font-size:14px}
 .badge-ajustado{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd);border-radius:4px;font-weight:700;font-size:12px}
 .badge-ajustado .material-symbols-outlined{font-size:14px}
+.badge-automatico{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd);border-radius:4px;font-weight:700;font-size:12px}
+.badge-automatico .material-symbols-outlined{font-size:14px}
 .valor-dias-normal{color:var(--text);font-weight:600}
 .badge-fonte{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-weight:600;font-size:11px}
 .badge-fonte-historico{background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd)}
@@ -399,7 +392,7 @@ tr:hover td{background:var(--surface-2)}
                 </nav>
 
                 <div class="sidebar-info">
-                    <strong>Versão 2.2.0</strong>
+                    <strong>Versão 2.3.0</strong>
                     Sistema de gestão de vale transporte
                 </div>
             </div>
@@ -462,7 +455,7 @@ tr:hover td{background:var(--surface-2)}
             <div class="page-header-page">
                 <div>
                     <h1>Cálculo de Passes e Vale-Refeição</h1>
-                    <p>Calcule a quantidade e o valor dos passes e do ticket-refeição de cada servidor com base nos dias úteis, afastamentos e dias parciais.</p>
+                    <p>Calcule a quantidade e o valor dos passes e do ticket-refeição de cada servidor com base nos dias úteis, afastamentos manuais, férias, folgas, licenças e dias parciais.</p>
                 </div>
             </div>
 
@@ -531,9 +524,6 @@ tr:hover td{background:var(--surface-2)}
                 </div>
             </div>
 
-            <!-- ═══════════════════════════════════════════ -->
-            <!-- BARRA DE EXPORTAÇÃO GLOBAL (INDEPENDENTE)  -->
-            <!-- ═══════════════════════════════════════════ -->
             <div id="exportActionsBar" class="export-actions-bar" style="display:none;">
                 <div class="export-actions-info">
                     <div class="export-icon">
@@ -556,9 +546,6 @@ tr:hover td{background:var(--surface-2)}
                 </div>
             </div>
 
-            <!-- ═══════════════════════════════════════════ -->
-            <!-- SEÇÃO 1: VALE-TRANSPORTE                   -->
-            <!-- ═══════════════════════════════════════════ -->
             <div class="secao-calc-titulo">
                 <span class="material-symbols-outlined">directions_bus</span>
                 Vale-Transporte
@@ -605,9 +592,6 @@ tr:hover td{background:var(--surface-2)}
                 </div>
             </section>
 
-            <!-- ═══════════════════════════════════════════ -->
-            <!-- SEÇÃO 2: VALE-REFEIÇÃO                     -->
-            <!-- ═══════════════════════════════════════════ -->
             <div class="secao-calc-titulo refeicao">
                 <span class="material-symbols-outlined">restaurant</span>
                 Vale-Refeição
@@ -1431,6 +1415,9 @@ window.carregarDados = async function() {
             return;
         }
 
+        // ============================================================
+        // 1. LANÇAMENTOS MANUAIS (faltas, atestados lançados pela escola)
+        // ============================================================
         const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
         const lancamentosMap = {};
         const lancamentosPorCpfEscola = {};
@@ -1447,18 +1434,12 @@ window.carregarDados = async function() {
                 const diasParciaisSem4h = Number(data.diasParciaisSem4h) || 0;
 
                 const passesLancados = (data.passesDiariosLancados !== undefined && data.passesDiariosLancados !== null)
-                    ? Number(data.passesDiariosLancados)
-                    : null;
-
+                    ? Number(data.passesDiariosLancados) : null;
                 const tarifaLancada = (data.tarifaLancada !== undefined && data.tarifaLancada !== null)
-                    ? Number(data.tarifaLancada)
-                    : null;
+                    ? Number(data.tarifaLancada) : null;
 
                 lancamentosMap[chave] = {
-                    diasAfast: diasAfast,
-                    diasParciaisSem4h: diasParciaisSem4h,
-                    passesLancados: passesLancados,
-                    tarifaLancada: tarifaLancada
+                    diasAfast, diasParciaisSem4h, passesLancados, tarifaLancada
                 };
 
                 const chaveCpfEscola = `${escolaNorm}_${cpfNorm}`;
@@ -1475,6 +1456,93 @@ window.carregarDados = async function() {
                 }
             }
         });
+
+        // ============================================================
+        // 2. AFASTAMENTOS AUTOMÁTICOS (férias, folgas, licenças)
+        //    Lidos da coleção registro_ferias_folgas
+        // ============================================================
+        const [anoRef, mesRef] = mesAno.split('-').map(Number);
+        const primeiroDiaMes = new Date(anoRef, mesRef - 1, 1);
+        primeiroDiaMes.setHours(0, 0, 0, 0);
+        const ultimoDiaMes = new Date(anoRef, mesRef, 0);
+        ultimoDiaMes.setHours(23, 59, 59, 999);
+
+        const parseDataFlex = (s) => {
+            if (!s) return null;
+            if (typeof s === 'object' && s.toDate) return s.toDate();
+            s = s.toString().trim();
+            if (s.includes('/')) {
+                const p = s.split('/');
+                return new Date(+p[2], +p[1] - 1, +p[0]);
+            }
+            if (s.includes('-')) {
+                const p = s.substring(0, 10).split('-');
+                return p[0].length === 4
+                    ? new Date(+p[0], +p[1] - 1, +p[2])
+                    : new Date(+p[2], +p[1] - 1, +p[0]);
+            }
+            return null;
+        };
+
+        const afastamentosAutomaticos = {};
+        let totalAfastamentosAuto = 0;
+        let totalRegistrosAuto = 0;
+
+        try {
+            const registroFeriasSnap = await getDocs(collection(db, "registro_ferias_folgas"));
+
+            registroFeriasSnap.forEach(docSnap => {
+                const data = docSnap.data();
+                const cpfNorm = normalizarCPF(data.cpf);
+                if (!cpfNorm) return;
+
+                const matriculaNorm = normalizarMatricula(
+                    data.matricula || data.numeroMatricula || data.matricula_servidor || data.Matricula || ''
+                );
+
+                const dataInicio = parseDataFlex(
+                    data.dataInicio || data.data_inicio || data.data || data.data_gozo || data.dataGozo
+                );
+                const dataFim = parseDataFlex(
+                    data.dataFim || data.data_fim || data.dataTermino || data.data_termino || dataInicio
+                );
+
+                if (!dataInicio || !dataFim) return;
+
+                // Verificar se o intervalo do afastamento intercepta o mês de referência
+                if (dataFim < primeiroDiaMes || dataInicio > ultimoDiaMes) return;
+
+                // Recortar o intervalo para ficar dentro do mês
+                const inicioNoMes = dataInicio < primeiroDiaMes ? new Date(primeiroDiaMes) : new Date(dataInicio);
+                const fimNoMes = dataFim > ultimoDiaMes ? new Date(ultimoDiaMes) : new Date(dataFim);
+
+                // Contar DIAS ÚTEIS dentro do intervalo recortado
+                let diasNoMes = 0;
+                const cursor = new Date(inicioNoMes);
+                cursor.setHours(0, 0, 0, 0);
+                const fimCursor = new Date(fimNoMes);
+                fimCursor.setHours(0, 0, 0, 0);
+
+                while (cursor <= fimCursor) {
+                    const diaSemana = cursor.getDay();
+                    if (diaSemana !== 0 && diaSemana !== 6) {
+                        diasNoMes++;
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+
+                if (diasNoMes === 0) return;
+
+                const chaveAuto = `${cpfNorm}_${matriculaNorm}`;
+                afastamentosAutomaticos[chaveAuto] = (afastamentosAutomaticos[chaveAuto] || 0) + diasNoMes;
+                totalAfastamentosAuto += diasNoMes;
+                totalRegistrosAuto++;
+            });
+
+            console.log(`📅 Afastamentos automáticos (férias/folgas/licenças): ${totalAfastamentosAuto} dias úteis em ${totalRegistrosAuto} registro(s)`);
+        } catch (e) {
+            console.warn('[Afastamentos automáticos] Erro ao ler registro_ferias_folgas:', e);
+        }
 
         const configEscolasSnap = await getDocs(collection(db, "escola_configuracoes_mensais"));
         const configEscolasMap = {};
@@ -1496,6 +1564,7 @@ window.carregarDados = async function() {
         let totalValorRefeicao = 0;
         let historicoPassesUsados = 0;
         let historicoTarifasUsado = 0;
+        let totalComAfastamentoAuto = 0;
 
         servidoresSnap.forEach(servidorDoc => {
             const servidor = servidorDoc.data();
@@ -1522,7 +1591,9 @@ window.carregarDados = async function() {
                     let diasParciaisSem4h = 0;
                     let passesLancadosSnapshot = null;
                     let tarifaLancadaSnapshot = null;
+                    let diasAfastamentoAuto = 0;
 
+                    // Afastamentos manuais (da escola)
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         const info = lancamentosMap[chave];
                         diasAfastamento = info.diasAfast;
@@ -1535,6 +1606,14 @@ window.carregarDados = async function() {
                         diasParciaisSem4h = info.diasParciaisSem4h;
                         passesLancadosSnapshot = info.passesLancados;
                         tarifaLancadaSnapshot = info.tarifaLancada;
+                    }
+
+                    // Afastamentos automáticos (férias, folgas, licenças)
+                    const chaveAuto = `${cpfLimpo}_${matriculaNorm}`;
+                    if (afastamentosAutomaticos[chaveAuto]) {
+                        diasAfastamentoAuto = afastamentosAutomaticos[chaveAuto];
+                        diasAfastamento += diasAfastamentoAuto;
+                        totalComAfastamentoAuto++;
                     }
 
                     const diasUteisEscola = configEscolasMap[nomeEscolaNorm] || diasUteisPadrao;
@@ -1604,6 +1683,7 @@ window.carregarDados = async function() {
                         diasUteisPadrao: diasUteisPadrao,
                         diasUteisAjustado: diasUteisAjustado,
                         afastamentos: diasAfastamento,
+                        afastamentosAuto: diasAfastamentoAuto,
                         diasParciaisSem4h: diasParciaisSem4h,
                         diasEfetivosTransporte: diasEfetivosTransporte,
                         diasRefeicao: diasRefeicao,
@@ -1638,6 +1718,7 @@ window.carregarDados = async function() {
 
         console.log(`📸 Histórico de passes usado: ${historicoPassesUsados} servidor(es)`);
         console.log(`📊 Histórico de tarifas usado: ${historicoTarifasUsado} servidor(es)`);
+        console.log(`🏖️ Vínculos com afastamento automático (férias/folgas/licenças): ${totalComAfastamentoAuto}`);
         console.log(`🍽️ Valor do ticket vigente: ${formatarMoeda(valorTicketVigente)}`);
         console.log(`💰 Total Transporte: ${formatarMoeda(totalValorTransporte)} | Refeição: ${formatarMoeda(totalValorRefeicao)}`);
 
@@ -1720,10 +1801,15 @@ function renderizarTabelaTransporte(dados) {
         let afastamentosHtml = '';
         if (item.afastamentos > 0) {
             const textoDia = item.afastamentos === 1 ? 'dia' : 'dias';
+            const temAuto = item.afastamentosAuto > 0;
+            const titulo = temAuto 
+                ? `Servidor possui ${item.afastamentos} ${textoDia} de ausência (${item.afastamentosAuto} automáticos de férias/folgas/licenças + ${item.afastamentos - item.afastamentosAuto} manuais)`
+                : `Servidor possui ${item.afastamentos} ${textoDia} de ausência manual no mês`;
+            
             afastamentosHtml = `
-                <span class="badge-afastamento" title="Servidor possui ${item.afastamentos} ${textoDia} de ausência total no mês">
-                    <span class="material-symbols-outlined">event_busy</span>
-                    ${item.afastamentos} ${textoDia}
+                <span class="badge-afastamento" title="${titulo}">
+                    <span class="material-symbols-outlined">${temAuto ? 'beach_access' : 'event_busy'}</span>
+                    ${item.afastamentos} ${textoDia}${temAuto ? ' <small>(auto)</small>' : ''}
                 </span>
             `;
         } else {
@@ -1856,10 +1942,15 @@ function renderizarTabelaRefeicao(dados) {
 
         let afastamentosHtml = '';
         if (item.afastamentos > 0) {
+            const temAuto = item.afastamentosAuto > 0;
+            const titulo = temAuto 
+                ? `${item.afastamentos} dias de ausência (${item.afastamentosAuto} automáticos + ${item.afastamentos - item.afastamentosAuto} manuais)`
+                : `${item.afastamentos} ${item.afastamentos === 1 ? 'dia' : 'dias'} de ausência manual`;
+            
             afastamentosHtml = `
-                <span class="badge-afastamento">
-                    <span class="material-symbols-outlined">event_busy</span>
-                    ${item.afastamentos} ${item.afastamentos === 1 ? 'dia' : 'dias'}
+                <span class="badge-afastamento" title="${titulo}">
+                    <span class="material-symbols-outlined">${temAuto ? 'beach_access' : 'event_busy'}</span>
+                    ${item.afastamentos} ${item.afastamentos === 1 ? 'dia' : 'dias'}${temAuto ? ' <small>(auto)</small>' : ''}
                 </span>
             `;
         } else {
@@ -1973,6 +2064,7 @@ window.exportarODS = async function() {
     const totalValorRefeicao = dadosCalculados.reduce((sum, item) => sum + item.valorTotalRefeicao, 0);
     const totalGeral = totalValorTransporte + totalValorRefeicao;
     const totalAfastados = dadosCalculados.filter(item => item.afastamentos > 0).length;
+    const totalAfastamentosAuto = dadosCalculados.filter(item => item.afastamentosAuto > 0).length;
     const totalParciais = dadosCalculados.filter(item => item.diasParciaisSem4h > 0).length;
     const totalHistoricoPasses = dadosCalculados.filter(item => item.tipoPasses === 'Histórico').length;
     const totalHistoricoTarifas = dadosCalculados.filter(item => item.tipoTarifa === 'Histórico').length;
@@ -1998,7 +2090,7 @@ window.exportarODS = async function() {
         return `<table:table-cell office:value-type="string"><text:p>${escaped}</text:p></table:table-cell>`;
     }
 
-    const cabecalhosTransporte = ["Nº", "Servidor", "CPF", "Escola", "Empresa", "Matrícula", "Dias Úteis", "Ajustado", "Ausências", "Dias < 4h", "Dias Efetivos (Transporte)", "Passes/Dia", "Fonte Passes", "Total de Passes", "Valor Unit. (R$)", "Fonte Tarifa", "Valor Total Transporte (R$)"];
+    const cabecalhosTransporte = ["Nº", "Servidor", "CPF", "Escola", "Empresa", "Matrícula", "Dias Úteis", "Ajustado", "Ausências Totais", "Ausências Automáticas", "Dias < 4h", "Dias Efetivos (Transporte)", "Passes/Dia", "Fonte Passes", "Total de Passes", "Valor Unit. (R$)", "Fonte Tarifa", "Valor Total Transporte (R$)"];
 
     let linhasTransporte = "";
     linhasTransporte += `<table:table-row table:style-name="ro1">`;
@@ -2018,6 +2110,7 @@ window.exportarODS = async function() {
         linhasTransporte += getCellXml(item.diasUteis);
         linhasTransporte += getCellXml(item.diasUteisAjustado ? 'Sim' : 'Não');
         linhasTransporte += getCellXml(item.afastamentos);
+        linhasTransporte += getCellXml(item.afastamentosAuto || 0);
         linhasTransporte += getCellXml(item.diasParciaisSem4h);
         linhasTransporte += getCellXml(item.diasEfetivosTransporte);
         linhasTransporte += getCellXml(item.passesPorDia);
@@ -2029,7 +2122,7 @@ window.exportarODS = async function() {
         linhasTransporte += `</table:table-row>`;
     });
 
-    const cabecalhosRefeicao = ["Nº", "Servidor", "CPF", "Escola", "Dias Úteis", "Ausências", "Dias < 4h", "Dias Refeição", "Valor Ticket (R$)", "Valor Refeição (R$)"];
+    const cabecalhosRefeicao = ["Nº", "Servidor", "CPF", "Escola", "Dias Úteis", "Ausências Totais", "Ausências Automáticas", "Dias < 4h", "Dias Refeição", "Valor Ticket (R$)", "Valor Refeição (R$)"];
 
     let linhasRefeicao = "";
     linhasRefeicao += `<table:table-row table:style-name="ro1">`;
@@ -2046,6 +2139,7 @@ window.exportarODS = async function() {
         linhasRefeicao += getCellXml(item.escola);
         linhasRefeicao += getCellXml(item.diasUteis);
         linhasRefeicao += getCellXml(item.afastamentos);
+        linhasRefeicao += getCellXml(item.afastamentosAuto || 0);
         linhasRefeicao += getCellXml(item.diasParciaisSem4h);
         linhasRefeicao += getCellXml(item.diasRefeicao);
         linhasRefeicao += getCellXml(item.valorTicketVigente > 0 ? item.valorTicketVigente.toFixed(2) : '');
@@ -2061,6 +2155,7 @@ window.exportarODS = async function() {
         ["=== VALE-TRANSPORTE ===", ""],
         ["Total de Passes", totalPasses],
         ["Servidores com Ausência", totalAfastados],
+        ["Servidores com Afastamento Automático (férias/folgas/licenças)", totalAfastamentosAuto],
         ["Servidores com Dias < 4h", totalParciais],
         ["Passes com Histórico Usados", totalHistoricoPasses],
         ["Tarifas com Histórico Usadas", totalHistoricoTarifas],
@@ -2107,11 +2202,11 @@ window.exportarODS = async function() {
     <office:body>
         <office:spreadsheet>
             <table:table table:name="Vale-Transporte">
-                <table:table-column table:style-name="co1" table:number-columns-repeated="17"/>
+                <table:table-column table:style-name="co1" table:number-columns-repeated="18"/>
                 ${linhasTransporte}
             </table:table>
             <table:table table:name="Vale-Refeicao">
-                <table:table-column table:style-name="co1" table:number-columns-repeated="10"/>
+                <table:table-column table:style-name="co1" table:number-columns-repeated="11"/>
                 ${linhasRefeicao}
             </table:table>
             <table:table table:name="Resumo Geral">
@@ -2202,7 +2297,7 @@ window.exportarCSV = function() {
 
     const nomeArquivo = `calculo_completo_${formatarMesAnoArquivo(mesAno)}.csv`;
 
-    let csv = "Servidor;CPF;Escola;Empresa;Matrícula;Dias Úteis;Ajustado;Ausências;Dias < 4h;Dias Efetivos (Transporte);Passes/Dia;Fonte Passes;Total Passes;Valor Unit. (R$);Fonte Tarifa;Valor Transporte (R$);Dias Refeição;Ticket (R$);Valor Refeição (R$);Total Geral (R$)\n";
+    let csv = "Servidor;CPF;Escola;Empresa;Matrícula;Dias Úteis;Ajustado;Ausências Totais;Ausências Automáticas;Dias < 4h;Dias Efetivos (Transporte);Passes/Dia;Fonte Passes;Total Passes;Valor Unit. (R$);Fonte Tarifa;Valor Transporte (R$);Dias Refeição;Ticket (R$);Valor Refeição (R$);Total Geral (R$)\n";
 
     dadosCalculados.forEach(item => {
         const valUnit = item.valorUnitario > 0 ? item.valorUnitario.toFixed(2).replace('.', ',') : '';
@@ -2211,7 +2306,7 @@ window.exportarCSV = function() {
         const valRefeicao = item.valorTotalRefeicao > 0 ? item.valorTotalRefeicao.toFixed(2).replace('.', ',') : '';
         const totalGeral = (item.valorTotalTransporte + item.valorTotalRefeicao).toFixed(2).replace('.', ',');
         const ajustado = item.diasUteisAjustado ? 'Sim' : 'Não';
-        csv += `${item.nome};${item.cpf};${item.escola};${item.empresa || ''};${item.matricula};${item.diasUteis};${ajustado};${item.afastamentos};${item.diasParciaisSem4h};${item.diasEfetivosTransporte};${item.passesPorDia};${item.tipoPasses};${item.totalPasses};${valUnit};${item.tipoTarifa};${valTransporte};${item.diasRefeicao};${valTicket};${valRefeicao};${totalGeral}\n`;
+        csv += `${item.nome};${item.cpf};${item.escola};${item.empresa || ''};${item.matricula};${item.diasUteis};${ajustado};${item.afastamentos};${item.afastamentosAuto || 0};${item.diasParciaisSem4h};${item.diasEfetivosTransporte};${item.passesPorDia};${item.tipoPasses};${item.totalPasses};${valUnit};${item.tipoTarifa};${valTransporte};${item.diasRefeicao};${valTicket};${valRefeicao};${totalGeral}\n`;
     });
 
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
