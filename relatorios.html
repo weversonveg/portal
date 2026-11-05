@@ -1267,7 +1267,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     /* ------------------------------------------------------------
        Logo local (logo.png) como DataURL + dimensões reais
        ------------------------------------------------------------ */
-    let __logoInfo = null; // { dataURL, width, height, ratio }
+    let __logoInfo = null;
     async function obterLogoInfo() {
         if (__logoInfo) return __logoInfo;
         try {
@@ -1280,7 +1280,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 fr.onerror = () => reject(new Error('Falha ao ler logo'));
                 fr.readAsDataURL(blob);
             });
-            // Pré-carrega a imagem para obter largura/altura REAIS antes do addImage
             const dims = await new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
@@ -1330,8 +1329,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const geradoEm = new Date();
             const dataHoraStr = geradoEm.toLocaleString('pt-BR');
 
-            // Dimensões da logo: altura fixa, largura proporcional
-            const LOGO_H = 14;                 // mm (altura fixa)
+            const LOGO_H = 14;
             const LOGO_W = logo ? (LOGO_H * logo.ratio) : 0;
             const LOGO_X = marginX;
             const LOGO_Y = headerTop;
@@ -1340,7 +1338,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             function desenharCabecalho() {
                 if (logo && LOGO_W > 0) {
                     try {
-                        // addImage(dataURL, 'PNG', x, y, w, h) — mantém proporção real
                         doc.addImage(logo.dataURL, 'PNG', LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
                     } catch (e) {
                         console.warn('[PDF] addImage falhou:', e);
@@ -1840,9 +1837,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
                                 } else {
                                     gozo = '';
-                                    if (p.status === 'atual') status = 'atual';
-                                    else if (p.dataLimiteGozo < hoje) status = 'vencido';
-                                    else status = 'pendente';
+                                    // CORREÇÃO APLICADA AQUI:
+                                    if (p.status === 'atual') {
+                                        status = 'pendente';
+                                    } else if (p.dataLimiteGozo < hoje) {
+                                        status = 'vencido';
+                                    } else {
+                                        status = 'disponivel';
+                                    }
                                 }
 
                                 if (statusFiltro !== 'todos' && statusFiltro !== status) return;
