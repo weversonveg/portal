@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,arrow_drop_down,picture_as_pdf,csv,table_view,paid">
 
-<!-- Flatpickr - MESMAS bibliotecas do exemplo funcional -->
+<!-- Flatpickr -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
@@ -1744,8 +1744,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
     }
 
+    /*
+        FUNÇÃO CORRIGIDA:
+        Agora prioriza dataInicio / data_inicio / data_gozo.
+        O campo "data" fica apenas como último fallback.
+    */
     function verificarSeJaGozado(reg, dataBase) {
-        const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+        const raw = reg.dataInicio || reg.data_inicio || reg.data_gozo || reg.data;
+        const dt = parseDataParaDate(raw);
         if (!dt) return false;
         return dt <= dataBase;
     }
@@ -1785,7 +1791,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (!filtroMesValido(mes, ano)) return true;
         if (!lanc) return false;
 
-        const d = parseDataParaDate(lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
+        const d = parseDataParaDate(lanc.dataInicio || lanc.data_inicio || lanc.data_gozo || lanc.data);
         if (!d) return false;
 
         const mesInicio = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
@@ -1816,7 +1822,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const nomeFiltro = document.getElementById("filtroNomeServidor").value.trim().toLowerCase();
 
         const mesFeriasInput = document.getElementById("filtroMesFerias");
-        const mesFeriasValor = mesFeriasInput ? (window.lerMes ? window.lerMes(mesFeriasInput) : mesFeriasInput.value) : "";
+        const mesFeriasValor = mesFeriasInput
+            ? (window.lerMes ? window.lerMes(mesFeriasInput) : mesFeriasInput.value)
+            : "";
 
         let mesSelecionado = null;
         let anoSelecionado = null;
@@ -1839,17 +1847,19 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const temFiltroMes = filtroMesValido(mesSelecionado, anoSelecionado);
 
-        const agora = new Date();
-        agora.setHours(0, 0, 0, 0);
+        /*
+            CORREÇÃO IMPORTANTE:
 
-        let dataReferencia = new Date(agora);
+            O mês de referência NÃO altera a data usada para calcular
+            se as férias já foram gozadas.
 
-        if (temFiltroMes) {
-            const mesAtualReal = agora.getMonth() === (mesSelecionado - 1) && agora.getFullYear() === anoSelecionado;
-            if (!mesAtualReal) {
-                dataReferencia = new Date(anoSelecionado, mesSelecionado, 0, 0, 0, 0, 0);
-            }
-        }
+            Isso evita que férias futuras apareçam como GOZADO
+            quando o usuário seleciona um mês futuro.
+        */
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const dataReferencia = hoje;
 
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
 
@@ -1858,7 +1868,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const btnCsv = document.getElementById("btnCsv");
         const btnXls = document.getElementById("btnXls");
 
-        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
         btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
 
         if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
@@ -1890,6 +1901,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 if (nomeFiltro && !nome.toLowerCase().includes(nomeFiltro)) return;
 
                 const vinculos = [];
+
                 if (s.matricula1 && s.matricula1.numeroMatricula) {
                     vinculos.push({
                         matricula: s.matricula1.numeroMatricula,
@@ -1899,6 +1911,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         diasFerias: s.matricula1.diasFerias || s.diasFerias || null
                     });
                 }
+
                 if (s.matricula2 && s.matricula2.numeroMatricula) {
                     vinculos.push({
                         matricula: s.matricula2.numeroMatricula,
@@ -1934,15 +1947,17 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                 const lancs = feriasLanc.filter(r => {
                                     const anoRef = (r.ano_referencia || r.ano || '');
                                     if (anoRef === p.anoReferencia) return true;
+
                                     if (!anoRef) {
                                         const regIni = parseDataParaDate(r.dataInicio || r.data_inicio || r.data);
                                         const regFim = parseDataParaDate(r.dataFim || r.data_fim || r.dataTermino || r.data_termino || regIni);
                                         if (regIni && regFim) return !(regFim < p.inicio || regIni > p.fim);
                                     }
+
                                     return false;
                                 });
 
-                                // FILTRO POR MÊS RESTRITIVO
+                                // Filtro por mês: mostra apenas lançamentos que caem no mês selecionado
                                 if (temFiltroMes && !lancamentosTemMes(lancs, mesSelecionado, anoSelecionado)) {
                                     return;
                                 }
@@ -1958,6 +1973,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
                                         return (da || 0) - (db2 || 0);
                                     });
+
                                     const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
 
                                     const intervalos = lancsOrdenados.map(l => {
@@ -1965,20 +1981,31 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                         const fimParte = formatarData(l.dataFim || l.data_fim || l.dataTermino || l.data_termino || l.dataInicio || l.data_inicio || l.data);
                                         return `${ini} a ${fimParte}`;
                                     });
+
                                     gozo = intervalos.join(' + ');
 
+                                    /*
+                                        CORREÇÃO:
+                                        Usa sempre a data atual.
+                                        Se as férias começam no futuro, ficam como PROGRAMADO.
+                                    */
                                     status = verificarSeJaGozado(ultimo, dataReferencia) ? 'gozado' : 'programado';
+
                                 } else if (diasConsumidos > 0) {
                                     const lancsOrdenados = [...lancs].sort((a, b) => {
                                         const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
                                         const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
                                         return (db2 || 0) - (da || 0);
                                     });
+
                                     const ultimoParcial = lancsOrdenados[0];
                                     gozo = `${diasConsumidos}/${totalDireito} dias`;
+
                                     status = verificarSeJaGozado(ultimoParcial, dataReferencia) ? 'parcial' : 'programado';
+
                                 } else {
                                     gozo = '';
+
                                     if (p.status === 'atual') {
                                         status = 'pendente';
                                     } else if (p.dataLimiteGozo < dataReferencia) {
@@ -1991,12 +2018,17 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                 if (statusFiltro !== 'todos' && statusFiltro !== status) return;
 
                                 linhasFinais.push({
-                                    nome: nome, cpf: cpf, matricula: v.matricula,
-                                    cargo: v.cargo, escola: v.escola, tipo: 'Férias',
+                                    nome: nome,
+                                    cpf: cpf,
+                                    matricula: v.matricula,
+                                    cargo: v.cargo,
+                                    escola: v.escola,
+                                    tipo: 'Férias',
                                     periodo: p.anoReferencia,
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                                    status: status, gozo: gozo || '—',
+                                    status: status,
+                                    gozo: gozo || '—',
                                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
@@ -2004,7 +2036,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     }
 
                     if (tipoBeneficioFiltro === 'todos' || tipoBeneficioFiltro === 'folga') {
-                        const dirG = nascimento ? calcularDireitoFolgaAniversario(nascimento, v.dataAdmissao, dataReferencia) : null;
+                        const dirG = nascimento
+                            ? calcularDireitoFolgaAniversario(nascimento, v.dataAdmissao, dataReferencia)
+                            : null;
+
                         if (dirG) {
                             const folgasLanc = regsMat.filter(r => {
                                 const t = (r.tipo || '').toLowerCase();
@@ -2015,32 +2050,42 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                 const lanc = folgasLanc.find(r => {
                                     const anoRef = (r.ano_referencia || r.ano || '');
                                     if (anoRef) return anoRef === p.anoReferencia;
-                                    const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+
+                                    const raw = r.dataInicio || r.data_inicio || r.data_gozo || r.data;
                                     const dGozo = parseDataParaDate(raw);
+
                                     return dGozo && dGozo >= p.dataDisponivel && dGozo < p.dataLimiteGozo;
                                 });
 
-                                // FILTRO POR MÊS RESTRITIVO
+                                // Filtro por mês: mostra apenas folgas gozadas no mês selecionado
                                 if (temFiltroMes && !folgaTemMes(lanc, mesSelecionado, anoSelecionado)) {
                                     return;
                                 }
 
-                                let status = p.status, gozo = '';
+                                let status = p.status;
+                                let gozo = '';
+
                                 if (lanc) {
-                                    const raw = lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio;
+                                    const raw = lanc.dataInicio || lanc.data_inicio || lanc.data_gozo || lanc.data;
                                     gozo = formatarData(raw);
+
                                     status = verificarSeJaGozado(lanc, dataReferencia) ? 'gozado' : 'programado';
                                 }
 
                                 if (statusFiltro !== 'todos' && statusFiltro !== status) return;
 
                                 linhasFinais.push({
-                                    nome: nome, cpf: cpf, matricula: v.matricula,
-                                    cargo: v.cargo, escola: v.escola, tipo: 'Folga Aniv.',
+                                    nome: nome,
+                                    cpf: cpf,
+                                    matricula: v.matricula,
+                                    cargo: v.cargo,
+                                    escola: v.escola,
+                                    tipo: 'Folga Aniv.',
                                     periodo: p.anoReferencia,
                                     ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
                                     prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
-                                    status: status, gozo: gozo || '—',
+                                    status: status,
+                                    gozo: gozo || '—',
                                     extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
                                 });
                             });
@@ -2090,22 +2135,43 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 </tr>
             `;
 
-            const nomeMesFiltro = temFiltroMes ? obterNomeMesFormatado(mesSelecionado, anoSelecionado) : '';
-            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            const nomeMesFiltro = temFiltroMes
+                ? obterNomeMesFormatado(mesSelecionado, anoSelecionado)
+                : '';
+
+            const descEscolas = todasEscolasMarcadas
+                ? "Todas as Escolas"
+                : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+
             const descMes = temFiltroMes ? ` | Mês: ${nomeMesFiltro}` : '';
 
-            document.getElementById("printSubtitulo").textContent = `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}${descMes}`;
+            document.getElementById("printSubtitulo").textContent =
+                `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}${descMes}`;
 
-            document.getElementById("labelSumPeriodo").textContent = temFiltroMes ? "Mês de Referência" : "Situação";
-            document.getElementById("sumPeriodo").textContent = temFiltroMes ? nomeMesFiltro : "Atual";
+            document.getElementById("labelSumPeriodo").textContent = temFiltroMes
+                ? "Mês de Referência"
+                : "Situação";
+
+            document.getElementById("sumPeriodo").textContent = temFiltroMes
+                ? nomeMesFiltro
+                : "Atual";
 
             document.getElementById("labelSumVinculos").textContent = "Total de Registros";
             document.getElementById("sumVinculos").textContent = linhasFinais.length;
 
             document.getElementById("labelSumTotal").textContent = "Pendentes + Vencidos + Parciais";
-            const pendentesVencidosParciais = linhasFinais.filter(l => l.status === 'pendente' || l.status === 'vencido' || l.status === 'parcial').length;
+
+            const pendentesVencidosParciais = linhasFinais.filter(l =>
+                l.status === 'pendente' ||
+                l.status === 'vencido' ||
+                l.status === 'parcial'
+            ).length;
+
             document.getElementById("sumTotalPasses").textContent = `${pendentesVencidosParciais} registros`;
-            document.getElementById("sumTotalPasses").style.color = pendentesVencidosParciais > 0 ? 'var(--red)' : 'var(--green)';
+            document.getElementById("sumTotalPasses").style.color = pendentesVencidosParciais > 0
+                ? 'var(--red)'
+                : 'var(--green)';
+
             document.getElementById("boxSumValor").style.display = "none";
 
             document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
@@ -2136,7 +2202,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const btnCsv = document.getElementById("btnCsv");
         const btnXls = document.getElementById("btnXls");
 
-        msgDiv.className = "mensagem"; msgDiv.textContent = "";
+        msgDiv.className = "mensagem";
+        msgDiv.textContent = "";
         btnPdf.disabled = btnCsv.disabled = btnXls.disabled = true;
 
         if (!todasEscolasMarcadas && escolasSelecionadas.length === 0) {
@@ -2150,10 +2217,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         try {
             let mesesParaProcessar = [];
+
             if (tipoPeriodo === "mensal") {
                 const mesInput = document.getElementById("mesReferencia");
-                const mesAno = mesInput ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value) : "";
-                if (!mesAno) { mostrarMensagem("Selecione o mês de referência.", "erro"); return; }
+                const mesAno = mesInput
+                    ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value)
+                    : "";
+
+                if (!mesAno) {
+                    mostrarMensagem("Selecione o mês de referência.", "erro");
+                    return;
+                }
+
                 mesesParaProcessar.push(mesAno);
             } else {
                 const anoSelecionado = document.getElementById("anoReferencia").value;
@@ -2163,7 +2238,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             }
 
             const servidoresSnap = await getDocs(collection(db, "servidores"));
-            if (servidoresSnap.empty) { mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info"); return; }
+            if (servidoresSnap.empty) {
+                mostrarMensagem("Nenhum servidor cadastrado no sistema.", "info");
+                return;
+            }
 
             let resultadosConsolidados = {};
             let contadorMesesPorChave = {};
@@ -2212,12 +2290,19 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
                         if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
                         if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
+
                         const empresa = escolaObj.empresa || "";
                         if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
 
                         const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
-                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined ? afastamentosMap[chaveEscolaCpf] : (afastamentosMap[cpfLimpo] || 0);
-                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined ? diasEscolaMap[nomeEscola] : diasSemedDefault;
+                        const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined
+                            ? afastamentosMap[chaveEscolaCpf]
+                            : (afastamentosMap[cpfLimpo] || 0);
+
+                        const diasUteisUnidade = diasEscolaMap[nomeEscola] !== undefined
+                            ? diasEscolaMap[nomeEscola]
+                            : diasSemedDefault;
+
                         const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
                         const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
                         const totalMes = passesDiarios * diasEfetivos;
@@ -2236,6 +2321,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                             };
                             contadorMesesPorChave[chaveUnica] = 0;
                         }
+
                         resultadosConsolidados[chaveUnica].diasEfetivosTotal += diasEfetivos;
                         resultadosConsolidados[chaveUnica].afastamentosTotal += diasAfastamento;
                         resultadosConsolidados[chaveUnica].passesTotal += totalMes;
@@ -2247,6 +2333,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola1, escolasProcessadasMat1);
                         processarVinculo(s.matricula1.numeroMatricula, s.matricula1.cargo, s.matricula1.escola2, escolasProcessadasMat1);
                     }
+
                     if (s.matricula2) {
                         processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola1, escolasProcessadasMat2);
                         processarVinculo(s.matricula2.numeroMatricula, s.matricula2.cargo, s.matricula2.escola2, escolasProcessadasMat2);
@@ -2327,14 +2414,22 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             `;
 
             const mesInput = document.getElementById("mesReferencia");
-            const mesAnoValor = mesInput ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value) : "";
+            const mesAnoValor = mesInput
+                ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value)
+                : "";
+
             const mesAnoFormatado = formatarMesAnoPTBR(mesAnoValor);
+
             const rotuloPeriodo = tipoPeriodo === "mensal"
                 ? `Mês: ${mesAnoFormatado}`
                 : `Ano: ${document.getElementById("anoReferencia").value}`;
 
-            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
-            document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
+            const descEscolas = todasEscolasMarcadas
+                ? "Todas as Escolas"
+                : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+
+            document.getElementById("printSubtitulo").textContent =
+                `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}`;
 
             document.getElementById("labelSumPeriodo").textContent = "Período Analisado";
             document.getElementById("sumPeriodo").textContent = tipoPeriodo === "mensal"
@@ -2344,7 +2439,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("labelSumVinculos").textContent = "Total de Vínculos";
             document.getElementById("sumVinculos").textContent = totalVinculos;
 
-            document.getElementById("labelSumTotal").textContent = tipoPeriodo === "anual" ? "Total Geral (Ano)" : "Total Geral de Passes";
+            document.getElementById("labelSumTotal").textContent = tipoPeriodo === "anual"
+                ? "Total Geral (Ano)"
+                : "Total Geral de Passes";
+
             document.getElementById("sumTotalPasses").textContent = totalGeralPasses.toLocaleString("pt-BR") + " passes";
             document.getElementById("sumTotalPasses").style.color = "var(--green)";
 
@@ -2374,9 +2472,11 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
 
         let linhas = [];
+
         if (tipoRelatorioAtual === "ferias") {
             const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Tipo", "Periodo", "Prazo Gozo", "Status", "Data Gozo"];
             linhas.push(header.join(";"));
+
             dadosRelatorioGlobal.forEach(item => {
                 linhas.push([
                     `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
@@ -2387,9 +2487,11 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         } else {
             const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes", "Valor Unit. (R$)", "Valor Total (R$)"];
             linhas.push(header.join(";"));
+
             dadosRelatorioGlobal.forEach(item => {
                 const valUnit = item.valorUnitario > 0 ? item.valorUnitario.toFixed(2).replace('.', ',') : '';
                 const valTotal = item.valorTotal > 0 ? item.valorTotal.toFixed(2).replace('.', ',') : '';
+
                 linhas.push([
                     `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
                     `"${item.cargo}"`, `"${item.escola}"`, `"${item.empresa}"`,
@@ -2402,7 +2504,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const blob = new Blob(["\ufeff" + linhas.join("\n")], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        const nome = tipoRelatorioAtual === "ferias" ? "relatorio_ferias_folgas" : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+        const nome = tipoRelatorioAtual === "ferias"
+            ? "relatorio_ferias_folgas"
+            : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+
         link.href = URL.createObjectURL(blob);
         link.download = `${nome}.csv`;
         link.click();
@@ -2427,6 +2532,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         try {
             let dados = [];
+
             if (tipoRelatorioAtual === "ferias") {
                 dados = dadosRelatorioGlobal.map(item => ({
                     "Servidor": item.nome,
@@ -2467,7 +2573,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Relatório");
 
-            const nome = tipoRelatorioAtual === "ferias" ? "relatorio_ferias_folgas" : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+            const nome = tipoRelatorioAtual === "ferias"
+                ? "relatorio_ferias_folgas"
+                : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
+
             XLSX.writeFile(wb, `${nome}.xlsx`);
             mostrarMensagem("Arquivo Excel exportado com sucesso!", "sucesso");
         } catch (e) {
@@ -2546,12 +2655,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     window.mostrarMensagem = mostrarMensagem;
 </script>
 
-<!-- Flatpickr - MESMAS bibliotecas do exemplo funcional -->
+<!-- Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
-<!-- JavaScript do Flatpickr - IGUAL ao exemplo funcional -->
+<!-- Inicialização dos campos de mês -->
 <script>
 (function () {
     function init() {
