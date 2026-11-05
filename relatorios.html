@@ -466,7 +466,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     gap: 16px;
 }
 
-/* ========== FILTROS - MESMO PADRÃO DO EXEMPLO FUNCIONAL ========== */
 .filter-group {
     display: flex;
     flex-direction: column;
@@ -516,7 +515,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     background: var(--surface);
 }
 
-/* ========== FLATPICKR - TEMA ROXO ========== */
 .flatpickr-calendar .flatpickr-monthSelect-month.selected,
 .flatpickr-calendar .flatpickr-monthSelect-month.selected:hover {
     background: #2E0F4F !important;
@@ -527,8 +525,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .flatpickr-calendar {
     z-index: 9999 !important;
 }
-
-/* ========== FIM FILTROS ========== */
 
 .filter-checkbox-group {
     display: flex; align-items: center; gap: 8px;
@@ -1301,9 +1297,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     const DIAS_PADRAO = 30;
 
-    /* ------------------------------------------------------------
-       Carregamento dinâmico do jsPDF + AutoTable
-       ------------------------------------------------------------ */
     const JSPDF_URL     = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     const AUTOTABLE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
 
@@ -1330,9 +1323,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return window.jspdf.jsPDF;
     }
 
-    /* ------------------------------------------------------------
-       Logo local (logo.png) como DataURL + dimensões reais
-       ------------------------------------------------------------ */
     let __logoInfo = null;
     async function obterLogoInfo() {
         if (__logoInfo) return __logoInfo;
@@ -1361,9 +1351,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     }
 
-    /* ------------------------------------------------------------
-       Geração do PDF profissional com jsPDF + AutoTable
-       ------------------------------------------------------------ */
     async function gerarPDFProfissional() {
         if (!dadosRelatorioGlobal || dadosRelatorioGlobal.length === 0) {
             mostrarMensagem("Gere o relatório antes de exportar.", "erro");
@@ -1581,9 +1568,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         gerarPDFProfissional();
     };
 
-    /* ------------------------------------------------------------
-       Helpers de cálculo
-       ------------------------------------------------------------ */
     function obterDiasPorPeriodo(servidor, vinculo) {
         if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
         if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
@@ -1766,9 +1750,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return dt <= dataBase;
     }
 
-    /* ------------------------------------------------------------
-       Helpers para filtro por mês no relatório de férias/folgas
-       ------------------------------------------------------------ */
     function filtroMesValido(mes, ano) {
         return Boolean(mes && ano && !isNaN(mes) && !isNaN(ano));
     }
@@ -1789,12 +1770,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return mesInicio <= fimDate && mesFim >= ini;
     }
 
-    function dataEstaNoMes(data, mes, ano) {
-        if (!filtroMesValido(mes, ano)) return true;
-        const d = data instanceof Date ? data : parseDataParaDate(data);
-        return Boolean(d && d.getMonth() + 1 === mes && d.getFullYear() === ano);
-    }
-
     function lancamentosTemMes(lancs, mes, ano) {
         if (!filtroMesValido(mes, ano)) return true;
         if (!lancs || lancs.length === 0) return false;
@@ -1806,27 +1781,17 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         });
     }
 
-    function periodoFeriasVisivelNoMes(p, mes, ano, lancs) {
+    function folgaTemMes(lanc, mes, ano) {
         if (!filtroMesValido(mes, ano)) return true;
+        if (!lanc) return false;
 
-        if (mesAnoIntersecaoPeriodo(p.inicio, p.dataLimiteGozo, mes, ano)) return true;
+        const d = parseDataParaDate(lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
+        if (!d) return false;
 
-        if (lancamentosTemMes(lancs, mes, ano)) return true;
+        const mesInicio = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
+        const mesFim = new Date(ano, mes, 0, 23, 59, 59, 999);
 
-        return false;
-    }
-
-    function periodoFolgaVisivelNoMes(p, mes, ano, lanc) {
-        if (!filtroMesValido(mes, ano)) return true;
-
-        if (mesAnoIntersecaoPeriodo(p.inicio, p.dataLimiteGozo, mes, ano)) return true;
-
-        if (lanc) {
-            const d = parseDataParaDate(lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
-            if (dataEstaNoMes(d, mes, ano)) return true;
-        }
-
-        return false;
+        return d >= mesInicio && d <= mesFim;
     }
 
     function obterNomeMesFormatado(mes, ano) {
@@ -1872,12 +1837,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             }
         }
 
+        const temFiltroMes = filtroMesValido(mesSelecionado, anoSelecionado);
+
         const agora = new Date();
         agora.setHours(0, 0, 0, 0);
 
         let dataReferencia = new Date(agora);
 
-        if (filtroMesValido(mesSelecionado, anoSelecionado)) {
+        if (temFiltroMes) {
             const mesAtualReal = agora.getMonth() === (mesSelecionado - 1) && agora.getFullYear() === anoSelecionado;
             if (!mesAtualReal) {
                 dataReferencia = new Date(anoSelecionado, mesSelecionado, 0, 0, 0, 0, 0);
@@ -1975,7 +1942,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     return false;
                                 });
 
-                                if (!periodoFeriasVisivelNoMes(p, mesSelecionado, anoSelecionado, lancs)) return;
+                                // FILTRO POR MÊS RESTRITIVO
+                                if (temFiltroMes && !lancamentosTemMes(lancs, mesSelecionado, anoSelecionado)) {
+                                    return;
+                                }
 
                                 const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
                                 const totalDireito = p.totalDireito || diasDireito;
@@ -2050,7 +2020,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     return dGozo && dGozo >= p.dataDisponivel && dGozo < p.dataLimiteGozo;
                                 });
 
-                                if (!periodoFolgaVisivelNoMes(p, mesSelecionado, anoSelecionado, lanc)) return;
+                                // FILTRO POR MÊS RESTRITIVO
+                                if (temFiltroMes && !folgaTemMes(lanc, mesSelecionado, anoSelecionado)) {
+                                    return;
+                                }
 
                                 let status = p.status, gozo = '';
                                 if (lanc) {
@@ -2117,15 +2090,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 </tr>
             `;
 
-            const temMesFiltro = filtroMesValido(mesSelecionado, anoSelecionado);
-            const nomeMesFiltro = temMesFiltro ? obterNomeMesFormatado(mesSelecionado, anoSelecionado) : '';
+            const nomeMesFiltro = temFiltroMes ? obterNomeMesFormatado(mesSelecionado, anoSelecionado) : '';
             const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
-            const descMes = temMesFiltro ? ` | Mês: ${nomeMesFiltro}` : '';
+            const descMes = temFiltroMes ? ` | Mês: ${nomeMesFiltro}` : '';
 
             document.getElementById("printSubtitulo").textContent = `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}${descMes}`;
 
-            document.getElementById("labelSumPeriodo").textContent = temMesFiltro ? "Mês de Referência" : "Situação";
-            document.getElementById("sumPeriodo").textContent = temMesFiltro ? nomeMesFiltro : "Atual";
+            document.getElementById("labelSumPeriodo").textContent = temFiltroMes ? "Mês de Referência" : "Situação";
+            document.getElementById("sumPeriodo").textContent = temFiltroMes ? nomeMesFiltro : "Atual";
 
             document.getElementById("labelSumVinculos").textContent = "Total de Registros";
             document.getElementById("sumVinculos").textContent = linhasFinais.length;
