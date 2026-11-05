@@ -535,6 +535,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
     display: none !important;
 }
 
+.flatpickr-fallback {
+    padding-right: 42px !important;
+}
+.flatpickr-calendar.static {
+    margin-top: 6px;
+}
+
 .custom-dropdown { position: relative; width: 100%; }
 .dropdown-select-box {
     height: 42px; background: var(--surface);
@@ -2840,46 +2847,93 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return wrapper.offsetParent !== null;
     }
 
-    function criarCalendarioMes(input, definirPadrao) {
+    function aplicarFallbackInput(input, definirPadrao) {
+        if (!input) return;
+        if (input.dataset.fallbackMes === '1') return;
+
+        input.type = 'month';
+        input.readOnly = false;
+        input.removeAttribute('readonly');
+        input.classList.add('flatpickr-fallback');
+
+        if (definirPadrao && !input.value) {
+            input.value = valorMesAtual();
+        }
+
+        input.dataset.fallbackMes = '1';
+    }
+
+    function aplicarFallbackGeral() {
+        aplicarFallbackInput(document.getElementById('mesReferencia'), true);
+        aplicarFallbackInput(document.getElementById('filtroMesFerias'), false);
+    }
+
+    const flatpickrPronto = new Promise(function (resolve) {
+        if (typeof flatpickr !== 'undefined') {
+            resolve(true);
+            return;
+        }
+
+        let tentativas = 0;
+
+        const timer = setInterval(function () {
+            tentativas++;
+
+            if (typeof flatpickr !== 'undefined') {
+                clearInterval(timer);
+                resolve(true);
+            } else if (tentativas >= 40) {
+                clearInterval(timer);
+                resolve(false);
+            }
+        }, 250);
+    });
+
+    function criarCalendario(input, definirPadrao, forcar) {
         if (!input || typeof flatpickr === 'undefined') return;
 
         const valorAtual = input.value || '';
 
-        if (input._flatpickr) {
+        if (forcar && input._flatpickr) {
             input._flatpickr.destroy();
             input.value = valorAtual;
         }
+
+        if (input._flatpickr) return;
 
         if (definirPadrao && !input.value) {
             input.value = valorMesAtual();
         }
 
         const locale = (flatpickr.l10ns && flatpickr.l10ns.pt) ? 'pt' : 'default';
-        const plugins = [];
 
-        if (typeof monthSelectPlugin === 'function') {
-            plugins.push(new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: 'Y-m',
-                altInput: true,
-                altFormat: 'F Y',
-                theme: 'material_purple'
-            }));
-        }
-
-        flatpickr(input, {
+        const config = {
             locale: locale,
-            plugins: plugins,
             dateFormat: 'Y-m',
-            altInput: plugins.length === 0,
+            altInput: true,
             altFormat: 'F Y',
             allowInput: false,
             clickOpens: true,
+            disableMobile: true,
+            static: true,
             defaultDate: input.value || null
-        });
+        };
+
+        if (typeof monthSelectPlugin === 'function') {
+            config.plugins = [
+                new monthSelectPlugin({
+                    shorthand: true,
+                    dateFormat: 'Y-m',
+                    altFormat: 'F Y',
+                    theme: 'material_purple'
+                })
+            ];
+        }
+
+        flatpickr(input, config);
     }
 
-    function inicializarCalendariosMes(forcar) {
+    function inicializarVisiveis(forcar) {
         const tipoRelatorio = document.getElementById('tipoRelatorio')
             ? document.getElementById('tipoRelatorio').value
             : 'vales';
@@ -2898,38 +2952,89 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const feriasVisivel = tipoRelatorio === 'ferias'
             && campoVisivel(mesFerias);
 
-        if (mesVales && valesVisivel && (forcar || !mesVales.dataset.fpMesInit)) {
-            criarCalendarioMes(mesVales, true);
-            mesVales.dataset.fpMesInit = '1';
+        if (mesVales && valesVisivel) {
+            criarCalendario(mesVales, true, Boolean(forcar));
         }
 
-        if (mesFerias && feriasVisivel && (forcar || !mesFerias.dataset.fpMesInit)) {
-            criarCalendarioMes(mesFerias, false);
-            mesFerias.dataset.fpMesInit = '1';
+        if (mesFerias && feriasVisivel) {
+            criarCalendario(mesFerias, false, Boolean(forcar));
         }
     }
 
-    window.inicializarCalendariosMes = inicializarCalendariosMes;
+    window.inicializarCalendariosMes = function (forcar) {
+        flatpickrPronto.then(function (ok) {
+            if (!ok) {
+                aplicarFallbackGeral();
+                return;
+            }
+
+            inicializarVisiveis(Boolean(forcar));
+        });
+    };
 
     function init() {
-        inicializarCalendariosMes(false);
-
         const btnLimparVales = document.getElementById('btnLimparMesVales');
         const btnLimparFerias = document.getElementById('btnLimparMesFerias');
 
         if (btnLimparVales) {
             btnLimparVales.addEventListener('click', function () {
                 const input = document.getElementById('mesReferencia');
-                if (input && input._flatpickr) input._flatpickr.clear();
+                if (!input) return;
+
+                if (input._flatpickr) {
+                    input._flatpickr.clear();
+                } else {
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             });
         }
 
         if (btnLimparFerias) {
             btnLimparFerias.addEventListener('click', function () {
                 const input = document.getElementById('filtroMesFerias');
-                if (input && input._flatpickr) input._flatpickr.clear();
+                if (!input) return;
+
+                if (input._flatpickr) {
+                    input._flatpickr.clear();
+                } else {
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             });
         }
+
+        document.addEventListener('click', function (e) {
+            const wrapper = e.target.closest('.filter-input-limpar');
+            if (!wrapper) return;
+
+            if (e.target.closest('.btn-limpar-campo')) return;
+
+            const input = wrapper.querySelector('input');
+            if (!input) return;
+
+            flatpickrPronto.then(function (ok) {
+                if (!ok) {
+                    aplicarFallbackInput(input, input.id === 'mesReferencia');
+
+                    if (typeof input.showPicker === 'function') {
+                        try {
+                            input.showPicker();
+                        } catch (err) {}
+                    }
+
+                    return;
+                }
+
+                criarCalendario(input, input.id === 'mesReferencia', false);
+
+                if (input._flatpickr && typeof input._flatpickr.open === 'function') {
+                    input._flatpickr.open();
+                }
+            });
+        });
+
+        window.inicializarCalendariosMes(false);
     }
 
     if (document.readyState === 'loading') {
