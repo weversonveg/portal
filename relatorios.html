@@ -524,9 +524,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
    ============================================================ */
 .filter-group input.campo-preenchido,
 .filter-group select.campo-preenchido,
-.filter-group input.flatpickr-input.campo-preenchido,
-.quick-search-field input.campo-preenchido,
-.quick-search-field select.campo-preenchido {
+.filter-group input.flatpickr-input.campo-preenchido {
     background-color: var(--field-filled-bg) !important;
     border-color: var(--field-filled-border) !important;
     color: var(--text) !important;
@@ -534,17 +532,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .filter-group input.campo-preenchido:focus,
 .filter-group select.campo-preenchido:focus,
-.filter-group input.flatpickr-input.campo-preenchido:focus,
-.quick-search-field input.campo-preenchido:focus,
-.quick-search-field select.campo-preenchido:focus {
+.filter-group input.flatpickr-input.campo-preenchido:focus {
     border-color: var(--brand) !important;
     box-shadow: var(--focus-ring) !important;
 }
-/* Borda esquerda como reforço visual */
 .filter-group input.campo-preenchido,
-.filter-group select.campo-preenchido,
-.quick-search-field input.campo-preenchido,
-.quick-search-field select.campo-preenchido {
+.filter-group select.campo-preenchido {
     box-shadow: inset 3px 0 0 var(--brand);
 }
 
@@ -780,7 +773,6 @@ tr:hover td { background: var(--surface-2); }
     .topbar-sair, .modal-sair-overlay, .toast-container,
     .filter-card, .export-buttons, .breadcrumb,
     .page-header-page, .mensagem, .summary-container,
-    .quick-search, .quick-search-empty,
     .loading-overlay { display: none !important; }
     .main { overflow: visible; }
     .content-page { overflow: visible; padding: 0; }
@@ -951,9 +943,6 @@ tr:hover td { background: var(--surface-2); }
                         </select>
                     </div>
 
-                    <!-- ============================================================
-                         CAMPOS COMUNS AOS DOIS RELATÓRIOS
-                         ============================================================ -->
                     <div class="filter-group" id="grupoBuscaNome">
                         <label for="buscaNome">Nome do Servidor</label>
                         <input type="text" id="buscaNome" placeholder="Ex: Maria...">
@@ -974,9 +963,6 @@ tr:hover td { background: var(--surface-2); }
                         <input type="text" id="buscaPeriodo" placeholder="Ex: 2023/2024" maxlength="9" autocomplete="off">
                     </div>
 
-                    <!-- ============================================================
-                         FILTROS ESPECÍFICOS DE VALES
-                         ============================================================ -->
                     <div id="filtrosVales" style="display: contents;">
                         <div class="filter-group">
                             <label for="tipoPeriodo">Tipo de Período</label>
@@ -1021,9 +1007,6 @@ tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- ============================================================
-                         FILTROS ESPECÍFICOS DE FÉRIAS/FOLGAS
-                         ============================================================ -->
                     <div id="filtrosFerias" style="display: none;">
                         <div class="filter-group">
                             <label for="filtroTipoBeneficio">Tipo de Benefício</label>
@@ -1054,9 +1037,6 @@ tr:hover td { background: var(--surface-2); }
                         </div>
                     </div>
 
-                    <!-- ============================================================
-                         ESCOLAS (COMUM)
-                         ============================================================ -->
                     <div class="filter-group full-width">
                         <label>Escolas / Unidades de Ensino</label>
                         <div class="custom-dropdown" id="dropdownEscolasContainer">
@@ -1924,9 +1904,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         };
     }
 
-    /* ==================================================
-       Controle de visibilidade dos campos comuns
-       ================================================== */
     function atualizarCamposComuns(tipo) {
         const gNome = document.getElementById('grupoBuscaNome');
         const gCpf = document.getElementById('grupoBuscaCpf');
@@ -1974,14 +1951,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
        DESTAQUE DE CAMPOS PREENCHIDOS
        ================================================== */
     function atualizarDestaquesCampos() {
-        // Inputs e selects dentro do filter-card
         const controles = document.querySelectorAll(
             '.filter-card input[type="text"], .filter-card input[type="number"], .filter-card select'
         );
 
         controles.forEach(el => {
             if (!el) return;
-            // ignora inputs hidden / sem visual
             if (el.type === 'hidden') return;
 
             let preenchido;
@@ -1992,7 +1967,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 preenchido = v !== '';
             }
 
-            // campo-mes (flatpickr) — considera o data-value
             if (el.classList.contains('campo-mes') || el._flatpickr) {
                 const mes = (window.lerMes ? window.lerMes(el) : (el.dataset.value || el.value || '')).trim();
                 preenchido = mes !== '';
@@ -2001,7 +1975,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             el.classList.toggle('campo-preenchido', preenchido);
         });
 
-        // Checkbox de afastamento
         const chk = document.getElementById('filtroApenasFalta');
         const grupoChk = document.getElementById('grupoCheckApenasFalta');
         if (chk && grupoChk) {
@@ -2010,10 +1983,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     function instalarDestaquesCampos() {
-        // Atualiza no load
         atualizarDestaquesCampos();
 
-        // Delegamos no filter-card para capturar input/change
         const card = document.querySelector('.filter-card');
         if (card) {
             card.addEventListener('input', atualizarDestaquesCampos, true);
@@ -2021,18 +1992,48 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             card.addEventListener('blur', atualizarDestaquesCampos, true);
         }
 
-        // Campo-mes (flatpickr dispara change) — reforço
         document.querySelectorAll('.campo-mes').forEach(el => {
             el.addEventListener('change', atualizarDestaquesCampos);
             el.addEventListener('blur', atualizarDestaquesCampos);
         });
 
-        // Reforço periódico (caso algum componente altere programaticamente)
         setInterval(atualizarDestaquesCampos, 800);
     }
 
+    /* ==================================================
+       ENTER PARA PESQUISAR
+       ================================================== */
+    function instalarEnterPesquisar() {
+        const card = document.querySelector('.filter-card');
+        if (!card) return;
+
+        card.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+
+            const alvo = e.target;
+            if (!alvo) return;
+
+            const tag = (alvo.tagName || '').toLowerCase();
+            const tipo = (alvo.type || '').toLowerCase();
+
+            // Ignora botões, textareas e checkbox
+            if (tag === 'textarea') return;
+            if (tag === 'button') return;
+            if (tipo === 'checkbox' || tipo === 'radio' || tipo === 'submit') return;
+
+            // Para <select>, Enter não faz sentido: deixar o comportamento padrão
+            // (change já refaz a UI). Também para flatpickr em edição, deixa o Enter
+            // fechar o calendário e não disparar busca dupla.
+            if (tag === 'select') return;
+            if (alvo._flatpickr && alvo._flatpickr.isOpen) return;
+
+            e.preventDefault();
+            atualizarDestaquesCampos();
+            gerarRelatorio();
+        });
+    }
+
     window.gerarRelatorio = async function() {
-        // Atualiza destaques antes de gerar (garante estado visual coerente)
         atualizarDestaquesCampos();
 
         if (tipoRelatorioAtual === "ferias") {
@@ -2918,6 +2919,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarCamposComuns(tipoRelatorioAtual);
         instalarMascaraCpf();
         instalarDestaquesCampos();
+        instalarEnterPesquisar();
 
         document.addEventListener("click", function(e) {
             const container = document.getElementById("dropdownEscolasContainer");
