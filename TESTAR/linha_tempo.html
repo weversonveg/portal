@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1f3a5f">
+<title>Linha do tempo — Vale Transporte</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,table_view,beach_access,cake,event_upcoming,event_available,cancel,hourglass_top,error_outline,hourglass_bottom,grid_on,search,sync,apartment">
+
+<script>
+(function () {
+    try {
+        var t = localStorage.getItem('tema-vt') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#16181c' : '#1f3a5f');
+        var menuFechado = localStorage.getItem('menu-vt-fechado');
+        if (menuFechado === '1') document.documentElement.classList.add('menu-inicial-fechado');
+    } catch (e) {}
+})();
+</script>
+
+<style>
+:root, :root[data-theme="light"] {
+    --brand: #1f3a5f; --brand-hover: #2c4d77; --brand-soft: #e8eef5;
+    --gray-50:#fafafa; --gray-100:#f5f5f6; --gray-200:#e4e4e7; --gray-300:#d4d4d8;
+    --gray-400:#a1a1aa; --gray-500:#71717a; --gray-600:#52525b; --gray-700:#3f3f46;
+    --gray-800:#27272a; --gray-900:#18181b;
+    --ok:#1a6a38; --ok-bg:#f1f8f3; --ok-bd:#bfdcc6;
+    --warn:#8a5610; --warn-bg:#fbf7ef; --warn-bd:#e6d3ac;
+    --danger:#9a1e1e; --danger-bg:#fbf3f3; --danger-bd:#e0c2c2;
+    --info:#1a4d8f; --info-bg:#f0f5fb; --info-bd:#c3d5e9;
+    --background:#eef0f3; --surface:#ffffff; --surface-2:#f7f8fa; --surface-3:#eef0f3;
+    --text:#1a1d21; --text-secondary:#4d5560; --text-muted:#7b8490;
+    --border:#d8dce0; --border-strong:#b8bfc7;
+    --shadow-sm:0 1px 2px rgba(20,25,35,.05); --shadow-md:0 2px 6px rgba(20,25,35,.08);
+    --sidebar-width:268px; --topbar-height:56px;
+    --font:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --primary:var(--brand); --primary-hover:var(--brand-hover); --primary-light:var(--brand-soft);
+    --green:var(--ok); --green-soft:var(--ok-bg); --red:var(--danger); --red-soft:var(--danger-bg);
+    --yellow:var(--warn); --yellow-soft:var(--warn-bg); --blue:var(--brand); --blue-soft:var(--brand-soft);
+    --purple:#6a1b9a; --purple-soft:#f3e8f7; --border-light:var(--surface-2); --white:var(--surface);
+    --shadow:var(--shadow-md);
+}
+:root[data-theme="dark"] {
+    --brand:#7ba3cd; --brand-hover:#96b8db; --brand-soft:#1a2634;
+    --gray-50:#1a1c20; --gray-100:#1e2024; --gray-200:#2a2d31; --gray-300:#3a3d42;
+    --gray-400:#52555b; --gray-500:#71757c; --gray-600:#a1a5ab; --gray-700:#d4d7db;
+    --gray-800:#e4e6e9; --gray-900:#f4f5f7;
+    --ok:#86c79a; --ok-bg:#13251a; --ok-bd:#2f5c3f;
+    --warn:#e4c56c; --warn-bg:#26200f; --warn-bd:#5c4d2a;
+    --danger:#f0a1a1; --danger-bg:#241515; --danger-bd:#5c3434;
+    --info:#a3b8dd; --info-bg:#141b28; --info-bd:#33405a;
+    --background:#0f1114; --surface:#171a1e; --surface-2:#1c1f23; --surface-3:#23262b;
+    --text:#eceef1; --text-secondary:#a1a5ab; --text-muted:#71757c;
+    --border:#2a2d32; --border-strong:#3a3d42;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 2px 6px rgba(0,0,0,.5);
+    --primary:var(--brand); --primary-hover:var(--brand-hover); --primary-light:var(--brand-soft);
+    --green:var(--ok); --green-soft:var(--ok-bg); --red:var(--danger); --red-soft:var(--danger-bg);
+    --yellow:var(--warn); --yellow-soft:var(--warn-bg); --blue:var(--brand); --blue-soft:var(--brand-soft);
+    --purple:#d0a9f0; --purple-soft:#241633; --border-light:var(--surface-2); --white:var(--surface);
+    --shadow:var(--shadow-md);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:var(--font); -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; background:var(--background); color:var(--text); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+body { overflow:hidden; }
+button { font:inherit; color:inherit; cursor:pointer; }
+:focus-visible { outline:2px solid var(--brand); outline-offset:2px; border-radius:3px; }
+.layout { display:flex; width:100%; height:100vh; height:100dvh; overflow:hidden; }
+.sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); height:100%; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; transition:width .25s ease, min-width .25s ease, transform .25s ease; overflow:hidden; z-index:100; }
+.sidebar.fechado { width:0; min-width:0; border-right:none; }
+:root.menu-inicial-fechado .sidebar { width:0; min-width:0; border-right:none; }
+.sidebar-inner { width:var(--sidebar-width); height:100%; display:flex; flex-direction:column; }
+.sidebar-header { height:var(--topbar-height); padding:0 12px 0 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--surface); }
+.sidebar-logo { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
+.sidebar-brand { display:flex; flex-direction:column; gap:0; min-width:0; flex:1; }
+.sidebar-brand strong { font-size:13px; font-weight:600; color:var(--text); line-height:1.2; }
+.sidebar-brand span { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; line-height:1.2; margin-top:1px; }
+.btn-fechar-sidebar { display:none; width:32px; height:32px; background:transparent; border:1px solid transparent; border-radius:4px; color:var(--text-secondary); align-items:center; justify-content:center; flex-shrink:0; }
+.btn-fechar-sidebar .material-symbols-outlined { font-size:20px; }
+@media (max-width:900px){ .sidebar.aberta-mobile .btn-fechar-sidebar { display:inline-flex; } }
+.sidebar-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; }
+.menu-section { padding:16px 0 8px; }
+.menu-section-title { padding:0 20px; font-size:10.5px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px; }
+.menu { list-style:none; padding:0 10px; display:flex; flex-direction:column; gap:1px; }
+.menu-item a { display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:4px; text-decoration:none; color:var(--text-secondary); font-size:13.5px; font-weight:500; position:relative; white-space:nowrap; }
+.menu-item a:hover { background:var(--surface-2); color:var(--text); }
+.menu-item.ativo a { background:var(--brand-soft); color:var(--brand); font-weight:600; }
+.menu-item.ativo a::before { content:""; position:absolute; left:-10px; top:50%; transform:translateY(-50%); width:3px; height:20px; background:var(--brand); border-radius:0 3px 3px 0; }
+.menu-item .material-symbols-outlined { font-size:18px; flex-shrink:0; opacity:.75; }
+.menu-item.ativo .material-symbols-outlined { opacity:1; }
+.menu-item .menu-badge { margin-left:auto; font-size:10.5px; font-weight:600; color:var(--warn); background:var(--warn-bg); border:1px solid var(--warn-bd); padding:1px 7px; border-radius:999px; line-height:1.4; }
+.menu-section-sair { margin-top:8px; padding-top:16px; border-top:1px solid var(--border); padding-bottom:8px; }
+.menu-item-sair button { display:flex; align-items:center; gap:11px; width:100%; padding:9px 12px; border-radius:4px; background:transparent; border:none; color:var(--text-secondary); font-size:13.5px; font-weight:500; text-align:left; white-space:nowrap; }
+.menu-item-sair button:hover { background:var(--danger-bg); color:var(--danger); }
+.menu-item-sair button .material-symbols-outlined { font-size:18px; flex-shrink:0; opacity:.75; }
+.sidebar-info { padding:16px 22px 22px; font-size:10.5px; color:var(--text-muted); line-height:1.5; }
+.sidebar-info strong { color:var(--text-secondary); font-weight:600; display:block; font-size:11px; margin-bottom:2px; }
+.sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(20,25,35,.45); z-index:150; opacity:0; transition:opacity .2s ease; }
+.sidebar-backdrop.ativo { display:block; opacity:1; }
+@media (min-width:901px){ .sidebar-backdrop { display:none !important; } }
+.main { flex:1 1 auto; min-width:0; min-height:0; display:flex; flex-direction:column; height:100%; overflow:hidden; background:var(--background); }
+.topbar { height:var(--topbar-height); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; gap:16px; flex-shrink:0; z-index:50; }
+.topbar-left { display:flex; align-items:center; gap:14px; min-width:0; flex:1 1 auto; }
+.btn-menu { width:34px; height:34px; flex-shrink:0; background:transparent; border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; }
+.btn-menu:hover { background:var(--surface-2); color:var(--text); }
+.btn-menu .material-symbols-outlined { font-size:20px; }
+.topbar-title { display:flex; flex-direction:column; gap:0; min-width:0; }
+.topbar-title strong { font-size:13.5px; font-weight:600; color:var(--text); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topbar-title span { font-size:11px; color:var(--text-muted); line-height:1.2; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topbar-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.topbar-btn { height:34px; padding:0 12px; background:transparent; border:1px solid transparent; border-radius:4px; color:var(--text-secondary); display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; }
+.topbar-btn:hover { background:var(--surface-2); color:var(--text); }
+.topbar-btn .material-symbols-outlined { font-size:18px; }
+.topbar-btn.carregando .material-symbols-outlined { animation:girar 1s linear infinite; }
+@keyframes girar { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.topbar-user-group { display:flex; align-items:center; gap:4px; }
+.topbar-user { display:flex; align-items:center; gap:10px; padding:4px 10px 4px 4px; border-radius:999px; border:1px solid var(--border); background:var(--surface-2); max-width:220px; min-width:0; }
+.user-avatar { width:26px; height:26px; border-radius:50%; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0; }
+.user-info { display:flex; flex-direction:column; gap:0; min-width:0; line-height:1.15; }
+.user-info strong { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-info span { font-size:10.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topbar-sair { width:34px; height:34px; padding:0; background:transparent; border:none; border-radius:4px; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; transition:background-color .12s ease, color .12s ease; }
+.topbar-sair:hover { background:var(--danger-bg); color:var(--danger); }
+.topbar-sair .material-symbols-outlined { font-size:20px; }
+.btn-tema .icon-dark { display:none; }
+.btn-tema .icon-light { display:inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-dark { display:inline-flex; }
+:root[data-theme="dark"] .btn-tema .icon-light { display:none; }
+.modal-sair-overlay { display:none; position:fixed; inset:0; background:rgba(20,25,35,.55); z-index:9999; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .18s ease; }
+.modal-sair-overlay.ativo { display:flex; opacity:1; }
+.modal-sair { background:var(--surface); border:1px solid var(--border); border-radius:8px; max-width:400px; width:100%; padding:28px 28px 22px; box-shadow:0 20px 50px rgba(20,25,35,.28); text-align:center; animation:modalSairEntrar .22s ease; }
+@keyframes modalSairEntrar { from { transform:translateY(-12px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.modal-sair-icone { width:56px; height:56px; border-radius:50%; background:var(--danger-bg); color:var(--danger); display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px; border:1px solid var(--danger-bd); }
+.modal-sair-icone .material-symbols-outlined { font-size:28px; }
+.modal-sair-titulo { font-size:17px; font-weight:600; color:var(--text); letter-spacing:-.01em; margin-bottom:22px; line-height:1.25; }
+.modal-sair-acoes { display:flex; gap:10px; justify-content:center; }
+.modal-sair-btn { height:38px; padding:0 18px; border-radius:5px; border:1px solid transparent; font-size:13.5px; font-weight:500; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; min-width:110px; }
+.modal-sair-btn .material-symbols-outlined { font-size:17px; }
+.modal-sair-btn-cancelar { background:var(--surface); color:var(--text); border-color:var(--border-strong); order:1; }
+.modal-sair-btn-cancelar:hover { background:var(--surface-2); border-color:var(--gray-400); }
+.modal-sair-btn-confirmar { background:var(--danger); color:#fff; border-color:var(--danger); order:2; }
+.modal-sair-btn-confirmar:hover { background:#7d1717; border-color:#7d1717; }
+.modal-sair-btn:disabled { opacity:.65; cursor:not-allowed; }
+@media (max-width:480px){
+    .modal-sair-overlay { padding:0; align-items:flex-end; }
+    .modal-sair { padding:24px 20px 18px; border-radius:12px 12px 0 0; max-width:100%; align-self:flex-end; margin:0; }
+    .modal-sair-acoes { flex-direction:column-reverse; width:100%; }
+    .modal-sair-btn { width:100%; min-width:0; }
+}
+.content-page { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; padding:24px 28px 32px; }
+.breadcrumb { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); margin-bottom:12px; }
+.breadcrumb .material-symbols-outlined { font-size:17px; }
+.breadcrumb a { text-decoration:none; color:inherit; }
+.breadcrumb a:hover { color:var(--brand); }
+.breadcrumb .sep { opacity:.5; }
+.page-header-page { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:16px; }
+.page-header-page h1 { font-family:var(--font-serif); font-size:24px; font-weight:600; color:var(--text); margin-bottom:4px; }
+.page-header-page p { font-size:13px; color:var(--text-secondary); }
+.form-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; box-shadow:var(--shadow-sm); padding:18px 20px; margin-bottom:14px; }
+.card-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:7px; padding-bottom:10px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.3px; }
+.card-title .material-symbols-outlined { color:var(--brand); font-size:18px; }
+.form-card.busca-compacta { padding:12px 16px; margin-bottom:12px; }
+.busca-linha { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+.busca-linha .form-group { flex:1; min-width:220px; margin-bottom:0; }
+.busca-linha .form-group label { font-size:10px; margin-bottom:3px; }
+.form-group { display:flex; flex-direction:column; }
+.form-group label { font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+.form-group label span { color:var(--danger); }
+.search-input { height:36px; padding:0 10px; background:var(--surface); border:1px solid var(--border); border-radius:4px; outline:none; font-size:13px; color:var(--text); width:100%; transition:border-color .15s; }
+.search-input:focus { border-color:var(--brand); }
+.search-input:disabled { background:var(--surface-3); color:var(--text-muted); cursor:not-allowed; }
+.btn-buscar { width:auto; height:36px; padding:0 18px; background:var(--brand); color:#fff; border:none; border-radius:4px; font-weight:600; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; flex-shrink:0; letter-spacing:.2px; }
+.btn-buscar:hover { background:var(--brand-hover); }
+.btn-buscar:disabled { opacity:.6; cursor:not-allowed; }
+.btn-buscar .material-symbols-outlined { font-size:16px; }
+.cabecalho-compacto { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:10px 18px; }
+.cab-item { display:flex; flex-direction:column; gap:1px; }
+.cab-label { font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
+.cab-item strong { font-size:13px; color:var(--text); font-weight:600; }
+.cab-div { width:1px; height:24px; background:var(--border); }
+.resumo-executivo { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.resumo-matricula { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 16px; box-shadow:var(--shadow-sm); }
+.resumo-matricula-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.resumo-matricula-badge { font-size:10px; font-weight:700; color:var(--brand); background:var(--brand-soft); padding:3px 9px; border-radius:3px; letter-spacing:.3px; text-transform:uppercase; }
+.resumo-matricula-nome { font-size:12px; color:var(--text-secondary); font-weight:500; }
+.resumo-cards-row { display:flex; gap:10px; flex-wrap:wrap; }
+.resumo-bloco { background:var(--surface-2); border:1px solid var(--border); border-radius:5px; padding:10px 12px; flex:1; min-width:220px; }
+.resumo-bloco-titulo { font-size:11px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:5px; text-transform:uppercase; letter-spacing:.3px; }
+.resumo-bloco-titulo .material-symbols-outlined { font-size:14px; color:var(--brand); }
+.resumo-chips { display:flex; gap:5px; flex-wrap:wrap; }
+.chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:500; background:var(--surface-3); color:var(--text-secondary); border:1px solid var(--border); }
+.chip .num { font-weight:700; font-size:12px; }
+.chip-num-verde { color:var(--ok); } .chip-num-amarelo { color:var(--warn); } .chip-num-vermelho { color:var(--danger); }
+.chip-num-roxo { color:var(--purple); } .chip-num-azul { color:var(--brand); } .chip-num-cinza { color:var(--text); }
+.filtros-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.filtro-group { display:flex; flex-direction:column; min-width:130px; flex:1; max-width:180px; }
+.filtro-group label { font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.3px; }
+.filtro-select { height:34px; padding:0 8px; border:1px solid var(--border); border-radius:4px; font-size:12px; background:var(--surface); color:var(--text); outline:none; }
+.filtro-select:focus { border-color:var(--brand); }
+
+.table-wrapper {
+    overflow: auto;
+    max-height: 60vh;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+}
+
+.periodos-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+.periodos-table th {
+    background:var(--surface-2);
+    padding:8px 10px;
+    text-align:left;
+    font-weight:700;
+    color:var(--text-secondary);
+    border-bottom:1px solid var(--border);
+    font-size:10px;
+    text-transform:uppercase;
+    white-space:nowrap;
+    letter-spacing:.3px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 1px 0 var(--border);
+}
+.periodos-table td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text); }
+.periodos-table tr:hover td { background:var(--surface-2); }
+
+.badge-status { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:3px; font-size:10px; font-weight:600; white-space:nowrap; background:var(--surface-2); border:1px solid var(--border); }
+.badge-status .material-symbols-outlined { font-size:11px; }
+.badge-gozado { color:var(--ok); border-color:var(--ok-bd); background:var(--ok-bg); }
+.badge-pendente { color:var(--warn); border-color:var(--warn-bd); background:var(--warn-bg); }
+.badge-vencido { color:var(--danger); border-color:var(--danger-bd); background:var(--danger-bg); }
+.badge-programado { color:var(--purple); border-color:#e1bee7; background:var(--purple-soft); }
+.badge-disponivel { color:var(--ok); border-color:var(--ok-bd); background:var(--ok-bg); }
+.badge-perdido { color:var(--danger); border-color:var(--danger-bd); background:var(--danger-bg); }
+.badge-extemporaneo { color:var(--warn); border-color:var(--warn-bd); background:var(--warn-bg); }
+.badge-parcial { color:var(--info); border-color:var(--info-bd); background:var(--info-bg); }
+.tipo-badge { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; padding:2px 6px; border-radius:3px; white-space:nowrap; background:var(--surface-3); color:var(--text-secondary); border:1px solid var(--border); }
+.mensagem-erro { background:var(--danger-bg); border:1px solid var(--danger-bd); color:var(--danger); padding:10px 14px; border-radius:4px; font-size:12px; font-weight:500; margin-bottom:14px; display:none; align-items:center; gap:8px; }
+.mensagem-erro.ativo { display:flex; }
+.hidden { display:none !important; }
+
+.aviso-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-soft);
+    border-left: 3px solid var(--brand);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+}
+.aviso-info .material-symbols-outlined {
+    font-size: 22px;
+    color: var(--brand);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.aviso-info strong {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+}
+
+/* ===== CARDS DE ALERTA DE FÉRIAS ===== */
+.alerta-ferias {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-bd);
+    border-left: 4px solid var(--danger);
+    border-radius: 6px;
+    color: var(--text);
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    animation: alertaPulsa 2s ease-in-out infinite;
+}
+.alerta-ferias.hidden { display: none !important; }
+
+@keyframes alertaPulsa {
+    0%, 100% { box-shadow: var(--shadow-sm); }
+    50%      { box-shadow: 0 0 0 4px var(--danger-bg), 0 0 0 6px var(--danger-bd); }
+}
+
+.alerta-ferias-icone {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--danger);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.alerta-ferias-icone .material-symbols-outlined { font-size: 24px; }
+
+.alerta-ferias-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.5;
+}
+.alerta-ferias-texto strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--danger);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+.alerta-ferias-texto span {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.alerta-ferias-texto span strong {
+    display: inline;
+    font-size: 13px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Preventivo (laranja) */
+.alerta-ferias-preventivo {
+    background: var(--warn-bg);
+    border-color: var(--warn-bd);
+    border-left-color: var(--warn);
+    animation: alertaPulsaPreventivo 2.4s ease-in-out infinite;
+}
+.alerta-ferias-preventivo .alerta-ferias-icone {
+    background: var(--warn);
+}
+.alerta-ferias-preventivo .alerta-ferias-texto strong {
+    color: var(--warn);
+}
+@keyframes alertaPulsaPreventivo {
+    0%, 100% { box-shadow: var(--shadow-sm); }
+    50%      { box-shadow: 0 0 0 4px var(--warn-bg), 0 0 0 6px var(--warn-bd); }
+}
+
+@media (max-width: 640px) {
+    .alerta-ferias { padding: 14px 16px; }
+    .alerta-ferias-icone { width: 34px; height: 34px; }
+    .alerta-ferias-icone .material-symbols-outlined { font-size: 20px; }
+    .alerta-ferias-texto strong { font-size: 13px; }
+    .alerta-ferias-texto span { font-size: 12px; }
+}
+
+.tabela-resumo-wrap {
+    overflow-x: auto;
+    margin-top: 8px;
+}
+.tabela-resumo {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid var(--border-strong);
+    font-size: 13px;
+}
+.tabela-resumo thead th {
+    background: var(--surface-2);
+    border: 2px solid var(--border-strong);
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+.tabela-resumo tbody th {
+    background: var(--surface-2);
+    border: 2px solid var(--border-strong);
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    vertical-align: top;
+}
+.tabela-resumo tbody td {
+    border: 2px solid var(--border-strong);
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.6;
+}
+.tabela-resumo tbody td .linha-item {
+    display: block;
+    white-space: normal;
+    margin-top: 4px;
+}
+.tabela-resumo tbody td .linha-item:first-child {
+    margin-top: 0;
+}
+.tabela-resumo tbody td .linha-item.destaque {
+    color: var(--brand);
+    font-weight: 600;
+}
+.tabela-resumo tbody td .linha-item.folga {
+    color: var(--purple);
+    font-weight: 600;
+}
+.resumo-matricula-prefixo {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0 4px;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+.unidade-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--surface-2);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.unidade-tag .material-symbols-outlined { font-size: 12px; color: var(--brand); }
+
+.loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.15); z-index:9998; align-items:center; justify-content:center; }
+.loading-overlay.ativo { display:flex; }
+.loading-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.15); padding:26px 36px; display:flex; flex-direction:column; align-items:center; gap:14px; animation:loadingIn .2s ease; }
+@keyframes loadingIn { from { transform:scale(.92); opacity:0; } to { transform:scale(1); opacity:1; } }
+.spinner { width:38px; height:38px; border:3px solid var(--border); border-top-color:var(--brand); border-radius:50%; animation:girar .8s linear infinite; }
+.loading-text { font-size:13px; font-weight:600; color:var(--text-secondary); }
+.modal-alerta-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+.modal-alerta-overlay.ativo { display:flex; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes slideDown { from{transform:translateY(-20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+.modal-alerta { background:var(--surface); border:1px solid var(--border); border-radius:8px; max-width:400px; width:100%; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:slideDown .3s ease; }
+.modal-alerta-header { padding:22px 22px 14px; text-align:center; }
+.modal-alerta-icon { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; background:var(--brand-soft); color:var(--brand); }
+.modal-alerta-icon .material-symbols-outlined { font-size:28px; }
+.modal-alerta-titulo { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.modal-alerta-mensagem { font-size:13px; color:var(--text-secondary); line-height:1.5; }
+.modal-alerta-footer { padding:14px 22px 22px; display:flex; justify-content:center; }
+.modal-alerta-btn { height:38px; background:var(--brand); color:#fff; border:none; border-radius:4px; padding:0 28px; font-size:13px; font-weight:600; cursor:pointer; min-width:110px; }
+.modal-alerta-btn:hover { background:var(--brand-hover); }
+@media (max-width:900px){
+    .sidebar { position:fixed; top:0; left:0; height:100vh; height:100dvh; width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); transition:transform .25s ease; box-shadow:var(--shadow-md); border-right:1px solid var(--border); z-index:200; }
+    .sidebar.aberta-mobile { transform:translateX(0); }
+    .sidebar.fechado { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); border-right:1px solid var(--border); }
+    :root.menu-inicial-fechado .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); }
+    .topbar { padding:0 16px; gap:12px; }
+    .topbar-title span { display:none; }
+    .topbar-user .user-info span { display:none; }
+    .topbar-btn .btn-texto { display:none; }
+    .topbar-btn { padding:0 10px; }
+}
+@media (max-width:768px){
+    .content-page { padding:16px 12px 32px; }
+    .cabecalho-compacto { gap:8px; }
+    .cab-div { display:none; }
+    .filtros-row { flex-direction:column; }
+    .filtro-group { max-width:100%; }
+    .busca-linha { flex-direction:column; align-items:stretch; }
+    .btn-buscar { width:100%; }
+    .resumo-cards-row { flex-direction:column; }
+    .tabela-resumo { font-size: 11px; }
+    .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
+}
+@media (max-width:640px){
+    .topbar { padding:0 12px; gap:8px; }
+    .topbar-btn { padding:0 8px; height:32px; }
+    .topbar-user { display:none; }
+    .topbar-right { gap:4px; }
+    .page-header-page h1 { font-size:20px; }
+}
+@media (prefers-reduced-motion:reduce){
+    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
+@media print {
+    @page { margin:1.5cm; }
+    body { background:#fff !important; color:#000 !important; overflow:visible !important; }
+    .layout { display:block; height:auto; overflow:visible; }
+    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user, .topbar-sair, .modal-sair-overlay, .loading-overlay, .modal-alerta-overlay, .busca-compacta, .filtros-row { display:none !important; }
+    .main { overflow:visible; }
+    .content-page { overflow:visible; padding:0; }
+    .form-card { box-shadow:none; border:1px solid #999; }
+    .table-wrapper { overflow:visible !important; max-height:none !important; border-top:none !important; margin-top:0 !important; }
+    .periodos-table { font-size:10px; }
+    .periodos-table th { position:static !important; box-shadow:none !important; }
+    .periodos-table tr { page-break-inside:avoid; }
+    .tabela-resumo { border-color: #000 !important; }
+    .tabela-resumo thead th,
+    .tabela-resumo tbody th,
+    .tabela-resumo tbody td { border-color: #000 !important; }
+    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
+    .alerta-ferias-preventivo { border: 2px solid #a60 !important; }
+}
+
+.grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.grafico-periodo-bloco { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
+.grafico-periodo-titulo { font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.grafico-periodo-titulo .material-symbols-outlined { font-size: 16px; color: var(--brand); }
+.grafico-periodo-titulo .periodo-ref { font-weight: 400; color: var(--text-muted); font-size: 11px; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.grafico-barras { display: flex; flex-direction: column; gap: 8px; }
+.grafico-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.grafico-linha-rotulo { min-width: 90px; font-size: 11px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.grafico-linha-rotulo .material-symbols-outlined { font-size: 14px; }
+.grafico-trilha { flex: 1; height: 26px; background: var(--surface-3); border-radius: 4px; overflow: hidden; display: flex; align-items: stretch; min-width: 120px; }
+.grafico-segmento { height: 100%; transition: width .3s ease; position: relative; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; overflow: hidden; white-space: nowrap; min-width: 0; }
+.grafico-segmento.seg-gozado { background: var(--ok); }
+.grafico-segmento.seg-parcial { background: var(--info); }
+.grafico-segmento.seg-programado { background: var(--purple); }
+.grafico-segmento.seg-disponivel { background: var(--ok); }
+.grafico-segmento.seg-pendente { background: var(--warn); }
+.grafico-segmento.seg-vencido { background: var(--danger); }
+.grafico-segmento.seg-perdido { background: var(--gray-500); }
+.grafico-segmento.seg-fora-prazo { background: var(--danger); }
+.grafico-legenda { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted); }
+.grafico-legenda-item { display: inline-flex; align-items: center; gap: 4px; }
+.grafico-legenda-cor { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.grafico-vazio { text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px; }
+@media (max-width: 640px) {
+    .grafico-linha { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .grafico-trilha { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
+        <div class="sidebar-inner">
+            <div class="sidebar-header">
+                <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
+                <div class="sidebar-brand">
+                    <strong>Vale Transporte</strong>
+                    <span>SEMED · RH</span>
+                </div>
+                <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <div class="sidebar-scroll">
+                <nav class="menu-section">
+                    <div class="menu-section-title">Principal</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="inicial.html"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Painel de controle</span></a></li>
+                        <li class="menu-item"><a href="servidores.html"><span class="material-symbols-outlined" aria-hidden="true">badge</span><span>Servidores e vínculos</span></a></li>
+                    </ul>
+                </nav>
+                <nav class="menu-section">
+                    <div class="menu-section-title">Configuração</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="configuracao.html"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Dias úteis e meses</span></a></li>
+                        <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">domain</span><span>Unidades escolares</span></a></li>
+                    </ul>
+                </nav>
+                <nav class="menu-section">
+                    <div class="menu-section-title">Operação</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="escola.html"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Lançamentos da unidade</span></a></li>
+                        <li class="menu-item"><a href="lancamentos.html"><span class="material-symbols-outlined" aria-hidden="true">event_note</span><span>Férias, folgas e licenças</span></a></li>
+                        <li class="menu-item"><a href="calculo.html"><span class="material-symbols-outlined" aria-hidden="true">calculate</span><span>Cálculo e vales</span><span class="menu-badge">Mensal</span></a></li>
+                    </ul>
+                </nav>
+                <nav class="menu-section">
+                    <div class="menu-section-title">Consultas</div>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="relatorios.html"><span class="material-symbols-outlined" aria-hidden="true">description</span><span>Relatórios gerais</span></a></li>
+                        <li class="menu-item ativo"><a href="linha_tempo.html" aria-current="page"><span class="material-symbols-outlined" aria-hidden="true">history</span><span>Linha do tempo</span></a></li>
+                    </ul>
+                </nav>
+                <nav class="menu-section menu-section-sair">
+                    <ul class="menu">
+                        <li class="menu-item menu-item-sair"><button type="button" id="btnSairSidebar"><span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Sair do sistema</span></button></li>
+                    </ul>
+                </nav>
+                <div class="sidebar-info"><strong>Versão 1.0.0</strong>Sistema de gestão de vale transporte</div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-menu" id="btnMenuToggle" aria-label="Abrir ou fechar menu lateral" aria-controls="sidebarMenu" aria-expanded="true" title="Abrir / fechar menu">
+                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+                </button>
+                <div class="topbar-title">
+                    <strong>Linha do tempo</strong>
+                    <span>SEMED — Visão consolidada de férias e folgas</span>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
+                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                    <span class="btn-texto">Atualizar</span>
+                </button>
+                <button type="button" class="topbar-btn btn-tema" id="btnTema" title="Alternar tema claro/escuro">
+                    <span class="material-symbols-outlined icon-dark" aria-hidden="true">dark_mode</span>
+                    <span class="material-symbols-outlined icon-light" aria-hidden="true">light_mode</span>
+                    <span class="btn-texto">Tema</span>
+                </button>
+                <div class="topbar-user-group">
+                    <div class="topbar-user" title="Usuário logado">
+                        <div class="user-avatar" id="userAvatar">—</div>
+                        <div class="user-info">
+                            <strong id="userNameLabel">Usuário</strong>
+                            <span id="userEmailLabel">Carregando…</span>
+                        </div>
+                    </div>
+                    <button type="button" class="topbar-sair" id="btnSairTopbar" title="Sair do sistema" aria-label="Sair do sistema">
+                        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-page">
+            <div class="breadcrumb">
+                <span class="material-symbols-outlined">home</span>
+                <a href="inicial.html">Início</a>
+                <span class="sep">/</span>
+                <span>Linha do tempo</span>
+            </div>
+
+            <div class="page-header-page">
+                <div>
+                    <h1>Linha do Tempo do Servidor</h1>
+                    <p>Visão consolidada de férias e folgas por período aquisitivo, com detalhamento por matrícula e unidade.</p>
+                </div>
+            </div>
+
+            <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="polite">
+                <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
+                <span id="textoErro">Erro ao carregar dados.</span>
+            </div>
+
+            <section class="form-card busca-compacta" id="formBuscaCard">
+                <div class="busca-linha">
+                    <div class="form-group">
+                        <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
+                        <input type="text" id="termoBusca" class="search-input" placeholder="000.000.000-00" maxlength="20" autocomplete="off" inputmode="numeric">
+                    </div>
+                    <button class="btn-buscar" id="btnBuscar">
+                        <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                        Buscar
+                    </button>
+                </div>
+            </section>
+
+            <div id="resultadoContainer" class="hidden">
+                <section class="form-card cabecalho-compacto" aria-label="Dados do servidor">
+                    <div class="cab-item"><span class="cab-label">Servidor</span><strong id="nomeServidor">—</strong></div>
+                    <div class="cab-div" aria-hidden="true"></div>
+                    <div class="cab-item"><span class="cab-label">CPF</span><strong id="cpfServidor">—</strong></div>
+                    <div class="cab-div" aria-hidden="true"></div>
+                    <div class="cab-item"><span class="cab-label">Nascimento</span><strong id="nascimentoServidor">—</strong></div>
+                    <div class="cab-div" aria-hidden="true"></div>
+                    <div class="cab-item"><span class="cab-label">Matrículas</span><strong id="matriculasServidor">—</strong></div>
+                </section>
+
+                <!-- ALERTA PREVENTIVO -->
+                <div id="alertaFeriasVencidasPreventivo" class="alerta-ferias alerta-ferias-preventivo hidden" role="alert" aria-live="polite">
+                    <div class="alerta-ferias-icone" aria-hidden="true">
+                        <span class="material-symbols-outlined">schedule</span>
+                    </div>
+                    <div class="alerta-ferias-texto">
+                        <strong id="alertaFeriasPreventivoTitulo">Atenção: férias vencidas</strong>
+                        <span id="alertaFeriasPreventivoDetalhe">—</span>
+                    </div>
+                </div>
+
+                <!-- ALERTA CRÍTICO -->
+                <div id="alertaFeriasVencidas" class="alerta-ferias hidden" role="alert" aria-live="polite">
+                    <div class="alerta-ferias-icone" aria-hidden="true">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <div class="alerta-ferias-texto">
+                        <strong id="alertaFeriasTitulo">Crítico: férias vencidas</strong>
+                        <span id="alertaFeriasDetalhe">—</span>
+                    </div>
+                </div>
+
+                <div id="resumoExecutivo" class="resumo-executivo"></div>
+
+                <section class="form-card" id="cardTabela">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+                        Situação de Férias e Folgas por Período
+                    </div>
+                    <div class="filtros-row" id="filtrosRow">
+                        <div class="filtro-group">
+                            <label for="filtroMatricula">Matrícula</label>
+                            <select id="filtroMatricula" class="filtro-select"></select>
+                        </div>
+                        <div class="filtro-group">
+                            <label for="filtroTipo">Tipo</label>
+                            <select id="filtroTipo" class="filtro-select">
+                                <option value="">Todos</option>
+                                <option value="ferias">Férias</option>
+                                <option value="folga">Folga Aniversário</option>
+                            </select>
+                        </div>
+                        <div class="filtro-group">
+                            <label for="filtroStatus">Status</label>
+                            <select id="filtroStatus" class="filtro-select">
+                                <option value="">Todos</option>
+                                <option value="gozado">Gozado</option>
+                                <option value="parcial">Parcial</option>
+                                <option value="disponivel">Disponível</option>
+                                <option value="programado">Programado</option>
+                                <option value="vencido_preventivo">Vencido (preventivo)</option>
+                                <option value="vencido">Vencido</option>
+                                <option value="perdido">Perdido</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper" id="tableWrapper">
+                        <table class="periodos-table">
+                            <thead>
+                                <tr>
+                                    <th>Servidor</th>
+                                    <th>Matrícula</th>
+                                    <th>Unidade</th>
+                                    <th>Tipo</th>
+                                    <th>Período</th>
+                                    <th>Ciclo Aquisitivo</th>
+                                    <th>Prazo de Gozo</th>
+                                    <th>Status</th>
+                                    <th>Gozo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaUnica"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="avisoSemPeriodos" class="aviso-info hidden">
+                        <span class="material-symbols-outlined">info</span>
+                        <div>
+                            <strong>Nenhum período aquisitivo completo</strong>
+                            Este servidor ainda não possui períodos aquisitivos fechados. Os direitos de férias e folga aniversário serão exibidos aqui após o término do primeiro ciclo (12 meses a contar da data de admissão).
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-card" id="graficoContainer">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+                        Visualização Gráfica por Período
+                    </div>
+                    <div id="graficoPeriodos" class="grafico-periodos"></div>
+                </section>
+
+                <section class="form-card" id="cardResumoFinal">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
+                        Resumo por Período Aquisitivo
+                    </div>
+                    <div class="tabela-resumo-wrap">
+                        <table class="tabela-resumo">
+                            <thead>
+                                <tr><th colspan="1" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>
+                            </thead>
+                            <tbody id="tabelaResumoCorpo"></tbody>
+                        </table>
+                    </div>
+                    <div id="avisoResumoVazio" class="aviso-info hidden" style="margin-top:8px;">
+                        <span class="material-symbols-outlined">info</span>
+                        <div>
+                            <strong>Sem dados para o resumo</strong>
+                            Nenhum período aquisitivo foi localizado para este servidor.
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite">
+    <div class="loading-box">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="loading-text" id="loadingTexto">Carregando...</span>
+    </div>
+</div>
+
+<div id="modalAlerta" class="modal-alerta-overlay" role="presentation">
+    <div class="modal-alerta" role="alertdialog" aria-modal="true" aria-labelledby="modalAlertaTitulo">
+        <div class="modal-alerta-header">
+            <div class="modal-alerta-icon" id="modalAlertaIcon" aria-hidden="true"><span class="material-symbols-outlined">info</span></div>
+            <div class="modal-alerta-titulo" id="modalAlertaTitulo">Aviso</div>
+            <div class="modal-alerta-mensagem" id="modalAlertaMensagem">Mensagem</div>
+        </div>
+        <div class="modal-alerta-footer">
+            <button type="button" class="modal-alerta-btn" id="btnFecharModalAlerta">OK</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-sair-overlay" id="modalSair" role="presentation">
+    <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
+        <div class="modal-sair-icone" aria-hidden="true">
+            <span class="material-symbols-outlined" id="modalSairIconeSimbolo">logout</span>
+        </div>
+        <div class="modal-sair-titulo" id="modalSairTitulo">Sair do sistema?</div>
+        <div class="modal-sair-acoes">
+            <button type="button" class="modal-sair-btn modal-sair-btn-cancelar" id="btnCancelarSair">Cancelar</button>
+            <button type="button" class="modal-sair-btn modal-sair-btn-confirmar" id="btnConfirmarSair">
+                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                Sim, sair
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { auth } from "./firebase.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+(function () {
+    var btn = document.getElementById('btnTema');
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            var novo  = atual === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', novo);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f');
+            try { localStorage.setItem('tema-vt', novo); } catch (e) {}
+        });
+    }
+})();
+
+(function () {
+    var sidebar   = document.getElementById('sidebarMenu');
+    var backdrop  = document.getElementById('sidebarBackdrop');
+    var btn       = document.getElementById('btnMenuToggle');
+    var btnFechar = document.getElementById('btnFecharSidebar');
+    var CHAVE     = 'menu-vt-fechado';
+    function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
+    var salvo = null;
+    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
+    var iniciarFechadoDesktop = salvo === '1';
+    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false);
+    else fecharMobile(false);
+    if (btn) {
+        btn.addEventListener('click', function () {
+            if (isMobile()) {
+                var aberta = sidebar.classList.contains('aberta-mobile');
+                if (aberta) fecharMobile(true); else abrirMobile();
+            } else {
+                var fechado = sidebar.classList.contains('fechado');
+                aplicarEstadoDesktop(!fechado, true);
+            }
+        });
+    }
+    if (btnFechar) btnFechar.addEventListener('click', function () { fecharMobile(true); });
+    if (backdrop) backdrop.addEventListener('click', function () { fecharMobile(true); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) fecharMobile(true);
+        if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); }
+    });
+    sidebar.querySelectorAll('.menu-item a').forEach(function (link) {
+        link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); });
+    });
+    var ultimoMobile = isMobile();
+    window.addEventListener('resize', function () {
+        var agoraMobile = isMobile();
+        if (agoraMobile !== ultimoMobile) {
+            ultimoMobile = agoraMobile;
+            if (agoraMobile) fecharMobile(false);
+            else {
+                sidebar.classList.remove('aberta-mobile');
+                document.body.style.overflow = '';
+                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
+            }
+        }
+    });
+    function aplicarEstadoDesktop(fechado, animar) {
+        if (!animar) sidebar.style.transition = 'none';
+        sidebar.classList.toggle('fechado', fechado);
+        document.documentElement.classList.remove('menu-inicial-fechado');
+        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
+        if (btn) btn.setAttribute('aria-expanded', String(!fechado));
+        try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
+    }
+    function abrirMobile() {
+        sidebar.classList.add('aberta-mobile');
+        sidebar.classList.remove('fechado');
+        if (backdrop) backdrop.classList.add('ativo');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function fecharMobile(animar) {
+        if (!animar) sidebar.style.transition = 'none';
+        sidebar.classList.remove('aberta-mobile');
+        sidebar.classList.add('fechado');
+        if (backdrop) backdrop.classList.remove('ativo');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
+    }
+})();
+
+onAuthStateChanged(auth, function (user) {
+    if (user) {
+        var email = user.email || '';
+        var partes = email.split('@')[0].split(/[.\-_]/);
+        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
+        var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0, 2).join(' ');
+        var av = document.getElementById('userAvatar');
+        var nm = document.getElementById('userNameLabel');
+        var em = document.getElementById('userEmailLabel');
+        if (av) av.textContent = ini;
+        if (nm) nm.textContent = nome || 'Usuário';
+        if (em) { em.textContent = email; em.title = email; }
+    } else {
+        window.location.href = 'index.html';
+    }
+});
+
+var ultimoFocoSair = null;
+function abrirModalSair() {
+    var modal = document.getElementById('modalSair');
+    if (!modal) return;
+    ultimoFocoSair = document.activeElement;
+    modal.classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function () { var b = document.getElementById('btnCancelarSair'); if (b) b.focus(); });
+}
+function fecharModalSair() {
+    var modal = document.getElementById('modalSair');
+    if (!modal) return;
+    modal.classList.remove('ativo');
+    document.body.style.overflow = '';
+    if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') ultimoFocoSair.focus();
+    ultimoFocoSair = null;
+}
+async function confirmarSaida() {
+    var btn = document.getElementById('btnConfirmarSair');
+    if (!btn) return;
+    var btnOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
+    try {
+        try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
+        try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
+        await signOut(auth);
+        window.location.href = 'index.html';
+    } catch (e) {
+        console.error('[Sair] Erro:', e);
+        btn.disabled = false;
+        btn.innerHTML = btnOriginal;
+    }
+}
+var btnSairTopbar  = document.getElementById('btnSairTopbar');
+var btnSairSidebar = document.getElementById('btnSairSidebar');
+if (btnSairTopbar)  btnSairTopbar.addEventListener('click', abrirModalSair);
+if (btnSairSidebar) btnSairSidebar.addEventListener('click', abrirModalSair);
+var b1 = document.getElementById('btnCancelarSair');
+var b2 = document.getElementById('btnConfirmarSair');
+var modalSair = document.getElementById('modalSair');
+if (b1) b1.addEventListener('click', fecharModalSair);
+if (b2) b2.addEventListener('click', confirmarSaida);
+if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target === this) fecharModalSair(); });
+
+(function () {
+    var btnAtualizar = document.getElementById('btnAtualizar');
+    if (!btnAtualizar) return;
+    btnAtualizar.addEventListener('click', function () {
+        if (btnAtualizar.classList.contains('carregando')) return;
+        btnAtualizar.classList.add('carregando');
+        btnAtualizar.disabled = true;
+        try {
+            Object.keys(localStorage).filter(function (k) { return k.startsWith('cache-'); }).forEach(function (k) { localStorage.removeItem(k); });
+        } catch (e) {}
+        window.location.reload();
+    });
+})();
+</script>
+
+<script type="module">
+import { db, auth } from "./firebase.js";
+import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+let usuarioLogado = null;
+let acessoAutorizado = false;
+let linhasUnificadas = [];
+let nomeServidorAtual = '';
+let ultimoTermoBuscado = '';
+let servidorAtualRef = null;
+let termoPendenteDeBusca = null;
+
+const DIAS_PADRAO = 30;
+
+const CHAVES_UNIDADE_EXPLICITAS = [
+    'unidade', 'unidadeEscolar', 'unidade_escolar', 'unidadeEscola', 'unidade_escola',
+    'nomeUnidade', 'nome_unidade', 'nomeUnidadeEscolar', 'nome_unidade_escolar',
+    'nomeUnidadeEscola', 'nome_unidade_escola', 'escola', 'nomeEscola', 'nome_escola',
+    'escolaNome', 'escola_nome', 'estabelecimento', 'nomeEstabelecimento',
+    'estabelecimentoEnsino', 'estabelecimento_ensino', 'instituicao', 'instituicaoEnsino',
+    'instituicao_ensino', 'instituição', 'instituicao_nome', 'colegio', 'colégio',
+    'nomeColegio', 'nome_colegio', 'lotacao', 'lotação', 'nomeLotacao', 'nome_lotacao',
+    'lotacaoUnidade', 'lotacao_unidade', 'localTrabalho', 'local_trabalho', 'localidade',
+    'setor', 'departamento', 'orgao', 'órgão', 'posto', 'postoTrabalho', 'posto_trabalho'
+];
+
+const REGEX_CHAVE_UNIDADE = /(unidade|escola|school|lotacao|lotação|local_trabalho|localtrabalho|estabelecimento|instituicao|instituição|colegio|colégio|setor|departamento|orgao|órgão|posto)/i;
+
+const COLECOES_UNIDADE = ['unidades', 'escolas', 'unidades_escolares', 'unidadesEscolares'];
+
+const CAMPOS_BUSCA_UNIDADE = [
+    'codigo', 'codigoUnidade', 'codigoEscola', 'id', 'idUnidade', 'idEscola',
+    'cod', 'codUnidade', 'codEscola'
+];
+
+function escaparHtml(texto) {
+    return String(texto ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
+function ehReferenciaFirestore(valor) {
+    return Boolean(valor && typeof valor === 'object' && typeof valor.id === 'string' && typeof valor.path === 'string');
+}
+
+function normalizarTextoUnidade(valor) {
+    if (valor === null || valor === undefined) return '';
+    if (typeof valor === 'string') return valor.trim();
+    if (typeof valor === 'number') return String(valor);
+    if (typeof valor === 'boolean') return '';
+
+    if (Array.isArray(valor)) {
+        for (const item of valor) {
+            const txt = normalizarTextoUnidade(item);
+            if (txt) return txt;
+        }
+        return '';
+    }
+
+    if (typeof valor === 'object') {
+        if (ehReferenciaFirestore(valor)) return valor.id || String(valor.path).split('/').pop();
+
+        const camposNome = [
+            'nome', 'name', 'nomeUnidade', 'nome_unidade', 'nomeEscola', 'nome_escola',
+            'descricao', 'descrição', 'denominacao', 'denominação', 'titulo', 'título',
+            'razaoSocial', 'razão_social', 'nomeCompleto', 'nome_completo', 'sigla',
+            'unidade', 'unidadeEscolar', 'unidade_escolar', 'escola', 'nomeInstituicao',
+            'nome_instituicao', 'nomeEstabelecimento', 'nome_estabelecimento'
+        ];
+
+        for (const campo of camposNome) {
+            if (valor[campo] !== undefined && valor[campo] !== null) {
+                const txt = normalizarTextoUnidade(valor[campo]);
+                if (txt) return txt;
+            }
+        }
+
+        if (valor.id) return String(valor.id);
+        if (valor.path) return String(valor.path).split('/').pop();
+        if (valor.codigo) return String(valor.codigo);
+        if (valor.cod) return String(valor.cod);
+    }
+
+    return '';
+}
+
+function buscarUnidadeEmObjeto(obj, profundidade = 0) {
+    if (!obj || typeof obj !== 'object' || profundidade > 4 || ehReferenciaFirestore(obj)) return '';
+
+    for (const chave of CHAVES_UNIDADE_EXPLICITAS) {
+        if (obj[chave] !== undefined && obj[chave] !== null) {
+            const txt = normalizarTextoUnidade(obj[chave]);
+            if (txt) return txt;
+        }
+    }
+
+    for (const [chave, valor] of Object.entries(obj)) {
+        if (REGEX_CHAVE_UNIDADE.test(chave)) {
+            const txt = normalizarTextoUnidade(valor);
+            if (txt) return txt;
+
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                const interno = buscarUnidadeEmObjeto(valor, profundidade + 1);
+                if (interno) return interno;
+            }
+        }
+    }
+
+    if (profundidade < 2) {
+        for (const valor of Object.values(obj)) {
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                const interno = buscarUnidadeEmObjeto(valor, profundidade + 1);
+                if (interno) return interno;
+            }
+        }
+    }
+
+    return '';
+}
+
+function obterUnidade(documento, vinculoObj) {
+    if (vinculoObj) {
+        const txt = buscarUnidadeEmObjeto(vinculoObj, 0);
+        if (txt) return txt;
+    }
+    if (documento) {
+        const txt = buscarUnidadeEmObjeto(documento, 0);
+        if (txt) return txt;
+    }
+    return '';
+}
+
+function parecerNomeHumano(txt) {
+    const t = String(txt || '').trim();
+    if (t.length < 3) return false;
+    if (/\d{5,}/.test(t)) return false;
+
+    if (/[A-Za-zÀ-ÿ]{3,}/.test(t)) {
+        if (/\s/.test(t)) return true;
+        if (/escola|col[eé]gio|creche|cmei|centro|institui|unidade|estadual|municipal/i.test(t)) return true;
+        if (t.length > 12) return true;
+    }
+
+    return false;
+}
+
+function coletarCandidatosUnidade(obj, profundidade = 0, lista = []) {
+    if (!obj || typeof obj !== 'object' || profundidade > 4 || ehReferenciaFirestore(obj)) return lista;
+
+    const adicionar = (valor) => {
+        if (valor !== undefined && valor !== null) lista.push(valor);
+    };
+
+    for (const chave of CHAVES_UNIDADE_EXPLICITAS) {
+        if (obj[chave] !== undefined) adicionar(obj[chave]);
+    }
+
+    for (const [chave, valor] of Object.entries(obj)) {
+        if (REGEX_CHAVE_UNIDADE.test(chave)) adicionar(valor);
+    }
+
+    if (profundidade < 2) {
+        for (const valor of Object.values(obj)) {
+            if (valor && typeof valor === 'object' && !ehReferenciaFirestore(valor)) {
+                coletarCandidatosUnidade(valor, profundidade + 1, lista);
+            }
+        }
+    }
+
+    return lista;
+}
+
+function igualMatricula(a, b) {
+    const s1 = String(a || '').trim();
+    const s2 = String(b || '').trim();
+    if (!s1 || !s2) return false;
+    return s1 === s2 || s1.replace(/^0+/, '') === s2.replace(/^0+/, '');
+}
+
+function obterFontesDeVinculo(documento, matricula) {
+    const fontes = [];
+    if (documento.matricula1 && igualMatricula(documento.matricula1.numeroMatricula, matricula)) fontes.push(documento.matricula1);
+    if (documento.matricula2 && igualMatricula(documento.matricula2.numeroMatricula, matricula)) fontes.push(documento.matricula2);
+
+    const matriculaSolta = documento.matricula || documento.Matricula || documento.matricula_servidor;
+    if (igualMatricula(matriculaSolta, matricula)) fontes.push(documento);
+
+    if (fontes.length === 0) fontes.push(documento);
+    return fontes;
+}
+
+async function tentarObterDocumentoPorIdEmColecoes(id) {
+    if (!id) return '';
+    for (const col of COLECOES_UNIDADE) {
+        try {
+            const snap = await getDoc(doc(db, col, String(id)));
+            if (snap.exists()) {
+                const txt = normalizarTextoUnidade(snap.data());
+                if (txt) return txt;
+            }
+        } catch (e) {}
+    }
+    return '';
+}
+
+async function tentarObterDocumentoPorCodigo(codigo) {
+    const codigoStr = String(codigo || '').trim();
+    if (!codigoStr) return '';
+
+    const valores = [codigoStr];
+    if (/^\d+$/.test(codigoStr)) valores.push(Number(codigoStr));
+
+    for (const col of COLECOES_UNIDADE) {
+        for (const campo of CAMPOS_BUSCA_UNIDADE) {
+            for (const valor of valores) {
+                try {
+                    const snap = await getDocs(query(collection(db, col), where(campo, '==', valor)));
+                    if (!snap.empty) {
+                        const txt = normalizarTextoUnidade(snap.docs[0].data());
+                        if (txt) return txt;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+    return '';
+}
+
+async function resolverCandidatoUnidade(candidato) {
+    if (candidato === null || candidato === undefined) return '';
+
+    if (Array.isArray(candidato)) {
+        for (const item of candidato) {
+            const nome = await resolverCandidatoUnidade(item);
+            if (nome) return nome;
+        }
+        return '';
+    }
+
+    if (typeof candidato === 'string' || typeof candidato === 'number') {
+        const txt = String(candidato).trim();
+        if (!txt) return '';
+        if (parecerNomeHumano(txt)) return txt;
+
+        if (txt.includes('/')) {
+            try {
+                const snap = await getDoc(doc(db, txt));
+                if (snap.exists()) {
+                    const nome = normalizarTextoUnidade(snap.data());
+                    if (nome) return nome;
+                }
+            } catch (e) {}
+        }
+
+        const porId = await tentarObterDocumentoPorIdEmColecoes(txt);
+        if (porId) return porId;
+
+        const porCodigo = await tentarObterDocumentoPorCodigo(txt);
+        if (porCodigo) return porCodigo;
+
+        return txt;
+    }
+
+    if (typeof candidato === 'object') {
+        if (ehReferenciaFirestore(candidato) || candidato.path) {
+            try {
+                const snap = await getDoc(doc(db, candidato.path));
+                if (snap.exists()) {
+                    const nome = normalizarTextoUnidade(snap.data());
+                    if (nome) return nome;
+                }
+            } catch (e) {}
+        }
+
+        const txtObj = normalizarTextoUnidade(candidato);
+        if (txtObj && parecerNomeHumano(txtObj)) return txtObj;
+
+        const possibleId =
+            candidato.id || candidato.codigo || candidato.cod || candidato.unidadeId ||
+            candidato.unidade_id || candidato.escolaId || candidato.escola_id ||
+            candidato.codigoUnidade || candidato.codigoEscola;
+
+        if (possibleId) {
+            const resolved = await resolverCandidatoUnidade(possibleId);
+            if (resolved) return resolved;
+        }
+
+        if (txtObj) return txtObj;
+    }
+
+    return '';
+}
+
+async function resolverUnidadesDosVinculos(docs, vinculos) {
+    for (const vinculo of vinculos) {
+        const unidadeAtual = String(vinculo.unidade || '').trim();
+
+        if (unidadeAtual && parecerNomeHumano(unidadeAtual)) continue;
+
+        const candidatos = [];
+        if (unidadeAtual) candidatos.push(unidadeAtual);
+
+        for (const d of docs) {
+            const dt = d.data();
+            const fontes = obterFontesDeVinculo(dt, vinculo.matricula);
+            for (const fonte of fontes) coletarCandidatosUnidade(fonte, 0, candidatos);
+        }
+
+        const unicos = [];
+        const vistos = new Set();
+
+        for (const c of candidatos) {
+            let key = (c && typeof c === 'object') ? (c.path || c.id || JSON.stringify(Object.keys(c))) : String(c);
+            if (!vistos.has(key)) {
+                vistos.add(key);
+                unicos.push(c);
+            }
+            if (unicos.length >= 6) break;
+        }
+
+        let melhor = '';
+
+        for (const c of unicos) {
+            try {
+                const nome = await resolverCandidatoUnidade(c);
+                if (nome && parecerNomeHumano(nome)) { melhor = nome; break; }
+                if (nome && !melhor) melhor = nome;
+            } catch (e) {}
+        }
+
+        if (melhor) vinculo.unidade = melhor;
+        else if (!vinculo.unidade || vinculo.unidade === 'Não informada') vinculo.unidade = unidadeAtual || 'Não informada';
+    }
+}
+
+function obterDiasPorPeriodo(servidor, vinculo) {
+    if (vinculo && vinculo.diasFerias) return Number(vinculo.diasFerias);
+    if (servidor && servidor.diasFerias) return Number(servidor.diasFerias);
+    return DIAS_PADRAO;
+}
+
+function calcularDiasRegistro(reg) {
+    const ini = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+    const fim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino) || ini;
+    if (!ini) return 0;
+    const d = Math.round((fim - ini) / 86400000) + 1;
+    return d > 0 ? d : 0;
+}
+
+function mostrarLoading(texto = 'Carregando...') {
+    document.getElementById('loadingTexto').textContent = texto;
+    document.getElementById('loadingOverlay').classList.add('ativo');
+    const btn = document.getElementById('btnBuscar');
+    const input = document.getElementById('termoBusca');
+    if (btn) btn.disabled = true;
+    if (input) input.disabled = true;
+}
+
+function ocultarLoading() {
+    document.getElementById('loadingOverlay').classList.remove('ativo');
+    const btn = document.getElementById('btnBuscar');
+    const input = document.getElementById('termoBusca');
+    if (btn) btn.disabled = false;
+    if (input) input.disabled = false;
+}
+
+function mostrarAlerta(mensagem, tipo = 'info', titulo = 'Aviso') {
+    const modal = document.getElementById('modalAlerta');
+    const icon = document.getElementById('modalAlertaIcon');
+    const icones = { info: 'info', erro: 'error', aviso: 'warning' };
+    icon.innerHTML = `<span class="material-symbols-outlined">${icones[tipo] || 'info'}</span>`;
+    document.getElementById('modalAlertaTitulo').textContent = titulo;
+    document.getElementById('modalAlertaMensagem').textContent = mensagem;
+    modal.classList.add('ativo');
+    requestAnimationFrame(() => document.getElementById('btnFecharModalAlerta').focus());
+}
+
+function fecharModalAlerta() {
+    document.getElementById('modalAlerta').classList.remove('ativo');
+}
+
+document.getElementById('btnFecharModalAlerta').addEventListener('click', fecharModalAlerta);
+document.getElementById('modalAlerta').addEventListener('click', function (e) {
+    if (e.target === this) fecharModalAlerta();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fecharModalAlerta();
+});
+
+onAuthStateChanged(auth, async function (user) {
+    const formBusca = document.getElementById('formBuscaCard');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+
+    if (!user) {
+        mostrarErro("Sua sessão expirou. Faça login novamente.");
+        formBusca.style.display = 'none';
+        resultadoContainer.classList.add('hidden');
+        acessoAutorizado = false;
+        return;
+    }
+
+    usuarioLogado = user;
+
+    try {
+        const snap = await getDoc(doc(db, "usuarios", user.uid));
+
+        if (snap.exists()) {
+            const perfil = (snap.data().perfil || "").toUpperCase();
+
+            if (["ADMIN", "ADMINISTRADOR", "SEMED", "RH", "GESTOR", "MASTER", "DIRETOR"].includes(perfil)) {
+                acessoAutorizado = true;
+                formBusca.style.display = 'block';
+                ocultarErro();
+
+                if (termoPendenteDeBusca) {
+                    setTimeout(() => {
+                        buscarServidor();
+                        termoPendenteDeBusca = null;
+                    }, 300);
+                }
+            } else {
+                acessoAutorizado = false;
+                mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
+                formBusca.style.display = 'none';
+                resultadoContainer.classList.add('hidden');
+            }
+        } else {
+            acessoAutorizado = false;
+            mostrarErro("Usuário não encontrado no sistema.");
+            formBusca.style.display = 'none';
+            resultadoContainer.classList.add('hidden');
+        }
+    } catch (e) {
+        acessoAutorizado = false;
+        mostrarErro("Erro ao verificar permissões.");
+        formBusca.style.display = 'none';
+    }
+});
+
+document.getElementById('termoBusca').addEventListener('input', function (e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+
+    if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+    else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+
+    e.target.value = v;
+});
+
+document.getElementById('termoBusca').addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        buscarServidor();
+    }
+});
+
+document.getElementById('btnBuscar').addEventListener('click', buscarServidor);
+
+function formatarData(s) {
+    if (!s) return '';
+    if (typeof s === 'object' && s.toDate) s = s.toDate().toISOString().split('T')[0];
+    s = s.toString().trim();
+    if (s.includes('-') && s.length >= 10) {
+        const p = s.substring(0, 10).split('-');
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    return s;
+}
+
+function parseDataParaDate(s) {
+    if (!s) return null;
+    if (typeof s === 'object' && s.toDate) return s.toDate();
+
+    s = s.toString().trim();
+
+    if (s.includes('/')) {
+        const p = s.split('/');
+        return new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+
+    if (s.includes('-')) {
+        const p = s.substring(0, 10).split('-');
+        return p[0].length === 4 ? new Date(+p[0], +p[1] - 1, +p[2]) : new Date(+p[2], +p[1] - 1, +p[0]);
+    }
+
+    return null;
+}
+
+function verificarSeJaGozado(reg, hoje) {
+    const dt = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data || reg.data_gozo);
+    if (!dt) return false;
+    return dt <= hoje;
+}
+
+function verificarExtemporaneo(status, gozoStr, dataLimite) {
+    if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
+    if (/\d+\/\d+\s*dias/i.test(gozoStr)) return false;
+
+    const primeiraDataStr = gozoStr.split(' a ')[0].split(' + ')[0].trim();
+    const dg = parseDataParaDate(primeiraDataStr);
+
+    return dg ? dg > dataLimite : false;
+}
+
+function calcularDireitoFerias(dataAdmissao, ref = new Date(), diasDireito = DIAS_PADRAO) {
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!adm) return null;
+
+    ref.setHours(0, 0, 0, 0);
+
+    const totalDireito = diasDireito || DIAS_PADRAO;
+    let completos = 0;
+    let det = [];
+    let ini = new Date(adm);
+
+    while (completos < 40) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        if (fim > ref) break;
+
+        const prazoGozo = new Date(fim);
+        prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+        const p = {
+            numero: completos + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            dataLimiteGozo: prazoGozo,
+            status: 'pendente',
+            totalDireito: totalDireito
+        };
+
+        completos++;
+        det.push(p);
+
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
+    }
+
+    return {
+        periodosCompletos: completos,
+        diasDireito: completos * totalDireito,
+        periodosDetalhados: det
+    };
+}
+
+function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+    const nasc = parseDataParaDate(dataNascimento);
+    const adm = parseDataParaDate(dataAdmissao);
+    if (!nasc || !adm) return null;
+
+    ref.setHours(0, 0, 0, 0);
+
+    const mes = nasc.getMonth();
+    const dia = nasc.getDate();
+
+    let adquiridas = 0;
+    let disponiveis = 0;
+    let perdidas = 0;
+    let proxima = null;
+    let det = [];
+    let ini = new Date(adm);
+
+    for (let i = 0; i < 40; i++) {
+        const fim = new Date(ini);
+        fim.setFullYear(fim.getFullYear() + 1);
+        fim.setDate(fim.getDate() - 1);
+
+        let aniv = null;
+
+        for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+            const c = new Date(a, mes, dia);
+            if (c >= ini && c <= fim) {
+                aniv = c;
+                break;
+            }
+        }
+
+        if (!aniv) {
+            ini = new Date(fim);
+            ini.setDate(ini.getDate() + 1);
+            continue;
+        }
+
+        const dataDisponivel = new Date(aniv);
+        const prazoGozo = new Date(aniv);
+        prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+        if (ref < dataDisponivel) break;
+
+        const p = {
+            numero: i + 1,
+            inicio: new Date(ini),
+            fim: new Date(fim),
+            anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+            aniversarioNoPeriodo: aniv,
+            dataDisponivel: dataDisponivel,
+            dataLimiteGozo: prazoGozo,
+            status: 'pendente'
+        };
+
+        adquiridas++;
+
+        if (ref >= prazoGozo) {
+            p.status = 'perdido';
+            perdidas++;
+        } else {
+            p.status = 'disponivel';
+            disponiveis++;
+        }
+
+        det.push(p);
+
+        ini = new Date(fim);
+        ini.setDate(ini.getDate() + 1);
+    }
+
+    const anoBase = ref.getFullYear();
+
+    for (let a = anoBase; a <= anoBase + 2; a++) {
+        const c = new Date(a, mes, dia);
+        if (c > ref) {
+            proxima = c;
+            break;
+        }
+    }
+
+    return {
+        folgasAdquiridas: adquiridas,
+        folgasDisponiveis: disponiveis,
+        folgasPerdidas: perdidas,
+        proximaAquisicao: proxima,
+        periodosDetalhados: det
+    };
+}
+
+function filtrarRegistrosPorMatricula(registros, vinculo) {
+    const m = vinculo.matricula.toString().trim().replace(/^0+/, '');
+    return registros.filter(r => {
+        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+        return !rm || rm === m || rm === vinculo.matricula.toString().trim();
+    });
+}
+
+function associarRegistroAPeriodo(reg, periodo) {
+    const anoRef = (reg.ano_referencia || reg.ano || '');
+    if (anoRef === periodo.anoReferencia) return true;
+
+    if (!anoRef) {
+        const regIni = parseDataParaDate(reg.dataInicio || reg.data_inicio || reg.data);
+        const regFim = parseDataParaDate(reg.dataFim || reg.data_fim || reg.dataTermino || reg.data_termino || regIni);
+        if (regIni && regFim) {
+            return !(regFim < periodo.inicio || regIni > periodo.fim);
+        }
+    }
+
+    return false;
+}
+
+function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
+    const linhas = [];
+
+    vinculos.forEach(vinculo => {
+        if (!vinculo.dataAdmissao) return;
+
+        const regsMat = filtrarRegistrosPorMatricula(registros, vinculo);
+        const diasDireito = obterDiasPorPeriodo(servidorAtualRef, vinculo);
+
+        const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje, diasDireito);
+
+        if (dirF) {
+            const feriasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
+
+            dirF.periodosDetalhados.forEach(p => {
+                const lancs = feriasLanc.filter(r => associarRegistroAPeriodo(r, p));
+                const diasConsumidos = lancs.reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
+                const totalDireito = p.totalDireito || diasDireito;
+
+                let status;
+                let gozo;
+
+                if (diasConsumidos >= totalDireito) {
+                    const lancsOrdenados = [...lancs].sort((a, b) => {
+                        const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
+                        const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
+                        return (da || 0) - (db2 || 0);
+                    });
+
+                    const ultimo = lancsOrdenados[lancsOrdenados.length - 1];
+
+                    const intervalos = lancsOrdenados.map(l => {
+                        const ini = formatarData(l.dataInicio || l.data_inicio || l.data);
+                        const fimParte = formatarData(
+                            l.dataFim || l.data_fim || l.dataTermino || l.data_termino ||
+                            l.dataInicio || l.data_inicio || l.data
+                        );
+                        return `${ini} a ${fimParte}`;
+                    });
+
+                    gozo = intervalos.join(' + ');
+                    status = verificarSeJaGozado(ultimo, hoje) ? 'gozado' : 'programado';
+                } else if (diasConsumidos > 0) {
+                    const lancsOrdenados = [...lancs].sort((a, b) => {
+                        const da = parseDataParaDate(a.dataInicio || a.data_inicio || a.data);
+                        const db2 = parseDataParaDate(b.dataInicio || b.data_inicio || b.data);
+                        return (db2 || 0) - (da || 0);
+                    });
+
+                    const ultimoParcial = lancsOrdenados[0];
+                    gozo = `${diasConsumidos}/${totalDireito} dias`;
+                    status = verificarSeJaGozado(ultimoParcial, hoje) ? 'parcial' : 'programado';
+                } else {
+                    gozo = '';
+                    if (p.dataLimiteGozo < hoje) {
+                        status = 'vencido'; // Crítico
+                    } else if (p.fim < hoje) {
+                        status = 'vencido_preventivo'; // Preventivo
+                    } else {
+                        status = 'disponivel';
+                    }
+                }
+
+                linhas.push({
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
+                    unidade: vinculo.unidade || 'Não informada',
+                    diasDireito: diasDireito,
+                    tipo: 'Férias',
+                    tipoKey: 'ferias',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status,
+                    gozo: gozo || '—',
+                    ordem: p.inicio.getTime(),
+                    extemporaneo: verificarExtemporaneo(status, gozo, p.dataLimiteGozo)
+                });
+            });
+        }
+
+        const dirG = dataNascimento
+            ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
+            : null;
+
+        if (dirG) {
+            const folgasLanc = regsMat.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+
+            dirG.periodosDetalhados.forEach(p => {
+                const lanc = folgasLanc.find(r => {
+                    const anoRef = (r.ano_referencia || r.ano || '');
+                    if (anoRef) return anoRef === p.anoReferencia;
+
+                    const raw = r.data || r.data_gozo || r.dataInicio || r.data_inicio;
+                    return raw &&
+                        parseDataParaDate(raw) &&
+                        parseDataParaDate(raw) >= p.dataDisponivel &&
+                        parseDataParaDate(raw) < p.dataLimiteGozo;
+                });
+
+                let status;
+                let gozo = '';
+
+                if (lanc) {
+                    const raw = lanc.data || lanc.data_gozo || lanc.dataInicio || lanc.data_inicio;
+                    gozo = formatarData(raw);
+                    status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+                } else {
+                    gozo = '—';
+                    status = p.status;
+                }
+
+                linhas.push({
+                    servidor: nomeServidorAtual,
+                    matricula: vinculo.matricula,
+                    unidade: vinculo.unidade || 'Não informada',
+                    tipo: 'Folga Aniv.',
+                    tipoKey: 'folga',
+                    periodo: p.anoReferencia,
+                    ciclo: `${formatarData(p.inicio.toISOString().split('T')[0])} a ${formatarData(p.fim.toISOString().split('T')[0])}`,
+                    prazo: formatarData(p.dataLimiteGozo.toISOString().split('T')[0]),
+                    status,
+                    gozo: gozo || '—',
+                    ordem: p.inicio.getTime(),
+                    extemporaneo: false
+                });
+            });
+        }
+    });
+
+    linhas.sort((a, b) => b.ordem - a.ordem);
+    return linhas;
+}
+
+function badgeStatus(s) {
+    const m = {
+        gozado: ['badge-gozado', 'check_circle', 'Gozado'],
+        parcial: ['badge-parcial', 'hourglass_bottom', 'Parcial'],
+        programado: ['badge-programado', 'event_upcoming', 'Programado'],
+        disponivel: ['badge-disponivel', 'event_available', 'Disponível'],
+        pendente: ['badge-pendente', 'schedule', 'Pendente'],
+        vencido: ['badge-vencido', 'error', 'Vencido'],
+        vencido_preventivo: ['badge-pendente', 'schedule', 'Vencido (preventivo)'],
+        perdido: ['badge-perdido', 'cancel', 'Perdido']
+    };
+
+    const x = m[s];
+    if (!x) return '-';
+
+    return `<span class="badge-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+}
+
+function badgeTipo(k) {
+    return k === 'ferias'
+        ? '<span class="tipo-badge">Férias</span>'
+        : '<span class="tipo-badge">Folga Aniv.</span>';
+}
+
+function renderizarResumoExecutivo() {
+    const container = document.getElementById('resumoExecutivo');
+    // Pega todas as matrículas únicas que existem na lista de linhas geradas
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+    let html = '';
+
+    // Faz um loop para CADA matrícula
+    mats.forEach(mat => {
+        // Filtra apenas os dados (férias e folgas) da matrícula atual do loop
+        const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
+        
+        // Pega a unidade da primeira linha (todas as linhas dessa matrícula têm a mesma unidade)
+        const unidade = linhasMat[0]?.unidade || 'Unidade não informada';
+
+        const f = linhasMat.filter(l => l.tipoKey === 'ferias');
+        const g = linhasMat.filter(l => l.tipoKey === 'folga');
+        const c = (a, s) => a.filter(l => l.status === s).length;
+
+        const feriasAdquiridas = f.length;
+        const folgaAdquiridas = g.length;
+
+        // Monta o HTML do card para ESTA matrícula
+        html += `
+            <div class="resumo-matricula">
+                <div class="resumo-matricula-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span class="resumo-matricula-badge">Matrícula ${escaparHtml(mat)}</span>
+                        <span class="unidade-tag">
+                            <span class="material-symbols-outlined">apartment</span>
+                            ${escaparHtml(unidade)}
+                        </span>
+                    </div>
+                    <span class="resumo-matricula-nome" style="font-size:13px; font-weight:600; color:var(--text); margin-top:2px;">
+                        ${escaparHtml(nomeServidorAtual)}
+                    </span>
+                </div>
+                <div class="resumo-cards-row">
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">
+                            <span class="material-symbols-outlined">beach_access</span> Férias
+                        </div>
+                        <div class="resumo-chips">
+                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${feriasAdquiridas}</span></span>
+                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(f, 'gozado')}</span></span>
+                            <span class="chip">Parciais <span class="num chip-num-azul">${c(f, 'parcial')}</span></span>
+                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(f, 'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(f, 'disponivel')}</span></span>
+                            <span class="chip">Vencidas <span class="num chip-num-amarelo">${c(f, 'vencido_preventivo')}</span></span>
+                            <span class="chip">Críticas <span class="num chip-num-vermelho">${c(f, 'vencido')}</span></span>
+                        </div>
+                    </div>
+                    <div class="resumo-bloco">
+                        <div class="resumo-bloco-titulo">
+                            <span class="material-symbols-outlined">cake</span> Folga Aniversário
+                        </div>
+                        <div class="resumo-chips">
+                            <span class="chip">Adquiridas <span class="num chip-num-cinza">${folgaAdquiridas}</span></span>
+                            <span class="chip">Gozadas <span class="num chip-num-verde">${c(g, 'gozado')}</span></span>
+                            <span class="chip">Programadas <span class="num chip-num-roxo">${c(g, 'programado')}</span></span>
+                            <span class="chip">Disponíveis <span class="num chip-num-azul">${c(g, 'disponivel')}</span></span>
+                            <span class="chip">Perdidas <span class="num chip-num-vermelho">${c(g, 'perdido')}</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    // Injeta os cards no container
+    container.innerHTML = html;
+}
+
+/* ============================================================
+   ALERTA PREVENTIVO DE FÉRIAS VENCIDAS (2 ou mais)
+   ============================================================ */
+function renderizarAlertaFeriasVencidasPreventivo() {
+    const card = document.getElementById('alertaFeriasVencidasPreventivo');
+    const titulo = document.getElementById('alertaFeriasPreventivoTitulo');
+    const detalhe = document.getElementById('alertaFeriasPreventivoDetalhe');
+    if (!card || !titulo || !detalhe) return;
+
+    const preventivasPorMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey === 'ferias' && l.status === 'vencido_preventivo') {
+            if (!preventivasPorMatricula.has(l.matricula)) {
+                preventivasPorMatricula.set(l.matricula, []);
+            }
+            preventivasPorMatricula.get(l.matricula).push(l);
+        }
+    });
+
+    const matriculasAlerta = [];
+    preventivasPorMatricula.forEach((lista, mat) => {
+        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
+    });
+
+    if (matriculasAlerta.length === 0) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const totalMatriculas = matriculasAlerta.length;
+    const totalPreventivas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
+
+    titulo.textContent = totalMatriculas === 1
+        ? 'Atenção: 2 ou mais férias vencidas (ainda dá tempo)'
+        : `Atenção: ${totalMatriculas} matrículas com 2 ou mais férias vencidas (ainda dá tempo)`;
+
+    const partes = matriculasAlerta
+        .sort((a, b) => b.qtd - a.qtd)
+        .map(m => `<strong>${escaparHtml(m.mat)}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
+        .join(' · ');
+
+    detalhe.innerHTML = `${totalPreventivas} férias com ciclo fechado — ${partes}. Ainda estão dentro do prazo legal de gozo, mas o RH deve regularizar antes do prazo final.`;
+
+    card.classList.remove('hidden');
+}
+
+/* ============================================================
+   ALERTA CRÍTICO DE FÉRIAS VENCIDAS (2 ou mais)
+   ============================================================ */
+function renderizarAlertaFeriasVencidas() {
+    const card = document.getElementById('alertaFeriasVencidas');
+    const titulo = document.getElementById('alertaFeriasTitulo');
+    const detalhe = document.getElementById('alertaFeriasDetalhe');
+    if (!card || !titulo || !detalhe) return;
+
+    const vencidasPorMatricula = new Map();
+    linhasUnificadas.forEach(l => {
+        if (l.tipoKey === 'ferias' && l.status === 'vencido') {
+            if (!vencidasPorMatricula.has(l.matricula)) {
+                vencidasPorMatricula.set(l.matricula, []);
+            }
+            vencidasPorMatricula.get(l.matricula).push(l);
+        }
+    });
+
+    const matriculasAlerta = [];
+    vencidasPorMatricula.forEach((lista, mat) => {
+        if (lista.length >= 2) matriculasAlerta.push({ mat, qtd: lista.length });
+    });
+
+    if (matriculasAlerta.length === 0) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    const totalMatriculas = matriculasAlerta.length;
+    const totalVencidas = matriculasAlerta.reduce((acc, m) => acc + m.qtd, 0);
+
+    titulo.textContent = totalMatriculas === 1
+        ? 'Crítico: 2 ou mais férias já ilegais'
+        : `Crítico: ${totalMatriculas} matrículas com 2 ou mais férias já ilegais`;
+
+    const partes = matriculasAlerta
+        .sort((a, b) => b.qtd - a.qtd)
+        .map(m => `<strong>${escaparHtml(m.mat)}</strong> (${m.qtd} vencida${m.qtd === 1 ? '' : 's'})`)
+        .join(' · ');
+
+    detalhe.innerHTML = `${totalVencidas} férias já passaram do prazo legal de gozo — ${partes}. Ação imediata do RH é necessária para regularizar a situação.`;
+
+    card.classList.remove('hidden');
+}
+
+function popularFiltroMatricula() {
+    const sel = document.getElementById('filtroMatricula');
+    const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
+    sel.innerHTML = '<option value="">Todas</option>' + mats.map(m => `<option value="${escaparHtml(m)}">${escaparHtml(m)}</option>`).join('');
+}
+
+function aplicarFiltros() {
+    const fm = document.getElementById('filtroMatricula')?.value || '';
+    const ft = document.getElementById('filtroTipo')?.value || '';
+    const fs = document.getElementById('filtroStatus')?.value || '';
+
+    const linhasFiltradas = linhasUnificadas.filter(l => {
+        const okMatricula = !fm || String(l.matricula) === String(fm);
+        const okTipo = !ft || l.tipoKey === ft;
+        const okStatus = !fs || l.status === fs;
+
+        return okMatricula && okTipo && okStatus;
+    });
+
+    renderizarTabelaUnica(linhasFiltradas);
+    renderizarGrafico(linhasFiltradas);
+    renderizarTabelaResumo(linhasFiltradas);
+}
+
+document.getElementById('filtroMatricula').addEventListener('change', aplicarFiltros);
+document.getElementById('filtroTipo').addEventListener('change', aplicarFiltros);
+document.getElementById('filtroStatus').addEventListener('change', aplicarFiltros);
+
+function renderizarTabelaUnica(linhas) {
+    const tbody = document.getElementById('tabelaUnica');
+
+    if (!linhas || linhas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">Nenhum período encontrado com os filtros selecionados.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = linhas.map(l => `
+        <tr>
+            <td><strong>${escaparHtml(l.servidor)}</strong></td>
+            <td>${escaparHtml(l.matricula)}</td>
+            <td style="font-size:11px; color:var(--text-secondary);">${escaparHtml(l.unidade || '—')}</td>
+            <td>${badgeTipo(l.tipoKey)}</td>
+            <td>${escaparHtml(l.periodo)}</td>
+            <td>${escaparHtml(l.ciclo)}</td>
+            <td>${escaparHtml(l.prazo)}</td>
+            <td>
+                ${badgeStatus(l.status)}
+                ${l.extemporaneo ? ' <span class="badge-status badge-extemporaneo"><span class="material-symbols-outlined">warning</span> Fora do prazo</span>' : ''}
+            </td>
+            <td>${escaparHtml(l.gozo)}</td>
+        </tr>
+    `).join('');
+}
+
+function obterClasseSegmento(status) {
+    const mapa = {
+        gozado: 'seg-gozado',
+        parcial: 'seg-parcial',
+        programado: 'seg-programado',
+        disponivel: 'seg-disponivel',
+        pendente: 'seg-pendente',
+        vencido: 'seg-vencido',
+        vencido_preventivo: 'seg-pendente',
+        perdido: 'seg-perdido'
+    };
+
+    return mapa[status] || 'seg-pendente';
+}
+
+function renderizarGrafico(linhas = linhasUnificadas) {
+    const container = document.getElementById('graficoPeriodos');
+    if (!container) return;
+
+    if (!linhas || linhas.length === 0) {
+        container.innerHTML = '<div class="grafico-vazio">Nenhum período para exibir com os critérios atuais.</div>';
+        return;
+    }
+
+    const periodosMap = new Map();
+
+    linhas.forEach(l => {
+        if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
+        periodosMap.get(l.periodo).push(l);
+    });
+
+    const periodosOrdenados = [...periodosMap.keys()].sort((a, b) => {
+        const aNum = parseInt(a.split('/')[0], 10);
+        const bNum = parseInt(b.split('/')[0], 10);
+        return bNum - aNum;
+    });
+
+    let html = '';
+
+    periodosOrdenados.forEach(periodo => {
+        const linhasPeriodo = periodosMap.get(periodo);
+        const ferias = linhasPeriodo.filter(l => l.tipoKey === 'ferias');
+        const folgas = linhasPeriodo.filter(l => l.tipoKey === 'folga');
+
+        const totalDireito = ferias.length > 0 ? (ferias[0].diasDireito || DIAS_PADRAO) : DIAS_PADRAO;
+
+        html += `<div class="grafico-periodo-bloco">`;
+        html += `<div class="grafico-periodo-titulo">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    Período ${escaparHtml(periodo)}
+                    <span class="periodo-ref">— ciclo aquisitivo</span>
+                 </div>`;
+        html += `<div class="grafico-barras">`;
+
+        if (ferias.length > 0) {
+            const statusFerias = ferias.map(f => f.status);
+
+            const statusPrincipal = statusFerias.includes('gozado') ? 'gozado'
+                : statusFerias.includes('parcial') ? 'parcial'
+                : statusFerias.includes('programado') ? 'programado'
+                : statusFerias.includes('vencido') ? 'vencido'
+                : statusFerias.includes('vencido_preventivo') ? 'vencido_preventivo'
+                : statusFerias.includes('disponivel') ? 'disponivel'
+                : 'pendente';
+
+            let percentual = 0;
+            let labelPercentual = '';
+
+            if (statusPrincipal === 'gozado') {
+                percentual = 100;
+                labelPercentual = `${totalDireito}/${totalDireito} dias`;
+            } else if (statusPrincipal === 'parcial') {
+                const gozoTexto = ferias[0]?.gozo || '';
+                const match = gozoTexto.match(/(\d+)\/(\d+)/);
+
+                if (match) {
+                    const diasConsumidos = parseInt(match[1], 10);
+                    percentual = Math.round((diasConsumidos / totalDireito) * 100);
+                    labelPercentual = gozoTexto;
+                } else {
+                    percentual = 50;
+                    labelPercentual = 'Parcial';
+                }
+            } else if (statusPrincipal === 'programado') {
+                percentual = 100;
+                labelPercentual = 'Programado';
+            } else if (statusPrincipal === 'disponivel') {
+                percentual = 60;
+                labelPercentual = 'Disponível';
+            } else if (statusPrincipal === 'vencido_preventivo') {
+                percentual = 40;
+                labelPercentual = 'Vencido (prev.)';
+            } else if (statusPrincipal === 'vencido') {
+                percentual = 0;
+                labelPercentual = 'Vencido';
+            } else {
+                percentual = 0;
+                labelPercentual = 'Pendente';
+            }
+
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--brand);">beach_access</span> Férias
+                        </div>
+                        <div class="grafico-trilha">
+                            <div class="grafico-segmento ${obterClasseSegmento(statusPrincipal)}" style="width:${percentual}%;">
+                                ${percentual > 15 ? escaparHtml(labelPercentual) : ''}
+                            </div>
+                        </div>
+                    </div>`;
+        } else {
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--brand);">beach_access</span> Férias
+                        </div>
+                        <div class="grafico-trilha" style="opacity:.4;">
+                            <div class="grafico-segmento seg-pendente" style="width:100%;background:var(--surface-3);color:var(--text-muted);">—</div>
+                        </div>
+                    </div>`;
+        }
+
+        if (folgas.length > 0) {
+            const folga = folgas[0];
+            const statusFolga = folga.status;
+
+            let percentualFolga = 0;
+            let labelFolga = '';
+
+            if (statusFolga === 'gozado') {
+                percentualFolga = 100;
+                labelFolga = 'Gozada';
+            } else if (statusFolga === 'programado') {
+                percentualFolga = 100;
+                labelFolga = 'Programada';
+            } else if (statusFolga === 'disponivel') {
+                percentualFolga = 60;
+                labelFolga = 'Disponível';
+            } else if (statusFolga === 'perdido') {
+                percentualFolga = 100;
+                labelFolga = 'Perdida';
+            } else {
+                percentualFolga = 0;
+                labelFolga = statusFolga;
+            }
+
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--purple);">cake</span> Folga Aniv.
+                        </div>
+                        <div class="grafico-trilha">
+                            <div class="grafico-segmento ${obterClasseSegmento(statusFolga)}" style="width:${percentualFolga}%;">
+                                ${percentualFolga > 20 ? escaparHtml(labelFolga) : ''}
+                            </div>
+                        </div>
+                    </div>`;
+        } else {
+            html += `<div class="grafico-linha">
+                        <div class="grafico-linha-rotulo">
+                            <span class="material-symbols-outlined" style="color:var(--purple);">cake</span> Folga Aniv.
+                        </div>
+                        <div class="grafico-trilha" style="opacity:.4;">
+                            <div class="grafico-segmento seg-pendente" style="width:100%;background:var(--surface-3);color:var(--text-muted);">—</div>
+                        </div>
+                    </div>`;
+        }
+
+        html += `</div>`;
+        html += `</div>`;
+    });
+
+    html += `<div class="grafico-legenda">
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--ok);"></span> Gozado / Disponível</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--info);"></span> Parcial</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--purple);"></span> Programado</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--warn);"></span> Vencido (preventivo)</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--danger);"></span> Vencido</span>
+                <span class="grafico-legenda-item"><span class="grafico-legenda-cor" style="background:var(--gray-500);"></span> Perdido</span>
+             </div>`;
+
+    container.innerHTML = html;
+}
+
+function renderizarTabelaResumo(linhas = linhasUnificadas) {
+    const tbody = document.getElementById('tabelaResumoCorpo');
+    const aviso = document.getElementById('avisoResumoVazio');
+    const tabela = tbody ? tbody.closest('table') : null;
+
+    if (!tbody || !aviso || !tabela) return;
+
+    if (!linhas || linhas.length === 0) {
+        tbody.innerHTML = '';
+        tabela.classList.add('hidden');
+        aviso.classList.remove('hidden');
+
+        const fm = document.getElementById('filtroMatricula')?.value || '';
+        const ft = document.getElementById('filtroTipo')?.value || '';
+        const fs = document.getElementById('filtroStatus')?.value || '';
+        const temFiltro = Boolean(fm || ft || fs);
+
+        aviso.innerHTML = `
+            <span class="material-symbols-outlined">info</span>
+            <div>
+                <strong>${temFiltro ? 'Nenhum registro para o filtro selecionado' : 'Sem dados para o resumo'}</strong>
+                ${temFiltro ? 'Nenhum período corresponde aos filtros aplicados.' : 'Nenhum período aquisitivo foi localizado para este servidor.'}
+            </div>
+        `;
+        return;
+    }
+
+    tabela.classList.remove('hidden');
+    aviso.classList.add('hidden');
+
+    const periodosMap = new Map();
+
+    linhas.forEach(l => {
+        if (!periodosMap.has(l.periodo)) periodosMap.set(l.periodo, []);
+        periodosMap.get(l.periodo).push(l);
+    });
+
+    const periodosOrdenados = [...periodosMap.keys()].sort((a, b) => {
+        const aNum = parseInt(a.split('/')[0], 10);
+        const bNum = parseInt(b.split('/')[0], 10);
+        return aNum - bNum;
+    });
+
+    const vinculosUnicos = [...new Map(linhas.map(item => [String(item.matricula), item])).values()];
+
+    const infoVinculos = vinculosUnicos.map(v =>
+        `<strong>${escaparHtml(v.matricula)}</strong> <span style="color:var(--text-muted); font-weight:400;">(${escaparHtml(v.unidade || 'Sem unidade')})</span>`
+    ).join(' &nbsp;|&nbsp; ');
+
+    const linhaInfoVinculos = `<tr>
+        <td colspan="${periodosOrdenados.length}" style="text-align:left; padding:12px 14px; font-size:12px; color:var(--text-secondary); background:var(--surface); border-bottom:2px solid var(--border-strong);">
+            <span style="color:var(--brand); font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.5px;">Vínculos Ativos:</span><br>
+            <span style="margin-top:4px; display:block; line-height:1.6;">${infoVinculos}</span>
+        </td>
+    </tr>`;
+
+    let thead = tabela.querySelector('thead');
+    if (thead) {
+        thead.innerHTML = `<tr><th colspan="${periodosOrdenados.length}" id="tabelaResumoTitulo">Período Aquisitivo</th></tr>`;
+    }
+
+    let linhaAnos = '<tr>';
+    periodosOrdenados.forEach(per => {
+        linhaAnos += `<th scope="col">${escaparHtml(per)}</th>`;
+    });
+    linhaAnos += '</tr>';
+
+    let linhaConteudo = '<tr>';
+
+    periodosOrdenados.forEach(per => {
+        const itens = periodosMap.get(per);
+        const ferias = itens.filter(i => i.tipoKey === 'ferias');
+        const folgas = itens.filter(i => i.tipoKey === 'folga');
+
+        const linhasTexto = [];
+        const gruposFerias = new Map();
+
+        ferias.forEach(f => {
+            const mat = String(f.matricula || '—');
+            let chave = `${mat}::sem-data`;
+            let textoTrecho = '';
+
+            if (f.status === 'gozado' || f.status === 'parcial') {
+                textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
+                const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
+                chave = `${mat}::${m ? m[1] : 'sem-data'}`;
+            } else if (f.status === 'programado') {
+                textoTrecho = f.gozo && f.gozo !== '—'
+                    ? `Programado ${f.gozo}`
+                    : 'Programado';
+                const m = textoTrecho.match(/(\d{2}\/\d{2}\/\d{4})/);
+                chave = `${mat}::${m ? m[1] : 'sem-data'}`;
+            } else if (f.status === 'disponivel') {
+                textoTrecho = 'Disponível';
+                chave = `${mat}::disponivel`;
+            } else if (f.status === 'vencido') {
+                textoTrecho = `Vencido em ${f.prazo || '—'}`;
+                chave = `${mat}::vencido`;
+            } else if (f.status === 'vencido_preventivo') {
+                textoTrecho = `Vencido (preventivo) — prazo ${f.prazo || '—'}`;
+                chave = `${mat}::vencido_preventivo`;
+            } else {
+                textoTrecho = f.gozo && f.gozo !== '—' ? f.gozo : '—';
+                chave = `${mat}::outro`;
+            }
+
+            if (!gruposFerias.has(chave)) {
+                gruposFerias.set(chave, {
+                    texto: textoTrecho,
+                    status: f.status,
+                    matricula: mat,
+                    unidade: f.unidade || ''
+                });
+            }
+        });
+
+        [...gruposFerias.values()]
+            .sort((a, b) => String(a.matricula).localeCompare(String(b.matricula), 'pt-BR', { numeric: true }))
+            .forEach(item => {
+                const title = `Matrícula ${item.matricula}${item.unidade ? ' — ' + item.unidade : ''}`;
+                linhasTexto.push({
+                    classe: 'destaque',
+                    html: `<span class="resumo-matricula-prefixo" title="${escaparHtml(title)}">Mat. ${escaparHtml(item.matricula)}</span> ${escaparHtml(item.texto)}`
+                });
+            });
+
+        const prioridade = { gozado: 1, programado: 2, disponivel: 3, vencido_preventivo: 4, perdido: 5 };
+        const folgasUnicas = new Map();
+
+        folgas.forEach(g => {
+            const mat = String(g.matricula || '—');
+            let chave;
+            let textoFolga;
+
+            if (g.status === 'gozado' && g.gozo && g.gozo !== '—') {
+                textoFolga = `Folga Aniversário ${g.gozo}`;
+                chave = `${mat}::gozo:${g.gozo}`;
+            } else if (g.status === 'programado' && g.gozo && g.gozo !== '—') {
+                textoFolga = `Folga Aniversário ${g.gozo}`;
+                chave = `${mat}::prog:${g.gozo}`;
+            } else if (g.status === 'disponivel') {
+                textoFolga = `Folga Aniversário (disponível)`;
+                chave = `${mat}::disp:${g.periodo}`;
+            } else if (g.status === 'perdido') {
+                textoFolga = `Folga Aniversário (perdida)`;
+                chave = `${mat}::perd:${g.periodo}`;
+            } else {
+                textoFolga = `Folga Aniversário`;
+                chave = `${mat}::outro:${g.periodo}`;
+            }
+
+            if (!folgasUnicas.has(chave)) {
+                folgasUnicas.set(chave, {
+                    texto: textoFolga,
+                    status: g.status,
+                    matricula: mat,
+                    unidade: g.unidade || ''
+                });
+            }
+        });
+
+        [...folgasUnicas.values()]
+            .sort((a, b) => {
+                const prioA = prioridade[a.status] || 99;
+                const prioB = prioridade[b.status] || 99;
+
+                if (prioA !== prioB) return prioA - prioB;
+                return String(a.matricula).localeCompare(String(b.matricula), 'pt-BR', { numeric: true });
+            })
+            .forEach(item => {
+                const title = `Matrícula ${item.matricula}${item.unidade ? ' — ' + item.unidade : ''}`;
+                linhasTexto.push({
+                    classe: 'folga',
+                    html: `<span class="resumo-matricula-prefixo" title="${escaparHtml(title)}">Mat. ${escaparHtml(item.matricula)}</span> ${escaparHtml(item.texto)}`
+                });
+            });
+
+        let celula = '';
+
+        if (linhasTexto.length === 0) {
+            celula = '<span class="linha-item" style="color:var(--text-muted);">—</span>';
+        } else {
+            celula = linhasTexto.map(l =>
+                `<span class="linha-item ${l.classe}">${l.html}</span>`
+            ).join('');
+        }
+
+        linhaConteudo += `<td>${celula}</td>`;
+    });
+
+    linhaConteudo += '</tr>';
+
+    tbody.innerHTML = linhaInfoVinculos + linhaAnos + linhaConteudo;
+
+    const titulo = document.getElementById('tabelaResumoTitulo');
+    if (titulo) titulo.setAttribute('colspan', String(periodosOrdenados.length));
+}
+
+async function buscarServidor() {
+    if (!acessoAutorizado) {
+        mostrarErro("Acesso negado.");
+        return;
+    }
+
+    const termo = document.getElementById('termoBusca').value.trim();
+
+    if (!termo) {
+        mostrarAlerta('Por favor, digite um CPF ou Matrícula.', 'aviso', 'Campo obrigatório');
+        return;
+    }
+
+    mostrarLoading('Buscando servidor...');
+
+    const termoLimpo = termo.replace(/\D/g, '');
+    const colRef = collection(db, 'servidores');
+    const encontrados = new Map();
+
+    try {
+        const estrategias = [];
+        estrategias.push(getDoc(doc(db, 'servidores', termo)).catch(() => null));
+
+        if (termo !== termoLimpo) {
+            estrategias.push(getDoc(doc(db, 'servidores', termoLimpo)).catch(() => null));
+        }
+
+        const ehCpf = termoLimpo.length === 11;
+
+        if (ehCpf) {
+            estrategias.push(
+                getDocs(query(colRef, where('cpf', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('cpf', '==', termo))).catch(() => null),
+                getDocs(query(colRef, where('CPF', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('CPF', '==', termo))).catch(() => null)
+            );
+        } else {
+            estrategias.push(
+                getDocs(query(colRef, where('matricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('Matricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula_servidor', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula1.numeroMatricula', '==', termoLimpo))).catch(() => null),
+                getDocs(query(colRef, where('matricula2.numeroMatricula', '==', termoLimpo))).catch(() => null)
+            );
+        }
+
+        const resultados = await Promise.all(estrategias);
+
+        resultados.forEach(res => {
+            if (!res) return;
+            if (res.exists && res.exists()) {
+                encontrados.set(res.id, res);
+            } else if (res.forEach) {
+                res.forEach(d => encontrados.set(d.id, d));
+            }
+        });
+
+        if (encontrados.size === 0) {
+            ocultarLoading();
+            mostrarAlerta('Servidor não localizado no sistema. Verifique o CPF ou matrícula informados.', 'erro', 'Não encontrado');
+            document.getElementById('resultadoContainer').classList.add('hidden');
+            return;
+        }
+
+        await processarServidores(Array.from(encontrados.values()));
+        ultimoTermoBuscado = termo;
+    } catch (e) {
+        console.error('[Buscar] Erro:', e);
+        mostrarErro("Erro ao consultar o banco. Verifique sua conexão e tente novamente.");
+    } finally {
+        ocultarLoading();
+    }
+}
+
+async function processarServidores(docs) {
+    const d0 = docs[0].data();
+    const nome = d0.nome || d0.Nome || 'Não informado';
+
+    nomeServidorAtual = nome;
+    servidorAtualRef = d0;
+
+    const cpfLimpo = (d0.cpf || d0.CPF || '').toString().replace(/\D/g, '');
+    const cpfFmt = (d0.cpf || d0.CPF || '').toString();
+    const nascimento = d0.data_nascimento || d0.dataNascimento;
+
+    const vinculosMap = new Map();
+    const servidorIds = docs.map(d => d.id);
+
+    const addVinculo = (numMat, dataAdm, dias, unidade) => {
+        if (!numMat) return;
+        const ms = numMat.toString().trim();
+        if (!vinculosMap.has(ms)) {
+            vinculosMap.set(ms, {
+                matricula: ms,
+                dataAdmissao: dataAdm || '',
+                diasFerias: dias ? Number(dias) : null,
+                unidade: unidade || 'Não informada'
+            });
+        }
+    };
+
+    docs.forEach(d => {
+        const dt = d.data();
+        
+        if (dt.matricula1 && dt.matricula1.numeroMatricula) {
+            addVinculo(
+                dt.matricula1.numeroMatricula,
+                dt.matricula1.dataAdmissao || dt.matricula1.data_admissao,
+                dt.matricula1.diasFerias,
+                obterUnidade(dt, dt.matricula1)
+            );
+        }
+
+        if (dt.matricula2 && dt.matricula2.numeroMatricula) {
+            addVinculo(
+                dt.matricula2.numeroMatricula,
+                dt.matricula2.dataAdmissao || dt.matricula2.data_admissao,
+                dt.matricula2.diasFerias,
+                obterUnidade(dt, dt.matricula2)
+            );
+        }
+
+        const matSolta = dt.matricula || dt.Matricula || dt.matricula_servidor;
+        if (matSolta) {
+            addVinculo(
+                matSolta,
+                dt.data_admissao || dt.dataAdmissao,
+                dt.diasFerias,
+                obterUnidade(dt, null)
+            );
+        }
+    });
+
+    const vinculos = Array.from(vinculosMap.values());
+
+    if (vinculos.length === 0) {
+        vinculos.push({ matricula: 'N/A', dataAdmissao: '', diasFerias: null, unidade: 'Não informada' });
+    }
+
+    try {
+        await resolverUnidadesDosVinculos(docs, vinculos);
+    } catch (e) {
+        console.error('[UNIDADE] Erro:', e);
+    }
+
+    let registros = [];
+    const ids = new Set();
+
+    try {
+        const queriesRegistros = [];
+
+        if (cpfLimpo) {
+            queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfLimpo))).catch(() => null));
+        }
+        if (cpfFmt && cpfFmt !== cpfLimpo) {
+            queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt))).catch(() => null));
+        }
+        
+        for (const sid of servidorIds) {
+            queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid))).catch(() => null));
+        }
+
+        vinculos.forEach(v => {
+            queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('matricula', '==', v.matricula))).catch(() => null));
+        });
+
+        const resultados = await Promise.all(queriesRegistros);
+
+        resultados.forEach(res => {
+            if (res && res.forEach) {
+                res.forEach(x => {
+                    if (!ids.has(x.id)) {
+                        registros.push({ id: x.id, ...x.data() });
+                        ids.add(x.id);
+                    }
+                });
+            }
+        });
+
+    } catch (e) {
+        console.error('[Registros] Erro:', e);
+    }
+
+    document.getElementById('nomeServidor').textContent = nome;
+    document.getElementById('cpfServidor').textContent = cpfLimpo
+        ? cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+        : '—';
+    document.getElementById('nascimentoServidor').textContent = formatarData(nascimento) || '—';
+
+    document.getElementById('matriculasServidor').textContent = vinculos.map(v => {
+        const adm = formatarData(v.dataAdmissao) || '—';
+        const dias = v.diasFerias ? `${v.diasFerias} dias/período` : '30 dias/período';
+        const unidade = v.unidade && v.unidade !== 'Não informada' ? ` • ${v.unidade}` : '';
+        return `${v.matricula} (Adm ${adm} • ${dias}${unidade})`;
+    }).join('  ·  ');
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    linhasUnificadas = construirLinhasUnificadas(vinculos, nascimento, registros, hoje);
+
+    renderizarResumoExecutivo();
+    renderizarAlertaFeriasVencidasPreventivo();
+    renderizarAlertaFeriasVencidas();
+    popularFiltroMatricula();
+
+    document.getElementById('filtroTipo').value = '';
+    document.getElementById('filtroStatus').value = '';
+
+    const semPeriodos = linhasUnificadas.length === 0;
+
+    document.getElementById('tabelaUnica').innerHTML = '';
+    document.getElementById('filtrosRow').classList.toggle('hidden', semPeriodos);
+    document.getElementById('tableWrapper').classList.toggle('hidden', semPeriodos);
+    document.getElementById('avisoSemPeriodos').classList.toggle('hidden', !semPeriodos);
+    document.getElementById('resumoExecutivo').classList.toggle('hidden', semPeriodos);
+    document.getElementById('graficoContainer').classList.toggle('hidden', semPeriodos);
+
+    if (!semPeriodos) {
+        renderizarTabelaUnica(linhasUnificadas);
+        renderizarGrafico(linhasUnificadas);
+    }
+
+    renderizarTabelaResumo(linhasUnificadas);
+
+    document.getElementById('resultadoContainer').classList.remove('hidden');
+}
+
+function mostrarErro(t) {
+    const el = document.getElementById('mensagemErro');
+    document.getElementById('textoErro').textContent = t;
+    el.classList.add('ativo');
+    document.getElementById('resultadoContainer').classList.add('hidden');
+}
+
+function ocultarErro() {
+    document.getElementById('mensagemErro').classList.remove('ativo');
+}
+
+window.buscarServidor = buscarServidor;
+
+(function autoBuscarPorUrl() {
+    const params = new URLSearchParams(window.location.search);
+    let termo = params.get('cpf') || params.get('matricula') || params.get('servidor') || '';
+    termo = termo.trim();
+
+    if (!termo) return;
+
+    const apenasDigitos = termo.replace(/\D/g, '');
+    const input = document.getElementById('termoBusca');
+
+    if (!input) return;
+
+    if (apenasDigitos.length === 11) {
+        input.value = apenasDigitos.replace(
+            /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
+            '$1.$2.$3-$4'
+        );
+    } else {
+        input.value = termo;
+    }
+
+    termoPendenteDeBusca = input.value;
+
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('cpf');
+        url.searchParams.delete('matricula');
+        url.searchParams.delete('servidor');
+        window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+})();
+</script>
+
+</body>
+</html>

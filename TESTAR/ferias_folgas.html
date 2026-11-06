@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+
+<title>Controle de Férias e Folgas - Vale Transporte</title>
+
+<style>
+
+:root {
+    --primary: #5b2a86;
+    --primary-hover: #47206b;
+    --primary-light: #f1ebf6;
+
+    --green: #2e7d32;
+    --green-light: #eaf6ec;
+    --green-bd: #c8e6c9;
+
+    --orange: #e65100;
+    --orange-light: #fff3e0;
+    --orange-bd: #ffe0b2;
+
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --blue-bd: #bbdefb;
+
+    --red: #c62828;
+    --red-light: #ffebee;
+    --red-bd: #ffcdd2;
+
+    --purple: #6a1b9a;
+    --purple-light: #f3e8f7;
+    --purple-bd: #e1bee7;
+
+    --text: #263238;
+    --text-secondary: #68737d;
+    --text-muted: #90a4ae;
+
+    --border: #d9dee3;
+    --background: #f4f6f8;
+    --white: #ffffff;
+
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.10);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body { width: 100%; min-height: 100%; }
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+}
+
+/* BARRA SUPERIOR */
+.topbar {
+    width: 100%;
+    max-width: 1200px;
+    height: 68px;
+    margin: 16px auto 0;
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+.topbar-content { width: 100%; display: flex; align-items: center; gap: 14px; }
+.logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.system-name { font-size: 16px; font-weight: 700; color: #3d2450; }
+.system-divider { width: 1px; height: 22px; background: #dfe3e6; margin: 0 2px; }
+.system-module { font-size: 13px; color: var(--text-secondary); }
+
+/* ÁREA PRINCIPAL */
+.main {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.page-header { margin-bottom: 24px; }
+.breadcrumb {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; color: #7b858e; margin-bottom: 8px;
+}
+.breadcrumb .material-symbols-outlined { font-size: 17px; }
+.page-header h1 { font-size: 22px; font-weight: 700; color: #263238; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--text-secondary); }
+
+/* CARD DE BUSCA */
+.busca-card {
+    background: var(--white);
+    border: 1px solid #e0e4e7;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin-bottom: 24px;
+}
+
+.busca-form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.busca-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 220px;
+}
+
+.busca-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #455a64;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.busca-group input {
+    height: 46px;
+    padding: 0 14px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-size: 15px;
+    color: #263238;
+    letter-spacing: 0.4px;
+}
+
+.busca-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91,42,134,.10);
+}
+
+.btn-buscar {
+    height: 46px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-buscar:hover { background: var(--primary-hover); }
+.btn-buscar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ESTADO VAZIO / MENSAGEM */
+.estado-vazio {
+    background: var(--white);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.estado-vazio .material-symbols-outlined {
+    font-size: 48px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.estado-vazio h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.estado-vazio p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.mensagem {
+    display: none;
+    padding: 14px 16px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    align-items: center;
+    gap: 8px;
+}
+
+.mensagem.ativo { display: flex; }
+
+.mensagem.erro {
+    background: var(--red-light);
+    border: 1px solid var(--red-bd);
+    color: var(--red);
+}
+
+.mensagem.info {
+    background: #eef2f7;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+.mensagem .material-symbols-outlined { font-size: 20px; }
+
+/* ============================================================
+   CARDS DE PERÍODO
+   ============================================================ */
+.periodos-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.periodo-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+}
+
+.periodo-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.periodo-card.atual {
+    border-color: var(--primary);
+    border-width: 2px;
+}
+
+/* CABEÇALHO DO CARD */
+.periodo-card-header {
+    background: #fafbfc;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.periodo-card.atual .periodo-card-header {
+    background: var(--primary-light);
+}
+
+.periodo-referencia {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.periodo-referencia .titulo {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.periodo-referencia .valor {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+}
+
+.tag-atual {
+    background: var(--primary);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.tag-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.tag-status .material-symbols-outlined { font-size: 13px; }
+
+.tag-gozado { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
+.tag-programado { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-bd); }
+.tag-disponivel { background: var(--green-light); color: var(--green); border: 1px solid var(--green-bd); }
+.tag-pendente { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange-bd); }
+.tag-vencido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
+.tag-perdido { background: var(--red-light); color: var(--red); border: 1px solid var(--red-bd); }
+.tag-atual { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-bd); }
+
+/* CORPO DO CARD */
+.periodo-card-body {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+/* INFO DO VÍNCULO */
+.vinculo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.vinculo-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.vinculo-linha .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.vinculo-linha strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.vinculo-linha .matricula-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* DATAS DO PERÍODO */
+.periodo-datas-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.periodo-datas-box .label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.periodo-datas-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.periodo-datas-linha .material-symbols-outlined {
+    font-size: 17px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+/* PROGRESSO */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e8eaed;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.progress-fill.completo { background: var(--green); }
+.progress-fill.emcurso { background: var(--orange); }
+
+/* SEÇÕES DE GOZO */
+.gozos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.gozo-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #fafbfc;
+}
+
+.gozo-box.tem-data {
+    background: var(--green-light);
+    border-color: var(--green-bd);
+}
+
+.gozo-box.tem-data.folga {
+    background: var(--orange-light);
+    border-color: var(--orange-bd);
+}
+
+.gozo-titulo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+}
+
+.gozo-box.tem-data .gozo-titulo { color: var(--green); }
+.gozo-box.tem-data.folga .gozo-titulo { color: var(--orange); }
+
+.gozo-titulo .material-symbols-outlined { font-size: 14px; }
+
+.gozo-valor {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.gozo-box:not(.tem-data) .gozo-valor {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.gozo-status-mini {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.gozo-box.tem-data .gozo-status-mini { color: var(--green); }
+.gozo-box.tem-data.folga .gozo-status-mini { color: var(--orange); }
+.gozo-box:not(.tem-data) .gozo-status-mini { color: var(--text-muted); }
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+    .busca-form { flex-direction: column; align-items: stretch; }
+    .btn-buscar { width: 100%; justify-content: center; }
+    .periodos-wrapper { grid-template-columns: 1fr; }
+    .gozos-grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="topbar-content">
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="Logo">
+        <span class="system-name">Vale Transporte</span>
+        <div class="system-divider"></div>
+        <span class="system-module">Semed - Controle de Férias e Folgas</span>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-header">
+        <div class="breadcrumb">
+            <span class="material-symbols-outlined">home</span>
+            <a href="index.html" style="text-decoration:none; color:inherit;">Início</a>
+            <span>/</span>
+            <span>Férias e Folgas Aniversário</span>
+        </div>
+        <h1>Controle de Férias e Folga Aniversário</h1>
+        <p>Digite o CPF do servidor para visualizar os três últimos períodos aquisitivos.</p>
+    </div>
+
+    <!-- CARD DE BUSCA -->
+    <section class="busca-card">
+        <div class="busca-form">
+            <div class="busca-group">
+                <label for="termoBusca">CPF do Servidor</label>
+                <input type="text" id="termoBusca" placeholder="000.000.000-00"
+                       maxlength="14" autocomplete="off" inputmode="numeric">
+            </div>
+            <button class="btn-buscar" id="btnBuscar">
+                <span class="material-symbols-outlined">search</span>
+                Buscar
+            </button>
+        </div>
+    </section>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <!-- ESTADO VAZIO INICIAL -->
+    <div id="estadoVazio" class="estado-vazio">
+        <span class="material-symbols-outlined">person_search</span>
+        <h3>Nenhum servidor consultado</h3>
+        <p>Digite um CPF acima e clique em "Buscar" para visualizar os períodos.</p>
+    </div>
+
+    <!-- CONTAINER DOS CARDS -->
+    <div id="periodosContainer" class="periodos-wrapper" style="display:none;"></div>
+</main>
+
+<script type="module">
+    import { db } from "./firebase.js";
+    import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const QTD_PERIODOS_EXIBIR = 3;
+
+    // ============================================================
+    // HELPERS DE DATA
+    // ============================================================
+    function parseDataParaDate(s) {
+        if (!s) return null;
+        if (typeof s === 'object' && s.toDate) return s.toDate();
+        s = s.toString().trim();
+        if (s.includes('/')) {
+            const p = s.split('/');
+            return new Date(+p[2], +p[1] - 1, +p[0]);
+        }
+        if (s.includes('-')) {
+            const p = s.substring(0, 10).split('-');
+            return p[0].length === 4
+                ? new Date(+p[0], +p[1] - 1, +p[2])
+                : new Date(+p[2], +p[1] - 1, +p[0]);
+        }
+        return null;
+    }
+
+    function formatarData(s) {
+        if (!s) return '';
+        if (typeof s === 'object' && s.toDate) {
+            s = s.toDate().toISOString().split('T')[0];
+        }
+        s = s.toString().trim();
+        if (s.includes('-') && s.length >= 10) {
+            const p = s.substring(0, 10).split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return s;
+    }
+
+    function formatarCPF(cpf) {
+        if (!cpf) return '';
+        const limpo = cpf.toString().replace(/\D/g, '');
+        if (limpo.length !== 11) return cpf;
+        return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+
+    // ============================================================
+    // CÁLCULO DE PERÍODOS
+    // ============================================================
+    function calcularDireitoFerias(dataAdmissao, ref = new Date()) {
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        let completos = 0, det = [], ini = new Date(adm);
+        while (completos < 40) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            const prazoGozo = new Date(fim);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+            const p = {
+                numero: completos + 1,
+                inicio: new Date(ini),
+                fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                dataLimiteGozo: prazoGozo,
+                status: 'pendente'
+            };
+            if (fim <= ref) {
+                completos++;
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'atual';
+                det.push(p);
+                break;
+            }
+        }
+        return { periodosDetalhados: det };
+    }
+
+    function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
+        const nasc = parseDataParaDate(dataNascimento);
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!nasc || !adm) return null;
+        ref.setHours(0, 0, 0, 0);
+        const mes = nasc.getMonth(), dia = nasc.getDate();
+        let det = [], ini = new Date(adm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            const limite = aniv ? new Date(aniv) : new Date(fim);
+            const prazoGozo = new Date(limite);
+            prazoGozo.setFullYear(prazoGozo.getFullYear() + 1);
+
+            const p = {
+                numero: i + 1,
+                inicio: new Date(ini),
+                fim: new Date(fim),
+                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`,
+                dataLimiteGozo: prazoGozo,
+                status: 'pendente'
+            };
+            if (fim <= ref) {
+                if (prazoGozo < ref) { p.status = 'perdido'; }
+                else { p.status = 'disponivel'; }
+                det.push(p);
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else {
+                p.status = 'disponivel';
+                det.push(p);
+                break;
+            }
+        }
+        return { periodosDetalhados: det };
+    }
+
+    function verificarSeJaGozado(reg, hoje) {
+        const dt = parseDataParaDate(reg.data_inicio || reg.dataInicio || reg.data || reg.data_gozo);
+        if (!dt) return false;
+        return dt <= hoje;
+    }
+
+    // ============================================================
+    // VÍNCULOS
+    // ============================================================
+    function extrairVinculos(dt) {
+        const vinculos = [];
+        if (dt.matricula1) {
+            const m1 = dt.matricula1.numeroMatricula || dt.matricula1.matricula;
+            if (m1) {
+                vinculos.push({
+                    matricula: m1.toString().trim(),
+                    dataAdmissao: dt.matricula1.dataAdmissao || dt.matricula1.data_admissao || '',
+                    escola: dt.matricula1.escola1?.nomeEscola || dt.matricula1.escola2?.nomeEscola || ''
+                });
+            }
+        }
+        if (dt.matricula2) {
+            const m2 = dt.matricula2.numeroMatricula || dt.matricula2.matricula;
+            if (m2) {
+                vinculos.push({
+                    matricula: m2.toString().trim(),
+                    dataAdmissao: dt.matricula2.dataAdmissao || dt.matricula2.data_admissao || '',
+                    escola: dt.matricula2.escola1?.nomeEscola || dt.matricula2.escola2?.nomeEscola || ''
+                });
+            }
+        }
+        if (vinculos.length === 0) {
+            const mat = dt.matricula || dt.Matricula || dt.matricula_servidor;
+            if (mat) {
+                vinculos.push({
+                    matricula: mat.toString().trim(),
+                    dataAdmissao: dt.data_admissao || dt.dataAdmissao || '',
+                    escola: ''
+                });
+            }
+        }
+        return vinculos;
+    }
+
+    // ============================================================
+    // BUSCA DE REGISTROS
+    // ============================================================
+    async function buscarRegistrosPorCPF(cpfLimpo, cpfFmt) {
+        const registros = [];
+        const ids = new Set();
+        try {
+            if (cpfLimpo) {
+                const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfLimpo)));
+                sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
+            }
+            if (cpfFmt && cpfFmt !== cpfLimpo) {
+                const sn = await getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt)));
+                sn.forEach(x => { if (!ids.has(x.id)) { registros.push({ id: x.id, ...x.data() }); ids.add(x.id); } });
+            }
+        } catch (e) {
+            console.error('Erro ao buscar registros:', e);
+        }
+        return registros;
+    }
+
+    // ============================================================
+    // ASSOCIAÇÃO REGISTRO → PERÍODO
+    // ============================================================
+    function encontrarRegistroParaPeriodo(periodo, registros, tipo, dataNascimento, dataAdmissao) {
+        if (!periodo) return null;
+        const anoRef = periodo.anoReferencia;
+
+        if (tipo === 'ferias') {
+            const feriasLanc = registros.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('ferias') || t.includes('férias');
+            });
+            return feriasLanc.find(r => (r.ano_referencia || r.ano || '') === anoRef) || null;
+        } else {
+            const folgasLanc = registros.filter(r => {
+                const t = (r.tipo || '').toLowerCase();
+                return t.includes('aniversario') || t.includes('aniversário') || t.includes('folga');
+            });
+            let lanc = folgasLanc.find(r => (r.ano_referencia || r.ano || '') === anoRef);
+            if (lanc) return lanc;
+            for (const r of folgasLanc) {
+                const raw = r.data || r.data_gozo || r.data_inicio || r.dataInicio;
+                const per = identificarPeriodoFolgaAniversario(raw, dataNascimento, dataAdmissao);
+                if (per === anoRef) return r;
+            }
+            return null;
+        }
+    }
+
+    function identificarPeriodoFolgaAniversario(dataGozo, dataNascimento, dataAdmissao) {
+        const dtGozo = parseDataParaDate(dataGozo);
+        const dtNasc = parseDataParaDate(dataNascimento);
+        const dtAdm = parseDataParaDate(dataAdmissao);
+        if (!dtGozo || !dtNasc || !dtAdm) return null;
+        const mes = dtNasc.getMonth(), dia = dtNasc.getDate();
+        let ini = new Date(dtAdm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
+            let aniv = null;
+            for (let a = ini.getFullYear(); a <= fim.getFullYear(); a++) {
+                const c = new Date(a, mes, dia);
+                if (c >= ini && c <= fim) { aniv = c; break; }
+            }
+            const limite = aniv || fim;
+            if (dtGozo <= limite && dtGozo >= ini) return `${ini.getFullYear()}/${fim.getFullYear()}`;
+            if (dtGozo > limite && dtGozo <= fim) {
+                const pi = new Date(fim); pi.setDate(pi.getDate() + 1);
+                const pf = new Date(pi); pf.setFullYear(pf.getFullYear() + 1); pf.setDate(pf.getDate() - 1);
+                return `${pi.getFullYear()}/${pf.getFullYear()}`;
+            }
+            ini = new Date(fim); ini.setDate(ini.getDate() + 1);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // PREPARA ITEM DE GOZO (férias ou folga)
+    // ============================================================
+    function prepararGozo(periodo, registros, tipo, dataNascimento, dataAdmissao, hoje) {
+        const lanc = encontrarRegistroParaPeriodo(periodo, registros, tipo, dataNascimento, dataAdmissao);
+
+        let status = periodo.status;
+        let dataGozo = null;
+
+        if (lanc) {
+            const raw = tipo === 'ferias'
+                ? (lanc.data_inicio || lanc.dataInicio || lanc.data)
+                : (lanc.data || lanc.data_gozo || lanc.data_inicio || lanc.dataInicio);
+            dataGozo = raw;
+            status = verificarSeJaGozado(lanc, hoje) ? 'gozado' : 'programado';
+        } else {
+            if (periodo.status === 'atual') status = 'atual';
+            else if (periodo.dataLimiteGozo < hoje) status = tipo === 'folga' ? 'perdido' : 'vencido';
+            else status = tipo === 'folga' ? 'disponivel' : 'pendente';
+        }
+
+        return { status, dataGozo, reg: lanc };
+    }
+
+    // ============================================================
+    // RENDERIZAÇÃO DE TAG DE STATUS
+    // ============================================================
+    function renderTagStatus(status) {
+        const map = {
+            gozado: ['tag-gozado', 'check_circle', 'Gozado'],
+            programado: ['tag-programado', 'event_upcoming', 'Programado'],
+            disponivel: ['tag-disponivel', 'event_available', 'Disponível'],
+            pendente: ['tag-pendente', 'schedule', 'Pendente'],
+            vencido: ['tag-vencido', 'error', 'Vencido'],
+            perdido: ['tag-perdido', 'cancel', 'Perdido'],
+            atual: ['tag-atual', 'hourglass_top', 'Em curso']
+        };
+        const x = map[status];
+        if (!x) return '';
+        return `<span class="tag-status ${x[0]}"><span class="material-symbols-outlined">${x[1]}</span> ${x[2]}</span>`;
+    }
+
+    // ============================================================
+    // RENDERIZA UM CARD DE PERÍODO
+    // ============================================================
+    function renderCardPeriodo(periodo, gozoFerias, gozoFolga, vinculo, hoje) {
+        const p = periodo;
+        const inicioFmt = formatarData(p.inicio.toISOString().split('T')[0]);
+        const fimFmt = formatarData(p.fim.toISOString().split('T')[0]);
+        const isAtual = p.status === 'atual';
+
+        // Progresso
+        let progresso = 0;
+        if (isAtual) {
+            const total = p.fim - p.inicio;
+            const decorrido = hoje - p.inicio;
+            progresso = Math.min(100, Math.max(0, (decorrido / total) * 100));
+        }
+
+        // Férias
+        const feriasDataFmt = gozoFerias.dataGozo ? formatarData(gozoFerias.dataGozo) : null;
+        const feriasTemData = !!feriasDataFmt;
+        const feriasStatus = gozoFerias.status;
+
+        // Folga aniversário
+        const folgaDataFmt = gozoFolga.dataGozo ? formatarData(gozoFolga.dataGozo) : null;
+        const folgaTemData = !!folgaDataFmt;
+        const folgaStatus = gozoFolga.status;
+
+        return `
+            <div class="periodo-card ${isAtual ? 'atual' : ''}">
+                <div class="periodo-card-header">
+                    <div class="periodo-referencia">
+                        <span class="titulo">Período Aquisitivo</span>
+                        <span class="valor">${p.anoReferencia}</span>
+                    </div>
+                    ${isAtual
+                        ? '<span class="tag-atual">ATUAL</span>'
+                        : renderTagStatus(feriasStatus)}
+                </div>
+
+                <div class="periodo-card-body">
+
+                    <!-- VÍNCULO -->
+                    <div class="vinculo-info">
+                        <div class="vinculo-linha">
+                            <span class="material-symbols-outlined">badge</span>
+                            <span>Matrícula</span>
+                            <span class="matricula-badge">${vinculo.matricula}</span>
+                        </div>
+                        ${vinculo.escola ? `
+                            <div class="vinculo-linha">
+                                <span class="material-symbols-outlined">school</span>
+                                <strong>${vinculo.escola}</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- DATAS -->
+                    <div class="periodo-datas-box">
+                        <span class="label">Vigência do período</span>
+                        <div class="periodo-datas-linha">
+                            <span class="material-symbols-outlined">event</span>
+                            <span>${inicioFmt} &nbsp;→&nbsp; ${fimFmt}</span>
+                        </div>
+                    </div>
+
+                    <!-- PROGRESSO (só atual) -->
+                    ${isAtual ? `
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span>Decorrido</span>
+                                <span>${progresso.toFixed(0)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${progresso >= 100 ? 'completo' : 'emcurso'}"
+                                     style="width:${progresso}%"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- GOZOS -->
+                    <div class="gozos-grid">
+                        <div class="gozo-box ${feriasTemData ? 'tem-data' : ''}">
+                            <div class="gozo-titulo">
+                                <span class="material-symbols-outlined">beach_access</span>
+                                Férias
+                            </div>
+                            <div class="gozo-valor">
+                                ${feriasTemData ? feriasDataFmt : 'Não registrado'}
+                            </div>
+                            <div class="gozo-status-mini">
+                                ${feriasTemData ? (feriasStatus === 'gozado' ? 'Gozado' : 'Programado') : (feriasStatus === 'vencido' ? 'Vencido' : feriasStatus === 'pendente' ? 'Pendente' : '—')}
+                            </div>
+                        </div>
+
+                        <div class="gozo-box ${folgaTemData ? 'tem-data folga' : ''}">
+                            <div class="gozo-titulo">
+                                <span class="material-symbols-outlined">cake</span>
+                                Folga Aniv.
+                            </div>
+                            <div class="gozo-valor">
+                                ${folgaTemData ? folgaDataFmt : 'Não registrado'}
+                            </div>
+                            <div class="gozo-status-mini">
+                                ${folgaTemData ? (folgaStatus === 'gozado' ? 'Gozado' : 'Programado') : (folgaStatus === 'perdido' ? 'Perdido' : folgaStatus === 'disponivel' ? 'Disponível' : '—')}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // BUSCA PRINCIPAL
+    // ============================================================
+    async function buscar() {
+        const termo = document.getElementById('termoBusca').value.trim();
+        const msgDiv = document.getElementById('mensagem');
+        const estadoVazio = document.getElementById('estadoVazio');
+        const container = document.getElementById('periodosContainer');
+        const btn = document.getElementById('btnBuscar');
+
+        msgDiv.className = 'mensagem';
+        msgDiv.textContent = '';
+        container.style.display = 'none';
+        estadoVazio.style.display = 'none';
+
+        if (!termo) {
+            mostrarMensagem('Digite um CPF para buscar.', 'erro');
+            estadoVazio.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="animation: girar 1s linear infinite;">sync</span> Buscando...';
+
+        try {
+            const cpfLimpo = termo.replace(/\D/g, '');
+            const cpfFmt = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+
+            // Busca servidor por CPF (tenta vários formatos)
+            const colRef = collection(db, 'servidores');
+            const encontrados = new Map();
+            try {
+                const qs = [
+                    where('cpf', '==', cpfLimpo),
+                    where('cpf', '==', cpfFmt),
+                    where('CPF', '==', cpfLimpo),
+                    where('CPF', '==', cpfFmt)
+                ];
+                for (const q of qs) {
+                    try {
+                        const sn = await getDocs(query(colRef, q));
+                        sn.forEach(d => encontrados.set(d.id, d));
+                    } catch (e) {}
+                }
+            } catch (e) {}
+
+            if (encontrados.size === 0) {
+                mostrarMensagem('CPF não localizado no sistema.', 'erro');
+                estadoVazio.style.display = 'block';
+                estadoVazio.querySelector('h3').textContent = 'Servidor não encontrado';
+                estadoVazio.querySelector('p').textContent = 'Confira o CPF digitado e tente novamente.';
+                return;
+            }
+
+            const docServidor = Array.from(encontrados.values())[0];
+            const s = docServidor.data();
+            const dataNascimento = s.data_nascimento || s.dataNascimento;
+
+            const vinculos = extrairVinculos(s);
+            if (vinculos.length === 0) {
+                mostrarMensagem('Servidor sem matrícula/admissão cadastrada.', 'info');
+                estadoVazio.style.display = 'block';
+                return;
+            }
+
+            // Busca registros de férias/folgas
+            const registros = await buscarRegistrosPorCPF(cpfLimpo, cpfFmt);
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            let html = '';
+
+            // Para cada vínculo (matrícula), gera até 3 cards
+            vinculos.forEach(vinculo => {
+                if (!vinculo.dataAdmissao) return;
+
+                const dirF = calcularDireitoFerias(vinculo.dataAdmissao, hoje);
+                const dirG = dataNascimento
+                    ? calcularDireitoFolgaAniversario(dataNascimento, vinculo.dataAdmissao, hoje)
+                    : null;
+
+                if (!dirF) return;
+
+                // Ordena do mais recente para o mais antigo
+                const periodosOrdenados = [...dirF.periodosDetalhados].sort((a, b) => b.inicio - a.inicio);
+                const selecionados = periodosOrdenados.slice(0, QTD_PERIODOS_EXIBIR);
+
+                // Mapa de períodos de folga por ano de referência
+                const mapaFolgas = new Map();
+                if (dirG) {
+                    dirG.periodosDetalhados.forEach(p => mapaFolgas.set(p.anoReferencia, p));
+                }
+
+                selecionados.forEach(periodo => {
+                    // Registros da matrícula específica
+                    const registrosMat = registros.filter(r => {
+                        const rm = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+                        if (!rm) return true;
+                        const vm = vinculo.matricula.toString().trim().replace(/^0+/, '');
+                        return rm === vm || rm === vinculo.matricula.toString().trim();
+                    });
+
+                    const gozoFerias = prepararGozo(periodo, registrosMat, 'ferias', dataNascimento, vinculo.dataAdmissao, hoje);
+
+                    // Folga aniversário equivalente a este período
+                    const periodoFolga = mapaFolgas.get(periodo.anoReferencia);
+                    const gozoFolga = periodoFolga
+                        ? prepararGozo(periodoFolga, registrosMat, 'folga', dataNascimento, vinculo.dataAdmissao, hoje)
+                        : { status: '—', dataGozo: null };
+
+                    html += renderCardPeriodo(periodo, gozoFerias, gozoFolga, vinculo, hoje);
+                });
+            });
+
+            if (!html) {
+                mostrarMensagem('Nenhum período aquisitivo calculado para este servidor.', 'info');
+                estadoVazio.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = html;
+            container.style.display = 'grid';
+
+        } catch (erro) {
+            console.error('Erro na busca:', erro);
+            mostrarMensagem('Erro ao buscar os dados. Tente novamente.', 'erro');
+            estadoVazio.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">search</span> Buscar';
+        }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+        const msg = document.getElementById('mensagem');
+        msg.className = 'mensagem ativo ' + tipo;
+        const icone = tipo === 'erro' ? 'error' : 'info';
+        msg.innerHTML = `<span class="material-symbols-outlined">${icone}</span> ${texto}`;
+    }
+
+    // ============================================================
+    // MÁSCARA DE CPF + EVENTOS
+    // ============================================================
+    const inputBusca = document.getElementById('termoBusca');
+    inputBusca.addEventListener('input', function(e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 11) v = v.slice(0, 11);
+        if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+        else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+        else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+        e.target.value = v;
+    });
+    inputBusca.addEventListener('keypress', e => {
+        if (e.key === 'Enter') { e.preventDefault(); buscar(); }
+    });
+    document.getElementById('btnBuscar').addEventListener('click', buscar);
+
+    // Animação do spinner (declarada inline no botão)
+    const styleSpin = document.createElement('style');
+    styleSpin.textContent = '@keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+    document.head.appendChild(styleSpin);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: #fff; border: 1px solid #d4d4d8; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1); max-height: 220px;
+            overflow-y: auto; z-index: 999; display: none;
+        }
+        .autocomplete-list.ativo { display: block; }
+        .autocomplete-item {
+            padding: 10px 14px; font-size: 13.5px; color: #1a1d21;
+            cursor: pointer; border-bottom: 1px solid #f0f0f0;
+            transition: background .1s;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #f3e8ff; color: #6b21a8; }
+        .autocomplete-vazio { padding: 12px 14px; font-size: 13px; color: #71717a; }
+        .escola-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #f3e8ff; color: #6b21a8; font-size: 12px;
+            font-weight: 600; padding: 5px 10px; border-radius: 999px;
+            border: 1px solid #d8b4fe;
+        }
+        .escola-chip button {
+            background: none; border: none; color: #9333ea;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            line-height: 1; padding: 0 2px; margin-left: 2px;
+        }
+        .escola-chip button:hover { color: #6b21a8; }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen font-inter">
+
+    <!-- CABEÇALHO -->
+    <header class="bg-purple-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold">Gerenciamento de Usuários</h1>
+                    <p class="text-purple-200 text-sm mt-1">Controle de acesso ao sistema Vale Transporte</p>
+                </div>
+                <a href="inicial.html" class="text-sm font-medium text-purple-100 hover:text-white transition">
+                    ← Voltar ao sistema
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- MENSAGEM -->
+        <div id="mensagem" class="hidden mb-6 rounded-lg px-4 py-3 text-sm font-medium"></div>
+
+        <!-- FORMULÁRIO DE CADASTRO -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Cadastrar usuário</h2>
+                <p class="text-sm text-gray-500 mt-1">Cadastre um novo usuário para acesso ao sistema.</p>
+            </div>
+
+            <form id="formUsuario" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                <!-- NOME -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                    <input type="text" id="nome" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Nome completo">
+                </div>
+
+                <!-- USUÁRIO -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Usuário</label>
+                    <div class="flex">
+                        <input type="text" id="usuario" required autocomplete="off"
+                            class="w-full border border-gray-300 rounded-l-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="Digite o usuário">
+                        <span class="flex items-center bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg px-3 text-sm text-gray-600 whitespace-nowrap">
+                            @educacao.divinopolis.mg.gov.br
+                        </span>
+                    </div>
+                </div>
+
+                <!-- SENHA -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                    <input type="password" id="senha" required minlength="6" autocomplete="new-password"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Mínimo de 6 caracteres">
+                </div>
+
+                <!-- PERFIL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Perfil</label>
+                    <select id="perfil" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="">Selecione o perfil</option>
+                        <option value="escola">Escola</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+
+                <!-- ESCOLAS (AUTOCOMPLETE COM CHIPS) -->
+                <div id="campoEscola" class="md:col-span-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Escolas vinculadas</label>
+
+                    <div id="escolasChips" class="flex flex-wrap gap-2 mb-2 min-h-[42px] p-2 border border-gray-300 rounded-lg bg-gray-50"></div>
+
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="escolaInput" placeholder="Digite para buscar e adicionar escolas" autocomplete="off"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <div class="autocomplete-list" id="listaEscolasCadastro"></div>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Digite o nome da escola e clique na sugestão para adicionar. Clique no × do chip para remover.
+                    </p>
+                </div>
+
+                <!-- BOTÃO -->
+                <div class="md:col-span-2 flex justify-end pt-2">
+                    <button type="submit" id="btnCadastrar"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition">
+                        Cadastrar usuário
+                    </button>
+                </div>
+
+            </form>
+        </section>
+
+        <!-- LISTA DE USUÁRIOS -->
+        <section class="bg-white rounded-xl shadow-md overflow-hidden">
+
+            <div class="px-6 py-5 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">Usuários cadastrados</h2>
+                <p class="text-sm text-gray-500 mt-1">Usuários registrados no sistema.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase">Nome</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase">E-mail</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase">Perfil</th>
+                            <th class="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase">Escolas</th>
+                            <th class="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUsuarios">
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">Carregando usuários...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE INFORMAÇÃO -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 id="modalTitulo" class="text-xl font-bold text-gray-800 mb-3"></h3>
+            <p id="modalMensagem" class="text-gray-600 leading-relaxed"></p>
+            <div class="flex justify-end mt-6">
+                <button onclick="fecharModal()"
+                    class="bg-purple-700 hover:bg-purple-800 text-white px-5 py-2 rounded-lg font-medium">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO -->
+    <div id="modalEdicao" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Editar usuário</h3>
+                <button onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Fechar">×</button>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-5">
+                Altere os dados do usuário. Deixe a senha em branco para manter a atual.
+            </p>
+
+            <form id="formEdicao" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                <input type="hidden" id="edicaoUid">
+
+                <!-- NOME -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                    <input type="text" id="edicaoNome" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+
+                <!-- E-MAIL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="text" id="edicaoEmail" readonly
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-600 cursor-not-allowed">
+                    <p class="text-xs text-gray-400 mt-1">O e-mail não pode ser alterado.</p>
+                </div>
+
+                <!-- SENHA -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nova senha</label>
+                    <input type="password" id="edicaoSenha" minlength="6" autocomplete="new-password"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Deixe em branco para manter">
+                </div>
+
+                <!-- PERFIL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Perfil</label>
+                    <select id="edicaoPerfil" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="">Selecione o perfil</option>
+                        <option value="escola">Escola</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+
+                <!-- ESCOLAS (AUTOCOMPLETE COM CHIPS) -->
+                <div id="campoEdicaoEscola" class="md:col-span-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Escolas vinculadas</label>
+
+                    <div id="edicaoEscolasChips" class="flex flex-wrap gap-2 mb-2 min-h-[42px] p-2 border border-gray-300 rounded-lg bg-gray-50"></div>
+
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="edicaoEscolaInput" placeholder="Digite para buscar e adicionar escolas" autocomplete="off"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <div class="autocomplete-list" id="listaEscolasEdicao"></div>
+                    </div>
+                </div>
+
+                <!-- BOTÕES -->
+                <div class="md:col-span-2 flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                    <button type="button" onclick="fecharModalEdicao()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnSalvarEdicao"
+                        class="bg-purple-700 hover:bg-purple-800 text-white font-semibold px-6 py-3 rounded-lg transition">
+                        Salvar alterações
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+
+        // =========================================================
+        // FIREBASE
+        // =========================================================
+
+        import { db, auth } from "./firebase.js";
+
+        import {
+            collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        import {
+            onAuthStateChanged, createUserWithEmailAndPassword, signOut, getAuth
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+        // =========================================================
+        // CONFIGURAÇÕES
+        // =========================================================
+
+        const DOMINIO_EMAIL = "@educacao.divinopolis.mg.gov.br";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBM4YmeI3r8hojjpI3n0wJsOrV5h3KFH9M",
+            authDomain: "portal-47793.firebaseapp.com",
+            projectId: "portal-47793",
+            storageBucket: "portal-47793.firebasestorage.app",
+            messagingSenderId: "746031374293",
+            appId: "1:746031374293:web:ddb18d9faec8530a72675c"
+        };
+
+        let usuarioAtual = null;
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const formUsuario = document.getElementById("formUsuario");
+        const perfil = document.getElementById("perfil");
+        const campoEscola = document.getElementById("campoEscola");
+        const tabelaUsuarios = document.getElementById("tabelaUsuarios");
+        const btnCadastrar = document.getElementById("btnCadastrar");
+        const formEdicao = document.getElementById("formEdicao");
+        const edicaoPerfil = document.getElementById("edicaoPerfil");
+        const campoEdicaoEscola = document.getElementById("campoEdicaoEscola");
+        const btnSalvarEdicao = document.getElementById("btnSalvarEdicao");
+
+        // =========================================================
+        // ESTADO DAS ESCOLAS SELECIONADAS
+        // =========================================================
+
+        let escolasDisponiveis = [];
+        let escolasSelecionadasCadastro = [];
+        let escolasSelecionadasEdicao = [];
+
+        // =========================================================
+        // CARREGAR UNIDADES ESCOLARES DO FIRESTORE
+        // =========================================================
+
+        async function carregarUnidadesEscolares() {
+            try {
+                const snapshot = await getDocs(collection(db, 'unidades'));
+                escolasDisponiveis = [];
+                snapshot.forEach(d => {
+                    const data = d.data();
+                    const nome = data.nome || data.nomeEscola || d.id;
+                    escolasDisponiveis.push(nome);
+                });
+                escolasDisponiveis.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            } catch (e) {
+                console.error('Erro ao carregar unidades escolares:', e);
+            }
+        }
+
+        // =========================================================
+        // AUTOCOMPLETE DE ESCOLAS
+        // =========================================================
+
+        function inicializarAutocompleteEscolas(inputId, listaId, tipo) {
+            const input = document.getElementById(inputId);
+            const lista = document.getElementById(listaId);
+            if (!input || !lista) return;
+
+            input.addEventListener('focus', () => {
+                renderizarListaEscolas(input, lista, input.value, tipo);
+                lista.classList.add('ativo');
+            });
+
+            input.addEventListener('input', () => {
+                renderizarListaEscolas(input, lista, input.value, tipo);
+                lista.classList.add('ativo');
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => { lista.classList.remove('ativo'); }, 150);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest(`#${inputId}`) && !e.target.closest(`#${listaId}`)) {
+                    lista.classList.remove('ativo');
+                }
+            });
+        }
+
+        function renderizarListaEscolas(input, listaEl, filtro, tipo) {
+            listaEl.innerHTML = '';
+            const termo = filtro.toLowerCase().trim();
+
+            const selecionadas = tipo === 'cadastro' ? escolasSelecionadasCadastro : escolasSelecionadasEdicao;
+
+            const disponiveis = escolasDisponiveis.filter(e =>
+                !selecionadas.some(s => normalizarTexto(s) === normalizarTexto(e))
+            );
+
+            const resultados = disponiveis.filter(nome =>
+                nome.toLowerCase().includes(termo)
+            );
+
+            if (resultados.length === 0) {
+                listaEl.innerHTML = '<div class="autocomplete-vazio">Nenhuma escola encontrada</div>';
+                return;
+            }
+
+            resultados.forEach(nome => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = nome;
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    if (tipo === 'cadastro') {
+                        escolasSelecionadasCadastro.push(nome);
+                        renderizarChipsCadastro();
+                    } else {
+                        escolasSelecionadasEdicao.push(nome);
+                        renderizarChipsEdicao();
+                    }
+                    input.value = '';
+                    listaEl.classList.remove('ativo');
+                });
+                listaEl.appendChild(item);
+            });
+        }
+
+        // =========================================================
+        // CHIPS DE ESCOLAS
+        // =========================================================
+
+        function renderizarChipsCadastro() {
+            const container = document.getElementById('escolasChips');
+            container.innerHTML = '';
+            escolasSelecionadasCadastro.forEach((escola, index) => {
+                const chip = document.createElement('span');
+                chip.className = 'escola-chip';
+                chip.innerHTML = `${escaparHTML(escola)} <button type="button" onclick="removerEscolaCadastro(${index})">&times;</button>`;
+                container.appendChild(chip);
+            });
+        }
+
+        function renderizarChipsEdicao() {
+            const container = document.getElementById('edicaoEscolasChips');
+            container.innerHTML = '';
+            escolasSelecionadasEdicao.forEach((escola, index) => {
+                const chip = document.createElement('span');
+                chip.className = 'escola-chip';
+                chip.innerHTML = `${escaparHTML(escola)} <button type="button" onclick="removerEscolaEdicao(${index})">&times;</button>`;
+                container.appendChild(chip);
+            });
+        }
+
+        window.removerEscolaCadastro = function(index) {
+            escolasSelecionadasCadastro.splice(index, 1);
+            renderizarChipsCadastro();
+        };
+
+        window.removerEscolaEdicao = function(index) {
+            escolasSelecionadasEdicao.splice(index, 1);
+            renderizarChipsEdicao();
+        };
+
+        // =========================================================
+        // HELPERS
+        // =========================================================
+
+        function normalizarTexto(valor) {
+            if (valor === null || valor === undefined) return "";
+            return String(valor).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").toUpperCase();
+        }
+
+        function normalizarEscolas(dados) {
+            if (!dados.escola) return [];
+            if (Array.isArray(dados.escola)) return dados.escola;
+            return [dados.escola];
+        }
+
+        function escaparHTML(valor) {
+            return String(valor)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // =========================================================
+        // MOSTRAR / OCULTAR ESCOLA
+        // =========================================================
+
+        perfil.addEventListener("change", () => {
+            if (perfil.value === "escola") {
+                campoEscola.classList.remove("hidden");
+            } else {
+                campoEscola.classList.add("hidden");
+                escolasSelecionadasCadastro = [];
+                renderizarChipsCadastro();
+            }
+        });
+
+        edicaoPerfil.addEventListener("change", () => {
+            if (edicaoPerfil.value === "escola") {
+                campoEdicaoEscola.classList.remove("hidden");
+            } else {
+                campoEdicaoEscola.classList.add("hidden");
+                escolasSelecionadasEdicao = [];
+                renderizarChipsEdicao();
+            }
+        });
+
+        // =========================================================
+        // MENSAGEM
+        // =========================================================
+
+        function mostrarMensagem(texto, tipo = "sucesso") {
+            const mensagem = document.getElementById("mensagem");
+            mensagem.textContent = texto;
+            mensagem.classList.remove("hidden", "bg-green-100", "text-green-800", "bg-red-100", "text-red-800");
+            if (tipo === "erro") {
+                mensagem.classList.add("bg-red-100", "text-red-800");
+            } else {
+                mensagem.classList.add("bg-green-100", "text-green-800");
+            }
+        }
+
+        // =========================================================
+        // MODAL DE INFORMAÇÃO
+        // =========================================================
+
+        function mostrarModal(titulo, mensagem) {
+            document.getElementById("modalTitulo").textContent = titulo;
+            document.getElementById("modalMensagem").textContent = mensagem;
+            const modal = document.getElementById("modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        window.fecharModal = function () {
+            const modal = document.getElementById("modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        };
+
+        // =========================================================
+        // MODAL DE EDIÇÃO
+        // =========================================================
+
+        window.abrirModalEdicao = async function (uid) {
+            try {
+                const referencia = doc(db, "usuarios", uid);
+                const resultado = await getDoc(referencia);
+
+                if (!resultado.exists()) {
+                    mostrarModal("Usuário não encontrado", "O cadastro deste usuário não foi localizado.");
+                    return;
+                }
+
+                const dados = resultado.data();
+
+                document.getElementById("edicaoUid").value = uid;
+                document.getElementById("edicaoNome").value = dados.nome || "";
+                document.getElementById("edicaoEmail").value = dados.email || "";
+                document.getElementById("edicaoSenha").value = "";
+                edicaoPerfil.value = dados.perfil || "";
+
+                if (dados.perfil === "escola") {
+                    campoEdicaoEscola.classList.remove("hidden");
+                    const escolasVinculadas = normalizarEscolas(dados);
+                    escolasSelecionadasEdicao = [...escolasVinculadas];
+                    renderizarChipsEdicao();
+                } else {
+                    campoEdicaoEscola.classList.add("hidden");
+                    escolasSelecionadasEdicao = [];
+                    renderizarChipsEdicao();
+                }
+
+                const modal = document.getElementById("modalEdicao");
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+
+            } catch (erro) {
+                console.error("Erro ao abrir modal de edição:", erro);
+                mostrarModal("Erro ao abrir edição", erro?.message || "Não foi possível carregar os dados.");
+            }
+        };
+
+        window.fecharModalEdicao = function () {
+            const modal = document.getElementById("modalEdicao");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            formEdicao.reset();
+            campoEdicaoEscola.classList.add("hidden");
+            escolasSelecionadasEdicao = [];
+            renderizarChipsEdicao();
+        };
+
+        // =========================================================
+        // SALVAR EDIÇÃO
+        // =========================================================
+
+        formEdicao.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const uid = document.getElementById("edicaoUid").value;
+            const nome = document.getElementById("edicaoNome").value.trim();
+            const novaSenha = document.getElementById("edicaoSenha").value;
+            const perfilSelecionado = edicaoPerfil.value;
+            const escolasSelecionadas = [...escolasSelecionadasEdicao];
+
+            if (!uid || !nome || !perfilSelecionado) {
+                mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+                return;
+            }
+
+            if (novaSenha && novaSenha.length < 6) {
+                mostrarMensagem("A nova senha deve possuir pelo menos 6 caracteres.", "erro");
+                return;
+            }
+
+            if (perfilSelecionado === "escola" && escolasSelecionadas.length === 0) {
+                mostrarMensagem("Selecione pelo menos uma escola.", "erro");
+                return;
+            }
+
+            btnSalvarEdicao.disabled = true;
+            btnSalvarEdicao.textContent = "Salvando...";
+
+            try {
+                if (novaSenha) {
+                    mostrarMensagem("Os dados foram salvos, mas a alteração de senha deve ser feita pelo usuário via 'Esqueci minha senha'.", "sucesso");
+                }
+
+                const dadosAtualizados = {
+                    nome: nome,
+                    perfil: perfilSelecionado,
+                    escola: perfilSelecionado === "escola" ? escolasSelecionadas : [],
+                    dataAtualizacao: new Date().toISOString(),
+                    atualizadoPor: usuarioAtual.uid
+                };
+
+                await updateDoc(doc(db, "usuarios", uid), dadosAtualizados);
+
+                fecharModalEdicao();
+                mostrarModal("Usuário atualizado", "Os dados do usuário foram salvos com sucesso.");
+                await carregarUsuarios();
+
+            } catch (erro) {
+                console.error("ERRO AO SALVAR EDIÇÃO:", erro);
+                mostrarMensagem(erro?.message || "Não foi possível salvar as alterações.", "erro");
+                mostrarModal("Erro ao salvar", erro?.message || "Não foi possível salvar as alterações.");
+            } finally {
+                btnSalvarEdicao.disabled = false;
+                btnSalvarEdicao.textContent = "Salvar alterações";
+            }
+        });
+
+        // =========================================================
+        // VERIFICAR USUÁRIO LOGADO
+        // =========================================================
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            usuarioAtual = user;
+
+            await carregarUnidadesEscolares();
+
+            inicializarAutocompleteEscolas('escolaInput', 'listaEscolasCadastro', 'cadastro');
+            inicializarAutocompleteEscolas('edicaoEscolaInput', 'listaEscolasEdicao', 'edicao');
+
+            try {
+                const referencia = doc(db, "usuarios", user.uid);
+                const resultado = await getDoc(referencia);
+
+                if (!resultado.exists()) {
+                    mostrarModal("Acesso negado", "Seu usuário não possui um cadastro na coleção usuarios.");
+                    setTimeout(() => { window.location.href = "inicial.html"; }, 2500);
+                    return;
+                }
+
+                const dados = resultado.data();
+
+                if (dados.perfil !== "admin") {
+                    mostrarModal("Acesso negado", "Somente usuários administradores podem acessar esta página.");
+                    setTimeout(() => { window.location.href = "inicial.html"; }, 2500);
+                    return;
+                }
+
+                await carregarUsuarios();
+
+            } catch (erro) {
+                tabelaUsuarios.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-red-600">
+                            Erro ao verificar o usuário administrador.
+                            <br>
+                            <span class="text-xs text-gray-500">${escaparHTML(erro?.message || "Erro desconhecido")}</span>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        // =========================================================
+        // CADASTRAR USUÁRIO
+        // =========================================================
+
+        formUsuario.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            if (!usuarioAtual) {
+                mostrarMensagem("Usuário administrador não identificado.", "erro");
+                return;
+            }
+
+            const nome = document.getElementById("nome").value.trim();
+            const usuario = document.getElementById("usuario").value.trim().toLowerCase();
+            const senha = document.getElementById("senha").value;
+            const perfilSelecionado = perfil.value;
+            const escolasSelecionadas = [...escolasSelecionadasCadastro];
+
+            if (!nome || !usuario || !senha || !perfilSelecionado) {
+                mostrarMensagem("Preencha todos os campos obrigatórios.", "erro");
+                return;
+            }
+
+            if (senha.length < 6) {
+                mostrarMensagem("A senha deve possuir pelo menos 6 caracteres.", "erro");
+                return;
+            }
+
+            if (perfilSelecionado === "escola" && escolasSelecionadas.length === 0) {
+                mostrarMensagem("Selecione pelo menos uma escola.", "erro");
+                return;
+            }
+
+            const email = usuario + DOMINIO_EMAIL;
+
+            btnCadastrar.disabled = true;
+            btnCadastrar.textContent = "Cadastrando...";
+
+            let appSecundario = null;
+            let authSecundario = null;
+
+            try {
+                const nomeApp = "cadastroUsuario_" + Date.now();
+                appSecundario = initializeApp(firebaseConfig, nomeApp);
+                authSecundario = getAuth(appSecundario);
+
+                const usuarioCredential = await createUserWithEmailAndPassword(authSecundario, email, senha);
+                const uid = usuarioCredential.user.uid;
+
+                const dadosUsuario = {
+                    nome: nome,
+                    email: email,
+                    escola: perfilSelecionado === "escola" ? escolasSelecionadas : [],
+                    perfil: perfilSelecionado,
+                    ativo: true,
+                    dataCadastro: new Date().toISOString(),
+                    cadastradoPor: usuarioAtual.uid
+                };
+
+                await setDoc(doc(db, "usuarios", uid), dadosUsuario);
+
+                try { await signOut(authSecundario); } catch (e) { console.warn(e); }
+                try { await deleteApp(appSecundario); } catch (e) { console.warn(e); }
+                appSecundario = null;
+                authSecundario = null;
+
+                formUsuario.reset();
+                campoEscola.classList.add("hidden");
+                escolasSelecionadasCadastro = [];
+                renderizarChipsCadastro();
+
+                mostrarMensagem("Usuário cadastrado com sucesso.");
+                mostrarModal("Usuário cadastrado", "O usuário foi criado no Firebase Authentication e registrado na coleção usuarios.");
+                await carregarUsuarios();
+
+            } catch (erro) {
+                console.error("ERRO COMPLETO AO CADASTRAR:", erro);
+
+                let mensagemErro = "Não foi possível cadastrar o usuário.";
+                if (erro?.code === "auth/email-already-in-use") mensagemErro = "Este usuário já existe no Firebase Authentication.";
+                else if (erro?.code === "auth/invalid-email") mensagemErro = "O endereço de e-mail informado é inválido.";
+                else if (erro?.code === "auth/weak-password") mensagemErro = "A senha informada é muito fraca.";
+                else if (erro?.code === "auth/api-key-not-valid") mensagemErro = "A chave da API do Firebase foi rejeitada.";
+                else if (erro?.code === "permission-denied") mensagemErro = "O Firebase bloqueou o acesso ao Firestore.";
+                else if (erro?.message) mensagemErro = erro.message;
+
+                mostrarMensagem(mensagemErro, "erro");
+                mostrarModal("Erro ao cadastrar usuário", mensagemErro);
+
+                if (authSecundario) {
+                    try { await signOut(authSecundario); } catch (e) { console.warn(e); }
+                }
+                if (appSecundario) {
+                    try { await deleteApp(appSecundario); } catch (e) { console.warn(e); }
+                }
+
+            } finally {
+                btnCadastrar.disabled = false;
+                btnCadastrar.textContent = "Cadastrar usuário";
+            }
+        });
+
+        // =========================================================
+        // CARREGAR USUÁRIOS
+        // =========================================================
+
+        async function carregarUsuarios() {
+            tabelaUsuarios.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-10 text-center text-gray-500">Carregando usuários...</td>
+                </tr>
+            `;
+
+            try {
+                const referencia = collection(db, "usuarios");
+                const resultado = await getDocs(referencia);
+
+                if (resultado.empty) {
+                    tabelaUsuarios.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">Nenhum usuário cadastrado.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tabelaUsuarios.innerHTML = "";
+
+                resultado.forEach((documento) => {
+                    const dados = documento.data();
+                    const tr = document.createElement("tr");
+                    tr.className = "border-t border-gray-100 hover:bg-gray-50";
+
+                    const perfilTexto = dados.perfil === "admin" ? "Administrador" : "Escola";
+
+                    const escolasArray = normalizarEscolas(dados);
+                    const escolasHTML = escolasArray.length > 0
+                        ? escolasArray.map(e => `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded mr-1 mb-1">${escaparHTML(e)}</span>`).join("")
+                        : '<span class="text-gray-400 text-sm">—</span>';
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 text-sm text-gray-800">${escaparHTML(dados.nome || "")}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${escaparHTML(dados.email || "")}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${perfilTexto}</td>
+                        <td class="px-6 py-4 text-sm">${escolasHTML}</td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center gap-3">
+                                <button class="btn-editar text-blue-600 hover:text-blue-800 font-medium text-sm">Editar</button>
+                                <button class="btn-excluir text-red-600 hover:text-red-800 font-medium text-sm">Excluir</button>
+                            </div>
+                        </td>
+                    `;
+
+                    const botaoEditar = tr.querySelector(".btn-editar");
+                    botaoEditar.addEventListener("click", () => abrirModalEdicao(documento.id));
+
+                    const botaoExcluir = tr.querySelector(".btn-excluir");
+                    botaoExcluir.addEventListener("click", () => excluirUsuario(documento.id, dados.nome || "Usuário"));
+
+                    tabelaUsuarios.appendChild(tr);
+                });
+
+            } catch (erro) {
+                tabelaUsuarios.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-red-600">
+                            Não foi possível carregar os usuários.
+                            <br>
+                            <span class="text-xs text-gray-500">${escaparHTML(erro?.message || "Erro desconhecido")}</span>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // =========================================================
+        // EXCLUIR USUÁRIO
+        // =========================================================
+
+        async function excluirUsuario(uid, nome) {
+            if (!confirm(`Deseja realmente excluir o cadastro de "${nome}"?`)) return;
+
+            try {
+                await deleteDoc(doc(db, "usuarios", uid));
+                mostrarMensagem("Cadastro removido da coleção usuarios.");
+                await carregarUsuarios();
+            } catch (erro) {
+                mostrarMensagem("Não foi possível excluir o usuário.", "erro");
+            }
+        }
+
+    </script>
+
+</body>
+</html>
