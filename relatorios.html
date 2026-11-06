@@ -520,6 +520,41 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ============================================================
+   WRAPPER DO CAMPO MÊS (input + botão limpar)
+   ============================================================ */
+.campo-mes-wrap {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+.campo-mes-wrap .flatpickr-input {
+    padding-right: 38px !important;
+}
+.btn-limpar-mes {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color .12s ease, color .12s ease;
+}
+.btn-limpar-mes:hover {
+    background: var(--surface-2);
+    color: var(--danger);
+}
+.btn-limpar-mes .material-symbols-outlined { font-size: 18px; }
+.campo-mes-wrap.tem-valor .btn-limpar-mes { display: inline-flex; }
+
+/* ============================================================
    DESTAQUE DE CAMPOS COM DADOS
    ============================================================ */
 .filter-group input.campo-preenchido,
@@ -974,7 +1009,12 @@ tr:hover td { background: var(--surface-2); }
 
                         <div class="filter-group" id="grupoMes">
                             <label for="mesReferencia">Mês de Referência <span>*</span></label>
-                            <input type="text" id="mesReferencia" class="campo-mes" placeholder="Mês Ano" autocomplete="off">
+                            <div class="campo-mes-wrap">
+                                <input type="text" id="mesReferencia" class="campo-mes" placeholder="Mês Ano" autocomplete="off">
+                                <button type="button" class="btn-limpar-mes" data-target="mesReferencia" aria-label="Limpar mês" title="Limpar mês">
+                                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="filter-group" id="grupoAno" style="display: none;">
@@ -1033,7 +1073,12 @@ tr:hover td { background: var(--surface-2); }
 
                         <div class="filter-group">
                             <label for="filtroMesFerias">Mês de Referência</label>
-                            <input type="text" id="filtroMesFerias" class="campo-mes" placeholder="Todos os meses" autocomplete="off">
+                            <div class="campo-mes-wrap">
+                                <input type="text" id="filtroMesFerias" class="campo-mes" placeholder="Todos os meses" autocomplete="off">
+                                <button type="button" class="btn-limpar-mes" data-target="filtroMesFerias" aria-label="Limpar mês" title="Limpar mês">
+                                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1975,6 +2020,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             el.classList.toggle('campo-preenchido', preenchido);
         });
 
+        // Botão "limpar" aparece quando o campo-mes tem valor
+        document.querySelectorAll('.campo-mes-wrap').forEach(wrap => {
+            const input = wrap.querySelector('.campo-mes');
+            if (!input) return;
+            const mes = (window.lerMes ? window.lerMes(input) : (input.dataset.value || input.value || '')).trim();
+            wrap.classList.toggle('tem-valor', mes !== '');
+        });
+
         const chk = document.getElementById('filtroApenasFalta');
         const grupoChk = document.getElementById('grupoCheckApenasFalta');
         if (chk && grupoChk) {
@@ -2001,6 +2054,42 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     /* ==================================================
+       BOTÃO LIMPAR DOS CAMPOS MÊS
+       ================================================== */
+    function instalarBotoesLimparMes() {
+        document.querySelectorAll('.btn-limpar-mes').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const id = btn.getAttribute('data-target');
+                const input = document.getElementById(id);
+                if (!input) return;
+
+                if (window.setValorMes) {
+                    window.setValorMes(input, '');
+                } else {
+                    input.value = '';
+                    input.dataset.value = '';
+                    if (input._flatpickr) {
+                        try { input._flatpickr.clear(false); } catch (er) {}
+                    }
+                }
+
+                // fecha o calendário, se estiver aberto
+                if (input._flatpickr) {
+                    try { input._flatpickr.close(); } catch (er) {}
+                }
+
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                input.dispatchEvent(new Event('blur', { bubbles: true }));
+
+                atualizarDestaquesCampos();
+            });
+        });
+    }
+
+    /* ==================================================
        ENTER PARA PESQUISAR
        ================================================== */
     function instalarEnterPesquisar() {
@@ -2016,14 +2105,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const tag = (alvo.tagName || '').toLowerCase();
             const tipo = (alvo.type || '').toLowerCase();
 
-            // Ignora botões, textareas e checkbox
             if (tag === 'textarea') return;
             if (tag === 'button') return;
             if (tipo === 'checkbox' || tipo === 'radio' || tipo === 'submit') return;
-
-            // Para <select>, Enter não faz sentido: deixar o comportamento padrão
-            // (change já refaz a UI). Também para flatpickr em edição, deixa o Enter
-            // fechar o calendário e não disparar busca dupla.
             if (tag === 'select') return;
             if (alvo._flatpickr && alvo._flatpickr.isOpen) return;
 
@@ -2920,6 +3004,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         instalarMascaraCpf();
         instalarDestaquesCampos();
         instalarEnterPesquisar();
+        instalarBotoesLimparMes();
 
         document.addEventListener("click", function(e) {
             const container = document.getElementById("dropdownEscolasContainer");
@@ -2989,12 +3074,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             return input.dataset.value || input.value || '';
         };
 
-        var campoMesVales = document.getElementById('mesReferencia');
-        if (campoMesVales && !campoMesVales.dataset.value && !campoMesVales.value) {
-            var hoje = new Date();
-            var mesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
-            window.setValorMes(campoMesVales, mesAtual);
-        }
+        // NÃO preencher automaticamente o mês atual — o campo inicia vazio.
+        // A validação ao gerar o relatório já exige mês quando tipoPeriodo = mensal.
     }
 
     if (document.readyState === 'loading') {
