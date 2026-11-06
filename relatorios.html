@@ -916,9 +916,9 @@ tr:hover td { background: var(--surface-2); }
                     </div>
 
                     <!-- ============================================================
-                         PESQUISA COMUM AOS DOIS RELATÓRIOS
-                         Campos exibidos apenas quando o relatório escolhido ainda
-                         não possui o equivalente próprio.
+                         CAMPOS COMUNS AOS DOIS RELATÓRIOS
+                         (exibidos só quando o relatório escolhido não possui
+                          o equivalente próprio)
                          ============================================================ -->
                     <div class="filter-group" id="grupoBuscaNome">
                         <label for="buscaNome">Nome do Servidor</label>
@@ -927,7 +927,7 @@ tr:hover td { background: var(--surface-2); }
 
                     <div class="filter-group" id="grupoBuscaCpf">
                         <label for="buscaCpf">CPF</label>
-                        <input type="text" id="buscaCpf" placeholder="Ex: 000.000.000-00">
+                        <input type="text" id="buscaCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="off">
                     </div>
 
                     <div class="filter-group" id="grupoBuscaMatricula">
@@ -937,7 +937,7 @@ tr:hover td { background: var(--surface-2); }
 
                     <div class="filter-group" id="grupoBuscaPeriodo">
                         <label for="buscaPeriodo">Período (ano/ano)</label>
-                        <input type="text" id="buscaPeriodo" placeholder="Ex: 2023/2024">
+                        <input type="text" id="buscaPeriodo" placeholder="Ex: 2023/2024" maxlength="9" autocomplete="off">
                     </div>
 
                     <!-- ============================================================
@@ -974,6 +974,11 @@ tr:hover td { background: var(--surface-2); }
                         <div class="filter-group">
                             <label for="filtroEmpresa">Empresa / Concessionária</label>
                             <input type="text" id="filtroEmpresa" placeholder="Ex: Viação...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filtroPassesDia">Passes/Dia</label>
+                            <input type="number" id="filtroPassesDia" placeholder="Ex: 2" min="0" step="1" inputmode="numeric">
                         </div>
 
                         <div class="filter-checkbox-group">
@@ -1846,7 +1851,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     /* ==================================================
-       PESQUISA COMUM — leitura dos campos comuns
+       PESQUISA COMUM — normalização e leitura
        ================================================== */
     function normalizarTexto(v) {
         return (v == null ? '' : String(v))
@@ -1885,35 +1890,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         };
     }
 
-    function periodoCorresponde(item, periodo) {
-        if (!periodo) return true;
-        // relatório de vales: item.mesReferencia (ex: "2024-05") e, no anual, também usa ano.
-        // relatório de férias: item.periodo é "AAAA/AAAA".
-        if (tipoRelatorioAtual === 'vales') {
-            const mes = item.mesReferencia || '';
-            if (!mes) return false;
-            const ano = parseInt(mes.split('-')[0], 10);
-            return ano >= periodo.anoInicio && ano <= periodo.anoFim;
-        }
-        const p = item.periodo || '';
-        const m = p.match(/^(\d{4})\s*\/\s*(\d{4})$/);
-        if (!m) return false;
-        const ini = parseInt(m[1], 10);
-        const fim = parseInt(m[2], 10);
-        return ini >= periodo.anoInicio && fim <= periodo.anoFim;
-    }
-
-    function aplicarFiltrosComuns(lista) {
-        const f = lerFiltrosComuns();
-        return lista.filter(item => {
-            if (f.nome && !normalizarTexto(item.nome).includes(f.nome)) return false;
-            if (f.cpf && !normalizarCpf(item.cpf).includes(f.cpf)) return false;
-            if (f.matricula && !normalizarTexto(item.matricula).includes(f.matricula)) return false;
-            if (f.periodo && !periodoCorresponde(item, f.periodo)) return false;
-            return true;
-        });
-    }
-
     /* ==================================================
        Controle de visibilidade dos campos comuns
        ================================================== */
@@ -1923,22 +1899,46 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const gMat = document.getElementById('grupoBuscaMatricula');
         const gPer = document.getElementById('grupoBuscaPeriodo');
 
-        // Limpa valores ao esconder
-        const ocultar = (g) => { if (g) g.style.display = 'none'; };
-
-        // Por padrão mostramos tudo; escondemos apenas quando o relatório já tem campo equivalente.
         if (gNome) gNome.style.display = '';
         if (gCpf) gCpf.style.display = '';
         if (gMat) gMat.style.display = '';
         if (gPer) gPer.style.display = '';
 
-        if (tipo === 'vales') {
-            // Vales já possui Cargo, Empresa, Mês/Ano e Tipo de Período — mas NÃO tem nome/cpf/matrícula,
-            // então todos os comuns continuam visíveis. Nada a esconder.
-        } else if (tipo === 'ferias') {
-            // Férias já tem: Mês de Referência (filtroMesFerias) — mantém período comum mesmo assim,
-            // pois período comum é ano/ano e é diferente do mês de referência.
-        }
+        // Todos os campos comuns permanecem visíveis para os tipos atuais,
+        // pois nenhum dos relatórios possui campo equivalente próprio.
+    }
+
+    /* ==================================================
+       Máscara de CPF
+       ================================================== */
+    function aplicarMascaraCpf(valor) {
+        const d = String(valor || '').replace(/\D/g, '').slice(0, 11);
+        if (d.length <= 3) return d;
+        if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
+        if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+        return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+    }
+
+    function instalarMascaraCpf() {
+        const el = document.getElementById('buscaCpf');
+        if (!el) return;
+
+        el.addEventListener('input', function () {
+            const pos = el.selectionStart;
+            const antes = el.value;
+            const formatado = aplicarMascaraCpf(antes);
+            el.value = formatado;
+            // reposiciona o cursor de forma simples
+            try {
+                const novoPos = Math.min(formatado.length, pos + (formatado.length - antes.length));
+                el.setSelectionRange(novoPos, novoPos);
+            } catch (e) {}
+        });
+
+        el.addEventListener('blur', function () {
+            // completa? não — apenas remove dígitos além do 11
+            el.value = aplicarMascaraCpf(el.value);
+        });
     }
 
     window.gerarRelatorio = async function() {
@@ -2073,7 +2073,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                             });
 
                             dirF.periodosDetalhados.forEach(p => {
-                                // Aplica filtro período ano/ano no próprio ciclo
                                 if (filtrosComuns.periodo) {
                                     const mCiclo = p.anoReferencia.match(/^(\d{4})\/(\d{4})$/);
                                     if (!mCiclo) return;
@@ -2333,6 +2332,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         const empresaFiltro = document.getElementById("filtroEmpresa").value.trim().toLowerCase();
         const apenasFalta = document.getElementById("filtroApenasFalta").checked;
 
+        const passesDiaFiltroEl = document.getElementById("filtroPassesDia");
+        const passesDiaFiltroStr = passesDiaFiltroEl ? passesDiaFiltroEl.value.trim() : '';
+        const passesDiaFiltro = passesDiaFiltroStr !== '' && !isNaN(Number(passesDiaFiltroStr))
+            ? Number(passesDiaFiltroStr)
+            : null;
+
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
         const filtrosComuns = lerFiltrosComuns();
 
@@ -2382,7 +2387,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 }
             }
 
-            // filtro período ano/ano reduz os meses processados
             if (filtrosComuns.periodo) {
                 mesesParaProcessar = mesesParaProcessar.filter(mesAno => {
                     const ano = parseInt(mesAno.split('-')[0], 10);
@@ -2439,7 +2443,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     const s = docServidor.data();
                     const cpfLimpo = s.cpf ? s.cpf.replace(/\D/g, "") : "";
 
-                    // filtros comuns no servidor (nome, cpf)
                     if (filtrosComuns.nome && !normalizarTexto(s.nome || '').includes(filtrosComuns.nome)) return;
                     if (filtrosComuns.cpf && !cpfLimpo.includes(filtrosComuns.cpf)) return;
 
@@ -2461,6 +2464,9 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                         const empresa = escolaObj.empresa || "";
                         if (empresaFiltro !== "" && !empresa.toLowerCase().includes(empresaFiltro)) return;
 
+                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
+                        if (passesDiaFiltro !== null && passesDiarios !== passesDiaFiltro) return;
+
                         const chaveEscolaCpf = `${nomeEscola}_${cpfLimpo}`;
                         const diasAfastamento = afastamentosMap[chaveEscolaCpf] !== undefined
                             ? afastamentosMap[chaveEscolaCpf]
@@ -2471,7 +2477,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                             : diasSemedDefault;
 
                         const diasEfetivos = Math.max(0, diasUteisUnidade - diasAfastamento);
-                        const passesDiarios = Number(escolaObj.qtdPassagensDiarias) || 0;
                         const totalMes = passesDiarios * diasEfetivos;
 
                         const valorUnitario = tarifasEmpresas[empresa] || 0;
@@ -2815,6 +2820,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         document.getElementById("anoReferencia").value = new Date().getFullYear();
         atualizarTextoDropdown();
         atualizarCamposComuns(tipoRelatorioAtual);
+        instalarMascaraCpf();
 
         document.addEventListener("click", function(e) {
             const container = document.getElementById("dropdownEscolasContainer");
