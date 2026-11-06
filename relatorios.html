@@ -73,6 +73,8 @@
     --shadow-sm: 0 1px 2px rgba(20,25,35,.05);
     --shadow-md: 0 2px 6px rgba(20,25,35,.08);
     --focus-ring: 0 0 0 3px var(--brand-soft);
+    --field-filled-bg: #f0f0f3;
+    --field-filled-border: #b7bfc9;
     --sidebar-width: 268px;
     --topbar-height: 56px;
     --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -127,6 +129,8 @@
     --border: #2a2d32;
     --border-strong: #3a3d42;
     --focus-ring: 0 0 0 3px var(--brand-soft);
+    --field-filled-bg: #23262b;
+    --field-filled-border: #4a4f57;
     --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
     --shadow-md: 0 2px 6px rgba(0,0,0,.5);
     --primary: var(--brand);
@@ -496,7 +500,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
     outline: none;
     font-size: 13.5px;
     color: var(--text);
-    transition: border-color .15s ease, box-shadow .15s ease;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 
 .filter-group input:hover,
@@ -513,6 +517,35 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .filter-group input.flatpickr-input {
     cursor: pointer;
     background: var(--surface);
+}
+
+/* ============================================================
+   DESTAQUE DE CAMPOS COM DADOS
+   ============================================================ */
+.filter-group input.campo-preenchido,
+.filter-group select.campo-preenchido,
+.filter-group input.flatpickr-input.campo-preenchido,
+.quick-search-field input.campo-preenchido,
+.quick-search-field select.campo-preenchido {
+    background-color: var(--field-filled-bg) !important;
+    border-color: var(--field-filled-border) !important;
+    color: var(--text) !important;
+    font-weight: 600 !important;
+}
+.filter-group input.campo-preenchido:focus,
+.filter-group select.campo-preenchido:focus,
+.filter-group input.flatpickr-input.campo-preenchido:focus,
+.quick-search-field input.campo-preenchido:focus,
+.quick-search-field select.campo-preenchido:focus {
+    border-color: var(--brand) !important;
+    box-shadow: var(--focus-ring) !important;
+}
+/* Borda esquerda como reforço visual */
+.filter-group input.campo-preenchido,
+.filter-group select.campo-preenchido,
+.quick-search-field input.campo-preenchido,
+.quick-search-field select.campo-preenchido {
+    box-shadow: inset 3px 0 0 var(--brand);
 }
 
 .flatpickr-calendar .flatpickr-monthSelect-month.selected,
@@ -534,6 +567,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .filter-checkbox-group input {
     width: 18px; height: 18px;
     accent-color: var(--brand); cursor: pointer;
+}
+.filter-checkbox-group.ativo label {
+    color: var(--brand);
 }
 
 .filter-actions {
@@ -917,8 +953,6 @@ tr:hover td { background: var(--surface-2); }
 
                     <!-- ============================================================
                          CAMPOS COMUNS AOS DOIS RELATÓRIOS
-                         (exibidos só quando o relatório escolhido não possui
-                          o equivalente próprio)
                          ============================================================ -->
                     <div class="filter-group" id="grupoBuscaNome">
                         <label for="buscaNome">Nome do Servidor</label>
@@ -981,7 +1015,7 @@ tr:hover td { background: var(--surface-2); }
                             <input type="number" id="filtroPassesDia" placeholder="Ex: 2" min="0" step="1" inputmode="numeric">
                         </div>
 
-                        <div class="filter-checkbox-group">
+                        <div class="filter-checkbox-group" id="grupoCheckApenasFalta">
                             <input type="checkbox" id="filtroApenasFalta">
                             <label for="filtroApenasFalta" style="margin-bottom:0; cursor:pointer;">Exibir apenas servidores com ocorrências de afastamento</label>
                         </div>
@@ -1903,9 +1937,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         if (gCpf) gCpf.style.display = '';
         if (gMat) gMat.style.display = '';
         if (gPer) gPer.style.display = '';
-
-        // Todos os campos comuns permanecem visíveis para os tipos atuais,
-        // pois nenhum dos relatórios possui campo equivalente próprio.
     }
 
     /* ==================================================
@@ -1928,7 +1959,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const antes = el.value;
             const formatado = aplicarMascaraCpf(antes);
             el.value = formatado;
-            // reposiciona o cursor de forma simples
             try {
                 const novoPos = Math.min(formatado.length, pos + (formatado.length - antes.length));
                 el.setSelectionRange(novoPos, novoPos);
@@ -1936,12 +1966,75 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         });
 
         el.addEventListener('blur', function () {
-            // completa? não — apenas remove dígitos além do 11
             el.value = aplicarMascaraCpf(el.value);
         });
     }
 
+    /* ==================================================
+       DESTAQUE DE CAMPOS PREENCHIDOS
+       ================================================== */
+    function atualizarDestaquesCampos() {
+        // Inputs e selects dentro do filter-card
+        const controles = document.querySelectorAll(
+            '.filter-card input[type="text"], .filter-card input[type="number"], .filter-card select'
+        );
+
+        controles.forEach(el => {
+            if (!el) return;
+            // ignora inputs hidden / sem visual
+            if (el.type === 'hidden') return;
+
+            let preenchido;
+            if (el.tagName === 'SELECT') {
+                preenchido = el.value !== '' && el.value !== null && el.value !== undefined;
+            } else {
+                const v = (el.value || '').trim();
+                preenchido = v !== '';
+            }
+
+            // campo-mes (flatpickr) — considera o data-value
+            if (el.classList.contains('campo-mes') || el._flatpickr) {
+                const mes = (window.lerMes ? window.lerMes(el) : (el.dataset.value || el.value || '')).trim();
+                preenchido = mes !== '';
+            }
+
+            el.classList.toggle('campo-preenchido', preenchido);
+        });
+
+        // Checkbox de afastamento
+        const chk = document.getElementById('filtroApenasFalta');
+        const grupoChk = document.getElementById('grupoCheckApenasFalta');
+        if (chk && grupoChk) {
+            grupoChk.classList.toggle('ativo', !!chk.checked);
+        }
+    }
+
+    function instalarDestaquesCampos() {
+        // Atualiza no load
+        atualizarDestaquesCampos();
+
+        // Delegamos no filter-card para capturar input/change
+        const card = document.querySelector('.filter-card');
+        if (card) {
+            card.addEventListener('input', atualizarDestaquesCampos, true);
+            card.addEventListener('change', atualizarDestaquesCampos, true);
+            card.addEventListener('blur', atualizarDestaquesCampos, true);
+        }
+
+        // Campo-mes (flatpickr dispara change) — reforço
+        document.querySelectorAll('.campo-mes').forEach(el => {
+            el.addEventListener('change', atualizarDestaquesCampos);
+            el.addEventListener('blur', atualizarDestaquesCampos);
+        });
+
+        // Reforço periódico (caso algum componente altere programaticamente)
+        setInterval(atualizarDestaquesCampos, 800);
+    }
+
     window.gerarRelatorio = async function() {
+        // Atualiza destaques antes de gerar (garante estado visual coerente)
+        atualizarDestaquesCampos();
+
         if (tipoRelatorioAtual === "ferias") {
             await gerarRelatorioFerias();
         } else {
@@ -2774,6 +2867,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
 
         atualizarCamposComuns(tipoRelatorioAtual);
+        atualizarDestaquesCampos();
     }
 
     window.alternarTipoPeriodo = function() {
@@ -2786,6 +2880,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("grupoMes").style.display = "none";
             document.getElementById("grupoAno").style.display = "flex";
         }
+
+        atualizarDestaquesCampos();
     }
 
     window.toggleDropdownEscolas = function() {
@@ -2821,6 +2917,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         atualizarTextoDropdown();
         atualizarCamposComuns(tipoRelatorioAtual);
         instalarMascaraCpf();
+        instalarDestaquesCampos();
 
         document.addEventListener("click", function(e) {
             const container = document.getElementById("dropdownEscolasContainer");
