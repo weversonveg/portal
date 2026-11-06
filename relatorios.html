@@ -1,4 +1,4 @@
-Excel<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 
 <head>
@@ -10,7 +10,7 @@ Excel<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,arrow_drop_down,picture_as_pdf,csv,table_view,paid">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,arrow_drop_down,picture_as_pdf,csv,table_view,paid,search">
 
 <!-- Flatpickr -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -601,6 +601,114 @@ button { font: inherit; color: inherit; cursor: pointer; }
     color: var(--text); margin-top: 4px;
 }
 
+/* ---------- BARRA DE PESQUISA RÁPIDA ---------- */
+.quick-search {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+.quick-search.ativo { display: flex; }
+
+.quick-search-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.quick-search-header .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--brand);
+}
+.quick-search-header .quick-search-count {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.quick-search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+.quick-search-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.quick-search-field label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.quick-search-field input,
+.quick-search-field select {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    outline: none;
+    font-size: 13px;
+    color: var(--text);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.quick-search-field input:focus,
+.quick-search-field select:focus {
+    border-color: var(--brand);
+    box-shadow: var(--focus-ring);
+}
+
+.quick-search-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.quick-search-btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 5px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s, border-color .15s;
+}
+.quick-search-btn:hover { background: var(--surface-2); border-color: var(--gray-400); }
+.quick-search-btn .material-symbols-outlined { font-size: 16px; }
+
+.quick-search-empty {
+    display: none;
+    padding: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px dashed var(--border-strong);
+    border-radius: 6px;
+}
+.quick-search-empty.ativo { display: block; }
+
 .table-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -744,6 +852,7 @@ tr:hover td { background: var(--surface-2); }
     .topbar-sair, .modal-sair-overlay, .toast-container,
     .filter-card, .export-buttons, .breadcrumb,
     .page-header-page, .mensagem, .summary-container,
+    .quick-search, .quick-search-empty,
     .loading-overlay { display: none !important; }
     .main { overflow: visible; }
     .content-page { overflow: visible; padding: 0; }
@@ -898,7 +1007,7 @@ tr:hover td { background: var(--surface-2); }
                     <button type="button" id="btnCsv" class="btn-export btn-csv" onclick="exportarCSV()" disabled title="Baixar CSV">
                         <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
                     </button>
-                    <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar Excel">
+                    <button type="button" id="btnXls" class="btn-export btn-xls" onclick="exportarXLS()" disabled title="Baixar LibreOffice">
                         <span class="material-symbols-outlined" style="font-size:16px;">table_view</span> LibreOffice
                     </button>
                 </div>
@@ -1038,6 +1147,51 @@ tr:hover td { background: var(--surface-2); }
                 <div class="summary-box" id="boxSumValor" style="border-left: 4px solid var(--green); display: none;">
                     <label id="labelSumValor">Valor Total (R$)</label>
                     <p id="sumTotalValor" style="color: var(--green);">R$ 0,00</p>
+                </div>
+            </section>
+
+            <!-- ==================================================
+                 PESQUISA RÁPIDA (filtra a tabela já gerada)
+                 ================================================== -->
+            <section id="quickSearch" class="quick-search" aria-label="Pesquisa rápida na tabela">
+                <div class="quick-search-header">
+                    <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                    <span>Pesquisa rápida</span>
+                    <span class="quick-search-count" id="quickSearchCount"></span>
+                </div>
+
+                <div class="quick-search-grid">
+                    <div class="quick-search-field">
+                        <label for="qsPeriodoIni">Período — de</label>
+                        <input type="text" id="qsPeriodoIni" class="campo-mes" placeholder="Mês/Ano" autocomplete="off">
+                    </div>
+                    <div class="quick-search-field">
+                        <label for="qsPeriodoFim">Período — até</label>
+                        <input type="text" id="qsPeriodoFim" class="campo-mes" placeholder="Mês/Ano" autocomplete="off">
+                    </div>
+                    <div class="quick-search-field">
+                        <label for="qsNome">Nome do servidor</label>
+                        <input type="text" id="qsNome" placeholder="Ex: Maria..." autocomplete="off">
+                    </div>
+                    <div class="quick-search-field">
+                        <label for="qsCpf">CPF</label>
+                        <input type="text" id="qsCpf" placeholder="Ex: 000.000.000-00" autocomplete="off">
+                    </div>
+                    <div class="quick-search-field">
+                        <label for="qsMatricula">Matrícula</label>
+                        <input type="text" id="qsMatricula" placeholder="Ex: 12345..." autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="quick-search-actions">
+                    <button type="button" class="quick-search-btn" id="qsLimpar">
+                        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                        Limpar pesquisa
+                    </button>
+                </div>
+
+                <div class="quick-search-empty" id="quickSearchEmpty">
+                    Nenhum registro corresponde aos critérios de pesquisa.
                 </div>
             </section>
 
@@ -1338,9 +1492,18 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             });
             const dims = await new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+                let tentativas = 0;
+                const checar = () => {
+                    const w = img.naturalWidth || img.width;
+                    const h = img.naturalHeight || img.height;
+                    if (w > 0 && h > 0) { resolve({ width: w, height: h }); return; }
+                    if (++tentativas > 20) { reject(new Error('Dimensões da logo indisponíveis')); return; }
+                    setTimeout(checar, 50);
+                };
+                img.onload = checar;
                 img.onerror = () => reject(new Error('Falha ao decodificar logo'));
                 img.src = dataURL;
+                if (img.complete) checar();
             });
             const ratio = (dims.width && dims.height) ? (dims.width / dims.height) : 1;
             __logoInfo = { dataURL, width: dims.width, height: dims.height, ratio };
@@ -1382,11 +1545,20 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const geradoEm = new Date();
             const dataHoraStr = geradoEm.toLocaleString('pt-BR');
 
-            const LOGO_H = 14;
-            const LOGO_W = logo ? (LOGO_H * logo.ratio) : 0;
+            const LOGO_H_MAX = 14;
+            const LOGO_W_MAX = 55;
+            let LOGO_W = 0, LOGO_H = 0;
+            if (logo) {
+                LOGO_H = LOGO_H_MAX;
+                LOGO_W = LOGO_H * logo.ratio;
+                if (LOGO_W > LOGO_W_MAX) {
+                    LOGO_W = LOGO_W_MAX;
+                    LOGO_H = LOGO_W / logo.ratio;
+                }
+            }
             const LOGO_X = marginX;
-            const LOGO_Y = headerTop;
-            const TEXT_X = logo ? (LOGO_X + LOGO_W + 5) : marginX;
+            const LOGO_Y = headerTop + (14 - LOGO_H) / 2;
+            const TEXT_X = logo ? (LOGO_X + LOGO_W + 6) : marginX;
 
             function desenharCabecalho() {
                 if (logo && LOGO_W > 0) {
@@ -1425,6 +1597,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 doc.text(txt, pageW / 2, pageH - 4, { align: 'center' });
             }
 
+            const dadosFiltrados = obterDadosFiltradosPesquisa();
             let head, body, colStyles;
 
             if (tipoRelatorioAtual === 'ferias') {
@@ -1432,7 +1605,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     'Servidor', 'CPF / Matrícula', 'Cargo', 'Escola', 'Tipo',
                     'Período', 'Prazo Gozo', 'Status', 'Data Gozo'
                 ]];
-                body = dadosRelatorioGlobal.map(it => ([
+                body = dadosFiltrados.map(it => ([
                     it.nome,
                     it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
                     it.cargo,
@@ -1460,7 +1633,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     'Concessionária', 'Passes/Dia', 'Dias Efetivos',
                     'Afast. Totais', 'Total Passes', 'Valor Unit.', 'Valor Total'
                 ]];
-                body = dadosRelatorioGlobal.map(it => ([
+                body = dadosFiltrados.map(it => ([
                     it.nome,
                     it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
                     it.cargo,
@@ -1744,11 +1917,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         return { folgasAdquiridas: adquiridas, folgasDisponiveis: disponiveis, folgasPerdidas: perdidas, periodosDetalhados: det };
     }
 
-    /*
-        FUNÇÃO CORRIGIDA:
-        Agora prioriza dataInicio / data_inicio / data_gozo.
-        O campo "data" fica apenas como último fallback.
-    */
     function verificarSeJaGozado(reg, dataBase) {
         const raw = reg.dataInicio || reg.data_inicio || reg.data_gozo || reg.data;
         const dt = parseDataParaDate(raw);
@@ -1847,15 +2015,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
         const temFiltroMes = filtroMesValido(mesSelecionado, anoSelecionado);
 
-        /*
-            CORREÇÃO IMPORTANTE:
-
-            O mês de referência NÃO altera a data usada para calcular
-            se as férias já foram gozadas.
-
-            Isso evita que férias futuras apareçam como GOZADO
-            quando o usuário seleciona um mês futuro.
-        */
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
@@ -1957,7 +2116,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     return false;
                                 });
 
-                                // Filtro por mês: mostra apenas lançamentos que caem no mês selecionado
                                 if (temFiltroMes && !lancamentosTemMes(lancs, mesSelecionado, anoSelecionado)) {
                                     return;
                                 }
@@ -1983,12 +2141,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     });
 
                                     gozo = intervalos.join(' + ');
-
-                                    /*
-                                        CORREÇÃO:
-                                        Usa sempre a data atual.
-                                        Se as férias começam no futuro, ficam como PROGRAMADO.
-                                    */
                                     status = verificarSeJaGozado(ultimo, dataReferencia) ? 'gozado' : 'programado';
 
                                 } else if (diasConsumidos > 0) {
@@ -2057,7 +2209,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                     return dGozo && dGozo >= p.dataDisponivel && dGozo < p.dataLimiteGozo;
                                 });
 
-                                // Filtro por mês: mostra apenas folgas gozadas no mês selecionado
                                 if (temFiltroMes && !folgaTemMes(lanc, mesSelecionado, anoSelecionado)) {
                                     return;
                                 }
@@ -2098,42 +2249,13 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
+                document.getElementById("quickSearch").classList.remove("ativo");
+                document.getElementById("quickSearchEmpty").classList.remove("ativo");
                 dadosRelatorioGlobal = [];
                 return;
             }
 
             dadosRelatorioGlobal = linhasFinais;
-
-            let linhasTabela = "";
-            linhasFinais.forEach(item => {
-                const badgeClass = `badge-${item.status}`;
-                linhasTabela += `
-                    <tr>
-                        <td><b>${item.nome}</b></td>
-                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
-                        <td>${item.cargo}</td>
-                        <td>${item.escola}</td>
-                        <td>${item.tipo}</td>
-                        <td>${item.periodo}</td>
-                        <td>${item.prazo}</td>
-                        <td><span class="badge-status ${badgeClass}">${item.status}</span>${item.extemporaneo ? ' <span class="badge-status badge-extemporaneo">Fora do prazo</span>' : ''}</td>
-                        <td>${item.gozo}</td>
-                    </tr>`;
-            });
-
-            document.getElementById("tabelaCabecalho").innerHTML = `
-                <tr>
-                    <th>Servidor</th>
-                    <th>CPF / Matrícula</th>
-                    <th>Cargo</th>
-                    <th>Escola</th>
-                    <th>Tipo</th>
-                    <th>Período</th>
-                    <th>Prazo Gozo</th>
-                    <th>Status</th>
-                    <th>Data Gozo</th>
-                </tr>
-            `;
 
             const nomeMesFiltro = temFiltroMes
                 ? obterNomeMesFormatado(mesSelecionado, anoSelecionado)
@@ -2174,11 +2296,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
             document.getElementById("boxSumValor").style.display = "none";
 
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
+            document.getElementById("quickSearch").classList.add("ativo");
 
             btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
+            renderizarTabelaComPesquisa();
             mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
 
         } catch (erro) {
@@ -2317,7 +2440,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                                 cargo: cargo || '-', escola: nomeEscola, empresa: empresa || '-',
                                 passesDiarios: passesDiarios, diasEfetivosTotal: 0,
                                 afastamentosTotal: 0, passesTotal: 0,
-                                valorUnitario: valorUnitario, valorTotal: 0
+                                valorUnitario: valorUnitario, valorTotal: 0,
+                                mesReferencia: mesAno
                             };
                             contadorMesesPorChave[chaveUnica] = 0;
                         }
@@ -2353,7 +2477,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
             const listaFinal = Object.values(resultadosConsolidados).filter(item => !(apenasFalta && item.afastamentosTotal <= 0));
 
-            let linhasTabela = "";
             let totalVinculos = 0;
             let totalGeralPasses = 0;
             let totalGeralValor = 0;
@@ -2362,30 +2485,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                 totalVinculos++;
                 totalGeralPasses += item.passesTotal;
                 totalGeralValor += item.valorTotal;
-
-                const valorUnitFmt = item.valorUnitario > 0 ? formatarMoeda(item.valorUnitario) : '—';
-                const valorTotalFmt = item.valorTotal > 0 ? formatarMoeda(item.valorTotal) : '—';
-
-                linhasTabela += `
-                    <tr>
-                        <td><b>${item.nome}</b></td>
-                        <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
-                        <td>${item.cargo}</td>
-                        <td>${item.escola}</td>
-                        <td>${item.empresa}</td>
-                        <td>${item.passesDiarios}</td>
-                        <td><b>${item.diasEfetivosTotal} dias</b></td>
-                        <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
-                        <td><b>${item.passesTotal}</b></td>
-                        <td style="text-align:right;">${valorUnitFmt}</td>
-                        <td style="text-align:right;"><b style="color:var(--green);">${valorTotalFmt}</b></td>
-                    </tr>`;
             });
 
             if (totalVinculos === 0) {
                 mostrarMensagem("Nenhum registro encontrado para os filtros selecionados.", "info");
                 document.getElementById("summaryContainer").classList.remove("ativo");
                 document.getElementById("tableCard").classList.remove("ativo");
+                document.getElementById("quickSearch").classList.remove("ativo");
+                document.getElementById("quickSearchEmpty").classList.remove("ativo");
                 dadosRelatorioGlobal = [];
                 return;
             }
@@ -2450,11 +2557,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             document.getElementById("sumTotalValor").textContent = formatarMoeda(totalGeralValor);
             document.getElementById("boxSumValor").style.display = "block";
 
-            document.getElementById("tabelaCorpo").innerHTML = linhasTabela;
             document.getElementById("summaryContainer").classList.add("ativo");
             document.getElementById("tableCard").classList.add("ativo");
+            document.getElementById("quickSearch").classList.add("ativo");
 
             btnPdf.disabled = btnCsv.disabled = btnXls.disabled = false;
+            renderizarTabelaComPesquisa();
             mostrarMensagem("Relatório gerado com sucesso!", "sucesso");
 
         } catch (erro) {
@@ -2465,8 +2573,183 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
         }
     }
 
+    /* ==================================================
+       PESQUISA RÁPIDA (filtro na tabela já gerada)
+       ================================================== */
+    function normalizarTexto(v) {
+        return (v == null ? '' : String(v))
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    }
+
+    function normalizarCpf(v) {
+        return (v == null ? '' : String(v)).replace(/\D/g, '');
+    }
+
+    function mesAnoParaIndice(mesAnoStr) {
+        if (!mesAnoStr) return null;
+        const s = String(mesAnoStr).trim();
+        if (/^\d{4}-\d{2}$/.test(s)) {
+            const [a, m] = s.split('-').map(Number);
+            if (a >= 1900 && m >= 1 && m <= 12) return a * 12 + (m - 1);
+        }
+        return null;
+    }
+
+    function periodoDoItem(item) {
+        if (tipoRelatorioAtual === 'vales') {
+            return mesAnoParaIndice(item.mesReferencia || item._mesReferencia || '');
+        }
+        // férias/folga: usar período "AAAA/AAAA" (ciclo) ou prazo/gozo
+        const ciclo = item.ciclo || '';
+        const m = ciclo.match(/(\d{4})/);
+        if (m) {
+            const anoInicio = parseInt(m[1], 10);
+            return anoInicio * 12;
+        }
+        const prazo = item.prazo || '';
+        const d = parseDataParaDate(prazo);
+        if (d) return d.getFullYear() * 12 + d.getMonth();
+        return null;
+    }
+
+    function obterDadosFiltradosPesquisa() {
+        const qsIni = document.getElementById('qsPeriodoIni');
+        const qsFim = document.getElementById('qsPeriodoFim');
+        const qsNome = document.getElementById('qsNome');
+        const qsCpf = document.getElementById('qsCpf');
+        const qsMat = document.getElementById('qsMatricula');
+
+        const iniStr = qsIni ? (window.lerMes ? window.lerMes(qsIni) : qsIni.value) : '';
+        const fimStr = qsFim ? (window.lerMes ? window.lerMes(qsFim) : qsFim.value) : '';
+        const iniIdx = mesAnoParaIndice(iniStr);
+        const fimIdx = mesAnoParaIndice(fimStr);
+
+        const nomeQ = qsNome ? normalizarTexto(qsNome.value) : '';
+        const cpfQ = qsCpf ? normalizarCpf(qsCpf.value) : '';
+        const matQ = qsMat ? normalizarTexto(qsMat.value) : '';
+
+        const semFiltros = !nomeQ && !cpfQ && !matQ && iniIdx === null && fimIdx === null;
+        if (semFiltros) return dadosRelatorioGlobal.slice();
+
+        return dadosRelatorioGlobal.filter(item => {
+            if (nomeQ) {
+                if (!normalizarTexto(item.nome).includes(nomeQ)) return false;
+            }
+            if (cpfQ) {
+                if (!normalizarCpf(item.cpf).includes(cpfQ)) return false;
+            }
+            if (matQ) {
+                if (!normalizarTexto(item.matricula).includes(matQ)) return false;
+            }
+
+            if (iniIdx !== null || fimIdx !== null) {
+                const p = periodoDoItem(item);
+                if (p === null) return false;
+                if (iniIdx !== null && p < iniIdx) return false;
+                if (fimIdx !== null && p > fimIdx) return false;
+            }
+            return true;
+        });
+    }
+
+    function linhaHtmlItem(item) {
+        if (tipoRelatorioAtual === 'ferias') {
+            const badgeClass = `badge-${item.status}`;
+            return `
+                <tr>
+                    <td><b>${item.nome}</b></td>
+                    <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                    <td>${item.cargo}</td>
+                    <td>${item.escola}</td>
+                    <td>${item.tipo}</td>
+                    <td>${item.periodo}</td>
+                    <td>${item.prazo}</td>
+                    <td><span class="badge-status ${badgeClass}">${item.status}</span>${item.extemporaneo ? ' <span class="badge-status badge-extemporaneo">Fora do prazo</span>' : ''}</td>
+                    <td>${item.gozo}</td>
+                </tr>`;
+        }
+
+        const valorUnitFmt = item.valorUnitario > 0 ? formatarMoeda(item.valorUnitario) : '—';
+        const valorTotalFmt = item.valorTotal > 0 ? formatarMoeda(item.valorTotal) : '—';
+
+        return `
+            <tr>
+                <td><b>${item.nome}</b></td>
+                <td>${item.cpf}<br><small style="color:var(--text-secondary)">Mat: ${item.matricula}</small></td>
+                <td>${item.cargo}</td>
+                <td>${item.escola}</td>
+                <td>${item.empresa}</td>
+                <td>${item.passesDiarios}</td>
+                <td><b>${item.diasEfetivosTotal} dias</b></td>
+                <td><span style="color:${item.afastamentosTotal > 0 ? 'var(--red)' : 'inherit'}; font-weight:${item.afastamentosTotal > 0 ? '700' : 'normal'}">-${item.afastamentosTotal}</span></td>
+                <td><b>${item.passesTotal}</b></td>
+                <td style="text-align:right;">${valorUnitFmt}</td>
+                <td style="text-align:right;"><b style="color:var(--green);">${valorTotalFmt}</b></td>
+            </tr>`;
+    }
+
+    function renderizarTabelaComPesquisa() {
+        const lista = obterDadosFiltradosPesquisa();
+        const corpo = document.getElementById('tabelaCorpo');
+        const countEl = document.getElementById('quickSearchCount');
+        const emptyEl = document.getElementById('quickSearchEmpty');
+
+        if (!corpo) return;
+
+        if (lista.length === 0) {
+            corpo.innerHTML = '';
+            if (emptyEl) emptyEl.classList.add('ativo');
+            if (countEl) countEl.textContent = `0 de ${dadosRelatorioGlobal.length}`;
+            return;
+        }
+
+        if (emptyEl) emptyEl.classList.remove('ativo');
+        if (countEl) {
+            const total = dadosRelatorioGlobal.length;
+            countEl.textContent = lista.length === total
+                ? `${total} registro(s)`
+                : `${lista.length} de ${total} registro(s)`;
+        }
+
+        let html = '';
+        lista.forEach(item => { html += linhaHtmlItem(item); });
+        corpo.innerHTML = html;
+    }
+
+    function limparPesquisaRapida() {
+        ['qsPeriodoIni', 'qsPeriodoFim', 'qsNome', 'qsCpf', 'qsMatricula'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.classList.contains('campo-mes')) {
+                if (window.setValorMes) window.setValorMes(el, '');
+                else el.value = '';
+            } else {
+                el.value = '';
+            }
+        });
+        renderizarTabelaComPesquisa();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const ids = ['qsPeriodoIni', 'qsPeriodoFim', 'qsNome', 'qsCpf', 'qsMatricula'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const evt = el.classList.contains('campo-mes') ? 'change' : 'input';
+            el.addEventListener(evt, renderizarTabelaComPesquisa);
+            if (evt !== 'input') el.addEventListener('input', renderizarTabelaComPesquisa);
+        });
+
+        const btnLimpar = document.getElementById('qsLimpar');
+        if (btnLimpar) btnLimpar.addEventListener('click', limparPesquisaRapida);
+    });
+
     window.exportarCSV = function() {
-        if (dadosRelatorioGlobal.length === 0) {
+        const dados = obterDadosFiltradosPesquisa();
+        if (dados.length === 0) {
             mostrarMensagem("Gere o relatório antes de exportar.", "erro");
             return;
         }
@@ -2477,7 +2760,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Tipo", "Periodo", "Prazo Gozo", "Status", "Data Gozo"];
             linhas.push(header.join(";"));
 
-            dadosRelatorioGlobal.forEach(item => {
+            dados.forEach(item => {
                 linhas.push([
                     `"${item.nome}"`, `"${item.cpf}"`, `"${item.matricula}"`,
                     `"${item.cargo}"`, `"${item.escola}"`, `"${item.tipo}"`,
@@ -2488,7 +2771,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             const header = ["Servidor", "CPF", "Matricula", "Cargo", "Escola", "Empresa", "Passes/Dia", "Dias Efetivos", "Afastamentos", "Total Passes", "Valor Unit. (R$)", "Valor Total (R$)"];
             linhas.push(header.join(";"));
 
-            dadosRelatorioGlobal.forEach(item => {
+            dados.forEach(item => {
                 const valUnit = item.valorUnitario > 0 ? item.valorUnitario.toFixed(2).replace('.', ',') : '';
                 const valTotal = item.valorTotal > 0 ? item.valorTotal.toFixed(2).replace('.', ',') : '';
 
@@ -2514,7 +2797,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     }
 
     window.exportarXLS = async function() {
-        if (dadosRelatorioGlobal.length === 0) {
+        const dadosFiltrados = obterDadosFiltradosPesquisa();
+        if (dadosFiltrados.length === 0) {
             mostrarMensagem("Gere o relatório antes de exportar.", "erro");
             return;
         }
@@ -2534,7 +2818,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
             let dados = [];
 
             if (tipoRelatorioAtual === "ferias") {
-                dados = dadosRelatorioGlobal.map(item => ({
+                dados = dadosFiltrados.map(item => ({
                     "Servidor": item.nome,
                     "CPF": item.cpf,
                     "Matrícula": item.matricula,
@@ -2547,7 +2831,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
                     "Data Gozo": item.gozo
                 }));
             } else {
-                dados = dadosRelatorioGlobal.map(item => ({
+                dados = dadosFiltrados.map(item => ({
                     "Servidor": item.nome,
                     "CPF": item.cpf,
                     "Matrícula": item.matricula,
