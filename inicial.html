@@ -133,6 +133,9 @@ button { font:inherit; color:inherit; cursor:pointer; }
     white-space:nowrap; border:0;
 }
 
+/* ⬇️ ADICIONADO: classe usada pelo permissoes.js para esconder itens bloqueados */
+.oculto { display: none !important; }
+
 .layout {
     display:flex; width:100%; height:100vh; height:100dvh; overflow:hidden;
 }
@@ -1403,10 +1406,6 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     .alerta-critico::before { display:none !important; }
     .alerta-critico-icone-wrapper::after { display:none !important; }
 }
-
-    /* bloqueio */
-.oculto { display: none !important; }
-    
 </style>
 </head>
 
@@ -1967,18 +1966,12 @@ button:disabled { opacity:.65; cursor:not-allowed; }
     </div>
 </div>
 
-<!-- SCRIPTS DO LAYOUT -->
+<!-- ============================================================
+     SCRIPTS DO LAYOUT (menu, tema, sair, rede) — SEM GUARD
+     ============================================================ -->
 <script type="module">
-
-    import { exigirUsuario } from "./permissoes.js";
-exigirUsuario((user, perms) => {
-
-    
 import { auth } from "./firebase.js";
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 (function () {
     var pathAtual = (window.location.pathname.split('/').pop() || '').toLowerCase();
@@ -2089,25 +2082,6 @@ import {
         if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
     }
 })();
-
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean)
-            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
-            .slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 
 var ultimoFocoSair = null;
 function abrirModalSair() {
@@ -2291,10 +2265,10 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 })();
 </script>
 
-<!-- SCRIPTS ESPECÍFICOS DA PÁGINA inicial.html (Painel) -->
+<!-- ============================================================
+     SCRIPT DO PAINEL — AGORA PROTEGIDO PELO permissoes.js
+     ============================================================ -->
 <script type="module">
-
-     
 import { db } from "./firebase.js";
 import {
     collection,
@@ -2305,730 +2279,739 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const CACHE_KEY      = 'cache-painel-dados-v3';
-const CACHE_VERSAO   = 'cache-painel-versao';
-const CACHE_TTL_MS   = 30 * 60 * 1000;
-const DOC_RESUMO     = ['_estatisticas', 'resumo'];
-const LIMITE_ATENCAO = 2;   // 2 períodos fechados sem gozo → card laranja
-const LIMITE_CRITICO = 3;   // 3+ períodos fechados sem gozo → card vermelho
+// ⬇️ IMPORT DO GUARD
+import { exigirUsuario } from "./permissoes.js";
 
-function mostrarAviso(texto, icone, carregando) {
-    const aviso = document.getElementById('avisoCarregamento');
-    document.getElementById('avisoTexto').textContent = texto;
-    document.getElementById('avisoIcone').textContent = icone || 'info';
-    aviso.classList.add('ativo');
-    aviso.classList.toggle('carregando', !!carregando);
-}
+// ============================================================
+// TODO O CÓDIGO ORIGINAL DO PAINEL AGORA RODA DENTRO DO GUARD
+// ============================================================
+exigirUsuario((user, perms) => {
 
-function esconderAviso() {
-    document.getElementById('avisoCarregamento').classList.remove('ativo', 'carregando');
-}
+    // ---------- TOPBAR ----------
+    (function preencherTopbar() {
+        const email = user.email || '';
+        const partes = email.split('@')[0].split(/[.\-_]/);
+        const ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
+        const nome = partes.filter(Boolean)
+            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
+            .slice(0, 2).join(' ');
+        const av = document.getElementById('userAvatar');
+        const nm = document.getElementById('userNameLabel');
+        const em = document.getElementById('userEmailLabel');
+        if (av) av.textContent = ini;
+        if (nm) nm.textContent = nome || 'Usuário';
+        if (em) { em.textContent = email; em.title = email; }
+    })();
 
-function lerCache() {
-    try {
-        const bruto = localStorage.getItem(CACHE_KEY);
-        if (!bruto) return null;
-        const obj = JSON.parse(bruto);
-        if (Date.now() > obj.expiresAt) { localStorage.removeItem(CACHE_KEY); return null; }
-        const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
-        if (obj.versao !== versaoAtual) { localStorage.removeItem(CACHE_KEY); return null; }
-        return obj;
-    } catch (e) { return null; }
-}
+    // =========================================================
+    // CACHE E CARREGAMENTO DO PAINEL
+    // =========================================================
+    const CACHE_KEY      = 'cache-painel-dados-v3';
+    const CACHE_VERSAO   = 'cache-painel-versao';
+    const CACHE_TTL_MS   = 30 * 60 * 1000;
+    const DOC_RESUMO     = ['_estatisticas', 'resumo'];
+    const LIMITE_ATENCAO = 2;
+    const LIMITE_CRITICO = 3;
 
-function salvarCache(dados) {
-    try {
-        const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-            dados: dados,
-            expiresAt: Date.now() + CACHE_TTL_MS,
-            versao: versaoAtual,
-            cachedAt: Date.now()
-        }));
-    } catch (e) {}
-}
+    function mostrarAviso(texto, icone, carregando) {
+        const aviso = document.getElementById('avisoCarregamento');
+        document.getElementById('avisoTexto').textContent = texto;
+        document.getElementById('avisoIcone').textContent = icone || 'info';
+        aviso.classList.add('ativo');
+        aviso.classList.toggle('carregando', !!carregando);
+    }
 
-function limparCache() {
-    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
-}
+    function esconderAviso() {
+        document.getElementById('avisoCarregamento').classList.remove('ativo', 'carregando');
+    }
 
-function aguardarAuth() {
-    const check = setInterval(() => {
-        if (document.getElementById('userEmailLabel') &&
-            document.getElementById('userEmailLabel').textContent !== 'Carregando…') {
-            clearInterval(check);
-            iniciarPainel();
+    function lerCache() {
+        try {
+            const bruto = localStorage.getItem(CACHE_KEY);
+            if (!bruto) return null;
+            const obj = JSON.parse(bruto);
+            if (Date.now() > obj.expiresAt) { localStorage.removeItem(CACHE_KEY); return null; }
+            const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
+            if (obj.versao !== versaoAtual) { localStorage.removeItem(CACHE_KEY); return null; }
+            return obj;
+        } catch (e) { return null; }
+    }
+
+    function salvarCache(dados) {
+        try {
+            const versaoAtual = Number(localStorage.getItem(CACHE_VERSAO) || '0');
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                dados: dados,
+                expiresAt: Date.now() + CACHE_TTL_MS,
+                versao: versaoAtual,
+                cachedAt: Date.now()
+            }));
+        } catch (e) {}
+    }
+
+    function limparCache() {
+        try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    }
+
+    // (a função aguardarAuth original foi removida — o guard já faz esse papel)
+
+    async function iniciarPainel() {
+        const cache = lerCache();
+        if (cache) {
+            atualizarInfoCache('aviso', 'em cache');
+            renderizarTudo(cache.dados);
+            return;
         }
-    }, 100);
-    setTimeout(() => { clearInterval(check); iniciarPainel(); }, 4000);
-}
 
-setTimeout(aguardarAuth, 500);
+        atualizarInfoCache('aviso', 'verificando…');
+        mostrarAviso('Carregando resumo do sistema…', 'sync', true);
 
-async function iniciarPainel() {
-    const cache = lerCache();
-    if (cache) {
-        atualizarInfoCache('aviso', 'em cache');
-        renderizarTudo(cache.dados);
-        return;
-    }
+        let resumo = null;
+        try {
+            const snap = await getDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]));
+            if (snap.exists()) resumo = snap.data();
+        } catch (e) {
+            console.error('[Painel] Erro ao ler resumo:', e);
+        }
 
-    atualizarInfoCache('aviso', 'verificando…');
-    mostrarAviso('Carregando resumo do sistema…', 'sync', true);
-
-    let resumo = null;
-    try {
-        const snap = await getDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]));
-        if (snap.exists()) resumo = snap.data();
-    } catch (e) {
-        console.error('[Painel] Erro ao ler resumo:', e);
-    }
-
-    if (!resumo) {
-        mostrarAviso('Primeira execução: calculando indicadores…', 'sync', true);
-        resumo = await calcularResumoCompleto();
-        if (resumo) {
-            try {
-                await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
-                    ...resumo,
-                    _recalculo: 'auto',
-                    atualizadoEm: serverTimestamp()
-                });
-            } catch (e) {
-                console.error('[Painel] Erro ao salvar resumo:', e);
+        if (!resumo) {
+            mostrarAviso('Primeira execução: calculando indicadores…', 'sync', true);
+            resumo = await calcularResumoCompleto();
+            if (resumo) {
+                try {
+                    await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
+                        ...resumo,
+                        _recalculo: 'auto',
+                        atualizadoEm: serverTimestamp()
+                    });
+                } catch (e) {
+                    console.error('[Painel] Erro ao salvar resumo:', e);
+                }
             }
         }
+
+        if (!resumo) resumo = resumoVazio();
+
+        salvarCache(resumo);
+        atualizarInfoCache('fresco', 'atualizado agora');
+        renderizarTudo(resumo);
+        esconderAviso();
     }
 
-    if (!resumo) resumo = resumoVazio();
-
-    salvarCache(resumo);
-    atualizarInfoCache('fresco', 'atualizado agora');
-    renderizarTudo(resumo);
-    esconderAviso();
-}
-
-async function calcularResumoCompleto() {
-    try {
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
-        const snapConfig = await getDocs(collection(db, 'configuracoes'));
-        const meses = [];
-        snapConfig.forEach(d => {
-            if (d.id !== '_padraoGlobal') meses.push({ ...d.data(), _id: d.id });
-        });
-        meses.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
-
-        const snapServ = await getDocs(collection(db, 'servidores'));
-        const servidores = [];
-        snapServ.forEach(d => servidores.push({ id: d.id, ...d.data() }));
-
-        const snapReg = await getDocs(collection(db, 'registro_ferias_folgas'));
-        const registros = [];
-        snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
-
-        let excecoesAtivas = 0;
-        meses.forEach(m => {
-            (m.escolasReabertas || []).forEach(e => {
-                if (typeof e === 'object' && e.dataExpiracao) {
-                    if (new Date(e.dataExpiracao + 'T23:59:59') >= hoje) excecoesAtivas++;
-                } else {
-                    excecoesAtivas++;
-                }
-            });
-        });
-
-        let totalEscolas = 0;
+    async function calcularResumoCompleto() {
         try {
-            const snapUnidades = await getDocs(collection(db, 'unidades'));
-            totalEscolas = snapUnidades.size;
-        } catch (e) {
-            console.warn('[Painel] Erro ao ler "unidades":', e);
-        }
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
 
-        const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
+            const snapConfig = await getDocs(collection(db, 'configuracoes'));
+            const meses = [];
+            snapConfig.forEach(d => {
+                if (d.id !== '_padraoGlobal') meses.push({ ...d.data(), _id: d.id });
+            });
+            meses.sort((a, b) => (b.mesReferencia || '').localeCompare(a.mesReferencia || ''));
 
-        return {
-            totalServidores: servidores.length,
-            totalMesesConfigurados: meses.length,
-            totalEscolas: totalEscolas,
-            excecoesAtivas,
-            // Atenção: exatamente 2 períodos fechados sem gozo
-            servidoresAtencao: resultadoFerias.servidoresAtencao,
-            periodosAtencao: resultadoFerias.periodosAtencao,
-            // Crítico: 3+ períodos fechados sem gozo
-            feriasVencidas: resultadoFerias.periodosCriticos,
-            servidoresComPendencia: resultadoFerias.servidoresCriticos,
-            mesesParaExibir: meses.slice(0, 5).map(m => ({
-                mesReferencia: m.mesReferencia,
-                diasUteis: m.diasUteis || null,
-                congelado: !!m.congelado,
-                dataAbertura: m.dataAbertura || '',
-                dataFechamento: m.dataFechamento || '',
-                escolasReabertas: (m.escolasReabertas || []).length,
-                dataAtualizacao: m.dataAtualizacao || ''
-            })),
-            mesAtual: (() => {
-                const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-                const m = meses.find(x => x.mesReferencia === mesAtualStr);
-                if (!m) return null;
-                return {
+            const snapServ = await getDocs(collection(db, 'servidores'));
+            const servidores = [];
+            snapServ.forEach(d => servidores.push({ id: d.id, ...d.data() }));
+
+            const snapReg = await getDocs(collection(db, 'registro_ferias_folgas'));
+            const registros = [];
+            snapReg.forEach(d => registros.push({ id: d.id, ...d.data() }));
+
+            let excecoesAtivas = 0;
+            meses.forEach(m => {
+                (m.escolasReabertas || []).forEach(e => {
+                    if (typeof e === 'object' && e.dataExpiracao) {
+                        if (new Date(e.dataExpiracao + 'T23:59:59') >= hoje) excecoesAtivas++;
+                    } else {
+                        excecoesAtivas++;
+                    }
+                });
+            });
+
+            let totalEscolas = 0;
+            try {
+                const snapUnidades = await getDocs(collection(db, 'unidades'));
+                totalEscolas = snapUnidades.size;
+            } catch (e) {
+                console.warn('[Painel] Erro ao ler "unidades":', e);
+            }
+
+            const resultadoFerias = calcularFeriasPendentes(servidores, registros, hoje);
+
+            return {
+                totalServidores: servidores.length,
+                totalMesesConfigurados: meses.length,
+                totalEscolas: totalEscolas,
+                excecoesAtivas,
+                servidoresAtencao: resultadoFerias.servidoresAtencao,
+                periodosAtencao: resultadoFerias.periodosAtencao,
+                feriasVencidas: resultadoFerias.periodosCriticos,
+                servidoresComPendencia: resultadoFerias.servidoresCriticos,
+                mesesParaExibir: meses.slice(0, 5).map(m => ({
                     mesReferencia: m.mesReferencia,
                     diasUteis: m.diasUteis || null,
                     congelado: !!m.congelado,
                     dataAbertura: m.dataAbertura || '',
                     dataFechamento: m.dataFechamento || '',
-                    escolasReabertas: (m.escolasReabertas || []).length
-                };
-            })(),
+                    escolasReabertas: (m.escolasReabertas || []).length,
+                    dataAtualizacao: m.dataAtualizacao || ''
+                })),
+                mesAtual: (() => {
+                    const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+                    const m = meses.find(x => x.mesReferencia === mesAtualStr);
+                    if (!m) return null;
+                    return {
+                        mesReferencia: m.mesReferencia,
+                        diasUteis: m.diasUteis || null,
+                        congelado: !!m.congelado,
+                        dataAbertura: m.dataAbertura || '',
+                        dataFechamento: m.dataFechamento || '',
+                        escolasReabertas: (m.escolasReabertas || []).length
+                    };
+                })(),
+                dataAtualizacao: new Date().toISOString()
+            };
+        } catch (e) {
+            console.error('[Painel] Erro ao calcular resumo:', e);
+            return null;
+        }
+    }
+
+    function resumoVazio() {
+        return {
+            totalServidores: 0,
+            totalMesesConfigurados: 0,
+            totalEscolas: 0,
+            excecoesAtivas: 0,
+            servidoresAtencao: 0,
+            periodosAtencao: 0,
+            feriasVencidas: 0,
+            servidoresComPendencia: 0,
+            mesesParaExibir: [],
+            mesAtual: null,
             dataAtualizacao: new Date().toISOString()
         };
-    } catch (e) {
-        console.error('[Painel] Erro ao calcular resumo:', e);
+    }
+
+    function parseDataParaDate(v) {
+        if (!v) return null;
+        if (typeof v === 'object' && v.toDate) return v.toDate();
+        const s = v.toString().trim();
+        if (s.includes('/')) {
+            const p = s.split('/');
+            return new Date(+p[2], +p[1] - 1, +p[0]);
+        }
+        if (s.includes('-')) {
+            const p = s.substring(0, 10).split('-');
+            return p[0].length === 4
+                ? new Date(+p[0], +p[1] - 1, +p[2])
+                : new Date(+p[2], +p[1] - 1, +p[0]);
+        }
         return null;
     }
-}
 
-function resumoVazio() {
-    return {
-        totalServidores: 0,
-        totalMesesConfigurados: 0,
-        totalEscolas: 0,
-        excecoesAtivas: 0,
-        servidoresAtencao: 0,
-        periodosAtencao: 0,
-        feriasVencidas: 0,
-        servidoresComPendencia: 0,
-        mesesParaExibir: [],
-        mesAtual: null,
-        dataAtualizacao: new Date().toISOString()
-    };
-}
+    function periodosFechados(dataAdmissao, hoje) {
+        const adm = parseDataParaDate(dataAdmissao);
+        if (!adm) return [];
+        hoje.setHours(0, 0, 0, 0);
 
-function parseDataParaDate(v) {
-    if (!v) return null;
-    if (typeof v === 'object' && v.toDate) return v.toDate();
-    const s = v.toString().trim();
-    if (s.includes('/')) {
-        const p = s.split('/');
-        return new Date(+p[2], +p[1] - 1, +p[0]);
-    }
-    if (s.includes('-')) {
-        const p = s.substring(0, 10).split('-');
-        return p[0].length === 4
-            ? new Date(+p[0], +p[1] - 1, +p[2])
-            : new Date(+p[2], +p[1] - 1, +p[0]);
-    }
-    return null;
-}
+        const out = [];
+        let ini = new Date(adm);
+        for (let i = 0; i < 40; i++) {
+            const fim = new Date(ini);
+            fim.setFullYear(fim.getFullYear() + 1);
+            fim.setDate(fim.getDate() - 1);
 
-/* ⬇️ Conta PERÍODOS FECHADOS (já completaram 1 ano) */
-function periodosFechados(dataAdmissao, hoje) {
-    const adm = parseDataParaDate(dataAdmissao);
-    if (!adm) return [];
-    hoje.setHours(0, 0, 0, 0);
-
-    const out = [];
-    let ini = new Date(adm);
-    for (let i = 0; i < 40; i++) {
-        const fim = new Date(ini);
-        fim.setFullYear(fim.getFullYear() + 1);
-        fim.setDate(fim.getDate() - 1);
-
-        if (fim <= hoje) {
-            out.push({
-                inicio: new Date(ini),
-                fim: new Date(fim),
-                anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`
-            });
-            ini = new Date(fim);
-            ini.setDate(ini.getDate() + 1);
-        } else break;
-    }
-    return out;
-}
-
-/* ⬇️ NOVA LÓGICA: conta PERÍODOS FECHADOS SEM GOZO */
-function calcularFeriasPendentes(servidores, registros, hoje) {
-    const porCpf = new Map();
-    const porMatricula = new Map();
-
-    registros.forEach(r => {
-        const tipo = (r.tipo || '').toLowerCase();
-        if (!(tipo.includes('ferias') || tipo.includes('férias'))) return;
-        const ano = r.ano_referencia || r.ano || '';
-        if (!ano) return;
-
-        const cpf = (r.cpf || r.CPF || '').toString().replace(/\D/g, '');
-        if (cpf) {
-            if (!porCpf.has(cpf)) porCpf.set(cpf, new Set());
-            porCpf.get(cpf).add(ano);
+            if (fim <= hoje) {
+                out.push({
+                    inicio: new Date(ini),
+                    fim: new Date(fim),
+                    anoReferencia: `${ini.getFullYear()}/${fim.getFullYear()}`
+                });
+                ini = new Date(fim);
+                ini.setDate(ini.getDate() + 1);
+            } else break;
         }
-        const mat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
-        if (mat) {
-            if (!porMatricula.has(mat)) porMatricula.set(mat, new Set());
-            porMatricula.get(mat).add(ano);
-        }
-    });
+        return out;
+    }
 
-    let servidoresAtencao = 0;
-    let periodosAtencao = 0;
-    let servidoresCriticos = 0;
-    let periodosCriticos = 0;
+    function calcularFeriasPendentes(servidores, registros, hoje) {
+        const porCpf = new Map();
+        const porMatricula = new Map();
 
-    servidores.forEach(s => {
-        const cpf = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
-        const mats = [];
-        const m1 = s.matricula || s.Matricula || s.matricula_servidor;
-        if (m1) mats.push(m1.toString().trim().replace(/^0+/, ''));
-        if (s.matricula1?.numeroMatricula) mats.push(s.matricula1.numeroMatricula.toString().trim().replace(/^0+/, ''));
-        if (s.matricula2?.numeroMatricula) mats.push(s.matricula2.numeroMatricula.toString().trim().replace(/^0+/, ''));
+        registros.forEach(r => {
+            const tipo = (r.tipo || '').toLowerCase();
+            if (!(tipo.includes('ferias') || tipo.includes('férias'))) return;
+            const ano = r.ano_referencia || r.ano || '';
+            if (!ano) return;
 
-        const admissoes = [];
-        const adm1 = s.data_admissao || s.dataAdmissao || s.matricula1?.dataAdmissao;
-        if (adm1) admissoes.push(adm1);
-        if (s.matricula2?.dataAdmissao || s.matricula2?.data_admissao) {
-            admissoes.push(s.matricula2.dataAdmissao || s.matricula2.data_admissao);
-        }
-
-        if (admissoes.length === 0) return;
-
-        const lancados = new Set();
-        if (cpf && porCpf.has(cpf)) porCpf.get(cpf).forEach(a => lancados.add(a));
-        mats.forEach(m => {
-            if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
+            const cpf = (r.cpf || r.CPF || '').toString().replace(/\D/g, '');
+            if (cpf) {
+                if (!porCpf.has(cpf)) porCpf.set(cpf, new Set());
+                porCpf.get(cpf).add(ano);
+            }
+            const mat = (r.matricula || r.Matricula || r.servidor_matricula || '').toString().trim().replace(/^0+/, '');
+            if (mat) {
+                if (!porMatricula.has(mat)) porMatricula.set(mat, new Set());
+                porMatricula.get(mat).add(ano);
+            }
         });
 
-        let fechadosSemGozo = 0;
+        let servidoresAtencao = 0;
+        let periodosAtencao = 0;
+        let servidoresCriticos = 0;
+        let periodosCriticos = 0;
 
-        admissoes.forEach(adm => {
-            periodosFechados(adm, hoje).forEach(p => {
-                // Se já tem lançamento para esse ano de referência, conta como gozo
-                if (lancados.has(p.anoReferencia)) return;
-                fechadosSemGozo++;
+        servidores.forEach(s => {
+            const cpf = (s.cpf || s.CPF || '').toString().replace(/\D/g, '');
+            const mats = [];
+            const m1 = s.matricula || s.Matricula || s.matricula_servidor;
+            if (m1) mats.push(m1.toString().trim().replace(/^0+/, ''));
+            if (s.matricula1?.numeroMatricula) mats.push(s.matricula1.numeroMatricula.toString().trim().replace(/^0+/, ''));
+            if (s.matricula2?.numeroMatricula) mats.push(s.matricula2.numeroMatricula.toString().trim().replace(/^0+/, ''));
+
+            const admissoes = [];
+            const adm1 = s.data_admissao || s.dataAdmissao || s.matricula1?.dataAdmissao;
+            if (adm1) admissoes.push(adm1);
+            if (s.matricula2?.dataAdmissao || s.matricula2?.data_admissao) {
+                admissoes.push(s.matricula2.dataAdmissao || s.matricula2.data_admissao);
+            }
+
+            if (admissoes.length === 0) return;
+
+            const lancados = new Set();
+            if (cpf && porCpf.has(cpf)) porCpf.get(cpf).forEach(a => lancados.add(a));
+            mats.forEach(m => {
+                if (porMatricula.has(m)) porMatricula.get(m).forEach(a => lancados.add(a));
             });
+
+            let fechadosSemGozo = 0;
+
+            admissoes.forEach(adm => {
+                periodosFechados(adm, hoje).forEach(p => {
+                    if (lancados.has(p.anoReferencia)) return;
+                    fechadosSemGozo++;
+                });
+            });
+
+            if (fechadosSemGozo === LIMITE_ATENCAO) {
+                servidoresAtencao++;
+                periodosAtencao += fechadosSemGozo;
+            }
+            else if (fechadosSemGozo >= LIMITE_CRITICO) {
+                servidoresCriticos++;
+                periodosCriticos += fechadosSemGozo;
+            }
         });
 
-        // ATENÇÃO: exatamente 2 fechados sem gozo
-        if (fechadosSemGozo === LIMITE_ATENCAO) {
-            servidoresAtencao++;
-            periodosAtencao += fechadosSemGozo;
+        return {
+            servidoresAtencao: servidoresAtencao,
+            periodosAtencao: periodosAtencao,
+            servidoresCriticos: servidoresCriticos,
+            periodosCriticos: periodosCriticos
+        };
+    }
+
+    function atualizarInfoCache(tipo, texto) {
+        const el = document.getElementById('cacheInfo');
+        const txt = document.getElementById('cacheInfoTexto');
+        if (!el || !txt) return;
+        el.classList.remove('fresco', 'aviso');
+        el.classList.add(tipo === 'fresco' ? 'fresco' : 'aviso');
+        const icone = tipo === 'fresco' ? 'check_circle' : 'schedule';
+        el.querySelector('.material-symbols-outlined').textContent = icone;
+        txt.textContent = texto;
+    }
+
+    function renderizarTudo(dados) {
+        renderizarAlertaAtencao(dados);
+        renderizarAlertaCritico(dados);
+        renderizarFaixaStatus(dados);
+        renderizarPendencias(dados);
+        renderizarResumo(dados);
+        renderizarUltimosMeses(dados);
+        renderizarTimeline(dados);
+    }
+
+    function renderizarAlertaAtencao(dados) {
+        const alerta = document.getElementById('alertaAtencao');
+        if (!alerta) return;
+
+        const servidores = dados.servidoresAtencao || 0;
+
+        if (servidores === 0) {
+            alerta.classList.remove('ativo');
+            return;
         }
-        // CRÍTICO: 3 ou mais fechados sem gozo
-        else if (fechadosSemGozo >= LIMITE_CRITICO) {
-            servidoresCriticos++;
-            periodosCriticos += fechadosSemGozo;
+
+        alerta.classList.add('ativo');
+
+        const tituloEl = document.getElementById('alertaAtencaoTitulo');
+        const descEl = document.getElementById('alertaAtencaoDescricao');
+
+        const palavraServidor = servidores === 1 ? 'servidor' : 'servidores';
+
+        tituloEl.innerHTML = `
+            <span class="numero-destaque">${servidores}</span>
+            ${palavraServidor} a regularizar
+        `;
+
+        descEl.innerHTML = `
+            <strong>${servidores} ${palavraServidor}</strong> ${servidores === 1 ? 'acumulou' : 'acumularam'}
+            <strong>2 períodos aquisitivos fechados sem gozo</strong>. O RH tem <strong>até 1 ano</strong> para
+            regularizar antes que se torne ilegal.
+        `;
+    }
+
+    function renderizarAlertaCritico(dados) {
+        const alerta = document.getElementById('alertaCritico');
+        if (!alerta) return;
+
+        const criticos = dados.servidoresComPendencia || 0;
+        const periodos = dados.feriasVencidas || 0;
+
+        if (criticos === 0) {
+            alerta.classList.remove('ativo');
+            return;
         }
-    });
 
-    return {
-        servidoresAtencao: servidoresAtencao,
-        periodosAtencao: periodosAtencao,
-        servidoresCriticos: servidoresCriticos,
-        periodosCriticos: periodosCriticos
-    };
-}
+        alerta.classList.add('ativo');
 
-function atualizarInfoCache(tipo, texto) {
-    const el = document.getElementById('cacheInfo');
-    const txt = document.getElementById('cacheInfoTexto');
-    if (!el || !txt) return;
-    el.classList.remove('fresco', 'aviso');
-    el.classList.add(tipo === 'fresco' ? 'fresco' : 'aviso');
-    const icone = tipo === 'fresco' ? 'check_circle' : 'schedule';
-    el.querySelector('.material-symbols-outlined').textContent = icone;
-    txt.textContent = texto;
-}
+        const tituloEl = document.getElementById('alertaCriticoTitulo');
+        const descEl = document.getElementById('alertaCriticoDescricao');
 
-function renderizarTudo(dados) {
-    renderizarAlertaAtencao(dados);
-    renderizarAlertaCritico(dados);
-    renderizarFaixaStatus(dados);
-    renderizarPendencias(dados);
-    renderizarResumo(dados);
-    renderizarUltimosMeses(dados);
-    renderizarTimeline(dados);
-}
+        const palavraServidor = criticos === 1 ? 'servidor' : 'servidores';
+        const palavraPeriodo = periodos === 1 ? 'período' : 'períodos';
 
-function renderizarAlertaAtencao(dados) {
-    const alerta = document.getElementById('alertaAtencao');
-    if (!alerta) return;
+        tituloEl.innerHTML = `
+            <span class="numero-destaque">${criticos}</span>
+            ${palavraServidor} com limite legal excedido
+        `;
 
-    const servidores = dados.servidoresAtencao || 0;
-
-    if (servidores === 0) {
-        alerta.classList.remove('ativo');
-        return;
+        descEl.innerHTML = `
+            <strong>${criticos} ${palavraServidor}</strong> ${criticos === 1 ? 'acumulou' : 'acumularam'}
+            <strong>${periodos} ${palavraPeriodo}</strong> de férias sem gozo —
+            <strong>situação ilegal</strong> pela legislação. Regularize imediatamente.
+        `;
     }
 
-    alerta.classList.add('ativo');
+    function renderizarFaixaStatus(dados) {
+        const faixa = document.getElementById('faixaStatus');
+        const icone = document.getElementById('faixaIcone');
+        const titulo = document.getElementById('faixaTitulo');
+        const detalhe = document.getElementById('faixaDetalhe');
 
-    const tituloEl = document.getElementById('alertaAtencaoTitulo');
-    const descEl = document.getElementById('alertaAtencaoDescricao');
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        const m = dados.mesAtual;
 
-    const palavraServidor = servidores === 1 ? 'servidor' : 'servidores';
+        titulo.textContent = formatarMesAno(mesAtualStr);
 
-    tituloEl.innerHTML = `
-        <span class="numero-destaque">${servidores}</span>
-        ${palavraServidor} a regularizar
-    `;
-
-    descEl.innerHTML = `
-        <strong>${servidores} ${palavraServidor}</strong> ${servidores === 1 ? 'acumulou' : 'acumularam'}
-        <strong>2 períodos aquisitivos fechados sem gozo</strong>. O RH tem <strong>até 1 ano</strong> para
-        regularizar antes que se torne ilegal.
-    `;
-}
-
-function renderizarAlertaCritico(dados) {
-    const alerta = document.getElementById('alertaCritico');
-    if (!alerta) return;
-
-    const criticos = dados.servidoresComPendencia || 0;
-    const periodos = dados.feriasVencidas || 0;
-
-    if (criticos === 0) {
-        alerta.classList.remove('ativo');
-        return;
-    }
-
-    alerta.classList.add('ativo');
-
-    const tituloEl = document.getElementById('alertaCriticoTitulo');
-    const descEl = document.getElementById('alertaCriticoDescricao');
-
-    const palavraServidor = criticos === 1 ? 'servidor' : 'servidores';
-    const palavraPeriodo = periodos === 1 ? 'período' : 'períodos';
-
-    tituloEl.innerHTML = `
-        <span class="numero-destaque">${criticos}</span>
-        ${palavraServidor} com limite legal excedido
-    `;
-
-    descEl.innerHTML = `
-        <strong>${criticos} ${palavraServidor}</strong> ${criticos === 1 ? 'acumulou' : 'acumularam'}
-        <strong>${periodos} ${palavraPeriodo}</strong> de férias sem gozo —
-        <strong>situação ilegal</strong> pela legislação. Regularize imediatamente.
-    `;
-}
-
-function renderizarFaixaStatus(dados) {
-    const faixa = document.getElementById('faixaStatus');
-    const icone = document.getElementById('faixaIcone');
-    const titulo = document.getElementById('faixaTitulo');
-    const detalhe = document.getElementById('faixaDetalhe');
-
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-    const m = dados.mesAtual;
-
-    titulo.textContent = formatarMesAno(mesAtualStr);
-
-    if (!m) {
-        faixa.className = 'faixa-status info';
-        icone.textContent = 'schedule';
-        detalhe.textContent = 'Mês corrente não configurado no sistema.';
-        return;
-    }
-    if (m.congelado) {
-        faixa.className = 'faixa-status danger';
-        icone.textContent = 'error';
-        detalhe.textContent = `Fechado manualmente · ${m.diasUteis || '—'} dias úteis definidos.`;
-        return;
-    }
-    if (!m.dataAbertura && !m.dataFechamento) {
-        faixa.className = 'faixa-status ok';
-        icone.textContent = 'check_circle';
-        detalhe.textContent = `Aberto para lançamentos · ${m.diasUteis || '—'} dias úteis.`;
-        return;
-    }
-    if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) {
-        faixa.className = 'faixa-status danger';
-        icone.textContent = 'error';
-        detalhe.textContent = `Período encerrado em ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis.`;
-        return;
-    }
-    if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) {
-        faixa.className = 'faixa-status warn';
-        icone.textContent = 'schedule';
-        detalhe.textContent = `Abre em ${formatarData(m.dataAbertura)} · ${m.diasUteis || '—'} dias úteis.`;
-        return;
-    }
-    faixa.className = 'faixa-status ok';
-    icone.textContent = 'check_circle';
-    detalhe.textContent = `Aberto até ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis definidos.`;
-}
-
-function renderizarPendencias(dados) {
-    const lista = document.getElementById('listaPendencias');
-    const contador = document.getElementById('pendContador');
-
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    const pendencias = [];
-    const m = dados.mesAtual;
-
-    if (!m) {
-        pendencias.push({
-            tipo: 'warn', icone: 'calendar_month',
-            titulo: 'Mês corrente ainda não foi configurado',
-            descricao: 'Defina os dias úteis e o período de lançamento para habilitar o módulo de cálculo.',
-            cta: 'Configurar agora', link: 'configuracao.html'
-        });
-    } else {
-        if (m.congelado && (m.escolasReabertas || 0) === 0) {
-            pendencias.push({
-                tipo: 'danger', icone: 'schedule',
-                titulo: 'Mês corrente congelado',
-                descricao: 'O período está fechado para todas as unidades e nenhuma exceção foi cadastrada.',
-                cta: 'Revisar configuração', link: 'configuracao.html'
-            });
+        if (!m) {
+            faixa.className = 'faixa-status info';
+            icone.textContent = 'schedule';
+            detalhe.textContent = 'Mês corrente não configurado no sistema.';
+            return;
+        }
+        if (m.congelado) {
+            faixa.className = 'faixa-status danger';
+            icone.textContent = 'error';
+            detalhe.textContent = `Fechado manualmente · ${m.diasUteis || '—'} dias úteis definidos.`;
+            return;
+        }
+        if (!m.dataAbertura && !m.dataFechamento) {
+            faixa.className = 'faixa-status ok';
+            icone.textContent = 'check_circle';
+            detalhe.textContent = `Aberto para lançamentos · ${m.diasUteis || '—'} dias úteis.`;
+            return;
         }
         if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) {
+            faixa.className = 'faixa-status danger';
+            icone.textContent = 'error';
+            detalhe.textContent = `Período encerrado em ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis.`;
+            return;
+        }
+        if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) {
+            faixa.className = 'faixa-status warn';
+            icone.textContent = 'schedule';
+            detalhe.textContent = `Abre em ${formatarData(m.dataAbertura)} · ${m.diasUteis || '—'} dias úteis.`;
+            return;
+        }
+        faixa.className = 'faixa-status ok';
+        icone.textContent = 'check_circle';
+        detalhe.textContent = `Aberto até ${formatarData(m.dataFechamento)} · ${m.diasUteis || '—'} dias úteis definidos.`;
+    }
+
+    function renderizarPendencias(dados) {
+        const lista = document.getElementById('listaPendencias');
+        const contador = document.getElementById('pendContador');
+
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const pendencias = [];
+        const m = dados.mesAtual;
+
+        if (!m) {
             pendencias.push({
-                tipo: 'warn', icone: 'event',
-                titulo: 'Período de lançamento encerrado',
-                descricao: `O mês corrente encerrou em ${formatarData(m.dataFechamento)}. Reabra por unidade se necessário.`,
-                cta: 'Abrir exceções', link: 'configuracao.html'
+                tipo: 'warn', icone: 'calendar_month',
+                titulo: 'Mês corrente ainda não foi configurado',
+                descricao: 'Defina os dias úteis e o período de lançamento para habilitar o módulo de cálculo.',
+                cta: 'Configurar agora', link: 'configuracao.html'
+            });
+        } else {
+            if (m.congelado && (m.escolasReabertas || 0) === 0) {
+                pendencias.push({
+                    tipo: 'danger', icone: 'schedule',
+                    titulo: 'Mês corrente congelado',
+                    descricao: 'O período está fechado para todas as unidades e nenhuma exceção foi cadastrada.',
+                    cta: 'Revisar configuração', link: 'configuracao.html'
+                });
+            }
+            if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) {
+                pendencias.push({
+                    tipo: 'warn', icone: 'event',
+                    titulo: 'Período de lançamento encerrado',
+                    descricao: `O mês corrente encerrou em ${formatarData(m.dataFechamento)}. Reabra por unidade se necessário.`,
+                    cta: 'Abrir exceções', link: 'configuracao.html'
+                });
+            }
+        }
+
+        if (dados.servidoresAtencao > 0) {
+            pendencias.push({
+                tipo: 'warn',
+                icone: 'hourglass_empty',
+                titulo: `${dados.servidoresAtencao} servidor${dados.servidoresAtencao === 1 ? '' : 'es'} a regularizar`,
+                descricao: `2 períodos aquisitivos fechados sem gozo. Prazo de 1 ano para regularizar.`,
+                cta: 'Ver servidores', link: 'pendencias.html'
             });
         }
-    }
 
-    // Pendência de ATENÇÃO (2 períodos fechados sem gozo)
-    if (dados.servidoresAtencao > 0) {
-        pendencias.push({
-            tipo: 'warn',
-            icone: 'hourglass_empty',
-            titulo: `${dados.servidoresAtencao} servidor${dados.servidoresAtencao === 1 ? '' : 'es'} a regularizar`,
-            descricao: `2 períodos aquisitivos fechados sem gozo. Prazo de 1 ano para regularizar.`,
-            cta: 'Ver servidores', link: 'pendencias.html'
-        });
-    }
+        if (dados.servidoresComPendencia > 0) {
+            pendencias.push({
+                tipo: 'danger',
+                icone: 'warning',
+                titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com limite legal excedido`,
+                descricao: `3+ períodos aquisitivos fechados sem gozo. Situação ilegal.`,
+                cta: 'Ver servidores', link: 'pendencias.html'
+            });
+        }
 
-    // Pendência CRÍTICA (3+ períodos fechados sem gozo)
-    if (dados.servidoresComPendencia > 0) {
-        pendencias.push({
-            tipo: 'danger',
-            icone: 'warning',
-            titulo: `${dados.servidoresComPendencia} servidor${dados.servidoresComPendencia === 1 ? '' : 'es'} com limite legal excedido`,
-            descricao: `3+ períodos aquisitivos fechados sem gozo. Situação ilegal.`,
-            cta: 'Ver servidores', link: 'pendencias.html'
-        });
-    }
+        contador.textContent = `${pendencias.length} ${pendencias.length === 1 ? 'item' : 'itens'}`;
 
-    contador.textContent = `${pendencias.length} ${pendencias.length === 1 ? 'item' : 'itens'}`;
+        if (pendencias.length === 0) {
+            lista.innerHTML = `
+                <li class="vazio">
+                    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                    <div>
+                        <strong>Nenhuma pendência identificada</strong>
+                        Todas as configurações necessárias estão em conformidade.
+                    </div>
+                </li>
+            `;
+            return;
+        }
 
-    if (pendencias.length === 0) {
-        lista.innerHTML = `
-            <li class="vazio">
-                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-                <div>
-                    <strong>Nenhuma pendência identificada</strong>
-                    Todas as configurações necessárias estão em conformidade.
-                </div>
-            </li>
-        `;
-        return;
-    }
-
-    lista.innerHTML = pendencias.map(p => `
-        <li>
-            <a href="${p.link}" class="pendencia-item">
-                <span class="pendencia-icone ${p.tipo}" aria-hidden="true">
-                    <span class="material-symbols-outlined">${p.icone}</span>
-                </span>
-                <span class="pendencia-conteudo">
-                    <span class="pendencia-titulo">${p.titulo}</span>
-                    <span class="pendencia-descricao">${p.descricao}</span>
-                    <span class="pendencia-cta">
-                        ${p.cta}
-                        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        lista.innerHTML = pendencias.map(p => `
+            <li>
+                <a href="${p.link}" class="pendencia-item">
+                    <span class="pendencia-icone ${p.tipo}" aria-hidden="true">
+                        <span class="material-symbols-outlined">${p.icone}</span>
                     </span>
-                </span>
-            </a>
-        </li>
-    `).join('');
-}
-
-function renderizarResumo(dados) {
-    document.getElementById('statMeses').textContent = dados.totalMesesConfigurados || 0;
-    document.getElementById('statServidores').textContent = dados.totalServidores || 0;
-    document.getElementById('statEscolas').textContent = dados.totalEscolas || 0;
-    document.getElementById('statExcecoes').textContent = dados.excecoesAtivas || 0;
-    document.getElementById('statAtualizacao').textContent = dados.dataAtualizacao
-        ? formatarDataHora(dados.dataAtualizacao)
-        : '—';
-
-    // A REGULARIZAR (2 fechados sem gozo)
-    const tdAtencao = document.getElementById('statFeriasAtencao');
-    if (tdAtencao) {
-        const atencao = dados.servidoresAtencao || 0;
-        if (atencao === 0) {
-            tdAtencao.textContent = '0';
-            tdAtencao.title = 'Nenhum servidor com 2 períodos fechados sem gozo.';
-            tdAtencao.style.color = '';
-            tdAtencao.style.fontWeight = '';
-        } else {
-            tdAtencao.innerHTML = `${atencao} <span style="color:#c2610a;">⚠</span>`;
-            tdAtencao.title = `${atencao} servidor${atencao === 1 ? '' : 'es'} com 2 períodos fechados sem gozo — prazo de 1 ano para regularizar.`;
-            tdAtencao.style.color = '#c2610a';
-            tdAtencao.style.fontWeight = '600';
-        }
-    }
-
-    // CRÍTICO (3+ fechados sem gozo)
-    const td = document.getElementById('statFeriasPendentes');
-    const link = document.getElementById('linkFeriasPendentes');
-    if (!td || !link) return;
-
-    td.classList.remove('pendencia-ok', 'pendencia-alerta', 'pendencia-urgente');
-
-    const criticos = dados.servidoresComPendencia || 0;
-
-    if (criticos === 0) {
-        td.classList.add('pendencia-ok');
-        td.innerHTML = '0';
-        td.title = 'Nenhum servidor em situação crítica no momento.';
-        return;
-    }
-
-    td.classList.add('pendencia-urgente');
-
-    link.innerHTML = `
-        ${criticos}
-        <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
-        <span class="stat-sub">limite legal excedido</span>
-    `;
-    link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 3+ períodos fechados sem gozo — clique para ver a lista completa.`;
-}
-
-function renderizarUltimosMeses(dados) {
-    const tbody = document.getElementById('tabelaUltimosMeses');
-    const meses = dados.mesesParaExibir || [];
-
-    if (meses.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="tabela-vazia">Nenhum mês configurado.</td></tr>`;
-        return;
-    }
-
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-
-    tbody.innerHTML = meses.map(m => {
-        let classe = 'badge-info', rotulo = 'Indefinido';
-        if (m.congelado) { classe = 'badge-danger'; rotulo = 'Congelado'; }
-        else if (!m.dataAbertura && !m.dataFechamento) { classe = 'badge-ok'; rotulo = 'Aberto'; }
-        else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { classe = 'badge-danger'; rotulo = 'Encerrado'; }
-        else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { classe = 'badge-warn'; rotulo = 'Aguardando'; }
-        else { classe = 'badge-ok'; rotulo = 'Aberto'; }
-
-        return `
-            <tr>
-                <td><a href="configuracao.html" class="tabela-cta">${formatarMesAno(m.mesReferencia)}</a></td>
-                <td>${m.diasUteis || '—'}</td>
-                <td><span class="badge ${classe}">${rotulo}</span></td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function renderizarTimeline(dados) {
-    const ul = document.getElementById('linhaTempo');
-    const meses = dados.mesesParaExibir || [];
-
-    if (meses.length === 0) {
-        ul.innerHTML = `<li class="linha-tempo-item info"><div class="linha-tempo-titulo">Nenhuma atividade registrada.</div></li>`;
-        return;
-    }
-
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-
-    ul.innerHTML = meses.map(m => {
-        let tipo = 'info', descricao = '';
-        if (m.congelado) { tipo = 'danger'; descricao = 'Mês congelado manualmente.'; }
-        else if (!m.dataAbertura && !m.dataFechamento) { tipo = 'warn'; descricao = 'Sem período definido — sempre aberto.'; }
-        else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { tipo = 'danger'; descricao = `Encerrado em ${formatarData(m.dataFechamento)}.`; }
-        else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { tipo = 'warn'; descricao = `Abre em ${formatarData(m.dataAbertura)}.`; }
-        else { tipo = 'ok'; descricao = `Aberto até ${formatarData(m.dataFechamento) || 'indeterminado'}.`; }
-
-        const ex = m.escolasReabertas || 0;
-        if (ex > 0) descricao += ` ${ex} exceç${ex === 1 ? 'ão' : 'ões'}.`;
-
-        return `
-            <li class="linha-tempo-item ${tipo}">
-                <div class="linha-tempo-titulo">${formatarMesAno(m.mesReferencia)}</div>
-                <div class="linha-tempo-descricao">${descricao}</div>
-                <div class="linha-tempo-meta">
-                    <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                    ${m.dataAtualizacao ? formatarDataHora(m.dataAtualizacao) : (m.mesReferencia || '')}
-                </div>
+                    <span class="pendencia-conteudo">
+                        <span class="pendencia-titulo">${p.titulo}</span>
+                        <span class="pendencia-descricao">${p.descricao}</span>
+                        <span class="pendencia-cta">
+                            ${p.cta}
+                            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        </span>
+                    </span>
+                </a>
             </li>
-        `;
-    }).join('');
-}
+        `).join('');
+    }
 
-function formatarMesAno(str) {
-    if (!str) return '';
-    const [ano, mes] = str.split('-');
-    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    return `${meses[parseInt(mes, 10) - 1] || mes} / ${ano}`;
-}
+    function renderizarResumo(dados) {
+        document.getElementById('statMeses').textContent = dados.totalMesesConfigurados || 0;
+        document.getElementById('statServidores').textContent = dados.totalServidores || 0;
+        document.getElementById('statEscolas').textContent = dados.totalEscolas || 0;
+        document.getElementById('statExcecoes').textContent = dados.excecoesAtivas || 0;
+        document.getElementById('statAtualizacao').textContent = dados.dataAtualizacao
+            ? formatarDataHora(dados.dataAtualizacao)
+            : '—';
 
-function formatarData(dataStr) {
-    if (!dataStr) return '—';
-    const partes = dataStr.split('-');
-    if (partes.length !== 3) return dataStr;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function formatarDataHora(iso) {
-    if (!iso) return '—';
-    try {
-        const d = new Date(iso);
-        const dia = String(d.getDate()).padStart(2, '0');
-        const mes = String(d.getMonth() + 1).padStart(2, '0');
-        const h = String(d.getHours()).padStart(2, '0');
-        const m = String(d.getMinutes()).padStart(2, '0');
-        return `${dia}/${mes}/${d.getFullYear()} ${h}:${m}`;
-    } catch (e) { return '—'; }
-}
-
-const btnAtualizarPainel = document.getElementById('btnAtualizar');
-if (btnAtualizarPainel) {
-    btnAtualizarPainel.addEventListener('click', async function () {
-        const btn = this;
-        if (btn.classList.contains('carregando')) return;
-        btn.classList.add('carregando');
-        btn.disabled = true;
-
-        limparCache();
-        atualizarInfoCache('aviso', 'recalculando…');
-        mostrarAviso('Recalculando indicadores…', 'sync', true);
-
-        try {
-            const resumo = await calcularResumoCompleto();
-            if (resumo) {
-                resumo._recalculo = 'manual';
-                await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
-                    ...resumo,
-                    atualizadoEm: serverTimestamp()
-                });
-                salvarCache(resumo);
-                renderizarTudo(resumo);
-                atualizarInfoCache('fresco', 'atualizado agora');
+        const tdAtencao = document.getElementById('statFeriasAtencao');
+        if (tdAtencao) {
+            const atencao = dados.servidoresAtencao || 0;
+            if (atencao === 0) {
+                tdAtencao.textContent = '0';
+                tdAtencao.title = 'Nenhum servidor com 2 períodos fechados sem gozo.';
+                tdAtencao.style.color = '';
+                tdAtencao.style.fontWeight = '';
+            } else {
+                tdAtencao.innerHTML = `${atencao} <span style="color:#c2610a;">⚠</span>`;
+                tdAtencao.title = `${atencao} servidor${atencao === 1 ? '' : 'es'} com 2 períodos fechados sem gozo — prazo de 1 ano para regularizar.`;
+                tdAtencao.style.color = '#c2610a';
+                tdAtencao.style.fontWeight = '600';
             }
-        } catch (e) {
-            console.error('[Painel] Erro ao recalcular:', e);
-            mostrarAviso('Não foi possível recalcular. Tente novamente.', 'error', false);
-            setTimeout(esconderAviso, 3000);
-        } finally {
-            btn.classList.remove('carregando');
-            btn.disabled = false;
-            setTimeout(esconderAviso, 800);
         }
-    });
-}
 
-    }); 
+        const td = document.getElementById('statFeriasPendentes');
+        const link = document.getElementById('linkFeriasPendentes');
+        if (!td || !link) return;
+
+        td.classList.remove('pendencia-ok', 'pendencia-alerta', 'pendencia-urgente');
+
+        const criticos = dados.servidoresComPendencia || 0;
+
+        if (criticos === 0) {
+            td.classList.add('pendencia-ok');
+            td.innerHTML = '0';
+            td.title = 'Nenhum servidor em situação crítica no momento.';
+            return;
+        }
+
+        td.classList.add('pendencia-urgente');
+
+        link.innerHTML = `
+            ${criticos}
+            <span class="material-symbols-outlined" style="font-size:14px;" aria-hidden="true">warning</span>
+            <span class="stat-sub">limite legal excedido</span>
+        `;
+        link.title = `${criticos} servidor${criticos === 1 ? '' : 'es'} com 3+ períodos fechados sem gozo — clique para ver a lista completa.`;
+    }
+
+    function renderizarUltimosMeses(dados) {
+        const tbody = document.getElementById('tabelaUltimosMeses');
+        const meses = dados.mesesParaExibir || [];
+
+        if (meses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="tabela-vazia">Nenhum mês configurado.</td></tr>`;
+            return;
+        }
+
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+        tbody.innerHTML = meses.map(m => {
+            let classe = 'badge-info', rotulo = 'Indefinido';
+            if (m.congelado) { classe = 'badge-danger'; rotulo = 'Congelado'; }
+            else if (!m.dataAbertura && !m.dataFechamento) { classe = 'badge-ok'; rotulo = 'Aberto'; }
+            else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { classe = 'badge-danger'; rotulo = 'Encerrado'; }
+            else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { classe = 'badge-warn'; rotulo = 'Aguardando'; }
+            else { classe = 'badge-ok'; rotulo = 'Aberto'; }
+
+            return `
+                <tr>
+                    <td><a href="configuracao.html" class="tabela-cta">${formatarMesAno(m.mesReferencia)}</a></td>
+                    <td>${m.diasUteis || '—'}</td>
+                    <td><span class="badge ${classe}">${rotulo}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderizarTimeline(dados) {
+        const ul = document.getElementById('linhaTempo');
+        const meses = dados.mesesParaExibir || [];
+
+        if (meses.length === 0) {
+            ul.innerHTML = `<li class="linha-tempo-item info"><div class="linha-tempo-titulo">Nenhuma atividade registrada.</div></li>`;
+            return;
+        }
+
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+        ul.innerHTML = meses.map(m => {
+            let tipo = 'info', descricao = '';
+            if (m.congelado) { tipo = 'danger'; descricao = 'Mês congelado manualmente.'; }
+            else if (!m.dataAbertura && !m.dataFechamento) { tipo = 'warn'; descricao = 'Sem período definido — sempre aberto.'; }
+            else if (m.dataFechamento && new Date(m.dataFechamento + 'T23:59:59') < hoje) { tipo = 'danger'; descricao = `Encerrado em ${formatarData(m.dataFechamento)}.`; }
+            else if (m.dataAbertura && new Date(m.dataAbertura + 'T00:00:00') > hoje) { tipo = 'warn'; descricao = `Abre em ${formatarData(m.dataAbertura)}.`; }
+            else { tipo = 'ok'; descricao = `Aberto até ${formatarData(m.dataFechamento) || 'indeterminado'}.`; }
+
+            const ex = m.escolasReabertas || 0;
+            if (ex > 0) descricao += ` ${ex} exceç${ex === 1 ? 'ão' : 'ões'}.`;
+
+            return `
+                <li class="linha-tempo-item ${tipo}">
+                    <div class="linha-tempo-titulo">${formatarMesAno(m.mesReferencia)}</div>
+                    <div class="linha-tempo-descricao">${descricao}</div>
+                    <div class="linha-tempo-meta">
+                        <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                        ${m.dataAtualizacao ? formatarDataHora(m.dataAtualizacao) : (m.mesReferencia || '')}
+                    </div>
+                </li>
+            `;
+        }).join('');
+    }
+
+    function formatarMesAno(str) {
+        if (!str) return '';
+        const [ano, mes] = str.split('-');
+        const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        return `${meses[parseInt(mes, 10) - 1] || mes} / ${ano}`;
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '—';
+        const partes = dataStr.split('-');
+        if (partes.length !== 3) return dataStr;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function formatarDataHora(iso) {
+        if (!iso) return '—';
+        try {
+            const d = new Date(iso);
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            return `${dia}/${mes}/${d.getFullYear()} ${h}:${m}`;
+        } catch (e) { return '—'; }
+    }
+
+    // ---------- BOTÃO ATUALIZAR ----------
+    const btnAtualizarPainel = document.getElementById('btnAtualizar');
+    if (btnAtualizarPainel) {
+        btnAtualizarPainel.addEventListener('click', async function () {
+            const btn = this;
+            if (btn.classList.contains('carregando')) return;
+            btn.classList.add('carregando');
+            btn.disabled = true;
+
+            limparCache();
+            atualizarInfoCache('aviso', 'recalculando…');
+            mostrarAviso('Recalculando indicadores…', 'sync', true);
+
+            try {
+                const resumo = await calcularResumoCompleto();
+                if (resumo) {
+                    resumo._recalculo = 'manual';
+                    await setDoc(doc(db, DOC_RESUMO[0], DOC_RESUMO[1]), {
+                        ...resumo,
+                        atualizadoEm: serverTimestamp()
+                    });
+                    salvarCache(resumo);
+                    renderizarTudo(resumo);
+                    atualizarInfoCache('fresco', 'atualizado agora');
+                }
+            } catch (e) {
+                console.error('[Painel] Erro ao recalcular:', e);
+                mostrarAviso('Não foi possível recalcular. Tente novamente.', 'error', false);
+                setTimeout(esconderAviso, 3000);
+            } finally {
+                btn.classList.remove('carregando');
+                btn.disabled = false;
+                setTimeout(esconderAviso, 800);
+            }
+        });
+    }
+
+    // ---------- INICIA O PAINEL ----------
+    iniciarPainel();
+
+}); // fim do exigirUsuario
 </script>
 
 </body>
