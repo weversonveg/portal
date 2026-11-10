@@ -13,7 +13,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,person_search,work,work_history,progress_activity,search,error_outline,verified_user,list_alt">
 
-<!-- Flatpickr — tema Material Purple -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -89,6 +88,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 }
 ::selection{background:var(--focus-border);color:#fff;}
 ::-moz-selection{background:var(--focus-border);color:#fff;}
+.oculto{display:none!important;}
 
 .cs-wrap{position:relative;width:100%;user-select:none;}
 .cs-trigger{width:100%;height:40px;padding:0 36px 0 12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:5px;font-size:13.5px;color:var(--text);display:flex;align-items:center;cursor:pointer;transition:border-color .15s ease, box-shadow .15s ease;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
@@ -607,19 +607,12 @@ input.flatpickr-input{background:var(--surface)!important;}
                 </div>
             </div>
 
-            <div class="acesso-negado-banner" id="acessoNegadoBanner">
-                <span class="material-symbols-outlined">block</span>
-                <div style="flex:1;">
-                    <p id="textoAcessoNegado">Verificando permissões de acesso...</p>
-                </div>
-            </div>
-
             <div class="loading-auth" id="loadingAuth">
                 <div class="spinner"></div>
                 <span>Verificando permissões de acesso...</span>
             </div>
 
-            <div id="conteudoPrincipal" class="conteudo-bloqueado" style="display: none;">
+            <div id="conteudoPrincipal" style="display: none;">
                 <section class="form-card">
                     <div class="bloco">
                         <div class="card-title">
@@ -902,7 +895,7 @@ input.flatpickr-input{background:var(--surface)!important;}
 
 <script type="module">
 import { auth } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 (function () {
     var item = document.getElementById('menuItemConfigurarPeriodos');
@@ -996,23 +989,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
         if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
     }
 })();
-
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 
 var ultimoFocoSair = null;
 function abrirModalSair() {
@@ -1272,11 +1248,11 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
 <script type="module">
     import { db } from "./firebase.js";
-    import { collection, getDocs, getDoc, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { exigirUsuario } from "./permissoes.js";
 
     let usuarioLogado = null;
-    let perfilUsuario = "";
-    let acessoAutorizado = false;
+    let perms = null;
     let servidorCache = null;
     let registrosCache = [];
     let periodosAbertos = [];
@@ -1284,9 +1260,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     let registroEmEdicao = null;
     const DIAS_PADRAO = 30;
 
-    /* ============================================================
-       FLATPICKR — CALENDÁRIO ROXO
-       ============================================================ */
     const fpConfigBase = {
         locale: "pt",
         dateFormat: "Y-m-d",
@@ -1371,17 +1344,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         ).reduce((acc, r) => acc + calcularDiasRegistro(r), 0);
     }
 
-    /* ============================================================
-       CÁLCULO DE PERÍODOS — REGRAS
-       -----------------------------------------------------------
-       FÉRIAS: só lista quando o CICLO AQUISITIVO JÁ FECHOU
-       (12 meses completos desde o início do ciclo).
-       Se o ciclo ainda está em formação → NÃO lista (nem como atual).
-
-       FOLGA ANIVERSÁRIO: só lista quando o ANIVERSÁRIO JÁ PASSOU
-       e ainda está dentro do prazo de 1 ano.
-       Se passou do prazo → PERDIDA → não lista.
-       ============================================================ */
     function calcularPeriodosAbertos(dataAdmissao, matricula, tipo) {
         const dtAdm = parseData(dataAdmissao);
         if (!dtAdm) return [];
@@ -1431,11 +1393,8 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                         }
                     }
                 } else {
-                    // ✅ FÉRIAS: só lista se o ciclo JÁ FECHOU (fim <= hoje)
                     if (fim > hoje) {
                         // ciclo em formação → não lista
-                        // (o loop continua para o próximo ciclo, mas como o próximo
-                        //  também estará em formação, o for vai parar no break abaixo)
                     } else {
                         const status = prazoGozo < hoje ? 'vencido' : 'disponivel';
                         periodos.push({
@@ -1608,78 +1567,30 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         });
     }
 
-    (async function verificarPermissoes() {
-        const loadingAuth = document.getElementById("loadingAuth");
-        const conteudoPrincipal = document.getElementById("conteudoPrincipal");
-        const acessoNegadoBanner = document.getElementById("acessoNegadoBanner");
-        const textoAcessoNegado = document.getElementById("textoAcessoNegado");
-        const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
-        const { auth } = await import("./firebase.js");
+    /* ============================================================
+       GUARD — admin + escola, com perms disponíveis no código
+       ============================================================ */
+    exigirUsuario((user, permissoes) => {
 
-        onAuthStateChanged(auth, async function(user) {
-            acessoAutorizado = false;
-            if (!user) {
-                loadingAuth.style.display = "none";
-                acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.innerHTML = '<strong>Você não está autenticado</strong><br>Faça login para acessar esta página.';
-                conteudoPrincipal.style.display = "none";
-                return;
-            }
-            usuarioLogado = user;
-            try {
-                const usuarioRef = doc(db, "usuarios", user.uid);
-                const usuarioSnap = await getDoc(usuarioRef);
-                if (!usuarioSnap.exists()) {
-                    loadingAuth.style.display = "none";
-                    acessoNegadoBanner.classList.add("ativo");
-                    textoAcessoNegado.innerHTML = '<strong>Usuário sem cadastro</strong><br>Seu email está autenticado mas não existe na coleção usuarios.';
-                    conteudoPrincipal.style.display = "none";
-                    return;
-                }
-                const dadosUsuario = usuarioSnap.data();
-                perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
-                if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
-                    acessoAutorizado = true;
-                    loadingAuth.style.display = "none";
-                    acessoNegadoBanner.classList.remove("ativo");
-                    conteudoPrincipal.style.display = "block";
-                    conteudoPrincipal.classList.remove("conteudo-bloqueado");
-                    carregarRegistros();
-                    return;
-                }
-                loadingAuth.style.display = "none";
-                acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.innerHTML = '<strong>Perfil sem permissão</strong><br>Seu perfil é "' + dadosUsuario.perfil + '" mas esta página exige perfil de Administrador.';
-                conteudoPrincipal.style.display = "none";
-            } catch (erro) {
-                loadingAuth.style.display = "none";
-                acessoNegadoBanner.classList.add("ativo");
-                textoAcessoNegado.innerHTML = '<strong>Erro ao verificar permissões</strong><br>' + (erro.message || 'Erro desconhecido');
-                conteudoPrincipal.style.display = "none";
-            }
-        });
-    })();
+        usuarioLogado = user;
+        perms = permissoes;
 
-    document.addEventListener("DOMContentLoaded", function() {
-        const inputCpf = document.getElementById('inputCpf');
-        if (inputCpf) {
-            inputCpf.addEventListener('input', function (e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 11) value = value.slice(0, 11);
-                if (value.length > 9) value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-                else if (value.length > 6) value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
-                else if (value.length > 3) value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
-                e.target.value = value;
-            });
+        // topbar
+        (function preencherTopbar() {
+            const email = user.email || '';
+            const partes = email.split('@')[0].split(/[.\-_]/);
+            const ini = ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase() || email.slice(0,2).toUpperCase();
+            const nome = partes.filter(Boolean).map(p => p[0].toUpperCase() + p.slice(1).toLowerCase()).slice(0,2).join(' ');
+            document.getElementById('userAvatar').textContent = ini;
+            document.getElementById('userNameLabel').textContent = nome || 'Usuário';
+            const em = document.getElementById('userEmailLabel');
+            em.textContent = email; em.title = email;
+        })();
 
-            inputCpf.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.buscarServidorPorCpf();
-                }
-            });
-        }
+        document.getElementById('loadingAuth').style.display = 'none';
+        const conteudo = document.getElementById('conteudoPrincipal');
+        conteudo.style.display = 'block';
+
         window.mudarTipoAusencia();
         window.inicializarFlatpickr();
 
@@ -1692,8 +1603,78 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         document.addEventListener("keydown", function(e) {
             if (e.key === "Escape" && modal && modal.classList.contains("ativo")) fecharModalEditar();
         });
+
+        // CPF
+        const inputCpf = document.getElementById('inputCpf');
+        if (inputCpf) {
+            inputCpf.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                if (value.length > 9) value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+                else if (value.length > 6) value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+                else if (value.length > 3) value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+                e.target.value = value;
+            });
+            inputCpf.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); window.buscarServidorPorCpf(); }
+            });
+        }
+
+        // carrega registros
+        carregarRegistros();
+
+        // auto-preenchimento por URL
+        (function autoPreencherPorUrl() {
+            const params = new URLSearchParams(window.location.search);
+            let cpfUrl = (params.get('cpf') || '').trim();
+            const matriculaUrl = (params.get('matricula') || '').trim();
+            const servidorIdUrl = (params.get('servidorId') || '').trim();
+            if (!cpfUrl && !matriculaUrl && !servidorIdUrl) return;
+
+            const inputCpfEl = document.getElementById('inputCpf');
+            const lblNome = document.getElementById('nomeServidorEncontrado');
+            if (!inputCpfEl) return;
+
+            if (cpfUrl) {
+                const apenasDigitos = cpfUrl.replace(/\D/g, '');
+                if (apenasDigitos.length === 11) {
+                    inputCpfEl.value = apenasDigitos.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+                } else inputCpfEl.value = cpfUrl;
+            }
+
+            setTimeout(async function () {
+                if (!cpfUrl) {
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); url.searchParams.delete('servidorId');
+                        window.history.replaceState({}, '', url.toString());
+                    } catch (e) {}
+                    inputCpfEl.focus();
+                    return;
+                }
+                try {
+                    await window.buscarServidorPorCpf();
+                    if (matriculaUrl) {
+                        const csVinculo = document.getElementById('csVinculo');
+                        if (csVinculo) {
+                            const lista = Array.from(csVinculo.querySelectorAll('.cs-opcao'));
+                            const alvo = lista.find(op => (op.dataset.value || '').split('|')[0] === matriculaUrl);
+                            if (alvo) alvo.click();
+                        }
+                    }
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); url.searchParams.delete('servidorId');
+                        window.history.replaceState({}, '', url.toString());
+                    } catch (e) {}
+                } catch (e) { console.warn('[Lançamentos] Auto-preencher:', e); }
+            }, 250);
+        })();
     });
 
+    /* ============================================================
+       LÓGICA DE NEGÓCIO
+       ============================================================ */
     window.mudarTipoAusencia = function() {
         const tipo = document.getElementById("tipoAusencia").value;
         const grupoFim = document.getElementById("grupoDataFim");
@@ -1708,8 +1689,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             grupoDuracao.style.display = "none";
             inputFim.removeAttribute("required");
             inputFim.disabled = false;
-            if (fpDataFim) fpDataFim.clear();
-            else inputFim.value = "";
+            if (fpDataFim) fpDataFim.clear(); else inputFim.value = "";
             inputFim.classList.remove("campo-automatico");
             infoAuto.classList.remove("visivel");
             lblInicio.innerHTML = 'Data da Folga <span>*</span>';
@@ -1741,23 +1721,17 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const inputFim = document.getElementById("dataFim");
         const duracaoDias = parseInt(document.getElementById("duracaoFerias").value) || 30;
         if (!dataInicioStr || tipo !== "FERIAS") return;
-
         const partes = dataInicioStr.split('-');
         if (partes.length !== 3) return;
-
         let dataInicio = new Date(partes[0], partes[1] - 1, partes[2]);
         dataInicio.setDate(dataInicio.getDate() + (duracaoDias - 1));
-        const ano = dataInicio.getFullYear();
-        const mes = String(dataInicio.getMonth() + 1).padStart(2, '0');
-        const dia = String(dataInicio.getDate()).padStart(2, '0');
-        const novaData = `${ano}-${mes}-${dia}`;
-
+        const novaData = dataInicio.getFullYear() + '-' + String(dataInicio.getMonth()+1).padStart(2,'0') + '-' + String(dataInicio.getDate()).padStart(2,'0');
         if (inputFim._flatpickr) inputFim._flatpickr.setDate(novaData, false);
         else inputFim.value = novaData;
     };
 
     window.buscarServidorPorCpf = async function() {
-        if (!acessoAutorizado) { mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro"); return; }
+        if (!perms) return;
         const cpfDigitado = document.getElementById("inputCpf").value.trim();
         const lblNome = document.getElementById("nomeServidorEncontrado");
         const grupoVinculo = document.getElementById("grupoVinculo");
@@ -1796,21 +1770,28 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                     const cargo = matObj.cargo || 'Cargo não informado';
                     const admissao = matObj.dataAdmissao || matObj.data_admissao || '';
                     const dias = matObj.diasFerias ? ' • ' + matObj.diasFerias + 'd/per' : '';
-                    if (matObj.escola1 && matObj.escola1.nomeEscola) {
-                        lista.push({
-                            value: numMat + '|' + matObj.escola1.nomeEscola,
-                            label: 'Mat: ' + numMat + ' (' + cargo + ') - ' + matObj.escola1.nomeEscola + (admissao ? ' • Adm: ' + formatarDataBr(admissao) : '') + dias
-                        });
+
+                    function pushEscola(escolaObj) {
+                        if (!escolaObj || !escolaObj.nomeEscola) return;
+                        // ⬇️ FILTRO: escola só vê vínculos das escolas dela
+                        if (perms.ehAdmin || perms.temAcessoEscola(escolaObj.nomeEscola)) {
+                            lista.push({
+                                value: numMat + '|' + escolaObj.nomeEscola,
+                                label: 'Mat: ' + numMat + ' (' + cargo + ') - ' + escolaObj.nomeEscola + (admissao ? ' • Adm: ' + formatarDataBr(admissao) : '') + dias
+                            });
+                        }
                     }
-                    if (matObj.escola2 && matObj.escola2.nomeEscola) {
-                        lista.push({
-                            value: numMat + '|' + matObj.escola2.nomeEscola,
-                            label: 'Mat: ' + numMat + ' (' + cargo + ') - ' + matObj.escola2.nomeEscola + (admissao ? ' • Adm: ' + formatarDataBr(admissao) : '') + dias
-                        });
-                    }
+                    pushEscola(matObj.escola1);
+                    pushEscola(matObj.escola2);
                 }
                 addMat(encontrado.matricula1);
                 addMat(encontrado.matricula2);
+
+                if (lista.length === 0) {
+                    lblNome.textContent = "Servidor encontrado, mas sem vínculo com a(s) sua(s) escola(s).";
+                    lblNome.style.color = "var(--warn)";
+                    return;
+                }
 
                 atualizarSelectCustom('csVinculo', lista, '', 'Selecione a matrícula e escola...');
                 grupoVinculo.style.display = "flex";
@@ -1827,7 +1808,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
     window.salvarRegistro = async function(event) {
         event.preventDefault();
-        if (!acessoAutorizado) { mostrarMensagem("Acesso negado. Você não possui permissão para realizar lançamentos.", "erro"); return; }
+        if (!perms) return;
         if (!servidorCache) { mostrarMensagem("Por favor, busque e valide o CPF do servidor antes de salvar.", "erro"); return; }
 
         const vinculoSelect = document.getElementById("selectVinculo").value;
@@ -1835,6 +1816,12 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const partes = vinculoSelect.split("|");
         const matriculaEscolhida = partes[0];
         const escolaEscolhida = partes[1];
+
+        // ⬇️ DEFESA: escola só salva nas escolas dela
+        if (!perms.ehAdmin && !perms.temAcessoEscola(escolaEscolhida)) {
+            mostrarMensagem("Você não tem permissão para lançar nesta escola.", "erro");
+            return;
+        }
 
         const tipo = document.getElementById("tipoAusencia").value;
         const dataInicio = document.getElementById("dataInicio").value;
@@ -1853,11 +1840,9 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             const periodoSelecionado = document.getElementById('selectPeriodo').value;
             if (!periodoSelecionado) { mostrarMensagem("Selecione o período aquisitivo (referência) do lançamento.", "erro"); return; }
             anoReferencia = periodoSelecionado;
-
             const csPeriodo = document.getElementById('csPeriodo');
             const lista = csPeriodo._lista || [];
             const item = lista.find(function (p) { return p.value === periodoSelecionado; });
-
             if (tipo === 'FERIAS' && item && item.dataStatus === 'vencido' && item.dataLimite) {
                 const dtInicio = new Date(dataInicio);
                 const dtLimite = new Date(item.dataLimite);
@@ -1948,12 +1933,18 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     }
 
     async function carregarRegistros() {
-        if (!acessoAutorizado) return;
+        if (!perms) return;
         const tbody = document.getElementById("tabelaRegistros");
         try {
             const regSnap = await getDocs(collection(db, "registro_ferias_folgas"));
             registrosCache = [];
-            regSnap.forEach(d => registrosCache.push({ id: d.id, ...d.data() }));
+            regSnap.forEach(d => {
+                const r = { id: d.id, ...d.data() };
+                // ⬇️ FILTRO POR ESCOLA
+                if (perms.ehAdmin || perms.temAcessoEscola(r.escola)) {
+                    registrosCache.push(r);
+                }
+            });
             const visiveis = aplicarFiltroPadrao(registrosCache);
             renderizarTabela(visiveis);
         } catch (e) {
@@ -1964,12 +1955,10 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
     window.filtrarTabela = function() {
         const termo = document.getElementById("filtroTabela").value.toLowerCase().trim();
-
         if (!termo) {
             renderizarTabela(aplicarFiltroPadrao(registrosCache));
             return;
         }
-
         const filtrados = registrosCache.filter(r => {
             const nome = (r.nome || "").toLowerCase();
             const cpf = (r.cpf || "").toLowerCase();
@@ -2025,7 +2014,13 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     }
 
     window.excluirRegistro = async function(id) {
-        if (!acessoAutorizado) { mostrarMensagem("Acesso negado. Você não possui permissão para excluir registros.", "erro"); return; }
+        if (!perms) return;
+        const reg = registrosCache.find(r => r.id === id);
+        if (!reg) return;
+        if (!perms.ehAdmin && !perms.temAcessoEscola(reg.escola)) {
+            mostrarMensagem("Você não tem permissão para excluir este registro.", "erro");
+            return;
+        }
         var confirmado = await mostrarConfirmacao(
             'Deseja realmente excluir este registro de ausência?<br><br><strong style="color:var(--danger);">Esta ação não poderá ser desfeita.</strong>'
         );
@@ -2041,9 +2036,13 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     };
 
     window.abrirModalEditar = function(id) {
-        if (!acessoAutorizado) { mostrarMensagem("Acesso negado. Você não possui permissão para editar registros.", "erro"); return; }
+        if (!perms) return;
         const reg = registrosCache.find(r => r.id === id);
         if (!reg) { mostrarMensagem("Registro não encontrado.", "erro"); return; }
+        if (!perms.ehAdmin && !perms.temAcessoEscola(reg.escola)) {
+            mostrarMensagem("Você não tem permissão para editar este registro.", "erro");
+            return;
+        }
         registroEmEdicao = reg;
 
         document.getElementById("editarInfoServidor").innerHTML =
@@ -2148,21 +2147,18 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const duracao = parseInt(document.getElementById("editDuracao").value) || 30;
         const inputFim = document.getElementById("editDataFim");
         if (!dataInicioStr) return;
-
         const partes = dataInicioStr.split('-');
         if (partes.length !== 3) return;
-
         const dt = new Date(partes[0], partes[1] - 1, partes[2]);
         dt.setDate(dt.getDate() + (duracao - 1));
         const novaData = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
-
         if (inputFim._flatpickr) inputFim._flatpickr.setDate(novaData, false);
         else inputFim.value = novaData;
     };
 
     window.salvarEdicao = async function(event) {
         event.preventDefault();
-        if (!acessoAutorizado) { mostrarMensagemEdicao("Acesso negado. Você não possui permissão para editar registros.", "erro"); return; }
+        if (!perms) return;
         if (!registroEmEdicao) { mostrarMensagemEdicao("Nenhum registro selecionado para edição.", "erro"); return; }
 
         const tipo = document.getElementById("editTipo").value;
@@ -2171,6 +2167,11 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const escola = document.getElementById("editEscola").value.trim();
         const observacao = document.getElementById("editObservacao").value.trim();
         const anoReferencia = document.getElementById("editPeriodo").value.trim();
+
+        if (!perms.ehAdmin && !perms.temAcessoEscola(escola)) {
+            mostrarMensagemEdicao("Você não tem permissão para salvar em outra escola.", "erro");
+            return;
+        }
 
         if (!tipo || !dataInicio) { mostrarMensagemEdicao("Preencha todos os campos obrigatórios.", "erro"); return; }
         if (tipo === "FOLGA_ANIVERSARIO") dataFim = dataInicio;
@@ -2264,97 +2265,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         msg.textContent = texto;
         msg.className = "mensagem visivel " + tipo;
     }
-
-    /* ============================================================
-       AUTO-PREENCHIMENTO POR PARÂMETRO DE URL
-       Aceita: ?cpf=XXXX  |  ?matricula=YYYY  |  ?servidorId=ZZZ
-       ============================================================ */
-    (function autoPreencherPorUrl() {
-        const params = new URLSearchParams(window.location.search);
-
-        let cpfUrl = (params.get('cpf') || '').trim();
-        const matriculaUrl = (params.get('matricula') || '').trim();
-        const servidorIdUrl = (params.get('servidorId') || '').trim();
-
-        if (!cpfUrl && !matriculaUrl && !servidorIdUrl) return;
-
-        const inputCpf = document.getElementById('inputCpf');
-        const lblNome = document.getElementById('nomeServidorEncontrado');
-        if (!inputCpf) return;
-
-        if (cpfUrl) {
-            const apenasDigitos = cpfUrl.replace(/\D/g, '');
-            if (apenasDigitos.length === 11) {
-                inputCpf.value = apenasDigitos.replace(
-                    /^(\d{3})(\d{3})(\d{3})(\d{2})$/,
-                    '$1.$2.$3-$4'
-                );
-            } else {
-                inputCpf.value = cpfUrl;
-            }
-        } else if (matriculaUrl && lblNome) {
-            lblNome.textContent = 'Matrícula recebida da página anterior. Informe o CPF para buscar.';
-            lblNome.style.color = 'var(--text-secondary)';
-        }
-
-        let tentativas = 0;
-        const MAX_TENTATIVAS = 40;
-
-        const tentar = setInterval(function () {
-            tentativas++;
-
-            if (acessoAutorizado) {
-                clearInterval(tentar);
-
-                if (!cpfUrl) {
-                    try {
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('cpf');
-                        url.searchParams.delete('matricula');
-                        url.searchParams.delete('servidorId');
-                        window.history.replaceState({}, '', url.toString());
-                    } catch (e) {}
-                    inputCpf.focus();
-                    return;
-                }
-
-                setTimeout(async function () {
-                    try {
-                        await window.buscarServidorPorCpf();
-
-                        if (matriculaUrl) {
-                            const csVinculo = document.getElementById('csVinculo');
-                            if (csVinculo) {
-                                const lista = Array.from(
-                                    csVinculo.querySelectorAll('.cs-opcao')
-                                );
-                                const alvo = lista.find(function (op) {
-                                    const value = op.dataset.value || '';
-                                    return value.split('|')[0] === matriculaUrl;
-                                });
-
-                                if (alvo) {
-                                    alvo.click();
-                                }
-                            }
-                        }
-
-                        try {
-                            const url = new URL(window.location.href);
-                            url.searchParams.delete('cpf');
-                            url.searchParams.delete('matricula');
-                            url.searchParams.delete('servidorId');
-                            window.history.replaceState({}, '', url.toString());
-                        } catch (e) {}
-                    } catch (e) {
-                        console.warn('[Lançamentos] Falha ao auto-preencher via URL:', e);
-                    }
-                }, 250);
-            } else if (tentativas >= MAX_TENTATIVAS) {
-                clearInterval(tentar);
-            }
-        }, 200);
-    })();
 </script>
 
 </body>
