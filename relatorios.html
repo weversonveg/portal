@@ -461,7 +461,6 @@ tr:hover td { background: var(--surface-2); }
                             <option value="ferias">Situação de Férias e Folgas</option>
                         </select>
                     </div>
-
                     <div class="filter-group" id="grupoBuscaNome">
                         <label for="buscaNome">Nome do Servidor</label>
                         <input type="text" id="buscaNome" placeholder="Ex: Maria...">
@@ -562,9 +561,7 @@ tr:hover td { background: var(--surface-2); }
                                 <span id="dropdownTextoSelecionado">Todas as Escolas Selecionadas</span>
                                 <span class="material-symbols-outlined">arrow_drop_down</span>
                             </div>
-                            <div class="dropdown-options-panel" id="dropdownPanel">
-                                <!-- POPULADO VIA JS CONFORME PERFIL -->
-                            </div>
+                            <div class="dropdown-options-panel" id="dropdownPanel"></div>
                         </div>
                     </div>
                 </div>
@@ -609,17 +606,10 @@ tr:hover td { background: var(--surface-2); }
                 <table>
                     <thead id="tabelaCabecalho">
                         <tr>
-                            <th>Servidor</th>
-                            <th>CPF / Matrícula</th>
-                            <th>Cargo</th>
-                            <th>Escola / Lotação</th>
-                            <th>Concessionária</th>
-                            <th>Passes/Dia</th>
-                            <th>Dias Efetivos</th>
-                            <th>Afast. Totais</th>
-                            <th>Total Passes</th>
-                            <th>Valor Unit. (R$)</th>
-                            <th>Valor Total (R$)</th>
+                            <th>Servidor</th><th>CPF / Matrícula</th><th>Cargo</th><th>Escola / Lotação</th>
+                            <th>Concessionária</th><th>Passes/Dia</th><th>Dias Efetivos</th>
+                            <th>Afast. Totais</th><th>Total Passes</th>
+                            <th>Valor Unit. (R$)</th><th>Valor Total (R$)</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo"></tbody>
@@ -787,10 +777,8 @@ var b1 = document.getElementById('btnCancelarSair');
 var b2 = document.getElementById('btnConfirmarSair');
 var modalSair = document.getElementById('modalSair');
 if (b1) b1.addEventListener('click', fecharModalSair);
-if (b2) b2.addEventListener('click', confirmarSairWait);
+if (b2) b2.addEventListener('click', confirmarSaida);
 if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target === this) fecharModalSair(); });
-
-function confirmarSairWait() { confirmarSaida(); }
 
 (function () {
     var btnAtualizar = document.getElementById('btnAtualizar');
@@ -949,13 +937,8 @@ function confirmarSairWait() { confirmarSaida(); }
             if (tipoRelatorioAtual === 'ferias') {
                 head = [['Servidor', 'CPF / Matrícula', 'Cargo', 'Escola', 'Tipo', 'Período', 'Prazo Gozo', 'Status', 'Data Gozo']];
                 body = dadosRelatorioGlobal.map(it => ([
-                    it.nome,
-                    it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
-                    it.cargo,
-                    it.escola,
-                    it.tipo,
-                    it.periodo,
-                    it.prazo,
+                    it.nome, it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
+                    it.cargo, it.escola, it.tipo, it.periodo, it.prazo,
                     (it.status || '').toUpperCase() + (it.extemporaneo ? ' / FORA DO PRAZO' : ''),
                     it.gozo
                 ]));
@@ -963,14 +946,9 @@ function confirmarSairWait() { confirmarSaida(); }
             } else {
                 head = [['Servidor', 'CPF / Matrícula', 'Cargo', 'Escola / Lotação', 'Concessionária', 'Passes/Dia', 'Dias Efetivos', 'Afast. Totais', 'Total Passes', 'Valor Unit.', 'Valor Total']];
                 body = dadosRelatorioGlobal.map(it => ([
-                    it.nome,
-                    it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
-                    it.cargo,
-                    it.escola,
-                    it.empresa,
-                    String(it.passesDiarios),
-                    String(it.diasEfetivosTotal) + ' dias',
-                    '-' + String(it.afastamentosTotal),
+                    it.nome, it.cpf + (it.matricula ? '\nMat: ' + it.matricula : ''),
+                    it.cargo, it.escola, it.empresa, String(it.passesDiarios),
+                    String(it.diasEfetivosTotal) + ' dias', '-' + String(it.afastamentosTotal),
                     String(it.passesTotal),
                     it.valorUnitario > 0 ? formatarMoeda(it.valorUnitario) : '—',
                     it.valorTotal > 0 ? formatarMoeda(it.valorTotal) : '—'
@@ -1068,9 +1046,7 @@ function confirmarSairWait() { confirmarSaida(); }
         }
         return dataStr;
     }
-    function formatarMoeda(valor) {
-        return 'R$ ' + Number(valor).toFixed(2).replace('.', ',');
-    }
+    function formatarMoeda(valor) { return 'R$ ' + Number(valor).toFixed(2).replace('.', ','); }
     function parseDataParaDate(dataStr) {
         if (!dataStr) return null;
         if (typeof dataStr === 'object' && dataStr.toDate) return dataStr.toDate();
@@ -1089,14 +1065,8 @@ function confirmarSairWait() { confirmarSaida(); }
         try {
             const snapshot = await getDocs(collection(db, 'empresas'));
             tarifasEmpresas = {};
-            snapshot.forEach(d => {
-                const data = d.data();
-                tarifasEmpresas[data.nome] = Number(data.valorTarifa) || 0;
-            });
-        } catch (e) {
-            console.error('Erro ao carregar tarifas:', e);
-            tarifasEmpresas = {};
-        }
+            snapshot.forEach(d => { const data = d.data(); tarifasEmpresas[data.nome] = Number(data.valorTarifa) || 0; });
+        } catch (e) { console.error('Erro ao carregar tarifas:', e); tarifasEmpresas = {}; }
     }
     function verificarExtemporaneo(status, gozoStr, dataLimite) {
         if (status !== 'gozado' || !gozoStr || !dataLimite) return false;
@@ -1108,8 +1078,7 @@ function confirmarSairWait() { confirmarSaida(); }
     function calcularDireitoFerias(dataAdmissao, ref = new Date(), diasDireito = DIAS_PADRAO) {
         const adm = parseDataParaDate(dataAdmissao);
         if (!adm) return null;
-        const refClean = new Date(ref);
-        refClean.setHours(0, 0, 0, 0);
+        const refClean = new Date(ref); refClean.setHours(0, 0, 0, 0);
         const totalDireito = diasDireito || DIAS_PADRAO;
         let completos = 0, det = [], ini = new Date(adm);
         while (completos < 40) {
@@ -1127,8 +1096,7 @@ function confirmarSairWait() { confirmarSaida(); }
     function calcularDireitoFolgaAniversario(dataNascimento, dataAdmissao, ref = new Date()) {
         const nasc = parseDataParaDate(dataNascimento), adm = parseDataParaDate(dataAdmissao);
         if (!nasc || !adm) return null;
-        const refClean = new Date(ref);
-        refClean.setHours(0, 0, 0, 0);
+        const refClean = new Date(ref); refClean.setHours(0, 0, 0, 0);
         const mes = nasc.getMonth(), dia = nasc.getDate();
         let adquiridas = 0, disponiveis = 0, perdidas = 0, det = [], ini = new Date(adm);
         for (let i = 0; i < 40; i++) {
@@ -1194,9 +1162,7 @@ function confirmarSairWait() { confirmarSaida(); }
         let texto = dt.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         return texto.charAt(0).toUpperCase() + texto.slice(1);
     }
-    function normalizarTexto(v) {
-        return (v == null ? '' : String(v)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    }
+    function normalizarTexto(v) { return (v == null ? '' : String(v)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
     function normalizarCpf(v) { return (v == null ? '' : String(v)).replace(/\D/g, ''); }
     function lerPeriodoAnoAno(valor) {
         if (!valor) return null;
@@ -1326,6 +1292,13 @@ function confirmarSairWait() { confirmarSaida(); }
         else await gerarRelatorioVales();
     };
 
+    // ⬇️ LIMITE DE ESCOLAS PERMITIDAS (admin = null, escola = lista)
+    function calcularEscolasPermitidas() {
+        if (perms.ehAdmin) return null;
+        const lista = [...(perms.escolas || [])].map(n => normalizarTexto(n));
+        return lista.length > 0 ? lista : [];
+    }
+
     async function gerarRelatorioFerias() {
         const tipoBeneficioFiltro = document.getElementById("filtroTipoBeneficio").value;
         const statusFiltro = document.getElementById("filtroStatus").value;
@@ -1346,6 +1319,14 @@ function confirmarSairWait() { confirmarSaida(); }
         const dataReferencia = hoje;
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
         const filtrosComuns = lerFiltrosComuns();
+
+        // ⬇️ LIMITE
+        const escolasPermitidas = calcularEscolasPermitidas();
+        if (!perms.ehAdmin && escolasPermitidas.length === 0) {
+            mostrarMensagem("Seu usuário não possui escolas vinculadas.", "erro");
+            return;
+        }
+
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnPdf");
         const btnCsv = document.getElementById("btnCsv");
@@ -1387,7 +1368,9 @@ function confirmarSairWait() { confirmarSaida(); }
                     });
                 }
                 vinculos.forEach(v => {
-                    if (!perms.ehAdmin && !perms.temAcessoEscola(v.escola)) return;
+                    // ⬇️ BLOQUEIO DEFINITIVO: escola só vê as escolas permitidas
+                    if (escolasPermitidas && !escolasPermitidas.includes(normalizarTexto(v.escola))) return;
+
                     if (filtrosComuns.matricula && !normalizarTexto(v.matricula).includes(filtrosComuns.matricula)) return;
                     if (!v.dataAdmissao) return;
                     if (!todasEscolasMarcadas && !escolasSelecionadas.includes(v.escola)) return;
@@ -1527,7 +1510,9 @@ function confirmarSairWait() { confirmarSaida(); }
                     <th>Tipo</th><th>Período</th><th>Prazo Gozo</th><th>Status</th><th>Data Gozo</th>
                 </tr>`;
             const nomeMesFiltro = temFiltroMes ? obterNomeMesFormatado(mesSelecionado, anoSelecionado) : '';
-            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            const descEscolas = perms.ehAdmin
+                ? (todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`)
+                : `Acesso: ${perms.escolas.length} unidade(s) vinculada(s)`;
             const descMes = temFiltroMes ? ` | Mês: ${nomeMesFiltro}` : '';
             const descPeriodo = filtrosComuns.periodo ? ` | Período: ${filtrosComuns.periodo.texto}` : '';
             document.getElementById("printSubtitulo").textContent = `Relatório de Situação de Férias e Folgas | Escolas: ${descEscolas}${descMes}${descPeriodo}`;
@@ -1563,6 +1548,14 @@ function confirmarSairWait() { confirmarSaida(); }
         const passesDiaFiltro = passesDiaFiltroStr !== '' && !isNaN(Number(passesDiaFiltroStr)) ? Number(passesDiaFiltroStr) : null;
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
         const filtrosComuns = lerFiltrosComuns();
+
+        // ⬇️ LIMITE
+        const escolasPermitidas = calcularEscolasPermitidas();
+        if (!perms.ehAdmin && escolasPermitidas.length === 0) {
+            mostrarMensagem("Seu usuário não possui escolas vinculadas.", "erro");
+            return;
+        }
+
         const msgDiv = document.getElementById("mensagem");
         const btnPdf = document.getElementById("btnPdf");
         const btnCsv = document.getElementById("btnCsv");
@@ -1636,10 +1629,12 @@ function confirmarSairWait() { confirmarSaida(); }
                     function processarVinculo(matriculaNum, cargo, escolaObj, setEscolasProcessadas) {
                         if (!escolaObj || !escolaObj.nomeEscola) return;
                         const nomeEscola = escolaObj.nomeEscola;
+
+                        // ⬇️ BLOQUEIO DEFINITIVO
+                        if (escolasPermitidas && !escolasPermitidas.includes(normalizarTexto(nomeEscola))) return;
+
                         if (setEscolasProcessadas.has(nomeEscola)) return;
                         setEscolasProcessadas.add(nomeEscola);
-                        // ⬇️ FILTRO POR ESCOLA
-                        if (!perms.ehAdmin && !perms.temAcessoEscola(nomeEscola)) return;
                         if (filtrosComuns.matricula && !normalizarTexto(matriculaNum).includes(filtrosComuns.matricula)) return;
                         if (!todasEscolasMarcadas && !escolasSelecionadas.includes(nomeEscola)) return;
                         if (cargoFiltro !== "" && cargo && !cargo.toLowerCase().includes(cargoFiltro)) return;
@@ -1731,7 +1726,9 @@ function confirmarSairWait() { confirmarSaida(); }
             const mesAnoValor = mesInput ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value) : "";
             const mesAnoFormatado = formatarMesAnoPTBR(mesAnoValor);
             const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${mesAnoFormatado}` : `Ano: ${document.getElementById("anoReferencia").value}`;
-            const descEscolas = todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`;
+            const descEscolas = perms.ehAdmin
+                ? (todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`)
+                : `Acesso: ${perms.escolas.length} unidade(s) vinculada(s)`;
             const descPerAno = filtrosComuns.periodo ? ` | Período: ${filtrosComuns.periodo.texto}` : '';
             document.getElementById("printSubtitulo").textContent = `Relatório Consolidado (${rotuloPeriodo}) | Escolas: ${descEscolas}${descPerAno}`;
             document.getElementById("labelSumPeriodo").textContent = "Período Analisado";
@@ -1818,10 +1815,7 @@ function confirmarSairWait() { confirmarSaida(); }
             const nome = tipoRelatorioAtual === "ferias" ? "relatorio_ferias_folgas" : `relatorio_vales_${document.getElementById("tipoPeriodo").value}`;
             XLSX.writeFile(wb, `${nome}.xlsx`);
             mostrarMensagem("Arquivo Excel exportado com sucesso!", "sucesso");
-        } catch (e) {
-            console.error(e);
-            mostrarMensagem("Erro ao gerar o arquivo Excel.", "erro");
-        }
+        } catch (e) { console.error(e); mostrarMensagem("Erro ao gerar o arquivo Excel.", "erro"); }
     };
 
     window.alternarTipoRelatorio = function() {
@@ -1854,10 +1848,21 @@ function confirmarSairWait() { confirmarSaida(); }
         const checkboxes = document.querySelectorAll('input[name="escolaCheck"]:not([value="TODAS"])');
         const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
         const spanTexto = document.getElementById("dropdownTextoSelecionado");
-        if (master && master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
-        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; if(master) master.checked = false; }
-        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; if(master) master.checked = true; }
-        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; if(master) master.checked = false; }
+
+        // Escola (sem master): mostra só o que marcou
+        if (!master) {
+            if (marcadas.length === 0) spanTexto.textContent = "Nenhuma escola selecionada";
+            else if (marcadas.length === 1) spanTexto.textContent = marcadas[0].value;
+            else if (marcadas.length === checkboxes.length) spanTexto.textContent = "Todas as escolas vinculadas";
+            else spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`;
+            return;
+        }
+
+        // Admin (com master)
+        if (master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
+        else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; }
+        else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; master.checked = true; }
+        else { spanTexto.textContent = `${marcadas.length} escola(s) selecionada(s)`; master.checked = false; }
     };
 
     function mostrarMensagem(texto, tipo) {
@@ -1873,7 +1878,6 @@ function confirmarSairWait() { confirmarSaida(); }
         if (!panel) return;
         panel.innerHTML = "";
 
-        // Admin vê todas as unidades; escola vê apenas as vinculadas
         if (perms.ehAdmin) {
             try {
                 const snap = await getDocs(collection(db, "unidades"));
@@ -1898,11 +1902,13 @@ function confirmarSairWait() { confirmarSaida(); }
             return;
         }
 
-        // Master "Todas"
-        const labMaster = document.createElement("label");
-        labMaster.className = "dropdown-option";
-        labMaster.innerHTML = `<input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>`;
-        panel.appendChild(labMaster);
+        // Só admin tem "Todas"
+        if (perms.ehAdmin) {
+            const labMaster = document.createElement("label");
+            labMaster.className = "dropdown-option";
+            labMaster.innerHTML = `<input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>`;
+            panel.appendChild(labMaster);
+        }
 
         escolasDisponiveis.forEach(nome => {
             const lab = document.createElement("label");
@@ -1927,7 +1933,6 @@ function confirmarSairWait() { confirmarSaida(); }
         usuarioLogado = user;
         perms = permissoes;
 
-        // topbar
         (function preencherTopbar() {
             const email = user.email || '';
             const partes = email.split('@')[0].split(/[.\-_]/);
@@ -1939,7 +1944,6 @@ function confirmarSairWait() { confirmarSaida(); }
             em.textContent = email; em.title = email;
         })();
 
-        // popular dropdown + inicializar UI
         await carregarEscolasDisponiveis();
         document.getElementById("anoReferencia").value = new Date().getFullYear();
         atualizarCamposComuns(tipoRelatorioAtual);
@@ -1961,7 +1965,6 @@ function confirmarSairWait() { confirmarSaida(); }
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
-<!-- Inicialização dos campos de mês -->
 <script>
 (function () {
     function init() {
