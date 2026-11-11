@@ -32,8 +32,7 @@
 html,body{width:100%;height:100%;background:var(--background);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus-border);outline-offset:2px;border-radius:3px}
-
-/* ===== AUTOCOMPLETE (MESMO ESTILO DA PÁGINA DE CADASTRO) ===== */
+.oculto{display:none!important}
 .autocomplete-wrapper{position:relative;width:100%}
 .autocomplete-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;box-shadow:var(--shadow-md);max-height:220px;overflow-y:auto;z-index:999;display:none}
 .autocomplete-list.ativo{display:block;animation:fadeInMsg .15s ease}
@@ -42,7 +41,6 @@ body{overflow:hidden}button{font:inherit;color:inherit;cursor:pointer}
 .autocomplete-item:hover{background:var(--brand-soft);color:var(--brand)}
 .autocomplete-vazio{padding:12px 14px;font-size:13px;color:var(--text-muted)}
 @keyframes fadeInMsg{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-
 .layout{display:flex;width:100%;height:100vh;height:100dvh;overflow:hidden}
 .sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .25s ease,min-width .25s ease,transform .25s ease;overflow:hidden;z-index:100}
 .sidebar.fechado{width:0;min-width:0;border-right:none}
@@ -359,9 +357,6 @@ tr:hover td{background:var(--surface-2)}
                     <input type="month" id="mesReferencia">
                 </div>
 
-                <!-- ============================================================ -->
-                <!-- AUTOCOMPLETE DE ESCOLA (MESMO ESTILO DA PÁGINA DE CADASTRO) -->
-                <!-- ============================================================ -->
                 <div class="filter-group">
                     <label for="filtroEscola">Selecione a Escola</label>
                     <div class="autocomplete-wrapper" id="wrapperFiltroEscola">
@@ -502,15 +497,16 @@ tr:hover td{background:var(--surface-2)}
     </div>
 </div>
 
+<!-- ============================================================
+     SCRIPT DE UI (tema, sidebar, sair, atualizar) — SEM GUARD
+     ============================================================ -->
 <script type="module">
 import { auth } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 (function () { var btn = document.getElementById('btnTema'); if (btn) { btn.addEventListener('click', function () { var atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; var novo = atual === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', novo); var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', novo === 'dark' ? '#16181c' : '#1f3a5f'); try { localStorage.setItem('tema-vt', novo); } catch (e) {} }); } })();
 
 (function () { var sidebar = document.getElementById('sidebarMenu'); var backdrop = document.getElementById('sidebarBackdrop'); var btn = document.getElementById('btnMenuToggle'); var btnFechar = document.getElementById('btnFecharSidebar'); var CHAVE = 'menu-vt-fechado'; function isMobile() { return window.matchMedia('(max-width: 900px)').matches; } var salvo = null; try { salvo = localStorage.getItem(CHAVE); } catch (e) {} var iniciarFechadoDesktop = salvo === '1'; if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false); else fecharMobile(false); if (btn) { btn.addEventListener('click', function () { if (isMobile()) { var aberta = sidebar.classList.contains('aberta-mobile'); if (aberta) fecharMobile(true); else abrirMobile(); } else { var fechado = sidebar.classList.contains('fechado'); aplicarEstadoDesktop(!fechado, true); } }); } if (btnFechar) btnFechar.addEventListener('click', function () { fecharMobile(true); }); if (backdrop) backdrop.addEventListener('click', function () { fecharMobile(true); }); document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('aberta-mobile')) fecharMobile(true); if (e.key === 'm' && (e.ctrlKey || e.metaKey) && !isMobile()) { e.preventDefault(); if (btn) btn.click(); } }); sidebar.querySelectorAll('.menu-item a').forEach(function (link) { link.addEventListener('click', function () { if (isMobile()) fecharMobile(false); }); }); function aplicarEstadoDesktop(fechado, animar) { if (!animar) sidebar.style.transition = 'none'; sidebar.classList.toggle('fechado', fechado); document.documentElement.classList.remove('menu-inicial-fechado'); if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; } if (btn) btn.setAttribute('aria-expanded', String(!fechado)); try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {} } function abrirMobile() { sidebar.classList.add('aberta-mobile'); sidebar.classList.remove('fechado'); if (backdrop) backdrop.classList.add('ativo'); if (btn) btn.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; } function fecharMobile(animar) { if (!animar) sidebar.style.transition = 'none'; sidebar.classList.remove('aberta-mobile'); sidebar.classList.add('fechado'); if (backdrop) backdrop.classList.remove('ativo'); if (btn) btn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; } } })();
-
-onAuthStateChanged(auth, function (user) { if (user) { var email = user.email || ''; var partes = email.split('@')[0].split(/[.\-_]/); var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase(); var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0, 2).join(' '); var av = document.getElementById('userAvatar'); var nm = document.getElementById('userNameLabel'); var em = document.getElementById('userEmailLabel'); if (av) av.textContent = ini; if (nm) nm.textContent = nome || 'Usuário'; if (em) { em.textContent = email; em.title = email; } } else { window.location.href = 'index.html'; } });
 
 var ultimoFocoSair = null; function abrirModalSair() { var modal = document.getElementById('modalSair'); if (!modal) return; ultimoFocoSair = document.activeElement; modal.classList.add('ativo'); document.body.style.overflow = 'hidden'; requestAnimationFrame(function () { var b = document.getElementById('btnCancelarSair'); if (b) b.focus(); }); } function fecharModalSair() { var modal = document.getElementById('modalSair'); if (!modal) return; modal.classList.remove('ativo'); document.body.style.overflow = ''; if (ultimoFocoSair && typeof ultimoFocoSair.focus === 'function') ultimoFocoSair.focus(); ultimoFocoSair = null; } async function confirmarSaida() { var btn = document.getElementById('btnConfirmarSair'); if (!btn) return; var btnOriginal = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…'; try { try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {} try { localStorage.removeItem('cache-painel-versao'); } catch (e) {} await signOut(auth); window.location.href = 'index.html'; } catch (e) { console.error('[Sair] Erro:', e); btn.disabled = false; btn.innerHTML = btnOriginal; } }
 
@@ -528,13 +524,17 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
 (function () { var btnAtualizar = document.getElementById('btnAtualizar'); if (!btnAtualizar) return; btnAtualizar.addEventListener('click', function () { if (btnAtualizar.classList.contains('carregando')) return; btnAtualizar.classList.add('carregando'); btnAtualizar.disabled = true; try { Object.keys(localStorage).filter(function (k) { return k.startsWith('cache-'); }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} window.location.reload(); }); })();
 </script>
 
+<!-- ============================================================
+     SCRIPT PRINCIPAL — AGORA COM O GUARD + SEMED TRATADO COMO GESTOR
+     ============================================================ -->
 <script type="module">
 
-import { db, auth } from "./firebase.js";
+import { db } from "./firebase.js";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { exigirUsuario } from "./permissoes.js";   // ⬅️ NOVO
 
 let usuarioLogado = null;
+let perms = null;              // ⬅️ NOVO — vem do guard
 let perfilUsuario = "";
 let escolasUsuario = [];
 let autenticacaoPronta = false;
@@ -553,9 +553,35 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 // =========================================================
-// AUTOCOMPLETE DE ESCOLA (MESMO ESTILO DA PÁGINA DE CADASTRO)
+// HELPERS
 // =========================================================
+function normalizarTexto(valor) {
+    if (valor === null || valor === undefined) return "";
+    return String(valor).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").toUpperCase();
+}
 
+// ⬅️ ALTERADO: agora é "gestor" = admin OU semed
+function ehGestorAtual() {
+    return perms && perms.ehGestor;
+}
+
+function usuarioTemAcessoEscola(escola) {
+    if (!escola) return false;
+    if (ehGestorAtual()) return true;   // ⬅️ ALTERADO: admin e semed veem tudo
+    const escolaNorm = normalizarTexto(escola);
+    return escolasUsuario.some(e => normalizarTexto(e) === escolaNorm);
+}
+
+function formatarData(dataStr) {
+    if (!dataStr) return "-";
+    const partes = dataStr.split("-");
+    if (partes.length !== 3) return dataStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+// =========================================================
+// AUTOCOMPLETE
+// =========================================================
 async function carregarUnidadesEscolares() {
     try {
         const snapshot = await getDocs(collection(db, 'unidades'));
@@ -605,7 +631,8 @@ function renderizarListaEscola(input, listEl, filtro) {
 
     let listaFiltrada = escolasDisponiveis;
 
-    if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR" && perfilUsuario !== "") {
+    // ⬅️ ALTERADO: gestor (admin+semed) vê todas; escola só as dela
+    if (!ehGestorAtual() && perfilUsuario !== "") {
         listaFiltrada = escolasDisponiveis.filter(escola =>
             escolasUsuario.some(e => normalizarTexto(e) === normalizarTexto(escola))
         );
@@ -633,25 +660,9 @@ function renderizarListaEscola(input, listEl, filtro) {
     });
 }
 
-function normalizarTexto(valor) {
-    if (valor === null || valor === undefined) return "";
-    return String(valor).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").toUpperCase();
-}
-
-function usuarioTemAcessoEscola(escola) {
-    if (!escola) return false;
-    if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") return true;
-    const escolaNorm = normalizarTexto(escola);
-    return escolasUsuario.some(e => normalizarTexto(e) === escolaNorm);
-}
-
-function formatarData(dataStr) {
-    if (!dataStr) return "-";
-    const partes = dataStr.split("-");
-    if (partes.length !== 3) return dataStr;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
+// =========================================================
+// VERIFICAÇÃO DE EXCEÇÃO / BLOQUEIO (mantido igual)
+// =========================================================
 function verificarExcecao(escolasReabertas, escola) {
     if (!escolasReabertas || !Array.isArray(escolasReabertas) || !escola) return { temExcecao: false };
     const excecao = escolasReabertas.find(e => typeof e === 'string' ? e === escola : e.escola === escola);
@@ -726,6 +737,9 @@ function verificarAcessoEscola(config, escola, mesAno) {
     return { bloqueado: false, excessao: false, motivo: "Dentro do período", descricao: "" };
 }
 
+// =========================================================
+// TOASTS / CONTADORES (mantidos)
+// =========================================================
 function mostrarToast(texto, tipo = "sucesso") {
     const container = document.getElementById("toastContainer");
     const toast = document.createElement("div");
@@ -759,98 +773,72 @@ function zerarContador() {
 }
 
 // =========================================================
-// AUTENTICAÇÃO
+// GUARD — admin + semed + escola
 // =========================================================
-onAuthStateChanged(auth, async function(user) {
+exigirUsuario(async (user, permissoes) => {
+
+    usuarioLogado = user;
+    perms = permissoes;
+    perfilUsuario = perms.perfil;
+    escolasUsuario = perms.escolas || [];
+
+    // ---------- TOPBAR ----------
+    (function preencherTopbar() {
+        const email = user.email || '';
+        const partes = email.split('@')[0].split(/[.\-_]/);
+        const ini = ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase() || email.slice(0,2).toUpperCase();
+        const nome = partes.filter(Boolean).map(p => p[0].toUpperCase() + p.slice(1).toLowerCase()).slice(0,2).join(' ');
+        document.getElementById('userAvatar').textContent = ini;
+        document.getElementById('userNameLabel').textContent = nome || 'Usuário';
+        const em = document.getElementById('userEmailLabel');
+        em.textContent = email; em.title = email;
+    })();
+
+    await carregarUnidadesEscolares();
+
     const inputEscola = document.getElementById("filtroEscola");
     const infoUsuarioEscola = document.getElementById("infoUsuarioEscola");
     const textoEscolaUsuario = document.getElementById("textoEscolaUsuario");
 
-    autenticacaoPronta = false;
-
-    await carregarUnidadesEscolares();
-
-    if (!user) {
-        usuarioLogado = null;
-        perfilUsuario = "";
-        escolasUsuario = [];
-        inputEscola.value = "";
-        inputEscola.disabled = true;
-        textoEscolaUsuario.textContent = "Usuário não autenticado.";
+    // ---------- GESTOR (admin/semed) ----------
+    if (perms.ehGestor) {
+        inputEscola.disabled = false;
+        textoEscolaUsuario.textContent = perms.ehAdmin
+            ? "Usuário administrador — acesso a todas as escolas."
+            : "Usuário SEMED — acesso a todas as escolas.";
         infoUsuarioEscola.classList.add("ativo");
-        mostrarMensagem("Sua sessão não está autenticada. Faça login novamente.", "erro");
+        autenticacaoPronta = true;
         return;
     }
 
-    usuarioLogado = user;
-
-    try {
-        const usuarioRef = doc(db, "usuarios", user.uid);
-        const usuarioSnap = await getDoc(usuarioRef);
-
-        if (!usuarioSnap.exists()) {
-            perfilUsuario = "";
-            escolasUsuario = [];
-            inputEscola.value = "";
-            inputEscola.disabled = true;
-            textoEscolaUsuario.textContent = "Usuário não possui cadastro no sistema.";
-            infoUsuarioEscola.classList.add("ativo");
-            mostrarMensagem("Seu usuário está autenticado, mas não possui cadastro na coleção 'usuarios'.", "erro");
-            return;
-        }
-
-        const dadosUsuario = usuarioSnap.data();
-        perfilUsuario = normalizarTexto(dadosUsuario.perfil || "");
-
-        let escolasBrutas = dadosUsuario.escola;
-        if (Array.isArray(escolasBrutas)) {
-            escolasUsuario = escolasBrutas.map(e => String(e || "").trim()).filter(Boolean);
-        } else if (escolasBrutas && String(escolasBrutas).trim() !== "") {
-            escolasUsuario = [String(escolasBrutas).trim()];
-        } else {
-            escolasUsuario = [];
-        }
-
-        if (perfilUsuario === "ADMIN" || perfilUsuario === "ADMINISTRADOR") {
-            inputEscola.disabled = false;
-            textoEscolaUsuario.textContent = "Usuário administrador — acesso a todas as escolas.";
-            infoUsuarioEscola.classList.add("ativo");
-            autenticacaoPronta = true;
-            return;
-        }
-
-        if (escolasUsuario.length === 0) {
-            inputEscola.value = "";
-            inputEscola.disabled = true;
-            textoEscolaUsuario.textContent = "Nenhuma escola vinculada ao seu usuário.";
-            infoUsuarioEscola.classList.add("ativo");
-            mostrarMensagem("Seu usuário não possui escola cadastrada. Entre em contato com o administrador.", "erro");
-            return;
-        }
-
-        if (escolasUsuario.length === 1) {
-            inputEscola.value = escolasUsuario[0];
-            inputEscola.disabled = true;
-            textoEscolaUsuario.textContent = `Escola vinculada: ${escolasUsuario[0]}`;
-        } else {
-            inputEscola.value = escolasUsuario[0];
-            inputEscola.disabled = false;
-            textoEscolaUsuario.textContent = `Você tem acesso a ${escolasUsuario.length} escolas. Digite para buscar.`;
-        }
-
-        infoUsuarioEscola.classList.add("ativo");
-        autenticacaoPronta = true;
-        await carregarDadosDaEscola();
-
-    } catch (erro) {
-        console.error("Erro ao identificar usuário:", erro);
+    // ---------- ESCOLA ----------
+    if (escolasUsuario.length === 0) {
+        inputEscola.value = "";
         inputEscola.disabled = true;
-        textoEscolaUsuario.textContent = "Erro ao verificar as escolas do usuário.";
+        textoEscolaUsuario.textContent = "Nenhuma escola vinculada ao seu usuário.";
         infoUsuarioEscola.classList.add("ativo");
-        mostrarMensagem("Não foi possível verificar as escolas vinculadas ao usuário.", "erro");
+        mostrarMensagem("Seu usuário não possui escola cadastrada. Entre em contato com o administrador.", "erro");
+        return;
     }
+
+    if (escolasUsuario.length === 1) {
+        inputEscola.value = escolasUsuario[0];
+        inputEscola.disabled = true;
+        textoEscolaUsuario.textContent = `Escola vinculada: ${escolasUsuario[0]}`;
+    } else {
+        inputEscola.value = escolasUsuario[0];
+        inputEscola.disabled = false;
+        textoEscolaUsuario.textContent = `Você tem acesso a ${escolasUsuario.length} escolas. Digite para buscar.`;
+    }
+
+    infoUsuarioEscola.classList.add("ativo");
+    autenticacaoPronta = true;
+    await carregarDadosDaEscola();
 });
 
+// =========================================================
+// CARREGAR DADOS DA ESCOLA
+// =========================================================
 window.carregarDadosDaEscola = async function() {
     if (!autenticacaoPronta) { mostrarMensagem("Aguarde a identificação do usuário.", "info"); return; }
 
@@ -878,7 +866,7 @@ window.carregarDadosDaEscola = async function() {
 
     zerarContador();
 
-    if (perfilUsuario !== "ADMIN" && perfilUsuario !== "ADMINISTRADOR") {
+    if (!ehGestorAtual()) {
         if (!usuarioTemAcessoEscola(escolaSelecionada)) {
             mostrarMensagem("Acesso negado: a escola selecionada não corresponde a nenhuma escola vinculada ao seu usuário.", "erro");
             return;
@@ -1072,6 +1060,9 @@ window.carregarDadosDaEscola = async function() {
     }
 };
 
+// =========================================================
+// MARCAR / SALVAR LINHA (mantidos como estavam)
+// =========================================================
 window.marcarComoModificado = function(input) {
     const valorOriginal = Number(input.dataset.valorOriginal) || 0;
     const valorAtual = Number(input.value) || 0;
