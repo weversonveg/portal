@@ -1,13 +1,15 @@
 // ============================================================
 //  permissoes.js — TUDO em um arquivo só
 //
-//  Uso na página:
-//    import { exigirAdmin, exigirUsuario } from "./permissoes.js";
-//    exigirAdmin((user, perms) => { ... });    // página só admin
-//    exigirUsuario((user, perms) => { ... });  // admin + escola
+//  Perfis:
+//    admin  = poderes totais (inclui gerenciar usuários)
+//    semed  = como admin, MAS não gerencia usuários
+//    escola = só as escolas vinculadas
 //
-//  Para bloquear/liberar itens do menu:
-//    edite o objeto PERMISSOES logo abaixo. NÃO mexa no HTML.
+//  Uso:
+//    exigirAdmin(...)   → só admin (página usuarios.html)
+//    exigirGestor(...)  → admin OU semed (servidores, configuração, cálculo)
+//    exigirUsuario(...) → admin, semed ou escola (páginas compartilhadas)
 // ============================================================
 
 import { db, auth } from "./firebase.js";
@@ -19,10 +21,11 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 // ------------------------------------------------------------
 //  Chave = seletor CSS (id, classe ou atributo)
 //  Valor = quem vê:
-//      "todos"   → admin + escola
-//      "admin"   → só administrador
-//      "escola"  → só escola
-//      "ninguem" → esconde de todos
+//      "todos"           → admin + semed + escola
+//      "admin"           → só admin (ex.: card Usuários)
+//      "admin,semed"     → admin + semed
+//      "escola"          → só escola
+//      "ninguem"         → ninguém
 //
 //  Item que NÃO está na lista = visível para todos.
 //  Seletor que não existe na página = ignorado sem erro.
@@ -30,34 +33,39 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 const PERMISSOES = {
 
     // -------- MENU LATERAL --------
-    'a[href="servidores.html"]'      : 'admin',
-    'a[href="configuracao.html"]'    : 'admin',
-    '#menuItemConfigurarPeriodos'    : 'admin',
-    'a[href="configuracoes.html"]'   : 'admin',
-    'a[href="calculo.html"]'         : 'admin',
+    'a[href="servidores.html"]'      : 'admin,semed',
+    'a[href="configuracao.html"]'    : 'admin,semed',
+    '#menuItemConfigurarPeriodos'    : 'admin,semed',
+    'a[href="configuracoes.html"]'   : 'admin,semed',
+    'a[href="calculo.html"]'         : 'admin,semed',
     'a[href="escola.html"]'          : 'todos',
+    'a[href="lancamento.html"]'      : 'todos',
     'a[href="linha_tempo.html"]'     : 'todos',
     'a[href="relatorios.html"]'      : 'todos',
 
     // -------- ALERTAS DA HOME --------
-    '#alertaAtencao'                 : 'admin',
-    '#alertaCritico'                 : 'admin',
+    '#alertaAtencao'                 : 'admin,semed',
+    '#alertaCritico'                 : 'admin,semed',
 
     // -------- CARDS / SEÇÕES --------
-    '#faixaStatus'                                 : 'admin',
-    'section[aria-labelledby="resumoTitulo"]'      : 'admin',
-    'section[aria-labelledby="pendTitulo"]'        : 'admin',
+    '#faixaStatus'                                 : 'admin,semed',
+    'section[aria-labelledby="resumoTitulo"]'      : 'admin,semed',
+    'section[aria-labelledby="pendTitulo"]'        : 'admin,semed',
 
     // -------- MÓDULOS DO GRID --------
-    'a.modulo-card[href="servidores.html"]'        : 'admin',
-    'a.modulo-card[href="configuracao.html"]'      : 'admin',
-    'a.modulo-card[href="calculo.html"]'           : 'admin',
+    'a.modulo-card[href="servidores.html"]'        : 'admin,semed',
+    'a.modulo-card[href="configuracao.html"]'      : 'admin,semed',
+    'a.modulo-card[href="calculo.html"]'           : 'admin,semed',
     'a.modulo-card[href="escola.html"]'            : 'todos',
     'a.modulo-card[href="linha_tempo.html"]'       : 'todos',
     'a.modulo-card[href="relatorios.html"]'        : 'todos',
 
     // -------- BOTÕES --------
-    '#btnAtualizar'                  : 'admin',
+    '#btnAtualizar'                  : 'admin,semed',
+
+    // ⬇️ CARD "USUÁRIOS" EM configuracoes.html — SÓ ADMIN VÊ
+    '#cardUsuarios'                  : 'admin',
+    'a[href="usuarios.html"]'        : 'admin',
 };
 
 // ============================================================
@@ -75,6 +83,15 @@ function ehAdminPerfil(perfilNorm) {
     return perfilNorm === "ADMIN" || perfilNorm === "ADMINISTRADOR";
 }
 
+function ehSemedPerfil(perfilNorm) {
+    return perfilNorm === "SEMED";
+}
+
+// Gestor = admin OU semed (ambos veem todas as escolas)
+function ehGestorPerfil(perfilNorm) {
+    return ehAdminPerfil(perfilNorm) || ehSemedPerfil(perfilNorm);
+}
+
 async function carregarPermissoes(uid) {
     const snap = await getDoc(doc(db, "usuarios", uid));
     if (!snap.exists()) return null;
@@ -84,15 +101,20 @@ async function carregarPermissoes(uid) {
     const escolas = Array.isArray(d.escola)
         ? d.escola.map(e => String(e || "").trim()).filter(Boolean)
         : (d.escola ? [String(d.escola).trim()] : []);
+
     const admin = ehAdminPerfil(perfil);
+    const semed = ehSemedPerfil(perfil);
+    const gestor = admin || semed;
 
     return {
         perfil,
         escolas,
         ehAdmin: admin,
+        ehSemed: semed,
+        ehGestor: gestor,
         temAcessoEscola(escola) {
             if (!escola) return false;
-            if (admin) return true;
+            if (gestor) return true;
             const alvo = normalizarTexto(escola);
             return escolas.some(e => normalizarTexto(e) === alvo);
         }
@@ -100,12 +122,13 @@ async function carregarPermissoes(uid) {
 }
 
 function aplicarPermissoes(perms) {
-    const chave = perms.ehAdmin ? "admin" : "escola";
+    const chave = perms.ehAdmin ? "admin"
+                : perms.ehSemed ? "semed"
+                : "escola";
 
     for (const [seletor, regra] of Object.entries(PERMISSOES)) {
         const liberado =
             regra === "todos" ||
-            regra === "admin,escola" ||
             regra.split(",").map(s => s.trim().toLowerCase()).includes(chave);
 
         document.querySelectorAll(seletor).forEach(el => {
@@ -132,8 +155,7 @@ function _exigirLogin(callback) {
             const perms = await carregarPermissoes(user.uid);
             if (!perms) { window.location.href = "index.html"; return; }
 
-            aplicarPermissoes(perms); // esconde menu antes de liberar
-
+            aplicarPermissoes(perms);
             executou = true;
             callback(user, perms);
 
@@ -145,6 +167,8 @@ function _exigirLogin(callback) {
 }
 
 // -------- guards públicos --------
+
+// Só ADMIN (ex.: usuarios.html)
 export function exigirAdmin(callback) {
     _exigirLogin((user, perms) => {
         if (!perms.ehAdmin) { window.location.href = "inicial.html"; return; }
@@ -152,6 +176,15 @@ export function exigirAdmin(callback) {
     });
 }
 
+// Admin OU Semed (ex.: servidores.html, configuracao.html, calculo.html)
+export function exigirGestor(callback) {
+    _exigirLogin((user, perms) => {
+        if (!perms.ehGestor) { window.location.href = "inicial.html"; return; }
+        callback(user, perms);
+    });
+}
+
+// Todos (ex.: inicial.html, lancamento.html, relatorios.html)
 export function exigirUsuario(callback) {
     _exigirLogin((user, perms) => callback(user, perms));
 }
