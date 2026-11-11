@@ -1292,9 +1292,11 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         else await gerarRelatorioVales();
     };
 
-    // ⬇️ LIMITE DE ESCOLAS PERMITIDAS (admin = null, escola = lista)
+    // ⬇️ LIMITE DE ESCOLAS PERMITIDAS
+    // Admin OU Semed = sem restrição (null)
+    // Escola = lista das escolas vinculadas
     function calcularEscolasPermitidas() {
-        if (perms.ehAdmin) return null;
+        if (perms.ehGestor) return null;
         const lista = [...(perms.escolas || [])].map(n => normalizarTexto(n));
         return lista.length > 0 ? lista : [];
     }
@@ -1320,9 +1322,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
         const filtrosComuns = lerFiltrosComuns();
 
-        // ⬇️ LIMITE
         const escolasPermitidas = calcularEscolasPermitidas();
-        if (!perms.ehAdmin && escolasPermitidas.length === 0) {
+        if (!perms.ehGestor && escolasPermitidas.length === 0) {
             mostrarMensagem("Seu usuário não possui escolas vinculadas.", "erro");
             return;
         }
@@ -1368,7 +1369,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
                     });
                 }
                 vinculos.forEach(v => {
-                    // ⬇️ BLOQUEIO DEFINITIVO: escola só vê as escolas permitidas
                     if (escolasPermitidas && !escolasPermitidas.includes(normalizarTexto(v.escola))) return;
 
                     if (filtrosComuns.matricula && !normalizarTexto(v.matricula).includes(filtrosComuns.matricula)) return;
@@ -1510,7 +1510,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
                     <th>Tipo</th><th>Período</th><th>Prazo Gozo</th><th>Status</th><th>Data Gozo</th>
                 </tr>`;
             const nomeMesFiltro = temFiltroMes ? obterNomeMesFormatado(mesSelecionado, anoSelecionado) : '';
-            const descEscolas = perms.ehAdmin
+            const descEscolas = perms.ehGestor
                 ? (todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`)
                 : `Acesso: ${perms.escolas.length} unidade(s) vinculada(s)`;
             const descMes = temFiltroMes ? ` | Mês: ${nomeMesFiltro}` : '';
@@ -1549,9 +1549,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         const { todasEscolasMarcadas, escolasSelecionadas } = lerSelecaoEscolas();
         const filtrosComuns = lerFiltrosComuns();
 
-        // ⬇️ LIMITE
         const escolasPermitidas = calcularEscolasPermitidas();
-        if (!perms.ehAdmin && escolasPermitidas.length === 0) {
+        if (!perms.ehGestor && escolasPermitidas.length === 0) {
             mostrarMensagem("Seu usuário não possui escolas vinculadas.", "erro");
             return;
         }
@@ -1630,7 +1629,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
                         if (!escolaObj || !escolaObj.nomeEscola) return;
                         const nomeEscola = escolaObj.nomeEscola;
 
-                        // ⬇️ BLOQUEIO DEFINITIVO
                         if (escolasPermitidas && !escolasPermitidas.includes(normalizarTexto(nomeEscola))) return;
 
                         if (setEscolasProcessadas.has(nomeEscola)) return;
@@ -1726,7 +1724,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
             const mesAnoValor = mesInput ? (window.lerMes ? window.lerMes(mesInput) : mesInput.value) : "";
             const mesAnoFormatado = formatarMesAnoPTBR(mesAnoValor);
             const rotuloPeriodo = tipoPeriodo === "mensal" ? `Mês: ${mesAnoFormatado}` : `Ano: ${document.getElementById("anoReferencia").value}`;
-            const descEscolas = perms.ehAdmin
+            const descEscolas = perms.ehGestor
                 ? (todasEscolasMarcadas ? "Todas as Escolas" : `${escolasSelecionadas.length} unidade(s) selecionada(s)`)
                 : `Acesso: ${perms.escolas.length} unidade(s) vinculada(s)`;
             const descPerAno = filtrosComuns.periodo ? ` | Período: ${filtrosComuns.periodo.texto}` : '';
@@ -1849,7 +1847,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         const marcadas = Array.from(checkboxes).filter(cb => cb.checked);
         const spanTexto = document.getElementById("dropdownTextoSelecionado");
 
-        // Escola (sem master): mostra só o que marcou
         if (!master) {
             if (marcadas.length === 0) spanTexto.textContent = "Nenhuma escola selecionada";
             else if (marcadas.length === 1) spanTexto.textContent = marcadas[0].value;
@@ -1858,7 +1855,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
             return;
         }
 
-        // Admin (com master)
         if (master.checked) spanTexto.textContent = "Todas as Escolas Selecionadas";
         else if (marcadas.length === 0) { spanTexto.textContent = "Nenhuma escola selecionada"; }
         else if (marcadas.length === checkboxes.length) { spanTexto.textContent = "Todas as Escolas Selecionadas"; master.checked = true; }
@@ -1872,13 +1868,12 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
     }
     window.mostrarMensagem = mostrarMensagem;
 
-    // ---------- POPULAR DROPDOWN DE ESCOLAS ----------
     async function carregarEscolasDisponiveis() {
         const panel = document.getElementById("dropdownPanel");
         if (!panel) return;
         panel.innerHTML = "";
 
-        if (perms.ehAdmin) {
+        if (perms.ehGestor) {
             try {
                 const snap = await getDocs(collection(db, "unidades"));
                 escolasDisponiveis = [];
@@ -1902,8 +1897,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
             return;
         }
 
-        // Só admin tem "Todas"
-        if (perms.ehAdmin) {
+        if (perms.ehGestor) {
             const labMaster = document.createElement("label");
             labMaster.className = "dropdown-option";
             labMaster.innerHTML = `<input type="checkbox" name="escolaCheck" value="TODAS" checked onchange="toggleTodasEscolas(this)"> <b>Todas as Escolas</b>`;
@@ -1927,9 +1921,7 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         atualizarTextoDropdown();
     }
 
-    // ---------- GUARD ----------
     exigirUsuario(async (user, permissoes) => {
-
         usuarioLogado = user;
         perms = permissoes;
 
