@@ -61,7 +61,7 @@ const PERMISSOES = {
     'a.modulo-card[href="relatorios.html"]'        : 'todos',
 
     // -------- BOTÕES --------
-    '#btnAtualizar'                  : 'admin,semed',
+    '#btnAtualizar'                  : 'todos',
 
     // ⬇️ CARD "USUÁRIOS" EM configuracoes.html — SÓ ADMIN VÊ
     '#cardUsuarios'                  : 'admin',
