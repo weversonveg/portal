@@ -124,6 +124,7 @@
                         class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="">Selecione o perfil</option>
                         <option value="escola">Escola</option>
+                        <option value="semed">Semed</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>
@@ -247,6 +248,7 @@
                         class="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="">Selecione o perfil</option>
                         <option value="escola">Escola</option>
+                        <option value="semed">Semed</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>
@@ -485,6 +487,12 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function rotuloPerfil(perfil) {
+            if (perfil === "admin") return "Administrador";
+            if (perfil === "semed") return "Semed";
+            return "Escola";
+        }
+
         // =========================================================
         // MOSTRAR / OCULTAR ESCOLA
         // =========================================================
@@ -684,6 +692,7 @@
 
                 const dados = resultado.data();
 
+                // Só ADMIN gerencia usuários
                 if (dados.perfil !== "admin") {
                     mostrarModal("Acesso negado", "Somente usuários administradores podem acessar esta página.");
                     setTimeout(() => { window.location.href = "inicial.html"; }, 2500);
@@ -838,7 +847,7 @@
                     const tr = document.createElement("tr");
                     tr.className = "border-t border-gray-100 hover:bg-gray-50";
 
-                    const perfilTexto = dados.perfil === "admin" ? "Administrador" : "Escola";
+                    const perfilTexto = rotuloPerfil(dados.perfil);
 
                     const escolasArray = normalizarEscolas(dados);
                     const escolasHTML = escolasArray.length > 0
