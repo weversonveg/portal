@@ -1568,7 +1568,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     }
 
     /* ============================================================
-       GUARD — admin + escola, com perms disponíveis no código
+       GUARD — admin + semed + escola
        ============================================================ */
     exigirUsuario((user, permissoes) => {
 
@@ -1773,8 +1773,8 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
                     function pushEscola(escolaObj) {
                         if (!escolaObj || !escolaObj.nomeEscola) return;
-                        // ⬇️ FILTRO: escola só vê vínculos das escolas dela
-                        if (perms.ehAdmin || perms.temAcessoEscola(escolaObj.nomeEscola)) {
+                        // ⬇️ FILTRO: admin OU semed OU escola vinculada
+                        if (perms.ehGestor || perms.temAcessoEscola(escolaObj.nomeEscola)) {
                             lista.push({
                                 value: numMat + '|' + escolaObj.nomeEscola,
                                 label: 'Mat: ' + numMat + ' (' + cargo + ') - ' + escolaObj.nomeEscola + (admissao ? ' • Adm: ' + formatarDataBr(admissao) : '') + dias
@@ -1817,8 +1817,8 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const matriculaEscolhida = partes[0];
         const escolaEscolhida = partes[1];
 
-        // ⬇️ DEFESA: escola só salva nas escolas dela
-        if (!perms.ehAdmin && !perms.temAcessoEscola(escolaEscolhida)) {
+        // ⬇️ DEFESA: escola só salva nas escolas dela; admin e semed em qualquer
+        if (!perms.ehGestor && !perms.temAcessoEscola(escolaEscolhida)) {
             mostrarMensagem("Você não tem permissão para lançar nesta escola.", "erro");
             return;
         }
@@ -1940,8 +1940,8 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             registrosCache = [];
             regSnap.forEach(d => {
                 const r = { id: d.id, ...d.data() };
-                // ⬇️ FILTRO POR ESCOLA
-                if (perms.ehAdmin || perms.temAcessoEscola(r.escola)) {
+                // ⬇️ FILTRO: admin/semed veem tudo; escola só as vinculadas
+                if (perms.ehGestor || perms.temAcessoEscola(r.escola)) {
                     registrosCache.push(r);
                 }
             });
@@ -2017,7 +2017,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         if (!perms) return;
         const reg = registrosCache.find(r => r.id === id);
         if (!reg) return;
-        if (!perms.ehAdmin && !perms.temAcessoEscola(reg.escola)) {
+        if (!perms.ehGestor && !perms.temAcessoEscola(reg.escola)) {
             mostrarMensagem("Você não tem permissão para excluir este registro.", "erro");
             return;
         }
@@ -2039,7 +2039,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         if (!perms) return;
         const reg = registrosCache.find(r => r.id === id);
         if (!reg) { mostrarMensagem("Registro não encontrado.", "erro"); return; }
-        if (!perms.ehAdmin && !perms.temAcessoEscola(reg.escola)) {
+        if (!perms.ehGestor && !perms.temAcessoEscola(reg.escola)) {
             mostrarMensagem("Você não tem permissão para editar este registro.", "erro");
             return;
         }
@@ -2168,7 +2168,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const observacao = document.getElementById("editObservacao").value.trim();
         const anoReferencia = document.getElementById("editPeriodo").value.trim();
 
-        if (!perms.ehAdmin && !perms.temAcessoEscola(escola)) {
+        if (!perms.ehGestor && !perms.temAcessoEscola(escola)) {
             mostrarMensagemEdicao("Você não tem permissão para salvar em outra escola.", "erro");
             return;
         }
