@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,person_search,work,work_history,progress_activity,search,error_outline,verified_user,list_alt">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,lock_open,lock,hourglass_top,sync,save,autorenew,settings,lock_open_right,check,block,arrow_back,add_circle,update,person_search,work,work_history,progress_activity,search,error_outline,verified_user,list_alt,directions_bus">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_purple.css">
@@ -32,8 +32,10 @@
 </script>
 
 <style>
-:root,
-:root[data-theme="light"]{
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root,:root[data-theme="light"]{
     --brand:#1f3a5f;--brand-hover:#2c4d77;--brand-soft:#e8eef5;
     --brand-acao:#2E0F4F;--brand-acao-hover:#3D1566;
     --gray-50:#fafafa;--gray-100:#f5f5f6;--gray-150:#ececee;--gray-200:#e4e4e7;
@@ -53,6 +55,7 @@
     --overlay:rgba(20,25,35,.5);
     --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
     --font-serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+    --brand-contrast:#ffffff;
 }
 :root[data-theme="dark"]{
     --brand:#7ba3cd;--brand-hover:#96b8db;--brand-soft:#1a2634;
@@ -71,7 +74,9 @@
     --focus-ring:0 0 0 3px rgba(161,165,171,.22);--focus-border:#a1a5ab;--accent:#a1a5ab;
     --cs-sel-bg:#3a3d42;--cs-sel-text:#f4f5f7;
     --overlay:rgba(0,0,0,.65);
+    --brand-contrast:#1a1a1c;
 }
+
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;font-family:var(--font);-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;background:var(--background);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
 body{overflow:hidden;}
@@ -90,6 +95,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 ::-moz-selection{background:var(--focus-border);color:#fff;}
 .oculto{display:none!important;}
 
+/* ============================================================
+   SELECT CUSTOMIZADO
+   ============================================================ */
 .cs-wrap{position:relative;width:100%;user-select:none;}
 .cs-trigger{width:100%;height:40px;padding:0 36px 0 12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:5px;font-size:13.5px;color:var(--text);display:flex;align-items:center;cursor:pointer;transition:border-color .15s ease, box-shadow .15s ease;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
 .cs-wrap:hover .cs-trigger{border-color:var(--gray-400);}
@@ -108,6 +116,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .cs-opcao.vazia{color:var(--text-muted);font-style:italic;cursor:default;}
 .cs-opcao.vazia:hover{background:transparent;}
 
+/* LAYOUT / SIDEBAR / TOPBAR */
 .layout{display:flex;width:100%;height:100vh;height:100dvh;overflow:hidden;}
 .sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .25s ease,min-width .25s ease,transform .25s ease;overflow:hidden;z-index:100;}
 .sidebar.fechado{width:0;min-width:0;border-right:none;}
@@ -117,7 +126,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .sidebar-logo{width:28px;height:28px;object-fit:contain;flex-shrink:0;}
 .sidebar-brand{display:flex;flex-direction:column;gap:0;min-width:0;flex:1;}
 .sidebar-brand strong{font-size:13px;font-weight:600;color:var(--text);line-height:1.2;}
-.sidebar-brand span{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;line-height:1.2;margin-top:1px;}
+.sidebar-brand span{font-size:10.5px;color:var(--text-muted);text-transform:none;letter-spacing:.3px;line-height:1.2;margin-top:1px;}
 .btn-fechar-sidebar{display:none;width:32px;height:32px;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text-secondary);align-items:center;justify-content:center;flex-shrink:0;}
 .btn-fechar-sidebar .material-symbols-outlined{font-size:20px;}
 @media (max-width:900px){.sidebar.aberta-mobile .btn-fechar-sidebar{display:inline-flex;}}
@@ -146,6 +155,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .submenu-item a:hover{background:var(--surface-2);color:var(--text);}
 .submenu-item a .material-symbols-outlined{font-size:15px;opacity:.7;flex-shrink:0;}
 .submenu-item.ativo a{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+
 .main{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;height:100%;overflow:hidden;background:var(--background);}
 .topbar{height:var(--topbar-height);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:16px;flex-shrink:0;z-index:50;}
 .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 auto;}
@@ -174,6 +184,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .btn-tema .icon-light{display:inline-flex;}
 :root[data-theme="dark"] .btn-tema .icon-dark{display:inline-flex;}
 :root[data-theme="dark"] .btn-tema .icon-light{display:none;}
+
+/* REDE */
 .rede-indicador{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 8px;background:transparent;border:none;font-size:11.5px;color:var(--text-muted);user-select:none;white-space:nowrap;flex-shrink:0;cursor:pointer;border-radius:4px;transition:background-color .15s ease;}
 .rede-indicador:hover{background:var(--surface-2);}
 .rede-barras{display:inline-flex;align-items:flex-end;gap:2px;height:14px;flex-shrink:0;}
@@ -191,6 +203,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .rede-indicador.online .rede-texto{color:var(--ok);}
 .rede-indicador.offline .rede-texto{color:var(--danger);}
 .rede-indicador.verificando .rede-texto{color:var(--text-muted);}
+
+/* MODAL SAIR */
 .modal-sair-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,35,.55);z-index:9999;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .18s ease;}
 .modal-sair-overlay.ativo{display:flex;opacity:1;}
 .modal-sair{background:var(--surface);border:1px solid var(--border);border-radius:8px;max-width:400px;width:100%;padding:28px 28px 22px;box-shadow:0 20px 50px rgba(20,25,35,.28);text-align:center;animation:modalSairEntrar .22s ease;}
@@ -212,6 +226,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     .modal-sair-acoes{flex-direction:column-reverse;width:100%;}
     .modal-sair-btn{width:100%;min-width:0;}
 }
+
+/* CONTENT */
 .content-page{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 28px 32px;scroll-behavior:smooth;}
 .breadcrumb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-muted);margin-bottom:12px;flex-wrap:wrap;}
 .breadcrumb .material-symbols-outlined{font-size:17px;}
@@ -221,6 +237,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .page-header-page{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:16px;}
 .page-header-page h1{font-family:var(--font-serif);font-size:24px;font-weight:600;color:var(--text);margin-bottom:4px;}
 .page-header-page p{font-size:13px;color:var(--text-secondary);}
+
+/* CARDS / BLOCOS */
 .form-card,.table-card{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:20px;}
 .bloco{padding:20px 24px;border-bottom:1px solid var(--border);}
 .bloco:last-of-type{border-bottom:none;}
@@ -235,6 +253,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .form-group input{width:100%;height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--border-strong);border-radius:5px;outline:none;font-size:13.5px;color:var(--text);transition:border-color .15s ease,box-shadow .15s ease;}
 .form-group input:hover{border-color:var(--gray-400);}
 .form-group input:focus{border-color:var(--focus-border);box-shadow:var(--focus-ring);}
+
 button{height:38px;padding:0 16px;border-radius:5px;border:1px solid transparent;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .15s ease,border-color .15s ease;white-space:nowrap;}
 button:disabled{opacity:.65;cursor:not-allowed;}
 .cpf-search-wrapper{display:flex;gap:10px;width:100%;align-items:stretch;}
@@ -248,6 +267,7 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 .btn-salvar:hover{background:#0A2918;border-color:#0A2918;box-shadow:0 2px 4px rgba(15,61,34,.4);}
 .btn-salvar:active{background:#061A0F;border-color:#061A0F;}
 .btn-salvar:disabled{opacity:.55;cursor:not-allowed;}
+
 .periodo-info-box{display:none;background:var(--brand-soft);border:1px solid var(--brand-soft);border-radius:6px;padding:12px 14px;margin-top:8px;font-size:12.5px;color:var(--text);line-height:1.6;}
 .periodo-info-box.visivel{display:block;}
 .periodo-info-box strong{color:var(--brand);}
@@ -260,6 +280,7 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 .info-campo-automatico.visivel{display:block;}
 .form-group input.campo-automatico{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
 #nomeServidorEncontrado{margin-top:8px;font-weight:600;display:block;font-size:13px;}
+
 .mensagem{display:none;padding:12px 14px;border-radius:6px;font-size:12.5px;font-weight:500;line-height:1.55;border:1px solid transparent;align-items:flex-start;gap:8px;}
 .mensagem.visivel{display:flex;}
 .mensagem::before{font-family:'Material Symbols Outlined';font-size:18px;flex-shrink:0;margin-top:1px;line-height:1;}
@@ -271,15 +292,11 @@ button:disabled{opacity:.65;cursor:not-allowed;}
 .mensagem.aviso::before{content:"warning";}
 .mensagem.info{background:var(--info-bg);border-color:var(--info-bd);color:var(--info);}
 .mensagem.info::before{content:"info";}
-.acesso-negado-banner{display:none;background:var(--danger-bg);border:1px solid var(--danger-bd);color:var(--danger);padding:18px 22px;border-radius:6px;margin-bottom:20px;font-size:13.5px;align-items:flex-start;gap:14px;box-shadow:var(--shadow-sm);}
-.acesso-negado-banner.ativo{display:flex;}
-.acesso-negado-banner .material-symbols-outlined{font-size:26px;flex-shrink:0;margin-top:1px;}
-.acesso-negado-banner strong{display:block;font-size:14.5px;margin-bottom:4px;}
-.acesso-negado-banner p{margin:0;line-height:1.6;}
+
 .loading-auth{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;color:var(--text-secondary);}
 .loading-auth .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--focus-border);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.conteudo-bloqueado{opacity:0.4;pointer-events:none;filter:grayscale(30%);}
+
 .table-header-actions{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface-2);}
 .table-title{font-size:14.5px;font-weight:700;color:var(--brand);display:flex;align-items:center;gap:8px;}
 .table-title .material-symbols-outlined{font-size:20px;}
@@ -308,6 +325,8 @@ tbody tr:hover td{background:var(--surface-2);}
 .tipo-badge.licenca-medica{background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd);}
 .tipo-badge.licenca-outras{background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand-soft);}
 .badge-extemporaneo{background:var(--warn-bg);color:var(--warn);font-weight:600;padding:2px 8px;border-radius:3px;font-size:10px;margin-left:6px;border:1px solid var(--warn-bd);display:inline-block;vertical-align:middle;}
+
+/* MODAIS */
 .modal-overlay{display:none;position:fixed;inset:0;background:var(--overlay);z-index:9999;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.ativo{display:flex;animation:fadeIn .18s ease;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
@@ -337,6 +356,7 @@ tbody tr:hover td{background:var(--surface-2);}
 .modal-btn-salvar:disabled{opacity:.6;cursor:not-allowed;}
 .modal-btn-salvar .material-symbols-outlined{font-size:16px;}
 
+/* FLATPICKR */
 .flatpickr-calendar{background:var(--surface)!important;border:1px solid var(--border)!important;box-shadow:var(--shadow-lg)!important;font-family:var(--font)!important;border-radius:8px!important;}
 .flatpickr-calendar::before,.flatpickr-calendar::after{display:none!important;}
 .flatpickr-calendar .flatpickr-months,.flatpickr-calendar .flatpickr-weekdays,.flatpickr-calendar .flatpickr-month{background:transparent!important;color:var(--text)!important;}
@@ -359,6 +379,7 @@ tbody tr:hover td{background:var(--surface-2);}
 :root[data-theme="dark"] .flatpickr-calendar .flatpickr-day.today{border-color:#7ba3cd!important;color:#7ba3cd!important;}
 input.flatpickr-input{background:var(--surface)!important;}
 
+/* RESPONSIVO */
 @media (max-width:900px){
     .sidebar{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-md);border-right:1px solid var(--border);z-index:200;}
     .sidebar.aberta-mobile{transform:translateX(0);}
@@ -422,13 +443,14 @@ input.flatpickr-input{background:var(--surface)!important;}
 
 <div class="layout">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebarMenu" aria-label="Menu lateral">
         <div class="sidebar-inner">
             <div class="sidebar-header">
                 <img class="sidebar-logo" src="https://drive.google.com/thumbnail?id=1Epk870R1TRNRFx4ionkXV-HDkgRyrATQ" alt="">
                 <div class="sidebar-brand">
-                    <strong>Vale Transporte</strong>
-                    <span>SEMED · RH</span>
+                    <strong>Recursos Humanos</strong>
+                    <span>Secretaria Municipal de Educação</span>
                 </div>
                 <button type="button" class="btn-fechar-sidebar" id="btnFecharSidebar" aria-label="Fechar menu" title="Fechar menu">
                     <span class="material-symbols-outlined" aria-hidden="true">close</span>
@@ -441,13 +463,13 @@ input.flatpickr-input{background:var(--surface)!important;}
                         <li class="menu-item">
                             <a href="inicial.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                                <span>Painel de controle</span>
+                                <span>Painel de Controle</span>
                             </a>
                         </li>
                         <li class="menu-item">
                             <a href="servidores.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-                                <span>Servidores e vínculos</span>
+                                <span>Servidores e Vínculos</span>
                             </a>
                         </li>
                     </ul>
@@ -462,36 +484,30 @@ input.flatpickr-input{background:var(--surface)!important;}
                             </a>
                             <ul class="submenu">
                                 <li class="submenu-item">
-                                    <a href="configuracao.html#secao-periodo-aquisitivo">
+                                    <a href="configuracao.html#secao-periodo-aquisitivo" data-secao="secao-periodo-aquisitivo">
                                         <span class="material-symbols-outlined" aria-hidden="true">event</span>
-                                        <span>1. Período aquisitivo</span>
+                                        <span>1. Período Aquisitivo</span>
                                     </a>
                                 </li>
                                 <li class="submenu-item">
-                                    <a href="configuracao.html#secao-dias-uteis">
+                                    <a href="configuracao.html#secao-dias-uteis" data-secao="secao-dias-uteis">
                                         <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
-                                        <span>2. Dias úteis letivos</span>
+                                        <span>2. Dias Úteis Letivos</span>
                                     </a>
                                 </li>
                                 <li class="submenu-item">
-                                    <a href="configuracao.html#secao-abrir-fechar">
+                                    <a href="configuracao.html#secao-abrir-fechar" data-secao="secao-abrir-fechar">
                                         <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-                                        <span>3. Abrir / fechar mês</span>
+                                        <span>3. Abrir / Fechar Mês</span>
                                     </a>
                                 </li>
                                 <li class="submenu-item">
-                                    <a href="configuracao.html#secao-reabrir">
+                                    <a href="configuracao.html#secao-reabrir" data-secao="secao-reabrir">
                                         <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
-                                        <span>4. Reabrir período</span>
+                                        <span>4. Reabrir Período</span>
                                     </a>
                                 </li>
                             </ul>
-                        </li>
-                        <li class="menu-item">
-                            <a href="escola.html">
-                                <span class="material-symbols-outlined" aria-hidden="true">domain</span>
-                                <span>Unidades escolares</span>
-                            </a>
                         </li>
                     </ul>
                 </nav>
@@ -501,19 +517,19 @@ input.flatpickr-input{background:var(--surface)!important;}
                         <li class="menu-item">
                             <a href="escola.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
-                                <span>Lançamentos da unidade</span>
+                                <span>Lançamentos da Unidade</span>
                             </a>
                         </li>
-                        <li class="menu-item ativo">
-                            <a href="linha_tempo.html" aria-current="page">
+                        <li class="menu-item">
+                            <a href="linha_tempo.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
-                                <span>Férias, folgas e licenças</span>
+                                <span>Férias, Folgas e Licenças</span>
                             </a>
                         </li>
                         <li class="menu-item">
                             <a href="calculo.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-                                <span>Cálculo e vales</span>
+                                <span>Cálculo e Vales</span>
                                 <span class="menu-badge">Mensal</span>
                             </a>
                         </li>
@@ -525,7 +541,19 @@ input.flatpickr-input{background:var(--surface)!important;}
                         <li class="menu-item">
                             <a href="relatorios.html">
                                 <span class="material-symbols-outlined" aria-hidden="true">description</span>
-                                <span>Relatórios gerais</span>
+                                <span>Relatórios Gerais</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="linha_tempo.html">
+                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                                <span>Linha do Tempo</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="configuracoes.html">
+                                <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+                                <span>Configurações</span>
                             </a>
                         </li>
                     </ul>
@@ -535,14 +563,14 @@ input.flatpickr-input{background:var(--surface)!important;}
                         <li class="menu-item menu-item-sair">
                             <button type="button" id="btnSairSidebar">
                                 <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                                <span>Sair do sistema</span>
+                                <span>Sair do Sistema</span>
                             </button>
                         </li>
                     </ul>
                 </nav>
                 <div class="sidebar-info">
                     <strong>Versão 1.0.0</strong>
-                    Sistema de gestão de vale transporte
+                    Sistema de Gestão de Vale Transporte
                 </div>
             </div>
         </div>
@@ -550,6 +578,7 @@ input.flatpickr-input{background:var(--surface)!important;}
 
     <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
+    <!-- MAIN -->
     <div class="main">
         <header class="topbar">
             <div class="topbar-left">
@@ -563,9 +592,7 @@ input.flatpickr-input{background:var(--surface)!important;}
             </div>
             <div class="topbar-right">
                 <div class="rede-indicador verificando" id="redeIndicador" role="status" aria-live="polite" title="Verificando conexão…">
-                    <span class="rede-barras" aria-hidden="true">
-                        <span></span><span></span><span></span><span></span>
-                    </span>
+                    <span class="rede-barras" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
                     <span class="rede-texto" id="redeTexto">Verificando…</span>
                 </div>
                 <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
@@ -728,12 +755,10 @@ input.flatpickr-input{background:var(--surface)!important;}
                             <input type="text" id="filtroTabela" placeholder="Buscar no histórico (nome, CPF, escola...)" oninput="filtrarTabela()">
                         </div>
                     </div>
-
                     <div style="padding: 8px 20px; font-size: 11.5px; color: var(--text-muted); background: var(--surface-2); border-bottom: 1px solid var(--border);">
                         <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
                         Mostrando apenas lançamentos ativos ou futuros. Para ver o histórico completo, use a busca acima.
                     </div>
-
                     <div class="table-scroll">
                         <table>
                             <thead>
@@ -749,11 +774,7 @@ input.flatpickr-input{background:var(--surface)!important;}
                                 </tr>
                             </thead>
                             <tbody id="tabelaRegistros">
-                                <tr>
-                                    <td colspan="8" style="text-align:center; color:var(--text-muted); padding:24px;">
-                                        Carregando registros...
-                                    </td>
-                                </tr>
+                                <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:24px;">Carregando registros...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -763,6 +784,7 @@ input.flatpickr-input{background:var(--surface)!important;}
     </div>
 </div>
 
+<!-- MODAL SAIR -->
 <div class="modal-sair-overlay" id="modalSair" role="presentation">
     <div class="modal-sair" role="alertdialog" aria-modal="true" aria-labelledby="modalSairTitulo">
         <div class="modal-sair-icone" aria-hidden="true">
@@ -779,6 +801,7 @@ input.flatpickr-input{background:var(--surface)!important;}
     </div>
 </div>
 
+<!-- MODAL CONFIRM -->
 <div id="modalConfirm" class="modal-overlay">
     <div class="modal-box" style="max-width: 420px;">
         <div class="modal-header">
@@ -795,17 +818,16 @@ input.flatpickr-input{background:var(--surface)!important;}
         </div>
         <div class="modal-footer">
             <button type="button" class="modal-btn-cancelar" id="btnModalCancelar">
-                <span class="material-symbols-outlined">close</span>
-                Fechar
+                <span class="material-symbols-outlined">close</span> Fechar
             </button>
             <button type="button" class="modal-btn-confirmar" id="btnModalConfirmar">
-                <span class="material-symbols-outlined">check</span>
-                Sim, excluir
+                <span class="material-symbols-outlined">check</span> Sim, excluir
             </button>
         </div>
     </div>
 </div>
 
+<!-- MODAL EDITAR -->
 <div id="modalEditar" class="modal-overlay">
     <div class="modal-box" style="max-width: 640px;">
         <div class="modal-header modal-editar-header">
@@ -836,23 +858,19 @@ input.flatpickr-input{background:var(--surface)!important;}
                             <input type="hidden" id="editTipo" value="FERIAS">
                         </div>
                     </div>
-
                     <div class="form-group full" id="editGrupoPeriodo" style="display:none;">
                         <label for="editPeriodo">Período Aquisitivo (Referência)</label>
                         <input type="text" id="editPeriodo" placeholder="Ex.: 2023/2024">
                         <small class="ajuda">Deixe em branco se não se aplicar.</small>
                     </div>
-
                     <div class="form-group">
                         <label for="editDataInicio" id="editLabelDataInicio">Data de Início <span>*</span></label>
                         <input type="text" id="editDataInicio" placeholder="dd/mm/aaaa" required>
                     </div>
-
                     <div class="form-group" id="editGrupoDataFim">
                         <label for="editDataFim">Data de Término <span>*</span></label>
                         <input type="text" id="editDataFim" placeholder="dd/mm/aaaa" required>
                     </div>
-
                     <div class="form-group" id="editGrupoDuracao" style="display:none;">
                         <label>Duração das Férias <span>*</span></label>
                         <div class="cs-wrap" id="csEditDuracao" data-value="30">
@@ -866,12 +884,10 @@ input.flatpickr-input{background:var(--surface)!important;}
                             <input type="hidden" id="editDuracao" value="30">
                         </div>
                     </div>
-
                     <div class="form-group full">
                         <label for="editEscola">Escola</label>
                         <input type="text" id="editEscola" placeholder="Nome da escola">
                     </div>
-
                     <div class="form-group full">
                         <label for="editObservacao">Observação</label>
                         <input type="text" id="editObservacao" placeholder="Opcional">
@@ -882,27 +898,34 @@ input.flatpickr-input{background:var(--surface)!important;}
         </div>
         <div class="modal-footer">
             <button type="button" class="modal-btn-cancelar" id="btnModalEditarCancelar">
-                <span class="material-symbols-outlined">close</span>
-                Cancelar
+                <span class="material-symbols-outlined">close</span> Cancelar
             </button>
             <button type="submit" form="formEditar" class="modal-btn-salvar" id="btnModalEditarSalvar">
-                <span class="material-symbols-outlined">save</span>
-                Salvar alterações
+                <span class="material-symbols-outlined">save</span> Salvar alterações
             </button>
         </div>
     </div>
 </div>
 
+<!-- ============================================================
+     SCRIPT DE UI (tema, sidebar, sair, atualizar, rede)
+     ============================================================ -->
 <script type="module">
 import { auth } from "./firebase.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 (function () {
-    var item = document.getElementById('menuItemConfigurarPeriodos');
-    if (!item) return;
-    var path = (window.location.pathname.split('/').pop() || '').toLowerCase();
-    if (path === 'configuracao.html' || path === '') item.classList.add('ativo');
-    else item.classList.remove('ativo');
+    var pathAtual = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    if (!pathAtual) pathAtual = 'inicial.html';
+    document.querySelectorAll('.menu-item > a').forEach(function (link) {
+        var href = (link.getAttribute('href') || '').toLowerCase().split('#')[0].split('?')[0];
+        if (!href) return;
+        var li = link.closest('.menu-item');
+        if (!li) return;
+        li.classList.remove('ativo');
+        link.removeAttribute('aria-current');
+        if (href === pathAtual) { li.classList.add('ativo'); link.setAttribute('aria-current', 'page'); }
+    });
 })();
 
 (function () {
@@ -926,11 +949,9 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
     var btnFechar = document.getElementById('btnFecharSidebar');
     var CHAVE = 'menu-vt-fechado';
     function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
-    var salvo = null;
-    try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
+    var salvo = null; try { salvo = localStorage.getItem(CHAVE); } catch (e) {}
     var iniciarFechadoDesktop = salvo === '1';
-    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-    else fecharMobile(false);
+    if (!isMobile()) aplicarEstadoDesktop(iniciarFechadoDesktop, false); else fecharMobile(false);
     if (btn) {
         btn.addEventListener('click', function () {
             if (isMobile()) {
@@ -957,11 +978,7 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
         if (agoraMobile !== ultimoMobile) {
             ultimoMobile = agoraMobile;
             if (agoraMobile) fecharMobile(false);
-            else {
-                sidebar.classList.remove('aberta-mobile');
-                document.body.style.overflow = '';
-                aplicarEstadoDesktop(iniciarFechadoDesktop, false);
-            }
+            else { sidebar.classList.remove('aberta-mobile'); document.body.style.overflow = ''; aplicarEstadoDesktop(iniciarFechadoDesktop, false); }
         }
     });
     function aplicarEstadoDesktop(fechado, animar) {
@@ -973,22 +990,35 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
         try { localStorage.setItem(CHAVE, fechado ? '1' : '0'); } catch (e) {}
     }
     function abrirMobile() {
-        sidebar.classList.add('aberta-mobile');
-        sidebar.classList.remove('fechado');
+        sidebar.classList.add('aberta-mobile'); sidebar.classList.remove('fechado');
         if (backdrop) backdrop.classList.add('ativo');
         if (btn) btn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
     }
     function fecharMobile(animar) {
         if (!animar) sidebar.style.transition = 'none';
-        sidebar.classList.remove('aberta-mobile');
-        sidebar.classList.add('fechado');
+        sidebar.classList.remove('aberta-mobile'); sidebar.classList.add('fechado');
         if (backdrop) backdrop.classList.remove('ativo');
         if (btn) btn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
         if (!animar) { void sidebar.offsetWidth; sidebar.style.transition = ''; }
     }
 })();
+
+onAuthStateChanged(auth, function (user) {
+    if (user) {
+        var email = user.email || '';
+        var partes = email.split('@')[0].split(/[.\-_]/);
+        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0,2).toUpperCase();
+        var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0,2).join(' ');
+        var av = document.getElementById('userAvatar');
+        var nm = document.getElementById('userNameLabel');
+        var em = document.getElementById('userEmailLabel');
+        if (av) av.textContent = ini;
+        if (nm) nm.textContent = nome || 'Usuário';
+        if (em) { em.textContent = email; em.title = email; }
+    } else { window.location.href = 'index.html'; }
+});
 
 var ultimoFocoSair = null;
 function abrirModalSair() {
@@ -1018,11 +1048,7 @@ async function confirmarSaida() {
         try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
         await signOut(auth);
         window.location.href = 'index.html';
-    } catch (e) {
-        console.error('[Sair] Erro:', e);
-        btn.disabled = false;
-        btn.innerHTML = btnOriginal;
-    }
+    } catch (e) { console.error('[Sair] Erro:', e); btn.disabled = false; btn.innerHTML = btnOriginal; }
 }
 var btnSairTopbar = document.getElementById('btnSairTopbar');
 var btnSairSidebar = document.getElementById('btnSairSidebar');
@@ -1042,153 +1068,14 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
         if (btnAtualizar.classList.contains('carregando')) return;
         btnAtualizar.classList.add('carregando');
         btnAtualizar.disabled = true;
-        try {
-            Object.keys(localStorage).filter(function (k) { return k.startsWith('cache-'); }).forEach(function (k) { localStorage.removeItem(k); });
-        } catch (e) {}
+        try { Object.keys(localStorage).filter(function (k) { return k.startsWith('cache-'); }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
         window.location.reload();
     });
 })();
+</script>
 
-/* ============================================================
-   SELECT CUSTOMIZADO — MOTOR
-   ============================================================ */
-function inicializarSelectsCustom() {
-    document.querySelectorAll('.cs-wrap').forEach(function (wrap) {
-        if (wrap.dataset.csInit === '1') return;
-        wrap.dataset.csInit = '1';
-        var trigger = wrap.querySelector('.cs-trigger');
-        var textoEl = wrap.querySelector('.cs-texto');
-        var inputHidden = wrap.querySelector('input[type="hidden"]');
-        function fechar() { wrap.classList.remove('aberto'); trigger.setAttribute('aria-expanded', 'false'); }
-        function abrir() {
-            document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
-                if (w !== wrap) {
-                    w.classList.remove('aberto');
-                    var t = w.querySelector('.cs-trigger');
-                    if (t) t.setAttribute('aria-expanded', 'false');
-                }
-            });
-            wrap.classList.add('aberto');
-            trigger.setAttribute('aria-expanded', 'true');
-        }
-        trigger.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (wrap.classList.contains('aberto')) fechar(); else abrir();
-        });
-        trigger.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (wrap.classList.contains('aberto')) fechar(); else abrir(); }
-            if (e.key === 'Escape') fechar();
-        });
-        wrap.addEventListener('click', function (e) {
-            var op = e.target.closest('.cs-opcao');
-            if (!op || op.classList.contains('vazia')) return;
-            e.stopPropagation();
-            wrap.querySelectorAll('.cs-opcao').forEach(function (o) { o.classList.remove('selecionada'); });
-            op.classList.add('selecionada');
-            var valor = op.dataset.value;
-            wrap.dataset.value = valor;
-            if (inputHidden) {
-                inputHidden.value = valor;
-                inputHidden.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            if (textoEl) {
-                textoEl.textContent = op.textContent;
-                textoEl.classList.remove('cs-placeholder');
-            }
-            fechar();
-        });
-    });
-    document.addEventListener('click', function () {
-        document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
-            w.classList.remove('aberto');
-            var t = w.querySelector('.cs-trigger');
-            if (t) t.setAttribute('aria-expanded', 'false');
-        });
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
-                w.classList.remove('aberto');
-                var t = w.querySelector('.cs-trigger');
-                if (t) t.setAttribute('aria-expanded', 'false');
-            });
-        }
-    });
-}
-
-function atualizarSelectCustom(idWrap, listaOpcoes, valorSelecionado, placeholder) {
-    var wrap = document.getElementById(idWrap);
-    if (!wrap) return;
-    var lista = wrap.querySelector('.cs-lista');
-    var textoEl = wrap.querySelector('.cs-texto');
-    var inputHidden = wrap.querySelector('input[type="hidden"]');
-    lista.innerHTML = '';
-    if (!listaOpcoes || listaOpcoes.length === 0) {
-        var vazia = document.createElement('div');
-        vazia.className = 'cs-opcao vazia';
-        vazia.textContent = placeholder || 'Nenhuma opção disponível';
-        lista.appendChild(vazia);
-        textoEl.textContent = placeholder || 'Nenhuma opção disponível';
-        textoEl.classList.add('cs-placeholder');
-        wrap.dataset.value = '';
-        if (inputHidden) inputHidden.value = '';
-        return;
-    }
-    var achou = false;
-    listaOpcoes.forEach(function (op) {
-        var div = document.createElement('div');
-        div.className = 'cs-opcao';
-        if (op.classe) div.classList.add(op.classe);
-        div.dataset.value = op.value;
-        div.textContent = op.label;
-        if (op.value === valorSelecionado) {
-            div.classList.add('selecionada');
-            textoEl.textContent = op.label;
-            textoEl.classList.remove('cs-placeholder');
-            wrap.dataset.value = op.value;
-            if (inputHidden) inputHidden.value = op.value;
-            achou = true;
-        }
-        lista.appendChild(div);
-    });
-    if (!achou) {
-        textoEl.textContent = placeholder || 'Selecione...';
-        textoEl.classList.add('cs-placeholder');
-        wrap.dataset.value = '';
-        if (inputHidden) inputHidden.value = '';
-    }
-}
-
-inicializarSelectsCustom();
-window.inicializarSelectsCustom = inicializarSelectsCustom;
-window.atualizarSelectCustom = atualizarSelectCustom;
-
-document.getElementById('csTipoAusencia').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.mudarTipoAusencia && window.mudarTipoAusencia(); }, 0);
-});
-document.getElementById('csVinculo').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.carregarPeriodosAbertos && window.carregarPeriodosAbertos(); }, 0);
-});
-document.getElementById('csPeriodo').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.atualizarInfoPeriodo && window.atualizarInfoPeriodo(); }, 0);
-});
-document.getElementById('csDuracao').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.calcularDataFim && window.calcularDataFim(); }, 0);
-});
-document.getElementById('csEditTipo').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.mudarTipoEdicao && window.mudarTipoEdicao(); }, 0);
-});
-document.getElementById('csEditDuracao').addEventListener('click', function (e) {
-    var op = e.target.closest('.cs-opcao');
-    if (op) setTimeout(function () { window.calcularDataFimEdicao && window.calcularDataFimEdicao(); }, 0);
-});
-
-/* INDICADOR DE REDE */
+<!-- INDICADOR DE REDE -->
+<script>
 (function () {
     var el = document.getElementById('redeIndicador');
     var texto = document.getElementById('redeTexto');
@@ -1246,13 +1133,151 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 })();
 </script>
 
-<script type="module">
-    import { db } from "./firebase.js";
-    import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { exigirUsuario } from "./permissoes.js";
+<!-- ============================================================
+     SCRIPT DO SELECT CUSTOMIZADO (independente do guard)
+     ============================================================ -->
+<script>
+function inicializarSelectsCustom() {
+    document.querySelectorAll('.cs-wrap').forEach(function (wrap) {
+        if (wrap.dataset.csInit === '1') return;
+        wrap.dataset.csInit = '1';
+        var trigger = wrap.querySelector('.cs-trigger');
+        var textoEl = wrap.querySelector('.cs-texto');
+        var inputHidden = wrap.querySelector('input[type="hidden"]');
+        function fechar() { wrap.classList.remove('aberto'); trigger.setAttribute('aria-expanded', 'false'); }
+        function abrir() {
+            document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
+                if (w !== wrap) {
+                    w.classList.remove('aberto');
+                    var t = w.querySelector('.cs-trigger');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                }
+            });
+            wrap.classList.add('aberto');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (wrap.classList.contains('aberto')) fechar(); else abrir();
+        });
+        trigger.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (wrap.classList.contains('aberto')) fechar(); else abrir(); }
+            if (e.key === 'Escape') fechar();
+        });
+        wrap.addEventListener('click', function (e) {
+            var op = e.target.closest('.cs-opcao');
+            if (!op || op.classList.contains('vazia')) return;
+            e.stopPropagation();
+            wrap.querySelectorAll('.cs-opcao').forEach(function (o) { o.classList.remove('selecionada'); });
+            op.classList.add('selecionada');
+            var valor = op.dataset.value;
+            wrap.dataset.value = valor;
+            if (inputHidden) { inputHidden.value = valor; inputHidden.dispatchEvent(new Event('change', { bubbles: true })); }
+            if (textoEl) { textoEl.textContent = op.textContent; textoEl.classList.remove('cs-placeholder'); }
+            fechar();
+        });
+    });
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
+            w.classList.remove('aberto');
+            var t = w.querySelector('.cs-trigger');
+            if (t) t.setAttribute('aria-expanded', 'false');
+        });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.cs-wrap.aberto').forEach(function (w) {
+                w.classList.remove('aberto');
+                var t = w.querySelector('.cs-trigger');
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+        }
+    });
+}
+function atualizarSelectCustom(idWrap, listaOpcoes, valorSelecionado, placeholder) {
+    var wrap = document.getElementById(idWrap);
+    if (!wrap) return;
+    var lista = wrap.querySelector('.cs-lista');
+    var textoEl = wrap.querySelector('.cs-texto');
+    var inputHidden = wrap.querySelector('input[type="hidden"]');
+    lista.innerHTML = '';
+    if (!listaOpcoes || listaOpcoes.length === 0) {
+        var vazia = document.createElement('div');
+        vazia.className = 'cs-opcao vazia';
+        vazia.textContent = placeholder || 'Nenhuma opção disponível';
+        lista.appendChild(vazia);
+        textoEl.textContent = placeholder || 'Nenhuma opção disponível';
+        textoEl.classList.add('cs-placeholder');
+        wrap.dataset.value = '';
+        if (inputHidden) inputHidden.value = '';
+        return;
+    }
+    var achou = false;
+    listaOpcoes.forEach(function (op) {
+        var div = document.createElement('div');
+        div.className = 'cs-opcao';
+        if (op.classe) div.classList.add(op.classe);
+        div.dataset.value = op.value;
+        div.textContent = op.label;
+        if (op.value === valorSelecionado) {
+            div.classList.add('selecionada');
+            textoEl.textContent = op.label;
+            textoEl.classList.remove('cs-placeholder');
+            wrap.dataset.value = op.value;
+            if (inputHidden) inputHidden.value = op.value;
+            achou = true;
+        }
+        lista.appendChild(div);
+    });
+    if (!achou) {
+        textoEl.textContent = placeholder || 'Selecione...';
+        textoEl.classList.add('cs-placeholder');
+        wrap.dataset.value = '';
+        if (inputHidden) inputHidden.value = '';
+    }
+}
+inicializarSelectsCustom();
+window.inicializarSelectsCustom = inicializarSelectsCustom;
+window.atualizarSelectCustom = atualizarSelectCustom;
 
-    let usuarioLogado = null;
-    let perms = null;
+document.getElementById('csTipoAusencia').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.mudarTipoAusencia && window.mudarTipoAusencia(); }, 0);
+});
+document.getElementById('csVinculo').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.carregarPeriodosAbertos && window.carregarPeriodosAbertos(); }, 0);
+});
+document.getElementById('csPeriodo').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.atualizarInfoPeriodo && window.atualizarInfoPeriodo(); }, 0);
+});
+document.getElementById('csDuracao').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.calcularDataFim && window.calcularDataFim(); }, 0);
+});
+document.getElementById('csEditTipo').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.mudarTipoEdicao && window.mudarTipoEdicao(); }, 0);
+});
+document.getElementById('csEditDuracao').addEventListener('click', function (e) {
+    var op = e.target.closest('.cs-opcao');
+    if (op) setTimeout(function () { window.calcularDataFimEdicao && window.calcularDataFimEdicao(); }, 0);
+});
+</script>
+
+<!-- ============================================================
+     SCRIPT PRINCIPAL (guard + lógica) — DENTRO DO exigirUsuario
+     ============================================================ -->
+<script type="module">
+import { db } from "./firebase.js";
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { exigirUsuario } from "./permissoes.js";
+
+exigirUsuario((user, permissoes) => {
+
+    let usuarioLogado = user;
+    let perms = permissoes;
     let servidorCache = null;
     let registrosCache = [];
     let periodosAbertos = [];
@@ -1269,10 +1294,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         disableMobile: true
     };
 
-    let fpDataInicio = null;
-    let fpDataFim = null;
-    let fpEditDataInicio = null;
-    let fpEditDataFim = null;
+    let fpDataInicio = null, fpDataFim = null, fpEditDataInicio = null, fpEditDataFim = null;
 
     function inicializarFlatpickr() {
         const elDataInicio = document.getElementById('dataInicio');
@@ -1283,25 +1305,17 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         if (elDataInicio && !elDataInicio._flatpickr) {
             fpDataInicio = flatpickr(elDataInicio, {
                 ...fpConfigBase,
-                onChange: function () {
-                    if (typeof window.calcularDataFim === 'function') window.calcularDataFim();
-                }
+                onChange: function () { if (typeof window.calcularDataFim === 'function') window.calcularDataFim(); }
             });
         }
-        if (elDataFim && !elDataFim._flatpickr) {
-            fpDataFim = flatpickr(elDataFim, { ...fpConfigBase });
-        }
+        if (elDataFim && !elDataFim._flatpickr) fpDataFim = flatpickr(elDataFim, { ...fpConfigBase });
         if (elEditInicio && !elEditInicio._flatpickr) {
             fpEditDataInicio = flatpickr(elEditInicio, {
                 ...fpConfigBase,
-                onChange: function () {
-                    if (typeof window.calcularDataFimEdicao === 'function') window.calcularDataFimEdicao();
-                }
+                onChange: function () { if (typeof window.calcularDataFimEdicao === 'function') window.calcularDataFimEdicao(); }
             });
         }
-        if (elEditFim && !elEditFim._flatpickr) {
-            fpEditDataFim = flatpickr(elEditFim, { ...fpConfigBase });
-        }
+        if (elEditFim && !elEditFim._flatpickr) fpEditDataFim = flatpickr(elEditFim, { ...fpConfigBase });
     }
     window.inicializarFlatpickr = inicializarFlatpickr;
 
@@ -1500,11 +1514,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const lista = csPeriodo._lista || [];
         const item = lista.find(function (p) { return p.value === valorPeriodo; });
 
-        if (!item) {
-            infoBox.classList.remove('visivel');
-            alertaVencido.classList.remove('visivel');
-            return;
-        }
+        if (!item) { infoBox.classList.remove('visivel'); alertaVencido.classList.remove('visivel'); return; }
         const tipo = document.getElementById('tipoAusencia').value;
 
         if (tipo === 'FOLGA_ANIVERSARIO') {
@@ -1521,11 +1531,9 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
                 '<strong>Dias disponíveis:</strong> ' + item.dataRestantes + ' de ' + item.dataTotal + ' dias<br>' +
                 '<strong>Status:</strong> ' + (item.dataStatus === 'vencido' ? 'Vencido — gozo extemporâneo' : 'Disponível');
             if (item.dataStatus === 'vencido') {
-                infoBox.classList.add('vencido');
-                alertaVencido.classList.add('visivel');
+                infoBox.classList.add('vencido'); alertaVencido.classList.add('visivel');
             } else {
-                infoBox.classList.remove('vencido');
-                alertaVencido.classList.remove('visivel');
+                infoBox.classList.remove('vencido'); alertaVencido.classList.remove('visivel');
             }
         }
     };
@@ -1567,114 +1575,90 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         });
     }
 
-    /* ============================================================
-       GUARD — admin + semed + escola
-       ============================================================ */
-    exigirUsuario((user, permissoes) => {
+    // ====== TOPBAR ======
+    (function preencherTopbar() {
+        const email = user.email || '';
+        const partes = email.split('@')[0].split(/[.\-_]/);
+        const ini = ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase() || email.slice(0,2).toUpperCase();
+        const nome = partes.filter(Boolean).map(p => p[0].toUpperCase() + p.slice(1).toLowerCase()).slice(0,2).join(' ');
+        document.getElementById('userAvatar').textContent = ini;
+        document.getElementById('userNameLabel').textContent = nome || 'Usuário';
+        const em = document.getElementById('userEmailLabel');
+        em.textContent = email; em.title = email;
+    })();
 
-        usuarioLogado = user;
-        perms = permissoes;
+    document.getElementById('loadingAuth').style.display = 'none';
+    document.getElementById('conteudoPrincipal').style.display = 'block';
 
-        // topbar
-        (function preencherTopbar() {
-            const email = user.email || '';
-            const partes = email.split('@')[0].split(/[.\-_]/);
-            const ini = ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase() || email.slice(0,2).toUpperCase();
-            const nome = partes.filter(Boolean).map(p => p[0].toUpperCase() + p.slice(1).toLowerCase()).slice(0,2).join(' ');
-            document.getElementById('userAvatar').textContent = ini;
-            document.getElementById('userNameLabel').textContent = nome || 'Usuário';
-            const em = document.getElementById('userEmailLabel');
-            em.textContent = email; em.title = email;
-        })();
+    window.mudarTipoAusencia();
+    window.inicializarFlatpickr();
 
-        document.getElementById('loadingAuth').style.display = 'none';
-        const conteudo = document.getElementById('conteudoPrincipal');
-        conteudo.style.display = 'block';
-
-        window.mudarTipoAusencia();
-        window.inicializarFlatpickr();
-
-        const btnFechar = document.getElementById("btnModalEditarFechar");
-        const btnCancelar = document.getElementById("btnModalEditarCancelar");
-        const modal = document.getElementById("modalEditar");
-        if (btnFechar) btnFechar.addEventListener("click", fecharModalEditar);
-        if (btnCancelar) btnCancelar.addEventListener("click", fecharModalEditar);
-        if (modal) modal.addEventListener("click", function(e) { if (e.target === modal) fecharModalEditar(); });
-        document.addEventListener("keydown", function(e) {
-            if (e.key === "Escape" && modal && modal.classList.contains("ativo")) fecharModalEditar();
-        });
-
-        // CPF
-        const inputCpf = document.getElementById('inputCpf');
-        if (inputCpf) {
-            inputCpf.addEventListener('input', function (e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 11) value = value.slice(0, 11);
-                if (value.length > 9) value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-                else if (value.length > 6) value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
-                else if (value.length > 3) value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
-                e.target.value = value;
-            });
-            inputCpf.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); window.buscarServidorPorCpf(); }
-            });
-        }
-
-        // carrega registros
-        carregarRegistros();
-
-        // auto-preenchimento por URL
-        (function autoPreencherPorUrl() {
-            const params = new URLSearchParams(window.location.search);
-            let cpfUrl = (params.get('cpf') || '').trim();
-            const matriculaUrl = (params.get('matricula') || '').trim();
-            const servidorIdUrl = (params.get('servidorId') || '').trim();
-            if (!cpfUrl && !matriculaUrl && !servidorIdUrl) return;
-
-            const inputCpfEl = document.getElementById('inputCpf');
-            const lblNome = document.getElementById('nomeServidorEncontrado');
-            if (!inputCpfEl) return;
-
-            if (cpfUrl) {
-                const apenasDigitos = cpfUrl.replace(/\D/g, '');
-                if (apenasDigitos.length === 11) {
-                    inputCpfEl.value = apenasDigitos.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-                } else inputCpfEl.value = cpfUrl;
-            }
-
-            setTimeout(async function () {
-                if (!cpfUrl) {
-                    try {
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); url.searchParams.delete('servidorId');
-                        window.history.replaceState({}, '', url.toString());
-                    } catch (e) {}
-                    inputCpfEl.focus();
-                    return;
-                }
-                try {
-                    await window.buscarServidorPorCpf();
-                    if (matriculaUrl) {
-                        const csVinculo = document.getElementById('csVinculo');
-                        if (csVinculo) {
-                            const lista = Array.from(csVinculo.querySelectorAll('.cs-opcao'));
-                            const alvo = lista.find(op => (op.dataset.value || '').split('|')[0] === matriculaUrl);
-                            if (alvo) alvo.click();
-                        }
-                    }
-                    try {
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); url.searchParams.delete('servidorId');
-                        window.history.replaceState({}, '', url.toString());
-                    } catch (e) {}
-                } catch (e) { console.warn('[Lançamentos] Auto-preencher:', e); }
-            }, 250);
-        })();
+    const btnFechar = document.getElementById("btnModalEditarFechar");
+    const btnCancelar = document.getElementById("btnModalEditarCancelar");
+    const modal = document.getElementById("modalEditar");
+    if (btnFechar) btnFechar.addEventListener("click", fecharModalEditar);
+    if (btnCancelar) btnCancelar.addEventListener("click", fecharModalEditar);
+    if (modal) modal.addEventListener("click", function(e) { if (e.target === modal) fecharModalEditar(); });
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && modal && modal.classList.contains("ativo")) fecharModalEditar();
     });
 
-    /* ============================================================
-       LÓGICA DE NEGÓCIO
-       ============================================================ */
+    // CPF
+    const inputCpf = document.getElementById('inputCpf');
+    if (inputCpf) {
+        inputCpf.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            if (value.length > 9) value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            else if (value.length > 6) value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, '$1.$2.$3');
+            else if (value.length > 3) value = value.replace(/^(\d{3})(\d{1,3})$/, '$1.$2');
+            e.target.value = value;
+        });
+        inputCpf.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); window.buscarServidorPorCpf(); }
+        });
+    }
+
+    carregarRegistros();
+
+    // Auto-preenchimento por URL
+    (function autoPreencherPorUrl() {
+        const params = new URLSearchParams(window.location.search);
+        let cpfUrl = (params.get('cpf') || '').trim();
+        const matriculaUrl = (params.get('matricula') || '').trim();
+        if (!cpfUrl && !matriculaUrl) return;
+
+        const inputCpfEl = document.getElementById('inputCpf');
+        if (!inputCpfEl) return;
+
+        if (cpfUrl) {
+            const apenasDigitos = cpfUrl.replace(/\D/g, '');
+            if (apenasDigitos.length === 11) inputCpfEl.value = apenasDigitos.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            else inputCpfEl.value = cpfUrl;
+        }
+
+        setTimeout(async function () {
+            if (!cpfUrl) {
+                try { const url = new URL(window.location.href); url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); window.history.replaceState({}, '', url.toString()); } catch (e) {}
+                inputCpfEl.focus();
+                return;
+            }
+            try {
+                await window.buscarServidorPorCpf();
+                if (matriculaUrl) {
+                    const csVinculo = document.getElementById('csVinculo');
+                    if (csVinculo) {
+                        const lista = Array.from(csVinculo.querySelectorAll('.cs-opcao'));
+                        const alvo = lista.find(op => (op.dataset.value || '').split('|')[0] === matriculaUrl);
+                        if (alvo) alvo.click();
+                    }
+                }
+                try { const url = new URL(window.location.href); url.searchParams.delete('cpf'); url.searchParams.delete('matricula'); window.history.replaceState({}, '', url.toString()); } catch (e) {}
+            } catch (e) { console.warn('[Lançamentos] Auto-preencher:', e); }
+        }, 250);
+    })();
+
+    // ====== LÓGICA DE NEGÓCIO ======
     window.mudarTipoAusencia = function() {
         const tipo = document.getElementById("tipoAusencia").value;
         const grupoFim = document.getElementById("grupoDataFim");
@@ -1773,7 +1757,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
                     function pushEscola(escolaObj) {
                         if (!escolaObj || !escolaObj.nomeEscola) return;
-                        // ⬇️ FILTRO: admin OU semed OU escola vinculada
                         if (perms.ehGestor || perms.temAcessoEscola(escolaObj.nomeEscola)) {
                             lista.push({
                                 value: numMat + '|' + escolaObj.nomeEscola,
@@ -1817,7 +1800,6 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         const matriculaEscolhida = partes[0];
         const escolaEscolhida = partes[1];
 
-        // ⬇️ DEFESA: escola só salva nas escolas dela; admin e semed em qualquer
         if (!perms.ehGestor && !perms.temAcessoEscola(escolaEscolhida)) {
             mostrarMensagem("Você não tem permissão para lançar nesta escola.", "erro");
             return;
@@ -1921,8 +1903,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
     };
 
     function aplicarFiltroPadrao(registros) {
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
         return registros.filter(function (r) {
             const dataFim = r.dataFim || r.data_fim || r.dataTermino || r.data_termino || r.dataInicio || r.data_inicio || r.data;
             if (!dataFim) return false;
@@ -1940,10 +1921,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
             registrosCache = [];
             regSnap.forEach(d => {
                 const r = { id: d.id, ...d.data() };
-                // ⬇️ FILTRO: admin/semed veem tudo; escola só as vinculadas
-                if (perms.ehGestor || perms.temAcessoEscola(r.escola)) {
-                    registrosCache.push(r);
-                }
+                if (perms.ehGestor || perms.temAcessoEscola(r.escola)) registrosCache.push(r);
             });
             const visiveis = aplicarFiltroPadrao(registrosCache);
             renderizarTabela(visiveis);
@@ -1955,10 +1933,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
     window.filtrarTabela = function() {
         const termo = document.getElementById("filtroTabela").value.toLowerCase().trim();
-        if (!termo) {
-            renderizarTabela(aplicarFiltroPadrao(registrosCache));
-            return;
-        }
+        if (!termo) { renderizarTabela(aplicarFiltroPadrao(registrosCache)); return; }
         const filtrados = registrosCache.filter(r => {
             const nome = (r.nome || "").toLowerCase();
             const cpf = (r.cpf || "").toLowerCase();
@@ -1987,8 +1962,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         let linhas = "";
         dados.forEach(r => {
             const nomeServidor = r.nome || "Servidor não identificado";
-            let tipoLabel = "Férias Regulamentares";
-            let classeBadge = "ferias";
+            let tipoLabel = "Férias Regulamentares", classeBadge = "ferias";
             if (r.tipo === "FOLGA_ANIVERSARIO") { tipoLabel = "Folga Aniversário"; classeBadge = "folga"; }
             else if (r.tipo === "LICENCA_MEDICA") { tipoLabel = "Licença Médica"; classeBadge = "licenca-medica"; }
             else if (r.tipo === "LICENCA_OUTRAS") { tipoLabel = "Outras Licenças"; classeBadge = "licenca-outras"; }
@@ -2090,8 +2064,7 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 
         window.mudarTipoEdicao();
         const msg = document.getElementById("editMensagem");
-        msg.textContent = "";
-        msg.className = "mensagem";
+        msg.textContent = ""; msg.className = "mensagem";
         const modal = document.getElementById("modalEditar");
         modal.classList.add("ativo");
         document.body.style.overflow = "hidden";
@@ -2265,6 +2238,8 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
         msg.textContent = texto;
         msg.className = "mensagem visivel " + tipo;
     }
+
+});
 </script>
 
 </body>
