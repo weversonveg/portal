@@ -1469,7 +1469,7 @@ input.flatpickr-input { background: var(--surface) !important; }
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
 import { auth } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 /* Item ativo automático */
 (function () {
@@ -1601,7 +1601,11 @@ async function confirmarSaida() {
     btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:17px;">sync</span> Saindo…';
     try {
         try { localStorage.removeItem('cache-painel-dados-v1'); } catch (e) {}
+        try { localStorage.removeItem('cache-painel-dados-v2'); } catch (e) {}
+        try { localStorage.removeItem('cache-painel-dados-v3'); } catch (e) {}
         try { localStorage.removeItem('cache-painel-versao'); } catch (e) {}
+        try { localStorage.removeItem('cache-pendencias-v1'); } catch (e) {}
+        try { localStorage.removeItem('cache-pendencias-v2'); } catch (e) {}
         await signOut(auth);
         window.location.href = 'index.html';
     } catch (e) {
@@ -1694,24 +1698,6 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     setInterval(medirVelocidade, INTERVALO_VEL);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) { verificar(); medirVelocidade(); } });
 })();
-
-/* Preenche dados do usuário */
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1857,11 +1843,13 @@ document.getElementById('csEditDuracao').addEventListener('click', function (e) 
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
-     SCRIPT DE NEGÓCIO — LANÇAMENTOS
+     SCRIPT DE NEGÓCIO — LANÇAMENTOS (PROTEGIDO PELO permissoes.js)
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
 import { db } from "./firebase.js";
 import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ⬇️ IMPORT DO GUARD — mesma fonte de verdade usada em inicial.html
 import { exigirUsuario } from "./permissoes.js";
 
 let usuarioLogado = null;
@@ -2175,17 +2163,47 @@ function mostrarConfirmacao(mensagem) {
 }
 
 /* ============================================================
-   GUARD — autenticação + permissões
+   GUARD — autenticação + permissões (MESMO PADRÃO de inicial.html)
    ============================================================ */
 exigirUsuario((user, permissoes) => {
 
+    // ---------- TOPBAR (mesmo padrão de inicial.html) ----------
+    (function preencherTopbar() {
+        const email = user.email || '';
+        const partes = email.split('@')[0].split(/[.\-_]/);
+        const ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
+        const nome = partes.filter(Boolean)
+            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
+            .slice(0, 2).join(' ');
+        const av = document.getElementById('userAvatar');
+        const nm = document.getElementById('userNameLabel');
+        const em = document.getElementById('userEmailLabel');
+        if (av) av.textContent = ini;
+        if (nm) nm.textContent = nome || 'Usuário';
+        if (em) { em.textContent = email; em.title = email; }
+    })();
+
+    // ---------- ESTADO GLOBAL ----------
     usuarioLogado = user;
     perms = permissoes;
 
-    document.getElementById('loadingAuth').style.display = 'none';
+    // ---------- ESCONDE LOADING / EXIBE CONTEÚDO ----------
+    const loading = document.getElementById('loadingAuth');
     const conteudo = document.getElementById('conteudoPrincipal');
-    conteudo.style.display = 'block';
+    if (loading) loading.style.display = 'none';
+    if (conteudo) conteudo.style.display = 'block';
 
+    // ---------- APLICA .oculto CONFORME PERMISSÕES (padrão inicial.html) ----------
+    // Em lancamentos.html não há elementos "admin-only" no HTML atual,
+    // então não há nada a ocultar aqui. As validações ocorrem nos handlers
+    // (buscarServidorPorCpf, salvarRegistro, salvarEdicao, excluirRegistro).
+    //
+    // Exemplo futuro (mantido comentado para referência):
+    //   if (!perms.ehGestor) {
+    //       document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.add('oculto'));
+    //   }
+
+    // ---------- INICIALIZAÇÕES ----------
     window.mudarTipoAusencia();
     window.inicializarFlatpickr();
 
@@ -2316,7 +2334,7 @@ window.calcularDataFim = function() {
 };
 
 window.buscarServidorPorCpf = async function() {
-    if (!perms) return;
+    if (!perms) { mostrarMensagem("Sessão não inicializada. Recarregue a página.", "erro"); return; }
     const cpfDigitado = document.getElementById("inputCpf").value.trim();
     const lblNome = document.getElementById("nomeServidorEncontrado");
     const grupoVinculo = document.getElementById("grupoVinculo");
@@ -2358,6 +2376,7 @@ window.buscarServidorPorCpf = async function() {
 
                 function pushEscola(escolaObj) {
                     if (!escolaObj || !escolaObj.nomeEscola) return;
+                    // ⬇️ MESMA REGRA de inicial.html: gestor OU acesso à escola
                     if (perms.ehGestor || perms.temAcessoEscola(escolaObj.nomeEscola)) {
                         lista.push({
                             value: numMat + '|' + escolaObj.nomeEscola,
@@ -2392,7 +2411,7 @@ window.buscarServidorPorCpf = async function() {
 
 window.salvarRegistro = async function(event) {
     event.preventDefault();
-    if (!perms) return;
+    if (!perms) { mostrarMensagem("Sessão não inicializada. Recarregue a página.", "erro"); return; }
     if (!servidorCache) { mostrarMensagem("Por favor, busque e valide o CPF do servidor antes de salvar.", "erro"); return; }
 
     const vinculoSelect = document.getElementById("selectVinculo").value;
@@ -2401,6 +2420,7 @@ window.salvarRegistro = async function(event) {
     const matriculaEscolhida = partes[0];
     const escolaEscolhida = partes[1];
 
+    // ⬇️ MESMA REGRA de inicial.html: gestor OU acesso à escola
     if (!perms.ehGestor && !perms.temAcessoEscola(escolaEscolhida)) {
         mostrarMensagem("Você não tem permissão para lançar nesta escola.", "erro");
         return;
@@ -2523,6 +2543,7 @@ async function carregarRegistros() {
         registrosCache = [];
         regSnap.forEach(d => {
             const r = { id: d.id, ...d.data() };
+            // ⬇️ MESMA REGRA de inicial.html
             if (perms.ehGestor || perms.temAcessoEscola(r.escola)) {
                 registrosCache.push(r);
             }
@@ -2596,9 +2617,10 @@ function renderizarTabela(dados) {
 }
 
 window.excluirRegistro = async function(id) {
-    if (!perms) return;
+    if (!perms) { mostrarMensagem("Sessão não inicializada. Recarregue a página.", "erro"); return; }
     const reg = registrosCache.find(r => r.id === id);
     if (!reg) return;
+    // ⬇️ MESMA REGRA de inicial.html
     if (!perms.ehGestor && !perms.temAcessoEscola(reg.escola)) {
         mostrarMensagem("Você não tem permissão para excluir este registro.", "erro");
         return;
@@ -2618,9 +2640,10 @@ window.excluirRegistro = async function(id) {
 };
 
 window.abrirModalEditar = function(id) {
-    if (!perms) return;
+    if (!perms) { mostrarMensagem("Sessão não inicializada. Recarregue a página.", "erro"); return; }
     const reg = registrosCache.find(r => r.id === id);
     if (!reg) { mostrarMensagem("Registro não encontrado.", "erro"); return; }
+    // ⬇️ MESMA REGRA de inicial.html
     if (!perms.ehGestor && !perms.temAcessoEscola(reg.escola)) {
         mostrarMensagem("Você não tem permissão para editar este registro.", "erro");
         return;
@@ -2740,7 +2763,7 @@ window.calcularDataFimEdicao = function() {
 
 window.salvarEdicao = async function(event) {
     event.preventDefault();
-    if (!perms) return;
+    if (!perms) { mostrarMensagemEdicao("Sessão não inicializada. Recarregue a página.", "erro"); return; }
     if (!registroEmEdicao) { mostrarMensagemEdicao("Nenhum registro selecionado para edição.", "erro"); return; }
 
     const tipo = document.getElementById("editTipo").value;
@@ -2750,6 +2773,7 @@ window.salvarEdicao = async function(event) {
     const observacao = document.getElementById("editObservacao").value.trim();
     const anoReferencia = document.getElementById("editPeriodo").value.trim();
 
+    // ⬇️ MESMA REGRA de inicial.html
     if (!perms.ehGestor && !perms.temAcessoEscola(escola)) {
         mostrarMensagemEdicao("Você não tem permissão para salvar em outra escola.", "erro");
         return;
