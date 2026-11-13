@@ -39,7 +39,7 @@ const PERMISSOES = {
     'a[href="configuracoes.html"]'   : 'admin,semed',
     'a[href="calculo.html"]'         : 'admin,semed',
     'a[href="escola.html"]'          : 'todos',
-    'a[href="lancamentos.html"]'      : 'todos',
+    'a[href="lancamentos.html"]'      : 'admin',
     'a[href="linha_tempo.html"]'     : 'todos',
     'a[href="relatorios.html"]'      : 'todos',
 
