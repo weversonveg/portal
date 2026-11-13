@@ -33,7 +33,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 const PERMISSOES = {
 
     // -------- MENU LATERAL --------
-    'a[href="servidores.html"]'      : 'todos',
+    'a[href="servidores.html"]'      : 'admin,semed',
     'a[href="configuracao.html"]'    : 'admin,semed',
     '#menuItemConfigurarPeriodos'    : 'admin,semed',
     'a[href="configuracoes.html"]'   : 'admin,semed',
