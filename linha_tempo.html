@@ -1732,9 +1732,9 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
                     if (p.dataLimiteGozo < hoje) {
                         status = 'vencido'; // Crítico
                     } else if (p.fim < hoje) {
-                        status = 'vencido_preventivo'; // Preventivo
+                        status = 'disponivel'; // Disponível (fechou o ciclo, mas ainda pode gozar)
                     } else {
-                        status = 'disponivel';
+                        status = 'disponivel'; // Não fechou o ciclo, mas está disponível
                     }
                 }
 
@@ -1838,16 +1838,11 @@ function badgeTipo(k) {
 
 function renderizarResumoExecutivo() {
     const container = document.getElementById('resumoExecutivo');
-    // Pega todas as matrículas únicas que existem na lista de linhas geradas
     const mats = [...new Set(linhasUnificadas.map(l => l.matricula))];
     let html = '';
 
-    // Faz um loop para CADA matrícula
     mats.forEach(mat => {
-        // Filtra apenas os dados (férias e folgas) da matrícula atual do loop
         const linhasMat = linhasUnificadas.filter(l => l.matricula === mat);
-        
-        // Pega a unidade da primeira linha (todas as linhas dessa matrícula têm a mesma unidade)
         const unidade = linhasMat[0]?.unidade || 'Unidade não informada';
 
         const f = linhasMat.filter(l => l.tipoKey === 'ferias');
@@ -1857,7 +1852,6 @@ function renderizarResumoExecutivo() {
         const feriasAdquiridas = f.length;
         const folgaAdquiridas = g.length;
 
-        // Monta o HTML do card para ESTA matrícula
         html += `
             <div class="resumo-matricula">
                 <div class="resumo-matricula-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
@@ -1904,13 +1898,9 @@ function renderizarResumoExecutivo() {
         `;
     });
 
-    // Injeta os cards no container
     container.innerHTML = html;
 }
 
-/* ============================================================
-   ALERTA PREVENTIVO DE FÉRIAS VENCIDAS (2 ou mais)
-   ============================================================ */
 function renderizarAlertaFeriasVencidasPreventivo() {
     const card = document.getElementById('alertaFeriasVencidasPreventivo');
     const titulo = document.getElementById('alertaFeriasPreventivoTitulo');
@@ -1954,9 +1944,6 @@ function renderizarAlertaFeriasVencidasPreventivo() {
     card.classList.remove('hidden');
 }
 
-/* ============================================================
-   ALERTA CRÍTICO DE FÉRIAS VENCIDAS (2 ou mais)
-   ============================================================ */
 function renderizarAlertaFeriasVencidas() {
     const card = document.getElementById('alertaFeriasVencidas');
     const titulo = document.getElementById('alertaFeriasTitulo');
