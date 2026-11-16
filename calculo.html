@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2,tune,restaurant,timer,toggle_on,toggle_off,payments,summarize,directions_bus,settings,beach_access,celebration,medical_services">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2,tune,restaurant,timer,toggle_on,toggle_off,payments,summarize,directions_bus,settings,beach_access,celebration,medical_services,content_cut">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -349,6 +349,8 @@ tr:hover td{background:var(--surface-2)}
 .detalhe-item-datas strong{color:var(--text);font-weight:600}
 .detalhe-item-obs{font-size:11.5px;color:var(--text-muted);margin-top:4px;font-style:italic}
 .detalhe-item-dias{margin-left:auto;font-size:13px;font-weight:700;color:var(--danger);white-space:nowrap;align-self:center}
+.detalhe-item-recorte{margin-top:6px;padding:6px 8px;background:var(--info-bg);color:var(--info);border:1px solid var(--info-bd);border-radius:5px;font-size:11.5px;line-height:1.4;display:flex;align-items:flex-start;gap:5px}
+.detalhe-item-recorte .material-symbols-outlined{font-size:14px;flex-shrink:0;margin-top:1px}
 .detalhe-vazio{padding:32px 20px;text-align:center;color:var(--text-secondary);font-size:13.5px}
 .detalhe-vazio .material-symbols-outlined{font-size:40px;color:var(--gray-300);display:block;margin:0 auto 10px}
 .detalhe-alerta{background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);padding:12px 14px;border-radius:8px;font-size:12.5px;margin-top:14px;display:flex;gap:8px;align-items:flex-start}
@@ -1551,13 +1553,14 @@ window.carregarDados = async function() {
                     lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada = tarifaLancada;
                 }
 
-                // Detalhes do lançamento manual
                 if (diasAfast > 0) {
                     const chaveAuto = `${cpfNorm}_${matriculaNorm}`;
                     if (!afastamentosDetalhados[chaveAuto]) afastamentosDetalhados[chaveAuto] = [];
                     afastamentosDetalhados[chaveAuto].push({
                         tipo: LABEL_TIPO.manual,
                         tipoNorm: 'manual',
+                        dataInicioOriginal: null,
+                        dataFimOriginal: null,
                         dataInicio: null,
                         dataFim: null,
                         diasNoMes: diasAfast,
@@ -1649,6 +1652,8 @@ window.carregarDados = async function() {
                 afastamentosDetalhados[chaveAuto].push({
                     tipo: LABEL_TIPO[tipoNorm],
                     tipoNorm: tipoNorm,
+                    dataInicioOriginal: new Date(dataInicio),
+                    dataFimOriginal: new Date(dataFim),
                     dataInicio: new Date(inicioNoMes),
                     dataFim: new Date(fimNoMes),
                     diasNoMes: diasNoMes,
@@ -2201,6 +2206,15 @@ function formatarDataBR(d) {
     return dt.toLocaleDateString('pt-BR');
 }
 
+function periodoFoiRecortado(d) {
+    if (!d.dataInicioOriginal || !d.dataFimOriginal) return false;
+    if (!d.dataInicio || !d.dataFim) return false;
+    return (
+        d.dataInicioOriginal.getTime() !== d.dataInicio.getTime() ||
+        d.dataFimOriginal.getTime() !== d.dataFim.getTime()
+    );
+}
+
 function abrirModalDetalhes(index) {
     const item = dadosCalculados[index];
     if (!item) return;
@@ -2243,9 +2257,30 @@ function abrirModalDetalhes(index) {
                 </div>`;
 
             lista.forEach(d => {
-                const datasTexto = (d.dataInicio && d.dataFim)
-                    ? `De <strong>${formatarDataBR(d.dataInicio)}</strong> até <strong>${formatarDataBR(d.dataFim)}</strong>`
-                    : 'Lançamento manual pela escola (sem datas específicas registradas)';
+                let datasTexto = '';
+                let notaRecorte = '';
+
+                if (d.dataInicioOriginal && d.dataFimOriginal) {
+                    datasTexto = `De <strong>${formatarDataBR(d.dataInicioOriginal)}</strong> até <strong>${formatarDataBR(d.dataFimOriginal)}</strong>`;
+
+                    if (periodoFoiRecortado(d)) {
+                        const cortouInicio = d.dataInicioOriginal.getTime() !== d.dataInicio.getTime();
+                        const cortouFim = d.dataFimOriginal.getTime() !== d.dataFim.getTime();
+
+                        let partes = [];
+                        if (cortouInicio) partes.push(`início em ${formatarDataBR(d.dataInicio)}`);
+                        if (cortouFim) partes.push(`fim em ${formatarDataBR(d.dataFim)}`);
+
+                        notaRecorte = `<div class="detalhe-item-recorte">
+                            <span class="material-symbols-outlined">content_cut</span>
+                            <div>Período recortado para este mês: ${partes.join(' e ')} — contabilizados apenas <strong>${d.diasNoMes} dia(s) úteis</strong> dentro do mês calculado.</div>
+                        </div>`;
+                    }
+                } else if (d.origem === 'manual') {
+                    datasTexto = 'Lançamento manual pela escola (sem datas específicas registradas)';
+                } else {
+                    datasTexto = 'Datas não informadas';
+                }
 
                 html += `<div class="detalhe-item">
                     <div class="detalhe-item-icone ${meta.classe}">
@@ -2255,6 +2290,7 @@ function abrirModalDetalhes(index) {
                         <div class="detalhe-item-tipo">${d.tipo}</div>
                         <div class="detalhe-item-datas">${datasTexto}</div>
                         ${d.observacao ? `<div class="detalhe-item-obs">Obs.: ${d.observacao}</div>` : ''}
+                        ${notaRecorte}
                     </div>
                     <div class="detalhe-item-dias">${d.diasNoMes} dia(s)</div>
                 </div>`;
