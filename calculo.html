@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2,tune,restaurant,timer,toggle_on,toggle_off,payments,summarize,directions_bus,settings">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=block&text=dashboard,badge,calendar_month,edit_note,event_note,calculate,description,account_circle,dark_mode,light_mode,arrow_forward,check_circle,history,bar_chart,event,warning,error,info,schedule,logout,notifications,chevron_right,menu,close,help_outline,domain,refresh,person_add,edit,delete_outline,school,cached,expand_more,search_off,person_off,confirmation_number,home,delete,date_range,event_busy,event_available,event_upcoming,event_note,hourglass_top,lock_open_right,ac_unit,block,table_view,download,info,paid,history,inventory_2,tune,restaurant,timer,toggle_on,toggle_off,payments,summarize,directions_bus,settings,beach_access,celebration,medical_services">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -301,13 +301,64 @@ tr:hover td{background:var(--surface-2)}
 .empty-state strong{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
 .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.flatpickr-calendar .flatpickr-monthSelect-month.selected,.flatpickr-calendar .flatpickr-monthSelect-month.selected:hover{background:#2E0F4F!important;border-color:#2E0F4F!important;color:#ffffff!important}
+.flatpickr-calendar .flatpickr-monthSelect-month.selected,.flatpickr-calendar .flatpickr-monthSelect-month:hover.selected{background:#2E0F4F!important;border-color:#2E0F4F!important;color:#ffffff!important}
 .secao-calc-titulo{display:flex;align-items:center;gap:10px;margin:32px 0 12px;font-size:15px;font-weight:700;color:var(--text)}
 .secao-calc-titulo .material-symbols-outlined{font-size:22px}
 .secao-calc-titulo.refeicao{color:var(--refeicao)}
 .aviso-refeicao-inativo{display:none;background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);padding:14px 18px;border-radius:8px;margin-bottom:16px;font-size:13px;align-items:flex-start;gap:10px}
 .aviso-refeicao-inativo.visivel{display:flex}
 .aviso-refeicao-inativo .material-symbols-outlined{font-size:20px;flex-shrink:0;margin-top:1px}
+
+/* ============================================================
+   MODAL DE DETALHES DAS AUSÊNCIAS
+   ============================================================ */
+.modal-detalhes-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,35,.55);z-index:9998;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .18s ease}
+.modal-detalhes-overlay.ativo{display:flex;opacity:1}
+.modal-detalhes{background:var(--surface);border:1px solid var(--border);border-radius:10px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(20,25,35,.35);animation:modalDetEntrar .22s ease}
+@keyframes modalDetEntrar{from{transform:translateY(-14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-detalhes-header{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-detalhes-icone{width:44px;height:44px;border-radius:10px;background:var(--warn-bg);color:var(--warn);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--warn-bd)}
+.modal-detalhes-icone .material-symbols-outlined{font-size:24px}
+.modal-detalhes-titulo-wrap{flex:1;min-width:0}
+.modal-detalhes-titulo-wrap h2{font-size:16px;font-weight:700;color:var(--text);margin:0;line-height:1.3}
+.modal-detalhes-titulo-wrap p{font-size:12.5px;color:var(--text-secondary);margin:2px 0 0;line-height:1.3}
+.modal-detalhes-fechar{width:34px;height:34px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-detalhes-fechar:hover{background:var(--surface-2);color:var(--text)}
+.modal-detalhes-fechar .material-symbols-outlined{font-size:20px}
+.modal-detalhes-body{padding:20px 24px;overflow-y:auto;flex:1;min-height:0}
+.modal-detalhes-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;flex-shrink:0}
+.modal-detalhes-btn{height:38px;padding:0 22px;border-radius:5px;background:var(--brand);color:#fff;border:none;font-size:13.5px;font-weight:600}
+.modal-detalhes-btn:hover{background:var(--brand-hover)}
+
+.detalhe-grupo{margin-bottom:18px}
+.detalhe-grupo:last-child{margin-bottom:0}
+.detalhe-grupo-titulo{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.3px}
+.detalhe-grupo-titulo .material-symbols-outlined{font-size:18px}
+.detalhe-item{display:flex;gap:12px;padding:12px 14px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:8px;align-items:center}
+.detalhe-item:last-child{margin-bottom:0}
+.detalhe-item-icone{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.detalhe-item-icone .material-symbols-outlined{font-size:20px}
+.detalhe-item-icone.ferias{background:var(--info-bg);color:var(--info);border-color:var(--info-bd)}
+.detalhe-item-icone.aniversario{background:var(--refeicao-bg);color:var(--refeicao);border-color:var(--refeicao-bd)}
+.detalhe-item-icone.licenca{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-bd)}
+.detalhe-item-icone.outros{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-bd)}
+.detalhe-item-icone.manual{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-bd)}
+.detalhe-item-conteudo{flex:1;min-width:0}
+.detalhe-item-tipo{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.3}
+.detalhe-item-datas{font-size:12px;color:var(--text-secondary);margin-top:3px;line-height:1.4}
+.detalhe-item-datas strong{color:var(--text);font-weight:600}
+.detalhe-item-obs{font-size:11.5px;color:var(--text-muted);margin-top:4px;font-style:italic}
+.detalhe-item-dias{margin-left:auto;font-size:13px;font-weight:700;color:var(--danger);white-space:nowrap;align-self:center}
+.detalhe-vazio{padding:32px 20px;text-align:center;color:var(--text-secondary);font-size:13.5px}
+.detalhe-vazio .material-symbols-outlined{font-size:40px;color:var(--gray-300);display:block;margin:0 auto 10px}
+.detalhe-alerta{background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);padding:12px 14px;border-radius:8px;font-size:12.5px;margin-top:14px;display:flex;gap:8px;align-items:flex-start}
+.detalhe-alerta .material-symbols-outlined{font-size:18px;flex-shrink:0}
+@media(max-width:480px){
+    .modal-detalhes-overlay{padding:0;align-items:flex-end}
+    .modal-detalhes{border-radius:12px 12px 0 0;max-height:90vh;max-width:100%}
+    .modal-detalhes-header,.modal-detalhes-body,.modal-detalhes-footer{padding-left:18px;padding-right:18px}
+}
+
 @media(max-width:900px){.sidebar{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-md);border-right:1px solid var(--border);z-index:200}.sidebar.aberta-mobile{transform:translateX(0)}.sidebar.fechado{width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%);border-right:1px solid var(--border)}:root.menu-inicial-fechado .sidebar{width:var(--sidebar-width);min-width:var(--sidebar-width);transform:translateX(-100%)}.topbar{padding:0 16px;gap:12px}.topbar-title span{display:none}.topbar-user .user-info span{display:none}.topbar-btn .btn-texto{display:none}.topbar-btn{padding:0 10px}}
 @media(max-width:768px){
     .content-page{padding:16px 12px}
@@ -323,7 +374,7 @@ tr:hover td{background:var(--surface-2)}
 }
 @media(max-width:640px){.topbar{padding:0 12px;gap:8px}.topbar-btn{padding:0 8px;height:32px}.topbar-user{display:none}.topbar-right{gap:4px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-@media print{@page{margin:1.5cm}body{background:#fff!important;color:#000!important;overflow:visible!important}.layout{display:block;height:auto;overflow:visible}.sidebar,.sidebar-backdrop,.btn-menu,.topbar-btn,.topbar-user,.topbar-sair,.modal-sair-overlay,.filter-card,.card-actions,.export-actions-bar,.breadcrumb,.page-header-page,.aviso-bloqueio,.aviso-refeicao-inativo{display:none!important}.main{overflow:visible}.content-page{overflow:visible;padding:0}.card-resultado{border:none!important;box-shadow:none!important;overflow:visible!important;display:block!important}.table-responsive{max-height:none!important}table{font-size:10px!important;white-space:normal!important}th{position:static!important;box-shadow:none!important}th,td{padding:6px 8px!important}tr.linha-selecionada td{background:#eef!important}}
+@media print{@page{margin:1.5cm}body{background:#fff!important;color:#000!important;overflow:visible!important}.layout{display:block;height:auto;overflow:visible}.sidebar,.sidebar-backdrop,.btn-menu,.topbar-btn,.topbar-user,.topbar-sair,.modal-sair-overlay,.modal-detalhes-overlay,.filter-card,.card-actions,.export-actions-bar,.breadcrumb,.page-header-page,.aviso-bloqueio,.aviso-refeicao-inativo{display:none!important}.main{overflow:visible}.content-page{overflow:visible;padding:0}.card-resultado{border:none!important;box-shadow:none!important;overflow:visible!important;display:block!important}.table-responsive{max-height:none!important}table{font-size:10px!important;white-space:normal!important}th{position:static!important;box-shadow:none!important}th,td{padding:6px 8px!important}tr.linha-selecionada td{background:#eef!important}}
 </style>
 </head>
 
@@ -651,6 +702,27 @@ tr:hover td{background:var(--surface-2)}
                 <span class="material-symbols-outlined" aria-hidden="true">logout</span>
                 Sim, sair
             </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-detalhes-overlay" id="modalDetalhesAfastamento" role="presentation">
+    <div class="modal-detalhes" role="dialog" aria-modal="true" aria-labelledby="modalDetalhesTitulo">
+        <div class="modal-detalhes-header">
+            <div class="modal-detalhes-icone">
+                <span class="material-symbols-outlined">event_busy</span>
+            </div>
+            <div class="modal-detalhes-titulo-wrap">
+                <h2 id="modalDetalhesTitulo">Detalhes das Ausências</h2>
+                <p id="modalDetalhesSubtitulo">—</p>
+            </div>
+            <button type="button" class="modal-detalhes-fechar" id="btnFecharDetalhes" aria-label="Fechar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="modal-detalhes-body" id="modalDetalhesCorpo"></div>
+        <div class="modal-detalhes-footer">
+            <button type="button" class="modal-detalhes-btn" id="btnFecharDetalhesFooter">Fechar</button>
         </div>
     </div>
 </div>
@@ -1333,6 +1405,29 @@ function atualizarCardStatus(status, config) {
     }
 }
 
+// ============================================================
+// NORMALIZAÇÃO DE TIPOS DE AFASTAMENTO
+// ============================================================
+const normalizarTipoAfastamento = (tipo) => {
+    const t = String(tipo || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    
+    if (t.includes('ferias')) return 'ferias';
+    if (t.includes('anivers')) return 'aniversario';
+    if (t.includes('licenca') || t.includes('medic')) return 'licenca';
+    if (t.includes('outro') || t.includes('afastamento')) return 'outros';
+    
+    return 'outros';
+};
+
+const LABEL_TIPO = {
+    ferias:      'Férias Regulamentares',
+    aniversario: 'Folga de Aniversário',
+    licenca:     'Licença Médica',
+    outros:      'Outros Afastamentos',
+    manual:      'Lançamento Manual'
+};
+
 window.carregarDados = async function() {
     const campoMes = document.getElementById("mesReferencia");
     const mesAno = window.lerMes ? window.lerMes(campoMes) : (campoMes ? campoMes.value : "");
@@ -1421,6 +1516,7 @@ window.carregarDados = async function() {
         const lancamentosSnap = await getDocs(collection(db, "lancamentos_mensais"));
         const lancamentosMap = {};
         const lancamentosPorCpfEscola = {};
+        const afastamentosDetalhados = {};
 
         lancamentosSnap.forEach(lancDoc => {
             const data = lancDoc.data();
@@ -1453,6 +1549,21 @@ window.carregarDados = async function() {
                 }
                 if (tarifaLancada !== null && lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada === null) {
                     lancamentosPorCpfEscola[chaveCpfEscola].tarifaLancada = tarifaLancada;
+                }
+
+                // Detalhes do lançamento manual
+                if (diasAfast > 0) {
+                    const chaveAuto = `${cpfNorm}_${matriculaNorm}`;
+                    if (!afastamentosDetalhados[chaveAuto]) afastamentosDetalhados[chaveAuto] = [];
+                    afastamentosDetalhados[chaveAuto].push({
+                        tipo: LABEL_TIPO.manual,
+                        tipoNorm: 'manual',
+                        dataInicio: null,
+                        dataFim: null,
+                        diasNoMes: diasAfast,
+                        origem: 'manual',
+                        observacao: data.observacao || data.obs || ''
+                    });
                 }
             }
         });
@@ -1509,14 +1620,11 @@ window.carregarDados = async function() {
 
                 if (!dataInicio || !dataFim) return;
 
-                // Verificar se o intervalo do afastamento intercepta o mês de referência
                 if (dataFim < primeiroDiaMes || dataInicio > ultimoDiaMes) return;
 
-                // Recortar o intervalo para ficar dentro do mês
                 const inicioNoMes = dataInicio < primeiroDiaMes ? new Date(primeiroDiaMes) : new Date(dataInicio);
                 const fimNoMes = dataFim > ultimoDiaMes ? new Date(ultimoDiaMes) : new Date(dataFim);
 
-                // Contar DIAS ÚTEIS dentro do intervalo recortado
                 let diasNoMes = 0;
                 const cursor = new Date(inicioNoMes);
                 cursor.setHours(0, 0, 0, 0);
@@ -1533,7 +1641,21 @@ window.carregarDados = async function() {
 
                 if (diasNoMes === 0) return;
 
+                const tipoNorm = normalizarTipoAfastamento(data.tipo);
                 const chaveAuto = `${cpfNorm}_${matriculaNorm}`;
+
+                if (!afastamentosDetalhados[chaveAuto]) afastamentosDetalhados[chaveAuto] = [];
+
+                afastamentosDetalhados[chaveAuto].push({
+                    tipo: LABEL_TIPO[tipoNorm],
+                    tipoNorm: tipoNorm,
+                    dataInicio: new Date(inicioNoMes),
+                    dataFim: new Date(fimNoMes),
+                    diasNoMes: diasNoMes,
+                    origem: 'automatico',
+                    registroId: docSnap.id
+                });
+
                 afastamentosAutomaticos[chaveAuto] = (afastamentosAutomaticos[chaveAuto] || 0) + diasNoMes;
                 totalAfastamentosAuto += diasNoMes;
                 totalRegistrosAuto++;
@@ -1593,7 +1715,6 @@ window.carregarDados = async function() {
                     let tarifaLancadaSnapshot = null;
                     let diasAfastamentoAuto = 0;
 
-                    // Afastamentos manuais (da escola)
                     if (lancamentosMap.hasOwnProperty(chave)) {
                         const info = lancamentosMap[chave];
                         diasAfastamento = info.diasAfast;
@@ -1608,7 +1729,6 @@ window.carregarDados = async function() {
                         tarifaLancadaSnapshot = info.tarifaLancada;
                     }
 
-                    // Afastamentos automáticos (férias, folgas, licenças)
                     const chaveAuto = `${cpfLimpo}_${matriculaNorm}`;
                     if (afastamentosAutomaticos[chaveAuto]) {
                         diasAfastamentoAuto = afastamentosAutomaticos[chaveAuto];
@@ -1673,6 +1793,8 @@ window.carregarDados = async function() {
                     const temDireitoRefeicao = configRefeicao.ativo !== false && valorTicketVigente > 0;
                     const valorTotalRefeicao = temDireitoRefeicao ? diasRefeicao * valorTicketVigente : 0;
 
+                    const detalhesAfastamento = afastamentosDetalhados[chaveAuto] || [];
+
                     dadosCalculados.push({
                         nome: servidor.nome,
                         cpf: servidor.cpf,
@@ -1698,7 +1820,8 @@ window.carregarDados = async function() {
                         temDireitoRefeicao: temDireitoRefeicao,
                         valorTicketVigente: valorTicketVigente,
                         valorTotalRefeicao: valorTotalRefeicao,
-                        valorTotal: valorTotalTransporte + valorTotalRefeicao
+                        valorTotal: valorTotalTransporte + valorTotalRefeicao,
+                        detalhesAfastamento: detalhesAfastamento
                     });
 
                     totalPasses += totalPassesServidor;
@@ -1802,14 +1925,17 @@ function renderizarTabelaTransporte(dados) {
         if (item.afastamentos > 0) {
             const textoDia = item.afastamentos === 1 ? 'dia' : 'dias';
             const temAuto = item.afastamentosAuto > 0;
-            const titulo = temAuto 
-                ? `Servidor possui ${item.afastamentos} ${textoDia} de ausência (${item.afastamentosAuto} automáticos de férias/folgas/licenças + ${item.afastamentos - item.afastamentosAuto} manuais)`
-                : `Servidor possui ${item.afastamentos} ${textoDia} de ausência manual no mês`;
             
             afastamentosHtml = `
-                <span class="badge-afastamento" title="${titulo}">
+                <span class="badge-afastamento badge-detalhes" 
+                      data-index="${index}" 
+                      role="button" 
+                      tabindex="0"
+                      title="Clique para ver a origem dos ${item.afastamentos} ${textoDia} de ausência"
+                      style="cursor:pointer;">
                     <span class="material-symbols-outlined">${temAuto ? 'beach_access' : 'event_busy'}</span>
                     ${item.afastamentos} ${textoDia}${temAuto ? ' <small>(auto)</small>' : ''}
+                    <span class="material-symbols-outlined" style="font-size:13px;margin-left:2px;">info</span>
                 </span>
             `;
         } else {
@@ -1937,20 +2063,24 @@ function renderizarTabelaRefeicao(dados) {
     }
 
     let html = "";
-    dados.forEach((item) => {
+    dados.forEach((item, index) => {
         const valorTotalFmt = item.valorTotalRefeicao > 0 ? formatarMoeda(item.valorTotalRefeicao) : '—';
 
         let afastamentosHtml = '';
         if (item.afastamentos > 0) {
+            const textoDia = item.afastamentos === 1 ? 'dia' : 'dias';
             const temAuto = item.afastamentosAuto > 0;
-            const titulo = temAuto 
-                ? `${item.afastamentos} dias de ausência (${item.afastamentosAuto} automáticos + ${item.afastamentos - item.afastamentosAuto} manuais)`
-                : `${item.afastamentos} ${item.afastamentos === 1 ? 'dia' : 'dias'} de ausência manual`;
             
             afastamentosHtml = `
-                <span class="badge-afastamento" title="${titulo}">
+                <span class="badge-afastamento badge-detalhes" 
+                      data-index="${index}" 
+                      role="button" 
+                      tabindex="0"
+                      title="Clique para ver a origem dos ${item.afastamentos} ${textoDia} de ausência"
+                      style="cursor:pointer;">
                     <span class="material-symbols-outlined">${temAuto ? 'beach_access' : 'event_busy'}</span>
-                    ${item.afastamentos} ${item.afastamentos === 1 ? 'dia' : 'dias'}${temAuto ? ' <small>(auto)</small>' : ''}
+                    ${item.afastamentos} ${textoDia}${temAuto ? ' <small>(auto)</small>' : ''}
+                    <span class="material-symbols-outlined" style="font-size:13px;margin-left:2px;">info</span>
                 </span>
             `;
         } else {
@@ -2049,6 +2179,151 @@ function navegarComTeclado(e) {
         linhas[novoIndice].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
+
+// ============================================================
+// MODAL DE DETALHES DAS AUSÊNCIAS
+// ============================================================
+
+const ICONES_TIPO = {
+    ferias:      { icone: 'beach_access',     classe: 'ferias' },
+    aniversario: { icone: 'celebration',      classe: 'aniversario' },
+    licenca:     { icone: 'medical_services', classe: 'licenca' },
+    outros:      { icone: 'event_note',       classe: 'outros' },
+    manual:      { icone: 'event_busy',       classe: 'manual' }
+};
+
+const ORDEM_TIPOS = ['ferias', 'aniversario', 'licenca', 'outros', 'manual'];
+
+function formatarDataBR(d) {
+    if (!d) return '—';
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return '—';
+    return dt.toLocaleDateString('pt-BR');
+}
+
+function abrirModalDetalhes(index) {
+    const item = dadosCalculados[index];
+    if (!item) return;
+
+    const modal = document.getElementById('modalDetalhesAfastamento');
+    document.getElementById('modalDetalhesTitulo').textContent = 'Detalhes das Ausências';
+    document.getElementById('modalDetalhesSubtitulo').textContent = `${item.nome} — ${item.escola}`;
+
+    const corpo = document.getElementById('modalDetalhesCorpo');
+    const detalhes = item.detalhesAfastamento || [];
+
+    if (detalhes.length === 0) {
+        corpo.innerHTML = `
+            <div class="detalhe-vazio">
+                <span class="material-symbols-outlined">info</span>
+                <strong>Nenhum detalhe disponível</strong>
+                <p style="margin-top:6px;">Este vínculo possui ${item.afastamentos} dia(s) de ausência, mas a origem não foi registrada.</p>
+            </div>
+        `;
+    } else {
+        const grupos = {};
+        detalhes.forEach(d => {
+            const k = d.tipoNorm || 'outros';
+            if (!grupos[k]) grupos[k] = [];
+            grupos[k].push(d);
+        });
+
+        let html = '';
+        ORDEM_TIPOS.forEach(tipoNorm => {
+            const lista = grupos[tipoNorm];
+            if (!lista) return;
+
+            const totalTipo = lista.reduce((s, d) => s + (d.diasNoMes || 0), 0);
+            const meta = ICONES_TIPO[tipoNorm] || ICONES_TIPO.outros;
+
+            html += `<div class="detalhe-grupo">
+                <div class="detalhe-grupo-titulo">
+                    <span class="material-symbols-outlined">${meta.icone}</span>
+                    ${lista[0].tipo} — ${totalTipo} dia(s)
+                </div>`;
+
+            lista.forEach(d => {
+                const datasTexto = (d.dataInicio && d.dataFim)
+                    ? `De <strong>${formatarDataBR(d.dataInicio)}</strong> até <strong>${formatarDataBR(d.dataFim)}</strong>`
+                    : 'Lançamento manual pela escola (sem datas específicas registradas)';
+
+                html += `<div class="detalhe-item">
+                    <div class="detalhe-item-icone ${meta.classe}">
+                        <span class="material-symbols-outlined">${meta.icone}</span>
+                    </div>
+                    <div class="detalhe-item-conteudo">
+                        <div class="detalhe-item-tipo">${d.tipo}</div>
+                        <div class="detalhe-item-datas">${datasTexto}</div>
+                        ${d.observacao ? `<div class="detalhe-item-obs">Obs.: ${d.observacao}</div>` : ''}
+                    </div>
+                    <div class="detalhe-item-dias">${d.diasNoMes} dia(s)</div>
+                </div>`;
+            });
+
+            html += `</div>`;
+        });
+
+        const temManual = detalhes.some(d => d.origem === 'manual');
+        const temAuto = detalhes.some(d => d.origem === 'automatico');
+        if (temManual && temAuto) {
+            html += `<div class="detalhe-alerta">
+                <span class="material-symbols-outlined">info</span>
+                <div>Este vínculo possui ausências <strong>registradas no sistema</strong> (férias, folga de aniversário, licença médica ou outros afastamentos) e também <strong>lançamentos manuais</strong> feitos pela escola. Os dias manuais não possuem data específica registrada.</div>
+            </div>`;
+        }
+
+        corpo.innerHTML = html;
+    }
+
+    modal.classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+        const b = document.getElementById('btnFecharDetalhes');
+        if (b) b.focus();
+    });
+}
+
+function fecharModalDetalhes() {
+    const modal = document.getElementById('modalDetalhesAfastamento');
+    if (!modal) return;
+    modal.classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('click', function(e) {
+    const alvo = e.target.closest('.badge-detalhes');
+    if (alvo) {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(alvo.getAttribute('data-index'), 10);
+        if (!isNaN(idx)) abrirModalDetalhes(idx);
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        const alvo = e.target.closest('.badge-detalhes');
+        if (alvo) {
+            e.preventDefault();
+            const idx = parseInt(alvo.getAttribute('data-index'), 10);
+            if (!isNaN(idx)) abrirModalDetalhes(idx);
+        }
+    }
+    if (e.key === 'Escape') fecharModalDetalhes();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modalDetalhesAfastamento');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) fecharModalDetalhes();
+        });
+    }
+    ['btnFecharDetalhes', 'btnFecharDetalhesFooter'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.addEventListener('click', fecharModalDetalhes);
+    });
+});
 
 window.exportarODS = async function() {
     if (dadosCalculados.length === 0) {
