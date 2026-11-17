@@ -196,6 +196,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
     white-space: nowrap; border: 0;
 }
 
+/* ⬇️ ADICIONADO: classe usada pelo permissoes.js para esconder itens bloqueados */
+.oculto { display: none !important; }
+
 /* ============================================================
    LAYOUT GERAL
    ============================================================ */
@@ -1999,10 +2002,7 @@ tbody tr:hover td { background: var(--surface-2); }
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
 import { auth } from "./firebase.js";
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 /* ============================================================
    AUTO-DETECÇÃO GENÉRICA DO ITEM ATIVO
@@ -2128,26 +2128,11 @@ import {
 })();
 
 /* ============================================================
-   AUTENTICAÇÃO
+   AUTENTICAÇÃO E PERMISSÕES
+   ⬇️ ADICIONADO: agora são tratadas pelo exigirUsuario (permissoes.js)
+   no script protegido no final da página. Este script de layout
+   permanece SEM GUARD, igual ao padrão do inicial.html.
    ============================================================ */
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean)
-            .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
-            .slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
 
 /* ============================================================
    MODAL DE SAIR
@@ -2522,10 +2507,35 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
 <!-- ═══════════════════════════════════════════════════════════
      LÓGICA PRINCIPAL — Configuração de Períodos
+     SCRIPT DA PÁGINA — PROTEGIDO PELO permissoes.js
      ═══════════════════════════════════════════════════════════ -->
 <script type="module">
     import { db } from "./firebase.js";
     import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ⬇️ IMPORT DO GUARD
+    import { exigirUsuario } from "./permissoes.js";
+
+    // ============================================================
+    // TODO O CÓDIGO DA PÁGINA RODA DENTRO DO GUARD
+    // ============================================================
+    exigirUsuario((user, perms) => {
+
+        // ---------- TOPBAR ----------
+        (function preencherTopbar() {
+            const email = user.email || '';
+            const partes = email.split('@')[0].split(/[.\-_]/);
+            const ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
+            const nome = partes.filter(Boolean)
+                .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
+                .slice(0, 2).join(' ');
+            const av = document.getElementById('userAvatar');
+            const nm = document.getElementById('userNameLabel');
+            const em = document.getElementById('userEmailLabel');
+            if (av) av.textContent = ini;
+            if (nm) nm.textContent = nome || 'Usuário';
+            if (em) { em.textContent = email; em.title = email; }
+        })();
 
     let unidadesDisponiveis = [];
     let snapshotEscolasModal = null;
@@ -3412,6 +3422,8 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
 
     window.mostrarMensagem = mostrarMensagem;
     window.ocultarMensagem = ocultarMensagem;
+
+    }); // fim do exigirUsuario
 </script>
 
 </body>
