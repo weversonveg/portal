@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1f3a5f">
+<meta name="description" content="">
 <title>Linha do tempo — Vale Transporte</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,6 +134,28 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .btn-tema .icon-light { display:inline-flex; }
 :root[data-theme="dark"] .btn-tema .icon-dark { display:inline-flex; }
 :root[data-theme="dark"] .btn-tema .icon-light { display:none; }
+
+/* ============================================================
+   INDICADOR DE REDE
+   ============================================================ */
+.rede-indicador { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 8px; background:transparent; border:none; font-size:11.5px; color:var(--text-muted); user-select:none; white-space:nowrap; flex-shrink:0; cursor:pointer; border-radius:4px; transition:background-color .15s ease; }
+.rede-indicador:hover { background:var(--surface-2); }
+.rede-barras { display:inline-flex; align-items:flex-end; gap:2px; height:14px; flex-shrink:0; }
+.rede-barras span { display:inline-block; width:3px; background:var(--gray-300); border-radius:1px; transition:background-color .25s ease, opacity .25s ease; }
+.rede-barras span:nth-child(1) { height:4px; }
+.rede-barras span:nth-child(2) { height:7px; }
+.rede-barras span:nth-child(3) { height:10px; }
+.rede-barras span:nth-child(4) { height:14px; }
+.rede-indicador.online .rede-barras span { background:var(--ok); }
+.rede-indicador.offline .rede-barras span { background:var(--gray-300); opacity:.35; }
+.rede-indicador.offline .rede-barras span:nth-child(1) { background:var(--danger); opacity:1; }
+.rede-indicador.verificando .rede-barras span { background:var(--gray-400); animation:pulsoRede 1s ease-in-out infinite; }
+@keyframes pulsoRede { 0%, 100% { opacity:.35; } 50% { opacity:1; } }
+.rede-texto { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+.rede-indicador.online .rede-texto { color:var(--ok); }
+.rede-indicador.offline .rede-texto { color:var(--danger); }
+@media (max-width:1100px){ .rede-texto { display:none; } }
+
 .modal-sair-overlay { display:none; position:fixed; inset:0; background:rgba(20,25,35,.55); z-index:9999; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .18s ease; }
 .modal-sair-overlay.ativo { display:flex; opacity:1; }
 .modal-sair { background:var(--surface); border:1px solid var(--border); border-radius:8px; max-width:400px; width:100%; padding:28px 28px 22px; box-shadow:0 20px 50px rgba(20,25,35,.28); text-align:center; animation:modalSairEntrar .22s ease; }
@@ -155,7 +178,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
     .modal-sair-btn { width:100%; min-width:0; }
 }
 .content-page { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; padding:24px 28px 32px; }
-.breadcrumb { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); margin-bottom:12px; }
+.breadcrumb { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); margin-bottom:12px; flex-wrap:wrap; }
 .breadcrumb .material-symbols-outlined { font-size:17px; }
 .breadcrumb a { text-decoration:none; color:inherit; }
 .breadcrumb a:hover { color:var(--brand); }
@@ -204,7 +227,64 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .filtro-group label { font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.3px; }
 .filtro-select { height:34px; padding:0 8px; border:1px solid var(--border); border-radius:4px; font-size:12px; background:var(--surface); color:var(--text); outline:none; }
 .filtro-select:focus { border-color:var(--brand); }
+@media (max-width:900px){
+    .sidebar { position:fixed; top:0; left:0; height:100vh; height:100dvh; width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); transition:transform .25s ease; box-shadow:var(--shadow-md); border-right:1px solid var(--border); z-index:200; }
+    .sidebar.aberta-mobile { transform:translateX(0); }
+    .sidebar.fechado { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); border-right:1px solid var(--border); }
+    :root.menu-inicial-fechado .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); }
+    .topbar { padding:0 16px; gap:12px; }
+    .topbar-title span { display:none; }
+    .topbar-user .user-info span { display:none; }
+    .topbar-btn .btn-texto { display:none; }
+    .topbar-btn { padding:0 10px; }
+}
+@media (max-width:768px){
+    .content-page { padding:16px 12px 32px; }
+    .cabecalho-compacto { gap:8px; }
+    .cab-div { display:none; }
+    .filtros-row { flex-direction:column; }
+    .filtro-group { max-width:100%; }
+    .busca-linha { flex-direction:column; align-items:stretch; }
+    .btn-buscar { width:100%; }
+    .resumo-cards-row { flex-direction:column; }
+    .tabela-resumo { font-size: 11px; }
+    .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
+}
+@media (max-width:640px){
+    .topbar { padding:0 12px; gap:8px; }
+    .topbar-btn { padding:0 8px; height:32px; }
+    .topbar-user { display:none; }
+    .topbar-right { gap:4px; }
+    .page-header-page h1 { font-size:20px; }
+}
+@media (prefers-reduced-motion:reduce){
+    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
+@media print {
+    @page { margin:1.5cm; }
+    body { background:#fff !important; color:#000 !important; overflow:visible !important; }
+    .layout { display:block; height:auto; overflow:visible; }
+    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user, .topbar-sair, .rede-indicador, .modal-sair-overlay, .loading-overlay, .modal-alerta-overlay, .busca-compacta, .filtros-row { display:none !important; }
+    .main { overflow:visible; }
+    .content-page { overflow:visible; padding:0; }
+    .form-card { box-shadow:none; border:1px solid #999; }
+    .table-wrapper { overflow:visible !important; max-height:none !important; border-top:none !important; margin-top:0 !important; }
+    .periodos-table { font-size:10px; }
+    .periodos-table th { position:static !important; box-shadow:none !important; }
+    .periodos-table tr { page-break-inside:avoid; }
+    .tabela-resumo { border-color: #000 !important; }
+    .tabela-resumo thead th,
+    .tabela-resumo tbody th,
+    .tabela-resumo tbody td { border-color: #000 !important; }
+    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
+    .alerta-ferias-preventivo { border: 2px solid #a60 !important; }
+}
+</style>
 
+<!-- ═══════════════════════════════════════════════════════════
+     ▼▼▼ CSS ESPECÍFICO DESTA PÁGINA ▼▼▼
+     ═══════════════════════════════════════════════════════════ -->
+<style>
 .table-wrapper {
     overflow: auto;
     max-height: 60vh;
@@ -466,58 +546,6 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .modal-alerta-footer { padding:14px 22px 22px; display:flex; justify-content:center; }
 .modal-alerta-btn { height:38px; background:var(--brand); color:#fff; border:none; border-radius:4px; padding:0 28px; font-size:13px; font-weight:600; cursor:pointer; min-width:110px; }
 .modal-alerta-btn:hover { background:var(--brand-hover); }
-@media (max-width:900px){
-    .sidebar { position:fixed; top:0; left:0; height:100vh; height:100dvh; width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); transition:transform .25s ease; box-shadow:var(--shadow-md); border-right:1px solid var(--border); z-index:200; }
-    .sidebar.aberta-mobile { transform:translateX(0); }
-    .sidebar.fechado { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); border-right:1px solid var(--border); }
-    :root.menu-inicial-fechado .sidebar { width:var(--sidebar-width); min-width:var(--sidebar-width); transform:translateX(-100%); }
-    .topbar { padding:0 16px; gap:12px; }
-    .topbar-title span { display:none; }
-    .topbar-user .user-info span { display:none; }
-    .topbar-btn .btn-texto { display:none; }
-    .topbar-btn { padding:0 10px; }
-}
-@media (max-width:768px){
-    .content-page { padding:16px 12px 32px; }
-    .cabecalho-compacto { gap:8px; }
-    .cab-div { display:none; }
-    .filtros-row { flex-direction:column; }
-    .filtro-group { max-width:100%; }
-    .busca-linha { flex-direction:column; align-items:stretch; }
-    .btn-buscar { width:100%; }
-    .resumo-cards-row { flex-direction:column; }
-    .tabela-resumo { font-size: 11px; }
-    .tabela-resumo tbody td, .tabela-resumo tbody th { padding: 8px 10px; }
-}
-@media (max-width:640px){
-    .topbar { padding:0 12px; gap:8px; }
-    .topbar-btn { padding:0 8px; height:32px; }
-    .topbar-user { display:none; }
-    .topbar-right { gap:4px; }
-    .page-header-page h1 { font-size:20px; }
-}
-@media (prefers-reduced-motion:reduce){
-    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
-}
-@media print {
-    @page { margin:1.5cm; }
-    body { background:#fff !important; color:#000 !important; overflow:visible !important; }
-    .layout { display:block; height:auto; overflow:visible; }
-    .sidebar, .sidebar-backdrop, .btn-menu, .topbar-btn, .topbar-user, .topbar-sair, .modal-sair-overlay, .loading-overlay, .modal-alerta-overlay, .busca-compacta, .filtros-row { display:none !important; }
-    .main { overflow:visible; }
-    .content-page { overflow:visible; padding:0; }
-    .form-card { box-shadow:none; border:1px solid #999; }
-    .table-wrapper { overflow:visible !important; max-height:none !important; border-top:none !important; margin-top:0 !important; }
-    .periodos-table { font-size:10px; }
-    .periodos-table th { position:static !important; box-shadow:none !important; }
-    .periodos-table tr { page-break-inside:avoid; }
-    .tabela-resumo { border-color: #000 !important; }
-    .tabela-resumo thead th,
-    .tabela-resumo tbody th,
-    .tabela-resumo tbody td { border-color: #000 !important; }
-    .alerta-ferias { animation: none !important; border: 2px solid #900 !important; }
-    .alerta-ferias-preventivo { border: 2px solid #a60 !important; }
-}
 
 .grafico-periodos { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
 .grafico-periodo-bloco { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
@@ -549,7 +577,11 @@ button { font:inherit; color:inherit; cursor:pointer; }
 </style>
 </head>
 
-<body>
+<body data-pagina="linha_tempo"
+      data-titulo="Linha do tempo"
+      data-subtitulo="Visão consolidada de férias e folgas"
+      data-categoria="Consultas"
+      data-descricao="Visão consolidada de férias e folgas por período aquisitivo, com detalhamento por matrícula e unidade.">
 
 <div class="layout">
 
@@ -614,11 +646,18 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     <span class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
                 <div class="topbar-title">
-                    <strong>Linha do tempo</strong>
-                    <span>SEMED — Visão consolidada de férias e folgas</span>
+                    <strong></strong>
+                    <span></span>
                 </div>
             </div>
             <div class="topbar-right">
+                <div class="rede-indicador verificando" id="redeIndicador" role="status" aria-live="polite" title="Verificando conexão…">
+                    <span class="rede-barras" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
+                    </span>
+                    <span class="rede-texto" id="redeTexto">Verificando…</span>
+                </div>
+
                 <button type="button" class="topbar-btn" id="btnAtualizar" title="Atualizar dados">
                     <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
                     <span class="btn-texto">Atualizar</span>
@@ -648,22 +687,28 @@ button { font:inherit; color:inherit; cursor:pointer; }
                 <span class="material-symbols-outlined">home</span>
                 <a href="inicial.html">Início</a>
                 <span class="sep">/</span>
-                <span>Linha do tempo</span>
+                <span id="breadcrumbCategoria"></span>
+                <span class="sep">/</span>
+                <span id="breadcrumbAtual"></span>
             </div>
 
             <div class="page-header-page">
                 <div>
-                    <h1>Linha do Tempo do Servidor</h1>
-                    <p>Visão consolidada de férias e folgas por período aquisitivo, com detalhamento por matrícula e unidade.</p>
+                    <h1></h1>
+                    <p></p>
                 </div>
             </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 ▼▼▼ CONTEÚDO DA PÁGINA ▼▼▼
+                 ═══════════════════════════════════════════════════════════ -->
 
             <div id="mensagemErro" class="mensagem-erro" role="alert" aria-live="polite">
                 <span class="material-symbols-outlined" aria-hidden="true">error_outline</span>
                 <span id="textoErro">Erro ao carregar dados.</span>
             </div>
 
-            <section class="form-card busca-compacta" id="formBuscaCard">
+            <section class="form-card busca-compacta hidden" id="formBuscaCard">
                 <div class="busca-linha">
                     <div class="form-group">
                         <label for="termoBusca">CPF ou Matrícula do Servidor <span aria-hidden="true">*</span></label>
@@ -802,6 +847,10 @@ button { font:inherit; color:inherit; cursor:pointer; }
                     </div>
                 </section>
             </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 ▲▲▲ FIM DO CONTEÚDO DA PÁGINA ▲▲▲
+                 ═══════════════════════════════════════════════════════════ -->
         </div>
     </div>
 </div>
@@ -842,9 +891,45 @@ button { font:inherit; color:inherit; cursor:pointer; }
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     PREENCHIMENTO AUTOMÁTICO DE IDENTIDADE (data-* do body)
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+    var b = document.body;
+    var titulo = b.dataset.titulo || 'Página';
+    var subtitulo = b.dataset.subtitulo || 'SEMED';
+    var categoria = b.dataset.categoria || '';
+    var descricao = b.dataset.descricao || '';
+
+    document.title = titulo + ' — Vale Transporte';
+
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', descricao);
+
+    var tt = document.querySelector('.topbar-title strong');
+    var ts = document.querySelector('.topbar-title span');
+    if (tt) tt.textContent = titulo;
+    if (ts) ts.textContent = 'SEMED — ' + subtitulo;
+
+    var h1 = document.querySelector('.page-header-page h1');
+    var hp = document.querySelector('.page-header-page p');
+    if (h1) h1.textContent = titulo;
+    if (hp) hp.textContent = descricao;
+
+    var bcAtual = document.getElementById('breadcrumbAtual');
+    if (bcAtual) bcAtual.textContent = titulo;
+    var bcCat = document.getElementById('breadcrumbCategoria');
+    if (bcCat) bcCat.textContent = categoria;
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CASCA — TEMA, MENU, SAIR
+     ═══════════════════════════════════════════════════════════ -->
 <script type="module">
 import { auth } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 (function () {
     var btn = document.getElementById('btnTema');
@@ -931,23 +1016,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
     }
 })();
 
-onAuthStateChanged(auth, function (user) {
-    if (user) {
-        var email = user.email || '';
-        var partes = email.split('@')[0].split(/[.\-_]/);
-        var ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
-        var nome = partes.filter(Boolean).map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); }).slice(0, 2).join(' ');
-        var av = document.getElementById('userAvatar');
-        var nm = document.getElementById('userNameLabel');
-        var em = document.getElementById('userEmailLabel');
-        if (av) av.textContent = ini;
-        if (nm) nm.textContent = nome || 'Usuário';
-        if (em) { em.textContent = email; em.title = email; }
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
 var ultimoFocoSair = null;
 function abrirModalSair() {
     var modal = document.getElementById('modalSair');
@@ -1008,12 +1076,66 @@ if (modalSair) modalSair.addEventListener('click', function (e) { if (e.target =
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════
+     SCRIPT DO INDICADOR DE REDE
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+    var el    = document.getElementById('redeIndicador');
+    var texto = document.getElementById('redeTexto');
+    if (!el || !texto) return;
+
+    var URL_PING       = 'https://www.gstatic.com/generate_204';
+    var INTERVALO_PING = 30000;
+    var TIMEOUT_PING   = 4000;
+
+    function aplicarEstado(estado) {
+        el.classList.remove('online', 'offline', 'verificando');
+        el.classList.add(estado);
+        if (estado === 'online') {
+            texto.textContent = 'Online';
+            el.title = 'Conexão ativa';
+        } else if (estado === 'offline') {
+            texto.textContent = 'Offline';
+            el.title = 'Sem conexão';
+        } else {
+            texto.textContent = 'Verificando…';
+            el.title = 'Verificando conexão…';
+        }
+    }
+
+    function pingar() {
+        var ctrl = ('AbortController' in window) ? new AbortController() : null;
+        var t = ctrl ? setTimeout(function () { ctrl.abort(); }, TIMEOUT_PING) : null;
+
+        fetch(URL_PING, { method: 'HEAD', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+            .then(function () { aplicarEstado('online'); })
+            .catch(function () { aplicarEstado(navigator.onLine ? 'online' : 'offline'); })
+            .finally(function () { if (t) clearTimeout(t); });
+    }
+
+    window.addEventListener('online',  function () { aplicarEstado('online'); pingar(); });
+    window.addEventListener('offline', function () { aplicarEstado('offline'); });
+
+    aplicarEstado(navigator.onLine ? 'verificando' : 'offline');
+    if (navigator.onLine) pingar();
+    setInterval(function () { if (navigator.onLine) pingar(); }, INTERVALO_PING);
+
+    el.addEventListener('click', function () { if (navigator.onLine) { aplicarEstado('verificando'); pingar(); } });
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ▼▼▼ SCRIPT ESPECÍFICO DESTA PÁGINA ▼▼▼
+     (auth + permissões vêm exclusivamente de permissoes.js)
+     ═══════════════════════════════════════════════════════════ -->
 <script type="module">
-import { db, auth } from "./firebase.js";
+import { db } from "./firebase.js";
 import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { exigirUsuario } from "./permissoes.js";
 
 let usuarioLogado = null;
+let perms = null;
 let acessoAutorizado = false;
 let linhasUnificadas = [];
 let nomeServidorAtual = '';
@@ -1398,53 +1520,48 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') fecharModalAlerta();
 });
 
-onAuthStateChanged(auth, async function (user) {
+/* ============================================================
+   GUARD — autenticação e permissões (fonte única: permissoes.js)
+   ============================================================ */
+exigirUsuario(function (user, permissoes) {
     const formBusca = document.getElementById('formBuscaCard');
     const resultadoContainer = document.getElementById('resultadoContainer');
 
-    if (!user) {
-        mostrarErro("Sua sessão expirou. Faça login novamente.");
-        formBusca.style.display = 'none';
-        resultadoContainer.classList.add('hidden');
+    usuarioLogado = user;
+    perms = permissoes;
+
+    // ---------- TOPBAR ----------
+    const email = user.email || '';
+    const partes = email.split('@')[0].split(/[.\-_]/);
+    const ini = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase() || email.slice(0, 2).toUpperCase();
+    const nome = partes.filter(Boolean)
+        .map(function (p) { return p[0].toUpperCase() + p.slice(1).toLowerCase(); })
+        .slice(0, 2).join(' ');
+    const av = document.getElementById('userAvatar');
+    const nm = document.getElementById('userNameLabel');
+    const em = document.getElementById('userEmailLabel');
+    if (av) av.textContent = ini;
+    if (nm) nm.textContent = nome || 'Usuário';
+    if (em) { em.textContent = email; em.title = email; }
+
+    // ---------- AUTORIZAÇÃO ----------
+    if (permissoes && permissoes.ehGestor === false) {
         acessoAutorizado = false;
+        mostrarErro('Acesso restrito: esta tela é exclusiva para gestores.');
+        formBusca.classList.add('hidden');
+        resultadoContainer.classList.add('hidden');
         return;
     }
 
-    usuarioLogado = user;
+    acessoAutorizado = true;
+    ocultarErro();
+    formBusca.classList.remove('hidden');
 
-    try {
-        const snap = await getDoc(doc(db, "usuarios", user.uid));
-
-        if (snap.exists()) {
-            const perfil = (snap.data().perfil || "").toUpperCase();
-
-            if (["ADMIN", "ADMINISTRADOR", "SEMED", "RH", "GESTOR", "MASTER", "DIRETOR"].includes(perfil)) {
-                acessoAutorizado = true;
-                formBusca.style.display = 'block';
-                ocultarErro();
-
-                if (termoPendenteDeBusca) {
-                    setTimeout(() => {
-                        buscarServidor();
-                        termoPendenteDeBusca = null;
-                    }, 300);
-                }
-            } else {
-                acessoAutorizado = false;
-                mostrarErro(`Acesso restrito: perfil "${snap.data().perfil}" não permitido.`);
-                formBusca.style.display = 'none';
-                resultadoContainer.classList.add('hidden');
-            }
-        } else {
-            acessoAutorizado = false;
-            mostrarErro("Usuário não encontrado no sistema.");
-            formBusca.style.display = 'none';
-            resultadoContainer.classList.add('hidden');
-        }
-    } catch (e) {
-        acessoAutorizado = false;
-        mostrarErro("Erro ao verificar permissões.");
-        formBusca.style.display = 'none';
+    if (termoPendenteDeBusca) {
+        setTimeout(function () {
+            buscarServidor();
+            termoPendenteDeBusca = null;
+        }, 300);
     }
 });
 
@@ -1730,11 +1847,11 @@ function construirLinhasUnificadas(vinculos, dataNascimento, registros, hoje) {
                 } else {
                     gozo = '';
                     if (p.dataLimiteGozo < hoje) {
-                        status = 'vencido'; // Crítico
+                        status = 'vencido';
                     } else if (p.fim < hoje) {
-                        status = 'disponivel'; // Disponível (fechou o ciclo, mas ainda pode gozar)
+                        status = 'disponivel';
                     } else {
-                        status = 'disponivel'; // Não fechou o ciclo, mas está disponível
+                        status = 'disponivel';
                     }
                 }
 
@@ -2423,7 +2540,7 @@ function renderizarTabelaResumo(linhas = linhasUnificadas) {
 
 async function buscarServidor() {
     if (!acessoAutorizado) {
-        mostrarErro("Acesso negado.");
+        mostrarErro('Acesso negado.');
         return;
     }
 
@@ -2489,7 +2606,7 @@ async function buscarServidor() {
         ultimoTermoBuscado = termo;
     } catch (e) {
         console.error('[Buscar] Erro:', e);
-        mostrarErro("Erro ao consultar o banco. Verifique sua conexão e tente novamente.");
+        mostrarErro('Erro ao consultar o banco. Verifique sua conexão e tente novamente.');
     } finally {
         ocultarLoading();
     }
@@ -2524,7 +2641,7 @@ async function processarServidores(docs) {
 
     docs.forEach(d => {
         const dt = d.data();
-        
+
         if (dt.matricula1 && dt.matricula1.numeroMatricula) {
             addVinculo(
                 dt.matricula1.numeroMatricula,
@@ -2578,7 +2695,7 @@ async function processarServidores(docs) {
         if (cpfFmt && cpfFmt !== cpfLimpo) {
             queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('cpf', '==', cpfFmt))).catch(() => null));
         }
-        
+
         for (const sid of servidorIds) {
             queriesRegistros.push(getDocs(query(collection(db, 'registro_ferias_folgas'), where('servidorId', '==', sid))).catch(() => null));
         }
