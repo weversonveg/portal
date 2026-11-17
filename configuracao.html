@@ -2519,7 +2519,95 @@ if (modalSair) modalSair.addEventListener('click', function (e) {
     // ============================================================
     // TODO O CÓDIGO DA PÁGINA RODA DENTRO DO GUARD
     // ============================================================
-    exigirUsuario((user, perms) => {
+    exigirUsuario(async (user, perms) => {
+
+        // ============================================================
+        // ⬇️ ADICIONADO: REGRA DE ACESSO DESTA PÁGINA (bloqueio por perfil)
+        // Barreira EXTRA dentro da própria página: mesmo que o usuário
+        // digite o endereço direto (configuracao.html), o conteúdo é
+        // apagado e ele é redirecionado se o perfil não for autorizado.
+        // O bloqueio visual do menu (classe .oculto) continua por conta
+        // do permissoes.js; esta checagem cobre o acesso direto pela URL.
+        // ============================================================
+
+        // Perfis impedidos de abrir esta página (comparação em minúsculas).
+        // Ajuste esta lista conforme a regra oficial do sistema.
+        const PERFIS_BLOQUEADOS = ['escola'];
+
+        // Nome desta página para checagem em listas de permissão do tipo
+        // perms.paginas / perms.acessos / perms.modulos (se existirem).
+        const PAGINA_ATUAL = 'configuracao';
+
+        function textoPerfilDe(obj) {
+            if (!obj || typeof obj !== 'object') return '';
+            const chaves = ['perfil', 'perfilNome', 'nomePerfil', 'tipo', 'tipoUsuario',
+                            'role', 'nivel', 'nivelAcesso', 'categoria', 'grupo'];
+            for (const k of chaves) {
+                if (typeof obj[k] === 'string' && obj[k].trim()) return obj[k].trim().toLowerCase();
+            }
+            return '';
+        }
+
+        function paginasDe(obj) {
+            if (!obj || typeof obj !== 'object') return null;
+            const chaves = ['paginas', 'paginasPermitidas', 'acessos', 'modulos', 'permissoes'];
+            for (const k of chaves) {
+                if (Array.isArray(obj[k]) && obj[k].length) {
+                    return obj[k].map(function (x) { return String(x).toLowerCase(); });
+                }
+            }
+            return null;
+        }
+
+        async function verificarAcessoPagina() {
+            // 1) Perfil entregue pelo permissoes.js (perms) ou no próprio user
+            let perfil = typeof perms === 'string' ? perms.trim().toLowerCase() : textoPerfilDe(perms);
+            if (!perfil) perfil = textoPerfilDe(user);
+
+            // 2) Custom claims do token de autenticação (se o sistema usar)
+            if (!perfil) {
+                try {
+                    const tk = await user.getIdTokenResult();
+                    perfil = textoPerfilDe(tk.claims || {});
+                } catch (e) {}
+            }
+
+            // 3) Último recurso: documento do usuário no Firestore
+            if (!perfil) {
+                try {
+                    let snap = await getDoc(doc(db, 'usuarios', user.uid));
+                    if (!snap.exists() && user.email) snap = await getDoc(doc(db, 'usuarios', user.email));
+                    if (snap.exists()) perfil = textoPerfilDe(snap.data());
+                } catch (e) {}
+            }
+
+            const paginas = paginasDe(perms);
+            const bloqueadoPorPerfil = !!perfil && PERFIS_BLOQUEADOS.indexOf(perfil) !== -1;
+            const bloqueadoPorPagina = Array.isArray(paginas) &&
+                !paginas.some(function (p) { return p.indexOf(PAGINA_ATUAL) !== -1; });
+
+            console.info('[Permissoes/configuracao] perfil:', perfil || '(não detectado)',
+                '| bloqueadoPorPerfil:', bloqueadoPorPerfil,
+                '| bloqueadoPorPagina:', bloqueadoPorPagina);
+
+            if (bloqueadoPorPerfil || bloqueadoPorPagina) {
+                document.title = 'Acesso restrito — Vale Transporte';
+                document.body.innerHTML = [
+                    '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;z-index:99999;">',
+                    '<div style="background:#fff;border-radius:12px;padding:32px 40px;max-width:420px;text-align:center;font-family:Inter,sans-serif;">',
+                    '<div style="font-size:40px;margin-bottom:8px;">&#128274;</div>',
+                    '<strong style="font-size:18px;color:#b91c1c;">Acesso restrito</strong>',
+                    '<p style="margin:8px 0 0;color:#52525b;font-size:14px;">Seu perfil n&atilde;o tem permiss&atilde;o para acessar esta p&aacute;gina. Voc&ecirc; ser&aacute; redirecionado&hellip;</p>',
+                    '</div></div>'
+                ].join('');
+                setTimeout(function () { window.location.href = 'inicial.html'; }, 1600);
+                return false;
+            }
+            return true;
+        }
+
+        // Se o perfil não pode acessar, interrompe o guard: nada da página executa.
+        if (!(await verificarAcessoPagina())) return;
 
         // ---------- TOPBAR ----------
         (function preencherTopbar() {
