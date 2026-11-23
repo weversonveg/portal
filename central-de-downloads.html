@@ -53,6 +53,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 .ibtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:.15s;text-decoration:none;flex:none}
 .ibtn:hover{color:var(--brand);border-color:#c9cede}
 .ibtn.danger:hover{color:var(--danger);border-color:#f3c2cf;background:#fdf1f4}
+.ibtn.pub-ok{color:var(--ok)}
+.ibtn.pub-ok:hover{color:#059669;border-color:#a7d9c6}
+.ibtn.pub-no{color:#d97706}
+.ibtn.pub-no:hover{color:#b45309;border-color:#f3d9a9;background:#fff8e6}
 .ibtn svg{width:17px;height:17px}
 
 /* formulários */
@@ -246,7 +250,7 @@ tbody tr:hover{background:#f8f9fd}
         </div>
         <div>
           <label class="lbl" for="inpFolderId">ID da pasta do Drive</label>
-          <input id="inpFolderId" class="in" type="text" placeholder="id em drive.google.com/drive/folders/…" autocomplete="off" spellcheck="false">
+          <input id="inpFolderId" class="in" type="text" placeholder="ID ou URL da pasta (drive.google.com/drive/folders/…)" autocomplete="off" spellcheck="false">
         </div>
         <div>
           <label class="lbl" for="inpApiKey">Chave de API</label>
@@ -270,7 +274,7 @@ tbody tr:hover{background:#f8f9fd}
           <li><b>Hospedagem:</b> publique este HTML em um serviço estático com HTTPS (GitHub Pages, Netlify, Vercel…). O login do Google não funciona em páginas <code>file://</code> (funciona em <code>localhost</code> e https).</li>
           <li><b>Pronto:</b> entre com a conta Google e envie os arquivos — cada envio é compartilhado automaticamente como “qualquer pessoa com o link” e passa a aparecer na aba Downloads.</li>
         </ol>
-        <p class="hint">Notas: a categoria é gravada na descrição do arquivo no Drive (<code>cat=…</code>). Arquivos enviados direto pelo Drive precisam ser compartilhados manualmente para aparecer aos visitantes. A exclusão pela página funciona apenas para arquivos enviados por ela (escopo <code>drive.file</code>).</p>
+        <p class="hint">Notas: a categoria é gravada na descrição do arquivo no Drive (<code>cat=…</code>). O botão de <b>cadeado/globo</b> na lista mostra se o arquivo está privado ou público — clique nele para tornar o arquivo visível na aba Downloads. Arquivos enviados direto pelo Drive precisam ser compartilhados manualmente (a página não consegue alterar arquivos que não foram enviados por ela — escopo <code>drive.file</code>). A exclusão pela página também só funciona para arquivos enviados por ela.</p>
       </details>
     </div>
   </details>
@@ -356,7 +360,7 @@ tbody tr:hover{background:#f8f9fd}
    CONFIGURAÇÃO — preencha aqui OU use a aba "Gerenciar" (localStorage)
    ===================================================================== */
 const DEFAULT_CONFIG = {
-  CLIENT_ID: '6579881283-ee92ji2pp865ckunm74k5lve3bq4cfap.apps.googleusercontent.com',
+  CLIENT_ID: '',  // ex.: '1234567890-abcdefg.apps.googleusercontent.com'
   FOLDER_ID: '',  // ex.: '1AbC_dEf-xyz' → drive.google.com/drive/folders/ID
   API_KEY:   ''   // ex.: 'AIzaSy…'
 };
@@ -444,10 +448,23 @@ function renderCfgStatus(){
   const mk=(lbl,v)=>`<span class="st ${v?'ok':''}">${lbl} ${v?'✓':'—'}</span>`;
   $('cfgStatus').innerHTML=mk('Client ID',cfg.CLIENT_ID)+mk('Pasta',cfg.FOLDER_ID)+mk('Chave API',cfg.API_KEY);
 }
+/* Aceita tanto o ID puro quanto a URL completa da pasta (ou de um arquivo):
+   "https://drive.google.com/drive/folders/1ABC?usp=sharing" → "1ABC" */
+function extractFolderId(v){
+  v=String(v||'').trim();
+  if(!v)return '';
+  let m=/\/folders\/([A-Za-z0-9_-]+)/.exec(v);
+  if(m)return m[1];
+  m=/\/d\/([A-Za-z0-9_-]+)/.exec(v);
+  if(m)return m[1];
+  m=/^([A-Za-z0-9_-]+)/.exec(v);
+  return m?m[1]:'';
+}
 function saveCfg(){
   cfg.CLIENT_ID=$('inpClientId').value.trim();
-  cfg.FOLDER_ID=$('inpFolderId').value.trim();
+  cfg.FOLDER_ID=extractFolderId($('inpFolderId').value);
   cfg.API_KEY=$('inpApiKey').value.trim();
+  $('inpFolderId').value=cfg.FOLDER_ID;
   try{localStorage.setItem('dl_cfg',JSON.stringify(cfg));}catch(e){}
   tokenClient=null;
   if(token){token=null;sessUI(false);}
@@ -521,28 +538,47 @@ function renderDownloads(){
 }
 async function loadPublic(silent){
   const banner=$('cfgBanner');
-  if(!cfg.FOLDER_ID||!cfg.API_KEY){
-    downFiles=cacheAll().map(f=>({...f,local:true}));
-    banner.hidden=false;
-    $('bannerMsg').textContent='Para exibir os arquivos do Google Drive aos visitantes, configure o ID da pasta e a Chave de API na aba Gerenciar. Abaixo, prévia local deste navegador.';
-    renderDownloads();return;
+  // 1) visão de visitante: Chave de API (só lista arquivos públicos)
+  if(cfg.FOLDER_ID&&cfg.API_KEY){
+    banner.hidden=true;
+    try{
+      const q=encodeURIComponent(`'${cfg.FOLDER_ID}' in parents and trashed=false`);
+      const url=`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=createdTime%20desc&pageSize=200&fields=files(id,name,description,mimeType,size,createdTime)&key=${encodeURIComponent(cfg.API_KEY)}`;
+      const r=await fetch(url);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const j=await r.json();
+      downFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime}));
+      if(!downFiles.length){
+        banner.hidden=false;
+        $('bannerMsg').textContent='A pasta foi acessada, mas nenhum arquivo público foi encontrado. Confira o compartilhamento na aba Gerenciar (botão de cadeado/globo) e se a Chave de API está correta.';
+      }
+      renderDownloads();return;
+    }catch(e){
+      if(!silent)console.warn('Falha ao listar do Drive com a Chave de API:',e);
+    }
   }
-  banner.hidden=true;
-  try{
-    const q=encodeURIComponent(`'${cfg.FOLDER_ID}' in parents and trashed=false`);
-    const url=`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=createdTime%20desc&pageSize=200&fields=files(id,name,description,mimeType,size,createdTime)&key=${encodeURIComponent(cfg.API_KEY)}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    downFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime}));
-    renderDownloads();
-  }catch(e){
-    if(!silent)console.warn('Falha ao listar do Drive:',e);
-    downFiles=cacheAll().map(f=>({...f,local:true}));
-    banner.hidden=false;
-    $('bannerMsg').textContent='Não foi possível carregar a lista do Google Drive ('+(e.message||'erro')+'). Verifique a Chave de API e se os arquivos estão compartilhados como públicos. Exibindo prévia local deste navegador.';
-    renderDownloads();
+  // 2) com sessão ativa: lista a pasta real mesmo sem Chave de API
+  if(cfg.FOLDER_ID&&token){
+    try{
+      const q=encodeURIComponent(`'${cfg.FOLDER_ID}' in parents and trashed=false`);
+      const r=await api(`files?q=${q}&orderBy=createdTime%20desc&pageSize=200&fields=files(id,name,description,mimeType,size,createdTime)`);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const j=await r.json();
+      downFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime}));
+      banner.hidden=false;
+      $('bannerMsg').textContent='Arquivos carregados pela sua sessão (visíveis só para você). Para que TODOS os visitantes vejam sem login, configure também a Chave de API na aba Gerenciar.';
+      renderDownloads();return;
+    }catch(e){
+      if(!silent)console.warn('Falha ao listar pela sessão:',e);
+    }
   }
+  // 3) prévia local (este navegador)
+  downFiles=cacheAll().map(f=>({...f,local:true}));
+  banner.hidden=false;
+  $('bannerMsg').textContent=(cfg.FOLDER_ID&&cfg.API_KEY)
+    ?'Não foi possível carregar a lista do Google Drive. Verifique a Chave de API e se os arquivos estão compartilhados como públicos. Exibindo prévia local deste navegador.'
+    :'Para exibir os arquivos do Google Drive a todos os visitantes, configure o ID da pasta e a Chave de API na aba Gerenciar. Abaixo, prévia local deste navegador.';
+  renderDownloads();
 }
 
 /* ---------- aba Gerenciar: API autenticada ---------- */
@@ -561,8 +597,9 @@ async function loadAdmin(){
     const r=await api(`files?q=${q}&orderBy=createdTime%20desc&pageSize=200&fields=files(id,name,description,mimeType,size,createdTime)`);
     if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error((j.error&&j.error.message)||('HTTP '+r.status));}
     const j=await r.json();
-    adminFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime}));
+    adminFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime,pub:null}));
     renderAdmin();
+    markSharing();
     if(!adminFiles.length)$('emptyAdminMsg').textContent='Nenhum arquivo na pasta ainda.';
   }catch(e){toast(e.message||'Erro ao listar arquivos.');}
 }
@@ -575,6 +612,7 @@ function adminRow(f){
     <td><span class="tacts">
       <a class="ibtn" href="${viewUrl(f.id)}" target="_blank" rel="noopener" title="Abrir no Drive">${ICO('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>')}</a>
       <button type="button" class="ibtn" data-act="copy" data-id="${f.id}" title="Copiar link público">${ICO('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>')}</button>
+      <button type="button" class="ibtn ${f.pub===true?'pub-ok':(f.pub===false?'pub-no':'')}" data-act="pub" data-id="${f.id}" title="${f.pub===true?'Público — aparece na aba Downloads':(f.pub===false?'Privado — clique para tornar público':'Verificar e tornar público')}">${ICO(f.pub===true?'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>')}</button>
       <button type="button" class="ibtn danger" data-act="del" data-id="${f.id}" data-name="${esc(f.name)}" title="Excluir">${ICO('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>')}</button>
     </span></td>
   </tr>`;
@@ -583,6 +621,47 @@ function renderAdmin(){
   $('adminCount').textContent=adminFiles.length?(adminFiles.length===1?'1 arquivo':adminFiles.length+' arquivos'):'';
   $('tblBody').innerHTML=adminFiles.map(adminRow).join('');
   $('emptyAdmin').hidden=adminFiles.length>0;
+}
+/* verifica o compartilhamento público de cada arquivo (globo = público, cadeado = privado) */
+async function markSharing(){
+  const MAX=40;
+  for(let i=0;i<adminFiles.length&&i<MAX;i++){
+    const f=adminFiles[i];
+    try{
+      const r=await api('files/'+encodeURIComponent(f.id)+'?fields=id,permissions(id,type)');
+      if(!r.ok){f.pub=null;}
+      else{
+        const j=await r.json();
+        f.pub=Array.isArray(j.permissions)&&j.permissions.some(function(p){return p.type==='anyone';});
+      }
+    }catch(e){f.pub=null;}
+    renderAdmin();
+  }
+}
+function setPub(id,v){
+  const f=adminFiles.find(function(x){return x.id===id;});
+  if(f){f.pub=v;renderAdmin();}
+  const d=downFiles.find(function(x){return x.id===id;});
+  if(d){d.local=false;renderDownloads();}
+}
+async function publishFile(id){
+  try{
+    const g=await api('files/'+encodeURIComponent(id)+'?fields=id,permissions(id,type)');
+    if(g.ok){
+      const j=await g.json();
+      if(Array.isArray(j.permissions)&&j.permissions.some(function(p){return p.type==='anyone';})){
+        setPub(id,true);toast('Este arquivo já está público — aparece na aba Downloads.');return;
+      }
+    }
+    const r=await api('files/'+encodeURIComponent(id)+'/permissions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({role:'reader',type:'anyone'})
+    });
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error((j.error&&j.error.message)||('HTTP '+r.status));}
+    setPub(id,true);
+    toast('Arquivo publicado — agora aparece na aba Downloads!');
+  }catch(e){toast('Não foi possível publicar: '+(e.message||e));}
 }
 function copyLink(id){
   const url=viewUrl(id);
@@ -718,7 +797,7 @@ async function submitUpload(ev){
     const res=await uploadXhr(pickedFile,name,cat,mime);
     $('progFill').style.width='100%';$('progText').textContent='Concluído — tornando o arquivo público…';
     const pub=await makePublic(res.id);
-    const rec={id:res.id,name:name,cat:cat,size:pickedFile.size,date:new Date().toISOString()};
+    const rec={id:res.id,name:name,cat:cat,size:pickedFile.size,date:new Date().toISOString(),pub:pub};
     cacheAdd(rec);
     adminFiles.unshift(rec);
     if(!downFiles.some(f=>f.id===res.id))downFiles.unshift(Object.assign({},rec,{local:!pub}));
@@ -780,6 +859,7 @@ function bind(){
     const b=e.target.closest('[data-act]');if(!b)return;
     const id=b.dataset.id;
     if(b.dataset.act==='copy')copyLink(id);
+    if(b.dataset.act==='pub')publishFile(id);
     if(b.dataset.act==='del')delFile(id,b.dataset.name||'');
   });
   window.addEventListener('hashchange',function(){
