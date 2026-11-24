@@ -87,14 +87,16 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 /* =====================================================================
    COMO ESTA PÁGINA FUNCIONA (nenhuma configuração necessária):
 
-   A cada visita, ela busca a listagem ATUAL da pasta do Google Drive
-   através de serviços públicos de leitura (allorigins / codetabs — sem
-   chave, sem cadastro) e monta a lista com ícone de download.
+   Ao abrir, ela mostra imediatamente a visualização oficial do Google
+   Drive da pasta (em tempo real — sempre atualizada). Em paralelo, ela
+   tenta buscar a listagem atual por vários serviços públicos de leitura
+   (sem chave, sem cadastro). Se conseguir, troca automaticamente pela
+   lista com ícone de download.
    - Enviou ou excluiu arquivo no Drive? A página reflete sozinha.
-   - Se os serviços estiverem fora do ar naquele momento, ela mostra a
-     cópia guardada do seu navegador (até 6h) ou a visualização oficial
-     do Google (em tempo real, sem os ícones). Nunca fica desatualizada
+   - Se os serviços estiverem lentos ou fora do ar, o visitante continua
+     vendo a visualização do Google — nunca fica travado, desatualizado
      nem em branco.
+   Cada tentativa tem limite rígido de 12 segundos (conexão + conteúdo).
 
    Arquivos duplicados na pasta aparecem uma única vez.
 
@@ -105,13 +107,11 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 const FOLDER_ID = '1JDpBLiyMn_ZXcpFjHbjvbv1N2W2h7qf7';
 const ALVO = 'https://drive.google.com/embeddedfolderview?id=' + FOLDER_ID + '#list';
 const PROXIES = [
+  'https://api.cors.lol/?url=',
   'https://api.allorigins.win/raw?url=',
   'https://api.allorigins.win/get?url=',
   'https://api.codetabs.com/v1/proxy?quest='
 ];
-const CACHE_KEY = 'listaDriveCache';
-const TTL_CACHE = 6 * 60 * 60 * 1000; /* 6 horas */
-
 /* ---------- categorias ---------- */
 const CATS = {
   edital:{label:'Editais',
@@ -226,51 +226,59 @@ function parseListing(html){
   }catch(e){return [];}
 }
 
-function salvarCache(arquivos){
-  try{localStorage.setItem(CACHE_KEY,JSON.stringify({t:Date.now(),arquivos:arquivos}));}catch(e){}
-}
-function usarCache(){
+/* ---------- tentativas de leitura (em paralelo, com limite rígido) ---------- */
+async function tentarProxy(pUrl){
+  const ctrl=('AbortController' in window)?new AbortController():null;
+  const timer=setTimeout(function(){if(ctrl)ctrl.abort();},12000);
   try{
-    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
-    if(c&&c.arquivos&&c.arquivos.length&&Date.now()-c.t<TTL_CACHE){
-      renderizar(c.arquivos,false);
-      return true;
+    const r=await fetch(pUrl,ctrl?{signal:ctrl.signal}:undefined);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    let txt=await r.text();
+    if(txt.charAt(0)==='{'){
+      try{const j=JSON.parse(txt);if(j&&j.contents)txt=j.contents;}catch(e){}
     }
-  }catch(e){}
-  return false;
+    if(txt.indexOf('flip-entry')===-1)throw new Error('resposta invalida');
+    const files=parseListing(txt);
+    if(!files.length)throw new Error('sem arquivos');
+    return files;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
-function buscarComLimite(url){
-  /* fetch com limite de 10s por serviço, para não travar a página */
+/* primeiro sucesso entre várias tentativas simultâneas */
+function primeiroSucesso(promessas){
   return new Promise(function(resolve,reject){
-    const ctrl=('AbortController' in window)?new AbortController():null;
-    const timer=setTimeout(function(){if(ctrl)ctrl.abort();},10000);
-    fetch(url,ctrl?{signal:ctrl.signal}:undefined)
-      .then(function(r){clearTimeout(timer);resolve(r);},
-            function(err){clearTimeout(timer);reject(err);});
+    let pendentes=promessas.length;
+    if(!pendentes){reject(new Error('sem tentativas'));return;}
+    promessas.forEach(function(p){
+      Promise.resolve(p).then(resolve,function(){ /* ignora falhas individuais */
+        if(--pendentes===0)reject(new Error('todas falharam'));
+      });
+    });
   });
 }
 
+const MAX_RODADAS = 10;       /* tentativas ao longo de ~5 minutos */
+const ESPERA_RODADAS = 20000; /* intervalo entre tentativas */
+function esperar(ms){return new Promise(function(res){setTimeout(res,ms);});}
+
 async function carregar(){
-  for(let i=0;i<PROXIES.length;i++){
-    try{
-      const r=await buscarComLimite(PROXIES[i]+encodeURIComponent(ALVO));
-      if(!r.ok)continue;
-      let txt=await r.text();
-      if(txt.charAt(0)==='{'){
-        try{const j=JSON.parse(txt);if(j&&j.contents)txt=j.contents;}catch(e){}
-      }
-      if(txt.indexOf('flip-entry')===-1)continue;
-      const files=parseListing(txt);
-      if(files.length){
-        salvarCache(files);
-        renderizar(files,false);
-        return;
-      }
-    }catch(e){/* tenta o próximo serviço */}
-  }
-  if(usarCache())return;
+  /* conteúdo imediato: visualização oficial do Google na tela */
   mostrarEmbed();
+  /* em paralelo e repetidamente: tenta montar a lista com ícones.
+     Assim que qualquer serviço responder, troca automaticamente. */
+  for(let rodada=0;rodada<MAX_RODADAS;rodada++){
+    try{
+      const files=await primeiroSucesso(PROXIES.map(function(p){
+        return tentarProxy(p+encodeURIComponent(ALVO));
+      }));
+      renderizar(files,false);
+      $('embedfallback').hidden=true;
+      return;
+    }catch(e){ /* serviços indisponíveis nesta rodada */ }
+    if(rodada<MAX_RODADAS-1) await esperar(ESPERA_RODADAS);
+  }
 }
 carregar();
 </script>
