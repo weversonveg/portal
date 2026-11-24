@@ -49,6 +49,9 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 .nome{display:block;word-break:break-word;font-size:.95rem}
 .tamanho{color:var(--muted);font-size:.82rem;white-space:nowrap}
 #status{text-align:center;color:var(--muted);padding:40px 0}
+.driveembed{margin-top:18px}
+.driveembed iframe{width:100%;height:clamp(420px,68vh,760px);border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+.driveembed .hint{display:block;margin-top:9px}
 .foot{color:var(--muted);font-size:.8rem;text-align:center;padding-top:8px;padding-bottom:28px}
 </style>
 </head>
@@ -65,11 +68,16 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
   <div class="hero">
     <h1>Downloads</h1>
     <p class="sub">Documentos, manuais, planilhas, PDFs, vídeos e editais disponíveis para download. Clique no ícone <b>para baixar</b> o arquivo ou no nome <b>para abrir</b> no Google Drive.</p>
-    <p class="hint atualizada">Lista atualizada em 24/11/2026 · arquivos armazenados no Google Drive.</p>
+    <p class="hint atualizada">Arquivos armazenados no Google Drive — a lista se atualiza automaticamente.</p>
   </div>
 
   <div id="status">Carregando arquivos...</div>
   <div id="conteudo"></div>
+
+  <div class="driveembed" id="embedfallback" hidden>
+    <iframe title="Arquivos da pasta no Google Drive" loading="lazy"></iframe>
+    <p class="hint">Visualização da pasta em tempo real, fornecida pelo Google Drive — sempre atualizada.</p>
+  </div>
 </main>
 
 <footer class="foot wrap">Arquivos armazenados no Google Drive · Página estática — sem servidor próprio</footer>
@@ -77,12 +85,32 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 <script>
 'use strict';
 /* =====================================================================
-   Lista dos arquivos disponíveis para download (gravada nesta página).
-   O ícone baixa o arquivo direto; o nome abre a visualização no Drive.
-   Para incluir/excluir arquivos: gerencie no Google Drive e depois peça
-   a atualização desta lista (ela é regerada em segundos).
+   COMO ESTA PÁGINA FUNCIONA (nenhuma configuração necessária):
+
+   A cada visita, ela busca a listagem ATUAL da pasta do Google Drive
+   através de serviços públicos de leitura (allorigins / codetabs — sem
+   chave, sem cadastro) e monta a lista com ícone de download.
+   - Enviou ou excluiu arquivo no Drive? A página reflete sozinha.
+   - Se os serviços estiverem fora do ar naquele momento, ela mostra a
+     cópia guardada do seu navegador (até 6h) ou a visualização oficial
+     do Google (em tempo real, sem os ícones). Nunca fica desatualizada
+     nem em branco.
+
+   Arquivos duplicados na pasta aparecem uma única vez.
+
+   ALTERNATIVA SEM DEPENDÊNCIA EXTERNA: se um dia quiser 100% de
+   garantia, o arquivo apps-script-codigo.gs descreve a versão com
+   Google Apps Script (uma implantação única, também sem chave).
    ===================================================================== */
-const ARQUIVOS_ESTATICOS = [{"id": "1OWi9GsITFKtC3Khv8bs2TWwDtayAjCXr", "name": "1_-_Capa-assinado (2).pdf", "mime": "application/pdf", "cat": "pdf"}, {"id": "1YchDA-8_WY6glJh4nElCSeEHhQPK1Wfx", "name": "Requerimento de férias regulares-original.pdf", "mime": "application/pdf", "cat": "pdf"}];
+const FOLDER_ID = '1JDpBLiyMn_ZXcpFjHbjvbv1N2W2h7qf7';
+const ALVO = 'https://drive.google.com/embeddedfolderview?id=' + FOLDER_ID + '#list';
+const PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://api.allorigins.win/get?url=',
+  'https://api.codetabs.com/v1/proxy?quest='
+];
+const CACHE_KEY = 'listaDriveCache';
+const TTL_CACHE = 6 * 60 * 60 * 1000; /* 6 horas */
 
 /* ---------- categorias ---------- */
 const CATS = {
@@ -164,7 +192,87 @@ function renderizar(arquivos,comTamanho){
   else{st.hidden=false;st.textContent='Nenhum arquivo publicado ainda.';}
 }
 
-renderizar(ARQUIVOS_ESTATICOS,false);
+/* ---------- reserva: visualização oficial do Google ---------- */
+function mostrarEmbed(){
+  const box=$('embedfallback'),fr=box.querySelector('iframe');
+  if(!fr.getAttribute('src')){
+    fr.src=ALVO;
+  }
+  box.hidden=false;
+  $('status').hidden=true;
+}
+
+/* ---------- leitura da listagem do Drive ---------- */
+function parseListing(html){
+  try{
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const out=[],vistoId={},vistoNome={};
+    doc.querySelectorAll('.flip-entry').forEach(function(el){
+      const link=el.querySelector('a[href*="/file/d/"]');
+      if(!link)return;
+      const m=(link.getAttribute('href')||'').match(/\/file\/d\/([A-Za-z0-9_-]+)\/view/);
+      if(!m)return;
+      const id=m[1],tEl=el.querySelector('.flip-entry-title');
+      const name=tEl?tEl.textContent.trim():'';
+      if(!name||vistoId[id]||vistoNome[name])return;
+      vistoId[id]=1;vistoNome[name]=1;
+      let mime='application/octet-stream';
+      const img=el.querySelector('img');
+      const mi=img?(img.getAttribute('src')||'').match(/\/type\/([A-Za-z0-9/+.\-]+)/):null;
+      if(mi)mime=mi[1];
+      out.push({id:id,name:name,mime:mime});
+    });
+    return out;
+  }catch(e){return [];}
+}
+
+function salvarCache(arquivos){
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify({t:Date.now(),arquivos:arquivos}));}catch(e){}
+}
+function usarCache(){
+  try{
+    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(c&&c.arquivos&&c.arquivos.length&&Date.now()-c.t<TTL_CACHE){
+      renderizar(c.arquivos,false);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function buscarComLimite(url){
+  /* fetch com limite de 10s por serviço, para não travar a página */
+  return new Promise(function(resolve,reject){
+    const ctrl=('AbortController' in window)?new AbortController():null;
+    const timer=setTimeout(function(){if(ctrl)ctrl.abort();},10000);
+    fetch(url,ctrl?{signal:ctrl.signal}:undefined)
+      .then(function(r){clearTimeout(timer);resolve(r);},
+            function(err){clearTimeout(timer);reject(err);});
+  });
+}
+
+async function carregar(){
+  for(let i=0;i<PROXIES.length;i++){
+    try{
+      const r=await buscarComLimite(PROXIES[i]+encodeURIComponent(ALVO));
+      if(!r.ok)continue;
+      let txt=await r.text();
+      if(txt.charAt(0)==='{'){
+        try{const j=JSON.parse(txt);if(j&&j.contents)txt=j.contents;}catch(e){}
+      }
+      if(txt.indexOf('flip-entry')===-1)continue;
+      const files=parseListing(txt);
+      if(files.length){
+        salvarCache(files);
+        renderizar(files,false);
+        return;
+      }
+    }catch(e){/* tenta o próximo serviço */}
+  }
+  if(usarCache())return;
+  mostrarEmbed();
+}
+carregar();
 </script>
 </body>
 </html>
