@@ -30,6 +30,9 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 .sub{color:var(--muted);margin-top:6px;max-width:62ch}
 .hint{color:var(--muted);font-size:.85rem}
 .atualizada{margin-top:9px}
+.driveembed{margin-top:18px}
+.driveembed iframe{width:100%;height:clamp(420px,68vh,760px);border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+.driveembed .hint{display:block;margin-top:9px}
 .categoria{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:18px;overflow:hidden}
 .cat-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border)}
 .cat-ico{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none}
@@ -65,11 +68,16 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
   <div class="hero">
     <h1>Downloads</h1>
     <p class="sub">Documentos, manuais, planilhas, PDFs, vídeos e editais disponíveis para download. Clique no ícone <b>para baixar</b> o arquivo ou no nome <b>para abrir</b> no Google Drive.</p>
-    <p class="hint atualizada">Lista atualizada em 24/11/2026 · arquivos armazenados no Google Drive.</p>
+    <p class="hint atualizada">Arquivos armazenados no Google Drive — a lista se atualiza automaticamente.</p>
   </div>
 
   <div id="status">Carregando arquivos...</div>
   <div id="conteudo"></div>
+
+  <div class="driveembed" id="embedfallback" hidden>
+    <iframe title="Arquivos da pasta no Google Drive" loading="lazy"></iframe>
+    <p class="hint">Visualização da pasta em tempo real, fornecida pelo Google Drive — sempre atualizada.</p>
+  </div>
 </main>
 
 <footer class="foot wrap">Arquivos armazenados no Google Drive · Página estática — sem servidor próprio</footer>
@@ -77,17 +85,19 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 <script>
 'use strict';
 /* =====================================================================
-   OPCIONAL — Chave de API do Google Drive.
-   Se você colar sua chave aqui, a lista se atualiza SOZINHA sempre que
-   um arquivo novo for enviado pela página de administração.
-   Se ficar vazia, a página mostra a lista gravada abaixo (24/11/2026).
+   Chave de API do Google Drive (OPCIONAL, mas recomendada).
+   COM a chave: lista com ícone de download consultada EM TEMPO REAL —
+   excluiu no Drive, some da página; enviou, aparece. Sozinha.
+   SEM a chave: mostra a visualização em tempo real do Google (sem os
+   ícones), também sempre atualizada. Em nenhum caso a lista fica gravada
+   no código — você NUNCA mais precisa editar este arquivo por causa de
+   arquivos.
+   Onde conseguir: console.cloud.google.com → APIs e Serviços →
+   Credenciais → Chaves de API (a mesma que você já criou antes).
    ===================================================================== */
 const API_KEY = '';
 
 const FOLDER_ID = '1JDpBLiyMn_ZXcpFjHbjvbv1N2W2h7qf7';
-
-/* Lista gravada dos arquivos da pasta (gerada em 24/11/2026) */
-const ARQUIVOS_ESTATICOS = [{"id": "1duwcxYk9G57iZEZ2NrwZp3HhbO4z0b2Q", "name": "recibo_pagamento.pdf", "mime": "application/pdf", "cat": "pdf"}, {"id": "1rZ3gar5t-sNAiD5BBtUhs4oDrfTmXfWG", "name": "Requerimento de férias regulares-original.pdf", "mime": "application/pdf", "cat": "pdf"}];
 
 /* ---------- categorias ---------- */
 const CATS = {
@@ -170,16 +180,21 @@ function renderizar(arquivos,comTamanho){
 }
 
 /* ---------- carregamento ---------- */
-function carregar(){
-  if(API_KEY){
-    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+FOLDER_ID+"' in parents and trashed=false")
-      +'&fields=files(id,name,mimeType,size)&orderBy=name&pageSize=1000&key='+encodeURIComponent(API_KEY))
-      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(function(j){renderizar((j.files||[]).map(function(f){return{id:f.id,name:f.name,mime:f.mimeType,size:f.size};}),true);})
-      .catch(function(){renderizar(ARQUIVOS_ESTATICOS,false);});
-  }else{
-    renderizar(ARQUIVOS_ESTATICOS,false);
+function mostrarEmbed(){
+  const box=$('embedfallback'),fr=box.querySelector('iframe');
+  if(!fr.getAttribute('src')){
+    fr.src='https://drive.google.com/embeddedfolderview?id='+encodeURIComponent(FOLDER_ID)+'#list';
   }
+  box.hidden=false;
+  $('status').hidden=true;
+}
+function carregar(){
+  if(!API_KEY){mostrarEmbed();return;}
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+FOLDER_ID+"' in parents and trashed=false")
+    +'&fields=files(id,name,mimeType,size)&orderBy=name&pageSize=1000&key='+encodeURIComponent(API_KEY))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(j){renderizar((j.files||[]).map(function(f){return{id:f.id,name:f.name,mime:f.mimeType,size:f.size};}),true);})
+    .catch(mostrarEmbed);
 }
 carregar();
 </script>
