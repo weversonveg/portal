@@ -57,6 +57,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 .ibtn.pub-ok:hover{color:#059669;border-color:#a7d9c6}
 .ibtn.pub-no{color:#d97706}
 .ibtn.pub-no:hover{color:#b45309;border-color:#f3d9a9;background:#fff8e6}
+.driveembed{margin-top:18px}
+.driveembed iframe{width:100%;height:clamp(380px,60vh,640px);border:1px solid #e2e8f0;border-radius:14px;background:#fff}
 .ibtn svg{width:17px;height:17px}
 
 /* formulários */
@@ -230,6 +232,11 @@ tbody tr:hover{background:#f8f9fd}
     <p id="emptyMsg">Nenhum arquivo publicado ainda.</p>
     <span class="hint">Os arquivos enviados na aba Gerenciar aparecem aqui automaticamente.</span>
   </div>
+
+  <div id="driveEmbed" class="driveembed" hidden>
+    <iframe id="driveEmbedFrame" title="Arquivos da pasta no Google Drive" loading="lazy"></iframe>
+    <p class="hint">Arquivos exibidos pela visualização pública da pasta no Google Drive — funciona para qualquer visitante, sem configuração.</p>
+  </div>
 </section>
 
 <!-- ===================== VIEW: GERENCIAR (administração) ===================== -->
@@ -242,7 +249,7 @@ tbody tr:hover{background:#f8f9fd}
       <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     </summary>
     <div class="cfgbody">
-      <p class="hint">Preencha os três campos abaixo e clique em <b>Salvar</b> (ficam guardados neste navegador). Também é possível preencher direto no código, nas constantes <code>DEFAULT_CONFIG</code> do &lt;script&gt; deste arquivo — ideal ao hospedar para o público.</p>
+      <p class="hint">Os arquivos da pasta já ficam visíveis a <b>todos os visitantes</b> automaticamente (ID da pasta e Chave de API gravados no código, nas constantes <code>DEFAULT_CONFIG</code> do &lt;script&gt;). Os campos abaixo ficam salvos <b>apenas neste navegador</b>: só o Client ID é realmente necessário para você administrar (envio, exclusão). Para permitir que só alguns e-mails usem o Gerenciar, preencha <code>ADMIN_EMAILS</code> no código.</p>
       <div class="cfggrid">
         <div>
           <label class="lbl" for="inpClientId">Client ID (OAuth)</label>
@@ -360,9 +367,10 @@ tbody tr:hover{background:#f8f9fd}
    CONFIGURAÇÃO — preencha aqui OU use a aba "Gerenciar" (localStorage)
    ===================================================================== */
 const DEFAULT_CONFIG = {
-  CLIENT_ID: '',  // ex.: '1234567890-abcdefg.apps.googleusercontent.com'
-  FOLDER_ID: '',  // ex.: '1AbC_dEf-xyz' → drive.google.com/drive/folders/ID
-  API_KEY:   ''   // ex.: 'AIzaSy…'
+  CLIENT_ID: '',  // ex.: '1234567890-abcdefg.apps.googleusercontent.com' (pode ficar só na aba Gerenciar)
+  FOLDER_ID: '1JDpBLiyMn_ZXcpFjHbjvbv1N2W2h7qf7',  // pasta do Drive exibida a todos os visitantes
+  API_KEY:   '',  // ← COLE AQUI A CHAVE DE API (ex.: 'AIzaSy…') — Google Cloud → Credenciais → Chave de API
+  ADMIN_EMAILS: ''  // opcional: e-mails (separados por vírgula) que podem usar o Gerenciar; vazio = qualquer conta Google
 };
 
 /* ---------- categorias (ícones, cores e extensões) ---------- */
@@ -497,7 +505,7 @@ function showView(v){
   $('tabDown').setAttribute('aria-selected',String(!adm));
   $('tabAdm').setAttribute('aria-selected',String(adm));
   try{history.replaceState(null,'',adm?'#gerenciar':'#downloads');}catch(e){}
-  if(adm&&!(cfg.CLIENT_ID&&cfg.FOLDER_ID&&cfg.API_KEY))$('cfgBox').open=true;
+  if(adm&&!cfg.CLIENT_ID)$('cfgBox').open=true;
 }
 
 /* ---------- chips (filtros e seletor de categoria) ---------- */
@@ -536,6 +544,15 @@ function renderDownloads(){
   }
   empty.hidden=true;grid.innerHTML=list.map(cardHTML).join('');
 }
+/* visualização pública da pasta (funciona para qualquer visitante, sem Chave de API) */
+function setEmbed(on){
+  const el=$('driveEmbed'),fr=$('driveEmbedFrame');
+  if(on&&cfg.FOLDER_ID){
+    const src='https://drive.google.com/embeddedfolderview?id='+encodeURIComponent(cfg.FOLDER_ID)+'#grid';
+    if(fr.getAttribute('src')!==src)fr.setAttribute('src',src);
+    el.hidden=false;
+  }else{el.hidden=true;}
+}
 async function loadPublic(silent){
   const banner=$('cfgBanner');
   // 1) visão de visitante: Chave de API (só lista arquivos públicos)
@@ -552,6 +569,7 @@ async function loadPublic(silent){
         banner.hidden=false;
         $('bannerMsg').textContent='A pasta foi acessada, mas nenhum arquivo público foi encontrado. Confira o compartilhamento na aba Gerenciar (botão de cadeado/globo) e se a Chave de API está correta.';
       }
+      setEmbed(false);
       renderDownloads();return;
     }catch(e){
       if(!silent)console.warn('Falha ao listar do Drive com a Chave de API:',e);
@@ -567,18 +585,34 @@ async function loadPublic(silent){
       downFiles=(j.files||[]).map(f=>({id:f.id,name:f.name,cat:parseCat(f.description,f.mimeType,f.name),size:f.size,date:f.createdTime}));
       banner.hidden=false;
       $('bannerMsg').textContent='Arquivos carregados pela sua sessão (visíveis só para você). Para que TODOS os visitantes vejam sem login, configure também a Chave de API na aba Gerenciar.';
+      setEmbed(false);
       renderDownloads();return;
     }catch(e){
       if(!silent)console.warn('Falha ao listar pela sessão:',e);
     }
   }
-  // 3) prévia local (este navegador)
+  // 3) fallback público: visualização embutida da pasta (funciona sem Chave de API)
   downFiles=cacheAll().map(f=>({...f,local:true}));
-  banner.hidden=false;
-  $('bannerMsg').textContent=(cfg.FOLDER_ID&&cfg.API_KEY)
-    ?'Não foi possível carregar a lista do Google Drive. Verifique a Chave de API e se os arquivos estão compartilhados como públicos. Exibindo prévia local deste navegador.'
-    :'Para exibir os arquivos do Google Drive a todos os visitantes, configure o ID da pasta e a Chave de API na aba Gerenciar. Abaixo, prévia local deste navegador.';
-  renderDownloads();
+  if(cfg.FOLDER_ID){
+    setEmbed(true);
+    if(downFiles.length){
+      banner.hidden=true;
+      renderDownloads();
+    }else{
+      // sem prévia local: só avisa quando a lista estilizada falhou de verdade
+      banner.hidden=!cfg.API_KEY;
+      if(!banner.hidden){
+        $('bannerMsg').textContent='Não foi possível carregar a lista estilizada do Drive agora. Tente atualizar a página — se continuar, o administrador deve verificar a Chave de API e o compartilhamento dos arquivos. Abaixo, os arquivos aparecem pela visualização pública do Google Drive.';
+      }
+      renderDownloads();
+      $('emptyDown').hidden=true;
+    }
+  }else{
+    setEmbed(false);
+    banner.hidden=false;
+    $('bannerMsg').textContent='A lista de arquivos aparecerá aqui para todos quando o administrador concluir a configuração (ID da pasta e Chave de API) no código da página.';
+    renderDownloads();
+  }
 }
 
 /* ---------- aba Gerenciar: API autenticada ---------- */
@@ -706,12 +740,12 @@ function ensureTokenClient(){
   return tokenClient;
 }
 function login(){const tc=ensureTokenClient();if(tc)tc.requestAccessToken({prompt:''});}
-function logout(){
+function logout(silent){
   if(token&&window.google&&google.accounts&&google.accounts.oauth2){try{google.accounts.oauth2.revoke(token,function(){});}catch(e){}}
   token=null;userEmail='';sessUI(false);
   adminFiles=[];renderAdmin();
   $('emptyAdminMsg').textContent='Entre com a conta Google para listar os arquivos da pasta.';
-  toast('Você saiu.');
+  if(!silent)toast('Você saiu.');
 }
 function sessUI(on){
   $('loginBox').hidden=on;$('sessBox').hidden=!on;
@@ -720,7 +754,15 @@ function sessUI(on){
 async function fetchEmail(){
   try{
     const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+token}});
-    if(r.ok){const j=await r.json();userEmail=j.email||'';if(userEmail)$('sessText').textContent=userEmail+' · conectado';}
+    if(!r.ok)return;
+    const j=await r.json();
+    userEmail=j.email||'';
+    if(userEmail)$('sessText').textContent=userEmail+' · conectado';
+    const allow=String(cfg.ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+    if(allow.length&&(!userEmail||!allow.includes(userEmail.toLowerCase()))){
+      toast('Esta conta não é administradora da página.');
+      logout(true);
+    }
   }catch(e){}
 }
 
