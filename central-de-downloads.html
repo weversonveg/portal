@@ -49,9 +49,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 .nome{display:block;word-break:break-word;font-size:.95rem}
 .tamanho{color:var(--muted);font-size:.82rem;white-space:nowrap}
 #status{text-align:center;color:var(--muted);padding:40px 0}
-.driveembed{margin-top:18px}
-.driveembed iframe{width:100%;height:clamp(420px,68vh,760px);border:1px solid #e2e8f0;border-radius:14px;background:#fff}
-.driveembed .hint{display:block;margin-top:9px}
 .foot{color:var(--muted);font-size:.8rem;text-align:center;padding-top:8px;padding-bottom:28px}
 </style>
 </head>
@@ -67,31 +64,32 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neu
 <main class="wrap">
   <div class="hero">
     <h1>Downloads</h1>
-    <p class="sub">Documentos, manuais, planilhas, PDFs, vídeos e editais disponíveis para download. Clique no ícone <b>para baixar</b> o arquivo ou no nome <b>para abrir</b> no Google Drive.</p>
-    <p class="hint atualizada">Arquivos armazenados no Google Drive — a lista se atualiza automaticamente.</p>
+    <p class="sub">Documentos, manuais, planilhas, PDFs, vídeos e editais disponíveis para download. Clique no ícone <b>para baixar</b> o arquivo ou no nome <b>para abrir</b>.</p>
+    <p class="hint atualizada">Arquivos hospedados no GitHub Pages — a lista é lida de <code>downloads/lista.json</code>.</p>
   </div>
 
   <div id="status">Carregando arquivos...</div>
   <div id="conteudo"></div>
-
-  <div class="driveembed" id="embedfallback" hidden>
-    <iframe title="Arquivos da pasta no Google Drive" loading="lazy"></iframe>
-    <p class="hint">Visualização da pasta em tempo real, fornecida pelo Google Drive — sempre atualizada.</p>
-  </div>
 </main>
 
-<footer class="foot wrap">Arquivos armazenados no Google Drive · Página estática — sem servidor próprio</footer>
+<footer class="foot wrap">Arquivos hospedados no GitHub Pages · Página estática</footer>
 
 <script>
 'use strict';
-const FOLDER_ID = '1JDpBLiyMn_ZXcpFjHbjvbv1N2W2h7qf7';
-const ALVO = 'https://drive.google.com/embeddedfolderview?id=' + FOLDER_ID + '#list';
-const PROXIES = [
-  'https://api.cors.lol/?url=',
-  'https://api.allorigins.win/raw?url=',
-  'https://api.allorigins.win/get?url=',
-  'https://api.codetabs.com/v1/proxy?quest='
-];
+/* =====================================================================
+   COMO FUNCIONA:
+   - Os arquivos ficam na pasta `downloads/` do repositório.
+   - A lista de arquivos é lida de `downloads/lista.json`.
+   - Para adicionar um arquivo novo: suba o arquivo na pasta `downloads/`
+     e adicione o nome dele no `lista.json`. Pronto.
+   - Cada item gera:
+       ícone → downloads/<arquivo>  (download)
+       nome  → downloads/<arquivo>  (abre no navegador)
+   ===================================================================== */
+
+const LISTA_URL = 'downloads/lista.json';
+const PASTA = 'downloads/';
+
 const CATS = {
   edital:{label:'Editais',
     icon:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>'},
@@ -117,13 +115,14 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-function catOf(name,mime){
+function catOf(name){
   const n=norm(name);
+  const ext=(name.split('.').pop()||'').toLowerCase();
   if(/edital|licita|concurso|aviso|convoca/.test(n))return 'edital';
   if(/manual|guia|instru/.test(n))return 'manual';
-  if(mime==='application/pdf')return 'pdf';
-  if(mime.indexOf('video/')===0)return 'video';
-  if(mime.indexOf('spreadsheet')>-1||mime==='text/csv')return 'planilha';
+  if(ext==='pdf')return 'pdf';
+  if(/mp4|mov|avi|mkv|webm/.test(ext))return 'video';
+  if(/xls|xlsx|csv|ods/.test(ext))return 'planilha';
   return 'documento';
 }
 function fmtSize(n){
@@ -133,10 +132,10 @@ function fmtSize(n){
   return v.toLocaleString('pt-BR',{maximumFractionDigits:i?1:0})+' '+u[i];
 }
 
-function renderizar(arquivos,comTamanho){
+function renderizar(arquivos){
   const grupos={};
   arquivos.forEach(function(f){
-    const c=f.cat||catOf(f.name,f.mime);
+    const c=catOf(f.name);
     (grupos[c]=grupos[c]||[]).push(f);
   });
   let total=0,htmlOut='';
@@ -151,14 +150,15 @@ function renderizar(arquivos,comTamanho){
       +'<span class="contagem">'+itens.length+'</span>'
       +'</div><ul class="lista">';
     itens.forEach(function(f){
+      const href=PASTA+encodeURIComponent(f.name);
       htmlOut+='<li>'
-        +'<a class="dlbtn" href="https://drive.usercontent.google.com/download?id='+encodeURIComponent(f.id)+'&export=download&confirm=t" download title="Baixar '+esc(f.name)+'" aria-label="Baixar '+esc(f.name)+'">'
+        +'<a class="dlbtn" href="'+href+'" download title="Baixar '+esc(f.name)+'" aria-label="Baixar '+esc(f.name)+'">'
         +ICONE_DOWNLOAD
         +'</a>'
-        +'<a class="arq" href="https://drive.google.com/file/d/'+encodeURIComponent(f.id)+'/view" target="_blank" rel="noopener" title="Abrir '+esc(f.name)+' no Google Drive">'
+        +'<a class="arq" href="'+href+'" target="_blank" rel="noopener" title="Abrir '+esc(f.name)+'">'
         +'<span class="nome">'+esc(f.name)+'</span>'
         +'</a>'
-        +(comTamanho&&f.size?'<span class="tamanho">'+fmtSize(f.size)+'</span>':'')
+        +(f.size?'<span class="tamanho">'+fmtSize(f.size)+'</span>':'')
         +'</li>';
     });
     htmlOut+='</ul></section>';
@@ -169,137 +169,22 @@ function renderizar(arquivos,comTamanho){
   else{st.hidden=false;st.textContent='Nenhum arquivo publicado ainda.';}
 }
 
-function mostrarEmbed(){
-  const box=$('embedfallback'),fr=box.querySelector('iframe');
-  if(!fr.getAttribute('src')){
-    fr.src=ALVO;
-  }
-  box.hidden=false;
-  $('status').hidden=true;
-}
-
-/* --- reserva: extrair arquivos do iframe do Google Drive --- */
-function lerDoIframe(){
-  try{
-    const fr=document.querySelector('#embedfallback iframe');
-    if(!fr||!fr.contentDocument)return [];
-    const doc=fr.contentDocument;
-    const out=[],vistoId={},vistoNome={};
-    doc.querySelectorAll('.flip-entry').forEach(function(el){
-      const link=el.querySelector('a[href*="/file/d/"],a[href*="/folder/"]');
-      if(!link)return;
-      const href=link.getAttribute('href')||'';
-      const m=href.match(/\/file\/d\/([A-Za-z0-9_-]+)/);
-      if(!m)return;
-      const id=m[1];
-      const tEl=el.querySelector('.flip-entry-title');
-      const name=tEl?tEl.textContent.trim():'';
-      if(!name||vistoId[id]||vistoNome[name])return;
-      vistoId[id]=1;vistoNome[name]=1;
-      let mime='application/octet-stream';
-      const img=el.querySelector('img');
-      const mi=img?(img.getAttribute('src')||'').match(/\/type\/([A-Za-z0-9/+.\-]+)/):null;
-      if(mi)mime=mi[1];
-      out.push({id:id,name:name,mime:mime});
-    });
-    return out;
-  }catch(e){return [];}
-}
-
-function parseListing(html){
-  try{
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const out=[],vistoId={},vistoNome={};
-    doc.querySelectorAll('.flip-entry').forEach(function(el){
-      const link=el.querySelector('a[href*="/file/d/"]');
-      if(!link)return;
-      const m=(link.getAttribute('href')||'').match(/\/file\/d\/([A-Za-z0-9_-]+)\/view/);
-      if(!m)return;
-      const id=m[1],tEl=el.querySelector('.flip-entry-title');
-      const name=tEl?tEl.textContent.trim():'';
-      if(!name||vistoId[id]||vistoNome[name])return;
-      vistoId[id]=1;vistoNome[name]=1;
-      let mime='application/octet-stream';
-      const img=el.querySelector('img');
-      const mi=img?(img.getAttribute('src')||'').match(/\/type\/([A-Za-z0-9/+.\-]+)/):null;
-      if(mi)mime=mi[1];
-      out.push({id:id,name:name,mime:mime});
-    });
-    return out;
-  }catch(e){return [];}
-}
-
-async function tentarProxy(pUrl){
-  const ctrl=('AbortController' in window)?new AbortController():null;
-  const timer=setTimeout(function(){if(ctrl)ctrl.abort();},12000);
-  try{
-    const r=await fetch(pUrl,ctrl?{signal:ctrl.signal}:undefined);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    let txt=await r.text();
-    if(txt.charAt(0)==='{'){
-      try{const j=JSON.parse(txt);if(j&&j.contents)txt=j.contents;}catch(e){}
-    }
-    if(txt.indexOf('flip-entry')===-1)throw new Error('resposta invalida');
-    const files=parseListing(txt);
-    if(!files.length)throw new Error('sem arquivos');
-    return files;
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
-function primeiroSucesso(promessas){
-  return new Promise(function(resolve,reject){
-    let pendentes=promessas.length;
-    if(!pendentes){reject(new Error('sem tentativas'));return;}
-    promessas.forEach(function(p){
-      Promise.resolve(p).then(resolve,function(){
-        if(--pendentes===0)reject(new Error('todas falharam'));
-      });
-    });
-  });
-}
-
-const MAX_RODADAS = 10;
-const ESPERA_RODADAS = 20000;
-function esperar(ms){return new Promise(function(res){setTimeout(res,ms);});}
-
-/* tenta ler do iframe após ele carregar (reserva) */
-function tentarIframe(){
-  const fr=document.querySelector('#embedfallback iframe');
-  if(!fr)return;
-  const tentar=function(){
-    const files=lerDoIframe();
-    if(files.length){
-      renderizar(files,false);
-      $('embedfallback').hidden=true;
-    }
-  };
-  fr.addEventListener('load',function(){
-    /* tenta algumas vezes, porque o Drive carrega o conteúdo em etapas */
-    setTimeout(tentar,800);
-    setTimeout(tentar,2000);
-    setTimeout(tentar,4000);
-  });
-}
-
 async function carregar(){
-  mostrarEmbed();
-  tentarIframe();
-  for(let rodada=0;rodada<MAX_RODADAS;rodada++){
-    try{
-      const files=await primeiroSucesso(PROXIES.map(function(p){
-        return tentarProxy(p+encodeURIComponent(ALVO));
-      }));
-      renderizar(files,false);
-      $('embedfallback').hidden=true;
+  try{
+    const r=await fetch(LISTA_URL,{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status+' em '+LISTA_URL);
+    const dados=await r.json();
+    if(!Array.isArray(dados)||!dados.length){
+      $('status').textContent='Nenhum arquivo publicado ainda (lista.json vazio).';
       return;
-    }catch(e){}
-    if(rodada<MAX_RODADAS-1) await esperar(ESPERA_RODADAS);
+    }
+    const lista=dados.filter(function(x){return x&&x.name;}).map(function(x){
+      return {name:String(x.name),size:x.size||0};
+    });
+    renderizar(lista);
+  }catch(e){
+    $('status').innerHTML='Não foi possível carregar <code>downloads/lista.json</code>.<br><span style="font-size:.8rem">'+esc(e.message)+'</span>';
   }
-  /* se nenhum proxy funcionou, tenta mais uma vez ler do iframe */
-  const files=lerDoIframe();
-  if(files.length){renderizar(files,false);$('embedfallback').hidden=true;}
 }
 carregar();
 </script>
